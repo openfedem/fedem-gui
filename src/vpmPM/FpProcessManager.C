@@ -10,12 +10,13 @@
 #include "FFuLib/FFuAuxClasses/FFuaTimer.H"
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
-#ifdef FPPROCESS_DEBUG
+#ifdef FP_DEBUG
 #include <iostream>
 #endif
 
 
 FpProcessManager::FpProcessManager()
+  : FFaSwitchBoardConnector("FpProcessManager")
 {
   myTimer = FFuaTimer::create(FFaDynCB0M(FpProcessManager, this, check));
 }
@@ -66,12 +67,9 @@ void FpProcessManager::check()
 
 void FpProcessManager::killAll()
 {
-  ProcessSet::iterator it;
-  ProcessMap::iterator pgIt;
-
-  for (pgIt = myProcesses.begin(); pgIt != myProcesses.end(); pgIt++)
-    for (it = pgIt->second.begin(); it != pgIt->second.end(); it++)
-      (*it)->kill();
+  for (ProcessMap::value_type& pg : myProcesses)
+    for (FpProcess* proc : pg.second)
+      proc->kill();
 }
 
 
@@ -104,70 +102,67 @@ int FpProcessManager::getInterval() const
 
 void FpProcessManager::addProcess(FpProcess* aProc)
 {
-#ifdef FPPROCESS_DEBUG
+#ifdef FP_DEBUG
   std::cout <<"FpProcessManager::addProcess(FpProcess*)"<< std::endl;
 #endif
 
-  bool doEmitStarted = false;
-  bool doEmitGroupStarted = false;
+  bool doEmitStarted = myProcesses.empty();
+  if (doEmitStarted)
+    myTimer->start(1000);
 
-  if (myProcesses.empty())
-    {
-      myTimer->start(1000);
-      doEmitStarted = true;
-    }
+  ProcessSet& processGroup = myProcesses[aProc->getGroupID()];
+  bool doEmitGroupStarted = processGroup.empty();
 
-  if (myProcesses[aProc->getGroupID()].empty())
-    doEmitGroupStarted = true;
+  processGroup.insert(aProc);
 
-  myProcesses[aProc->getGroupID()].insert(aProc);
-
-  if (doEmitStarted){
-#ifdef FPPROCESS_DEBUG
+  if (doEmitStarted)
+  {
+#ifdef FP_DEBUG
     std::cout <<"Emitting FpProcessManager::STARTED"<< std::endl;
 #endif
     FFaSwitchBoardCall(this,STARTED);
   }
-  if (doEmitGroupStarted){
-#ifdef FPPROCESS_DEBUG
+  if (doEmitGroupStarted)
+  {
+#ifdef FP_DEBUG
     std::cout <<"Emitting FpProcessManager::GROUP_STARTED : "
-	      << aProc->getGroupID() << std::endl;
+              << aProc->getGroupID() << std::endl;
 #endif
-    FFaSwitchBoardCall(this,GROUP_STARTED, aProc->getGroupID());
+    FFaSwitchBoardCall(this,GROUP_STARTED,aProc->getGroupID());
   }
 }
 
 
 void FpProcessManager::removeProcess(FpProcess* proc)
 {
-#ifdef FPPROCESS_DEBUG
+#ifdef FP_DEBUG
   std::cout <<"FpProcessManager::removeProcess(FpProcess*)"<< std::endl;
 #endif
 
-  myProcesses[proc->getGroupID()].erase(proc);
+  ProcessSet& processGroup = myProcesses[proc->getGroupID()];
+  processGroup.erase(proc);
 
-  if (myProcesses[proc->getGroupID()].empty())
-    {
-      myProcesses.erase(proc->getGroupID());
-#ifdef FPPROCESS_DEBUG
-      std::cout <<"Emitting FpProcessManager::GROUP_FINISHED : "
-		<< proc->getGroupID() << std::endl;
+  if (processGroup.empty())
+  {
+    myProcesses.erase(proc->getGroupID());
+#ifdef FP_DEBUG
+    std::cout <<"Emitting FpProcessManager::GROUP_FINISHED : "
+              << proc->getGroupID() << std::endl;
 #endif
-      FFaSwitchBoardCall(this,GROUP_FINISHED, proc->getGroupID());
-    }
-
+    FFaSwitchBoardCall(this,GROUP_FINISHED,proc->getGroupID());
+  }
   if (myProcesses.empty())
-    {
-      myTimer->stop();
+  {
+    myTimer->stop();
 #ifdef FPPROCESS_DEBUG
-      std::cout <<"Emitting FpProcessManager::FINISHED" << std::endl;
+    std::cout <<"Emitting FpProcessManager::FINISHED"<< std::endl;
 #endif
-      FFaSwitchBoardCall(this,FINISHED);
-      FFaMsg::list("================================================================================\n\n");
-      FFaMsg::setSubTask("");
-      FFaMsg::disableSubSteps();
-      FFaMsg::disableProgress();
-    }
+    FFaSwitchBoardCall(this,FINISHED);
+    FFaMsg::list("================================================================================\n\n");
+    FFaMsg::setSubTask("");
+    FFaMsg::disableSubSteps();
+    FFaMsg::disableProgress();
+  }
 }
 
 
@@ -179,5 +174,5 @@ bool FpProcessManager::haveProcess(FpProcess* proc) const
   if (pgIt == myProcesses.end()) return false;
   if (pgIt->second.empty()) return false;
 
-  return pgIt->second.find(proc) == pgIt->second.end() ? false : true;
+  return pgIt->second.find(proc) != pgIt->second.end();
 }
