@@ -16,8 +16,7 @@
 #include "vpmDB/FmIsRenderedBase.H"
 
 
-EventMgrSignalConnector* EventMgrSignalConnector::myInstance = NULL;
-
+FapEventManager::SignalConnector FapEventManager::signalConnector;
 std::list<FapEventManager::FFaViewItems>* FapEventManager::permSelectedItems = NULL;
 FFaViewItem* FapEventManager::tmpSelectedItem = NULL;
 FFuMDIWindow* FapEventManager::activeWindow = NULL;
@@ -25,11 +24,6 @@ FmGraph* FapEventManager::loadingGraph = NULL;
 bool FapEventManager::isDisconnectingItems = false;
 FmAnimation* FapEventManager::activeAnimation = NULL;
 
-
-FFaSwitchBoardConnector* FapEventManager::getSignalConnector()
-{
-  return EventMgrSignalConnector::instance();
-}
 
 //----------------------------------------------------------------------------
 
@@ -54,7 +48,9 @@ void FapEventManager::pushPermSelection()
 
 void FapEventManager::popPermSelection()
 {
-  if (FapEventManager::permSelectedItems->size() <= 1) return;
+  if (FapEventManager::permSelectedItems->size() <= 1)
+    return;
+
   FFaViewItems empty;
 
   FapEventManager::highlightCurrentLayer(false);
@@ -68,23 +64,20 @@ void FapEventManager::popPermSelection()
 
 bool FapEventManager::isInSelectionStack(FFaViewItem* item)
 {
-  if (FapEventManager::permSelectedItems->size() <= 1) return false;
+  size_t i = 0, nStack = FapEventManager::permSelectedItems->size();
+  if (nStack > 1)
+    for (const FFaViewItems& selection : *FapEventManager::permSelectedItems)
+      if (++i < nStack)
+        if (std::find(selection.begin(),selection.end(),item) != selection.end())
+          return true;
 
-  std::list<FFaViewItems>::iterator i = FapEventManager::permSelectedItems->begin();
-
-  while (i != FapEventManager::permSelectedItems->end()) {
-    if (i != FapEventManager::permSelectedItems->end()--)
-      if (std::find(i->begin(),i->end(),item) != i->end())
-	return true;
-    i++;
-  }
   return false;
 }
 //----------------------------------------------------------------------------
 
 bool FapEventManager::hasStackedSelections()
 {
-  return (FapEventManager::permSelectedItems->size() > 1);
+  return FapEventManager::permSelectedItems->size() > 1;
 }
 //----------------------------------------------------------------------------
 
@@ -123,88 +116,60 @@ void FapEventManager::permTotalSelect(const FFaViewItems& total)
 void FapEventManager::tmpSelect(FFaViewItem* tmp)
 {
   FFaViewItem* tmpUnselected = FapEventManager::tmpSelectedItem;
-  FapEventManager::tmpSelectedItem = tmp;
+  if (tmp == tmpUnselected) return;
 
-  if (tmp != FapEventManager::tmpSelectedItem)
-    FapEventManager::sendTmpSelectionChanged(FapEventManager::tmpSelectedItem,tmpUnselected,
-					     FapEventManager::permSelectedItems->back());
+  FapEventManager::tmpSelectedItem = tmp;
+  FapEventManager::sendTmpSelectionChanged(FapEventManager::tmpSelectedItem,tmpUnselected,
+                                           FapEventManager::permSelectedItems->back());
 }
 
 //----------------------------------------------------------------------------
 
-void FapEventManager::permSelect(FFaViewItem* object, int index)
+void FapEventManager::permSelect(FFaViewItem* object, int index, bool replace)
 {
-  FFaViewItems added, removed;
-  FFaViewItems::iterator it;
+  FFaViewItems removed;
+  removed.reserve(1);
 
-  if ((int)FapEventManager::permSelectedItems->back().size() > index)
+  FFaViewItems& pSel = FapEventManager::permSelectedItems->back();
+  if (index >= (int)pSel.size())
+  {
+    // Select item at index, but we have to
+    // pad the selection array to actually reach the index wanted
+    size_t npad = index - pSel.size();
+    if (npad > 0) // Pad with Null selections
+      pSel.insert(pSel.end(),npad,NULL);
+
+    // Put object in place
+    pSel.push_back(object);
+  }
+  else if (index >= 0)
+  {
+    if (replace)
     {
       // Deselect item at index
-      it = FapEventManager::permSelectedItems->back().begin() + index;
-      FapEventManager::highlightRendered(*it,false);
-      removed.push_back(*it);
-      FapEventManager::permSelectedItems->back().erase(it);
-
-      // Select item at index
-      it = FapEventManager::permSelectedItems->back().begin() + index;
-      FapEventManager::permSelectedItems->back().insert(it,object);
-      FapEventManager::highlightRendered(*it,true);
-      added.push_back(object);
+      FapEventManager::highlightRendered(pSel[index],false);
+      removed.push_back(pSel[index]);
+      pSel.erase(pSel.begin()+index);
     }
+
+    // Select item at index
+    pSel.insert(pSel.begin()+index,object);
+  }
   else
-    {
-      // Select item at index, but we have to pad selection array
-      // to actually reach index wanted.
-      it = FapEventManager::permSelectedItems->back().end();
-      int n = index -(FapEventManager::permSelectedItems->back().size()-1);
-      // Pad with Nill selections :
-      FapEventManager::permSelectedItems->back().insert(it,n-1,NULL);
-      // Put object in place :
-      FapEventManager::permSelectedItems->back().push_back(object);
-      FapEventManager::highlightRendered(object,true);
-      added.push_back(object);
-    }
+    return;
 
-  if (added.size() || removed .size())
-    FapEventManager::sendPermSelectionChanged(FapEventManager::permSelectedItems->back(),
-                                              added,removed);
+  FapEventManager::highlightRendered(object,true);
+  FapEventManager::sendPermSelectionChanged(pSel,{object},removed);
 }
 
 //----------------------------------------------------------------------------
 
 void FapEventManager::permSelectInsert(FFaViewItem* object, int index)
 {
-  FFaViewItems added, removed;
-  FFaViewItems::iterator it;
-
-  if ((int)FapEventManager::permSelectedItems->back().size() > index)
-    {
-      // Select item at index
-      it = FapEventManager::permSelectedItems->back().begin() + index;
-      FapEventManager::permSelectedItems->back().insert(it,object);
-      FapEventManager::highlightRendered(object,true);
-      added.push_back(object);
-    }
-  else
-    {
-      // Select item at index, but we have to pad selection array
-      // to actually reach index wanted.
-      it = FapEventManager::permSelectedItems->back().end();
-      int n = index -(FapEventManager::permSelectedItems->back().size()-1);
-      // Pad with Nill selections :
-      FapEventManager::permSelectedItems->back().insert(it,n-1,NULL);
-      // Put object in place :
-      FapEventManager::permSelectedItems->back().push_back(object);
-      FapEventManager::highlightRendered(object,true);
-      added.push_back(object);
-    }
-
-  if (added.size() || removed.size())
-    FapEventManager::sendPermSelectionChanged(FapEventManager::permSelectedItems->back(),
-                                              added,removed);
+  FapEventManager::permSelect(object,index,false);
 }
 
-//----------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 
 void FapEventManager::permSelect(const FFaViewItems& select)
 {
@@ -250,12 +215,8 @@ void FapEventManager::permUnselect(const FFaViewItems& unselect)
 
 void FapEventManager::permUnselectLast()
 {
-  if (FapEventManager::permSelectedItems->empty())
-    return;
-
-  size_t nSelected = FapEventManager::permSelectedItems->back().size();
-  if (nSelected > 0)
-    FapEventManager::permUnselect(nSelected-1);
+  if (!FapEventManager::permSelectedItems->empty())
+    FapEventManager::permUnselect(FapEventManager::permSelectedItems->back().size()-1);
 }
 
 /*!
@@ -265,21 +226,19 @@ void FapEventManager::permUnselectLast()
 
 void FapEventManager::permUnselect(int index)
 {
-  if (index >= (int)FapEventManager::permSelectedItems->back().size())
+  FFaViewItems& pSel = FapEventManager::permSelectedItems->back();
+  if (index < 0 || index >= (int)pSel.size())
     return;
 
-  FFaViewItems removed;
-  FFaViewItems::iterator it = FapEventManager::permSelectedItems->back().begin() + index;
-
   // Dehighlight the item to deselect if needed
-  FapEventManager::highlightRendered(*it,false);
+  FapEventManager::highlightRendered(pSel[index],false);
 
   // Store what was removed, and actually remove item
-  removed.push_back(*it);
-  FapEventManager::permSelectedItems->back().erase(it);
+  FFaViewItems removed = { pSel[index] };
+  pSel.erase(pSel.begin()+index);
 
   // Send signal with changes
-  FapEventManager::sendPermSelectionChanged(FapEventManager::permSelectedItems->back(),FFaViewItems(),removed);
+  FapEventManager::sendPermSelectionChanged(pSel,FFaViewItems(),removed);
 }
 
 //----------------------------------------------------------------------------
@@ -335,7 +294,7 @@ std::vector<FmModelMemberBase*> FapEventManager::getPermMMBSelection()
 
 FFaViewItem* FapEventManager::getFirstPermSelectedObject()
 {
-  if (FapEventManager::permSelectedItems->back().size())
+  if (!FapEventManager::permSelectedItems->back().empty())
     return FapEventManager::permSelectedItems->back().front();
   else
     return NULL;
@@ -424,15 +383,15 @@ bool FapEventManager::isOnlyObjectsOfTypeSelected(int typeID)
 
   return true;
 }
-
+//----------------------------------------------------------------------------
 
 void FapEventManager::setActiveWindow(FFuMDIWindow* active)
 {
   FFuMDIWindow* prevActive = FapEventManager::activeWindow;
-  FapEventManager::activeWindow = active;
+  if (active == prevActive) return;
 
-  if (active != prevActive)
-    FapEventManager::sendActiveWindowChanged(FapEventManager::activeWindow,prevActive);
+  FapEventManager::activeWindow = active;
+  FapEventManager::sendActiveWindowChanged(FapEventManager::activeWindow,prevActive);
 }
 //----------------------------------------------------------------------------
 
@@ -442,15 +401,17 @@ void FapEventManager::setLoadingGraph(FmGraph* graph)
 }
 //----------------------------------------------------------------------------
 
-void FapEventManager::setActiveAnimation(FmAnimation * animation)
+void FapEventManager::setActiveAnimation(FmAnimation* animation)
 {
-  FmAnimation * prevAnim = FapEventManager::activeAnimation;
-  FapEventManager::activeAnimation = animation;
+  FmAnimation* prevAnim = FapEventManager::activeAnimation;
+  if (animation == prevAnim) return;
 
-  if (prevAnim != FapEventManager::activeAnimation)
-    FFaSwitchBoardCall(EventMgrSignalConnector::instance(),
-		       ACTIVE_ANIMATION_CHANGED,
-		       activeAnimation,prevAnim);
+#if FAP_DEBUG > 4
+  std::cout <<"\nFFaSwitchBoardCall: active animation"<< std::endl;
+#endif
+  FapEventManager::activeAnimation = animation;
+  FFaSwitchBoardCall(&signalConnector,ACTIVE_ANIMATION_CHANGED,
+                     FapEventManager::activeAnimation,prevAnim);
 }
 //----------------------------------------------------------------------------
 
@@ -496,7 +457,8 @@ void FapEventManager::sendPermSelectionChanged(const FFaViewItems& permSelected,
   FapEventManager::filterNull(permUnselectedSinceLast,permUnselectedSinceLastFiltered);//tmp since 0's are being selected internally
 
 #if FAP_DEBUG > 4
-  std::cout <<"Total selection:";
+  std::cout <<"\nFFaSwitchBoardCall: permanent selection "<< permSelectedFiltered.size()
+            <<"\n  Total:";
   for (FFaViewItem* item : permSelectedFiltered)
     std::cout <<" "<< item->getItemName() <<"("<< item->getItemID() <<")";
   std::cout <<"\n  Removed:";
@@ -508,10 +470,10 @@ void FapEventManager::sendPermSelectionChanged(const FFaViewItems& permSelected,
   std::cout << std::endl;
 #endif
 
- FFaSwitchBoardCall(EventMgrSignalConnector::instance(),PERMSELECTIONCHANGED,permSelectedFiltered,
-		    permSelectedSinceLastFiltered,permUnselectedSinceLastFiltered);
+  FFaSwitchBoardCall(&signalConnector,PERMSELECTIONCHANGED,permSelectedFiltered,
+                     permSelectedSinceLastFiltered,permUnselectedSinceLastFiltered);
 
- FapUACommandHandler::updateAllUICommandsSensitivity();
+  FapUACommandHandler::updateAllUICommandsSensitivity();
 }
 //----------------------------------------------------------------------------
 
@@ -523,32 +485,40 @@ void FapEventManager::sendTmpSelectionChanged(FFaViewItem* tmpSelected,
   FapEventManager::filterNull(permSelected,permSelectedFiltered);//tmp since 0's are being selected internally
 
 #if FAP_DEBUG > 4
-  std::cout <<"sendTmpSelectionChanged:";
+  std::cout <<"\nFFaSwitchBoardCall: temporary selection "<< permSelectedFiltered.size();
   if (tmpSelected)
-    std::cout <<" "<< tmpSelected->getItemName() <<"("<< tmpSelected->getItemID()<<")";
+    std::cout <<"\n  Selected:"<< tmpSelected->getItemName() <<"("<< tmpSelected->getItemID()<<")";
+  if (tmpUnselected)
+    std::cout <<"\n  Unselected:"<< tmpUnselected->getItemName() <<"("<< tmpUnselected->getItemID()<<")";
   std::cout << std::endl;
 #endif
 
-  FFaSwitchBoardCall(EventMgrSignalConnector::instance(),TMPSELECTIONCHANGED,tmpSelected,tmpUnselected,permSelectedFiltered);
+  FFaSwitchBoardCall(&signalConnector,TMPSELECTIONCHANGED,
+                     tmpSelected,tmpUnselected,permSelectedFiltered);
 }
 //----------------------------------------------------------------------------
 
 void FapEventManager::sendPermSelectionStackChanged(bool pushed)
 {
-  FFaSwitchBoardCall(EventMgrSignalConnector::instance(),PERMSELECTIONSTACKCHANGED,pushed);
+#if FAP_DEBUG > 4
+  std::cout <<"\nFFaSwitchBoardCall: permanent selection strack "
+            << std::boolalpha << pushed << std::endl;
+#endif
+
+  FFaSwitchBoardCall(&signalConnector,PERMSELECTIONSTACKCHANGED,pushed);
 }
 //----------------------------------------------------------------------------
 
 void FapEventManager::sendActiveWindowChanged(FFuMDIWindow* newActive,FFuMDIWindow* prevActive)
 {
 #if FAP_DEBUG > 4
-  std::cout <<"sendActiveWindowChanged:";
-  if (dynamic_cast<FFuComponentBase*>(newActive))
-    std::cout <<" "<< dynamic_cast<FFuComponentBase*>(newActive)->getName();
+  std::cout <<"\nFFaSwitchBoardCall: active window";
+  if (newActive)
+    std::cout <<" "<< newActive->getName();
   std::cout << std::endl;
 #endif
 
-  FFaSwitchBoardCall(EventMgrSignalConnector::instance(),ACTIVEWINDOWCHANGED,newActive,prevActive);
+  FFaSwitchBoardCall(&signalConnector,ACTIVEWINDOWCHANGED,newActive,prevActive);
 }
 //----------------------------------------------------------------------------
 
@@ -605,15 +575,6 @@ void FapEventManager::highlightCurrentLayer(bool highlight)
 }
 //----------------------------------------------------------------------------
 
-EventMgrSignalConnector::EventMgrSignalConnector()
-{
-  FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
-  			  new FFaSlot1<EventMgrSignalConnector,FmModelMemberBase*>
-  			  (this,&EventMgrSignalConnector::onModelMemberDisconnected)
-  			  );
-}
-//----------------------------------------------------------------------------
-
 void FapEventManager::highlightRendered(FFaViewItem* item, bool onOff)
 {
   if (FapEventManager::isDisconnectingItems)
@@ -622,4 +583,12 @@ void FapEventManager::highlightRendered(FFaViewItem* item, bool onOff)
   FmIsRenderedBase* rItem = dynamic_cast<FmIsRenderedBase*>(item);
   if (rItem)
     rItem->highlight(onOff);
+}
+//----------------------------------------------------------------------------
+
+FapEventManager::SignalConnector::SignalConnector() : FFaSwitchBoardConnector("FapEventManager")
+{
+  FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
+                          FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
+                          FFaSlot1S(FapEventManager,onModelMemberDisconnected,FmModelMemberBase*));
 }

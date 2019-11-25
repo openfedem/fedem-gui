@@ -9,13 +9,11 @@
 #define FAP_EVENT_MANAGER_H
 
 #include "FFaLib/FFaDynCalls/FFaSwitchBoard.H"
-#include "FFaLib/FFaPatterns/FFaSingelton.H"
 #include <vector>
 #include <list>
 
 class FFaViewItem;
 class FFaListViewItem;
-class FFaSwitchBoardConnector;
 class FFuMDIWindow;
 class FmModelMemberBase;
 class FmAnimation;
@@ -28,12 +26,12 @@ public:
 
   // Signals
   enum {PERMSELECTIONCHANGED,
-	TMPSELECTIONCHANGED,
-	PERMSELECTIONSTACKCHANGED,
-	ACTIVEWINDOWCHANGED,
+        TMPSELECTIONCHANGED,
+        PERMSELECTIONSTACKCHANGED,
+        ACTIVEWINDOWCHANGED,
         ACTIVE_ANIMATION_CHANGED};
 
-  static FFaSwitchBoardConnector* getSignalConnector();
+  static FFaSwitchBoardConnector* getSignalConnector() { return &signalConnector; }
 
   // Selection stacking
   // Pushing and poping of selections gives always a selection changed signal
@@ -60,10 +58,10 @@ public:
   static void permAddSelect(const FFaViewItems& select);
   static void permAddSelect(FFaViewItem* select);
 
-  static void permSelect(FFaViewItem* object, int index);
+  static void permSelect(FFaViewItem* object, int index, bool replace = true);
   static void permSelectInsert(FFaViewItem* object, int index);
 
-  static void permUnselectAll() { permTotalSelect(0); }
+  static void permUnselectAll() { permTotalSelect(NULL); }
   static void permUnselect(const FFaViewItems& unselect);
   static void permUnselect(FFaViewItem* unselect);
   static void permUnselect(int index);
@@ -98,12 +96,12 @@ public:
   static bool isOnlyObjectsOfTypeSelected(int typeID);
 
   static bool hasPermSelection() { return !FapEventManager::permSelectedItems->empty(); }
-  static bool hasTmpSelection() { return (FapEventManager::tmpSelectedItem != 0); }
+  static bool hasTmpSelection() { return FapEventManager::tmpSelectedItem != NULL; }
 
   // views
   static void setActiveWindow(FFuMDIWindow* active);
   static FFuMDIWindow* getActiveWindow() { return FapEventManager::activeWindow; }
-  bool isActiveWindow(FFuMDIWindow* view) { return (view == FapEventManager::activeWindow); }
+  bool isActiveWindow(FFuMDIWindow* view) { return view == FapEventManager::activeWindow; }
 
   // fm pointers
   static void setLoadingGraph(FmGraph* graph);
@@ -153,36 +151,19 @@ private:
   static bool isDisconnectingItems;
 
   // Signal
-  friend class EventMgrSignalConnector;
+  class SignalConnector : public FFaSwitchBoardConnector
+  {
+  public:
+    SignalConnector();
+    virtual ~SignalConnector() {}
+  };
+  static SignalConnector signalConnector;
 
   // Initializer
   friend class FFaInitialisation<FapEventManager>;
 };
 
 static FFaInitialisation<FapEventManager> FapEventManager_Init;
-
-
-// JL: workaround on macro problem in switchboard, implement own singelton pattern
-
-class EventMgrSignalConnector : public FFaSwitchBoardConnector
-{
-public:
-  EventMgrSignalConnector();
-  virtual ~EventMgrSignalConnector() {}
-
-  // slots from db
-  void onModelMemberDisconnected(FmModelMemberBase* item)
-  {FapEventManager::onModelMemberDisconnected(item);}
-
-  static EventMgrSignalConnector* instance()
-  {
-    if (!myInstance) myInstance = new EventMgrSignalConnector();
-    return myInstance;
-  }
-
-private:
-  static EventMgrSignalConnector* myInstance;
-};
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -192,18 +173,18 @@ private:
 template <class T>
 class FapPermSelChangedReceiver : public FFaSwitchBoardConnector
 {
+  typedef std::vector<FFaViewItem*> FFaViewItems;
 public:
-  FapPermSelChangedReceiver() : myOwner(0) {}
   FapPermSelChangedReceiver(T* owner) : myOwner(owner)
   {
-    FFaSwitchBoard::connect( FapEventManager::getSignalConnector(),
-			     FapEventManager::PERMSELECTIONCHANGED,
-			     new FFaSlot3<FapPermSelChangedReceiver<T>, std::vector<FFaViewItem*>, std::vector<FFaViewItem*>, std::vector<FFaViewItem*> >
-			     (this,&FapPermSelChangedReceiver<T>::onPermSelectionChanged) );
+    FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
+                            FapEventManager::PERMSELECTIONCHANGED,
+                            new FFaSlot3<FapPermSelChangedReceiver<T>,FFaViewItems,FFaViewItems,FFaViewItems>
+                            (this,&FapPermSelChangedReceiver<T>::onChanged));
   }
   virtual ~FapPermSelChangedReceiver() {}
 private:
-  void onPermSelectionChanged(std::vector<FFaViewItem*> totalSelection, std::vector<FFaViewItem*> selectedSinceLast, std::vector<FFaViewItem*> unselectedSinceLast)
+  void onChanged(FFaViewItems totalSelection, FFaViewItems selectedSinceLast, FFaViewItems unselectedSinceLast)
   { myOwner->onPermSelectionChanged(totalSelection,selectedSinceLast,unselectedSinceLast); }
 private:
   T* myOwner;
@@ -213,18 +194,18 @@ private:
 template <class T>
 class FapTmpSelChangedReceiver : public FFaSwitchBoardConnector
 {
+  typedef std::vector<FFaViewItem*> FFaViewItems;
 public:
-  FapTmpSelChangedReceiver() : myOwner(0) {}
   FapTmpSelChangedReceiver(T* owner) : myOwner(owner)
   {
-    FFaSwitchBoard::connect( FapEventManager::getSignalConnector(),
-			     FapEventManager::TMPSELECTIONCHANGED,
-			     new FFaSlot3<FapTmpSelChangedReceiver<T>, FFaViewItem*, FFaViewItem*, std::vector<FFaViewItem*> >
-			     (this,&FapTmpSelChangedReceiver<T>::onTmpSelectionChanged) );
+    FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
+                            FapEventManager::TMPSELECTIONCHANGED,
+                            new FFaSlot3<FapTmpSelChangedReceiver<T>,FFaViewItem*,FFaViewItem*,FFaViewItems>
+                            (this,&FapTmpSelChangedReceiver<T>::onChanged));
   }
   virtual ~FapTmpSelChangedReceiver() {}
 private:
-  void onTmpSelectionChanged(FFaViewItem* tmpSelected, FFaViewItem* tmpUnselected, std::vector<FFaViewItem*> totalSelection)
+  void onChanged(FFaViewItem* tmpSelected, FFaViewItem* tmpUnselected, FFaViewItems totalSelection)
   { myOwner->onTmpSelectionChanged(tmpSelected,tmpUnselected,totalSelection); }
 private:
   T* myOwner;
@@ -235,18 +216,16 @@ template <class T>
 class FapPermSelStackChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FapPermSelStackChangedReceiver() : myOwner(0) {}
   FapPermSelStackChangedReceiver(T* owner) : myOwner(owner)
   {
-    FFaSwitchBoard::connect( FapEventManager::getSignalConnector(),
-			     FapEventManager::PERMSELECTIONSTACKCHANGED,
-			     new FFaSlot1<FapPermSelStackChangedReceiver<T>, bool>
-			     (this,&FapPermSelStackChangedReceiver<T>::onPermSelectionStackChanged) );
+    FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
+                            FapEventManager::PERMSELECTIONSTACKCHANGED,
+                            new FFaSlot1<FapPermSelStackChangedReceiver<T>,bool>
+                            (this,&FapPermSelStackChangedReceiver<T>::onChanged));
   }
   virtual ~FapPermSelStackChangedReceiver() {}
 private:
-  void onPermSelectionStackChanged(bool pushed)
-  { myOwner->onPermSelectionStackChanged(pushed); }
+  void onChanged(bool pushed) { myOwner->onPermSelectionStackChanged(pushed); }
 private:
   T* myOwner;
 };
@@ -256,17 +235,16 @@ template <class T>
 class FapActiveWinChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FapActiveWinChangedReceiver() : myOwner(0) {}
   FapActiveWinChangedReceiver(T* owner) : myOwner(owner)
   {
-    FFaSwitchBoard::connect( FapEventManager::getSignalConnector(),
-			     FapEventManager::ACTIVEWINDOWCHANGED,
-			     new FFaSlot2<FapActiveWinChangedReceiver<T>, FFuMDIWindow*, FFuMDIWindow*>
-			     (this,&FapActiveWinChangedReceiver<T>::onActiveWindowChanged) );
+    FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
+                            FapEventManager::ACTIVEWINDOWCHANGED,
+                            new FFaSlot2<FapActiveWinChangedReceiver<T>,FFuMDIWindow*,FFuMDIWindow*>
+                            (this,&FapActiveWinChangedReceiver<T>::onChanged));
   }
   virtual ~FapActiveWinChangedReceiver() {}
 private:
-  void onActiveWindowChanged(FFuMDIWindow* newActive, FFuMDIWindow* prevActive)
+  void onChanged(FFuMDIWindow* newActive, FFuMDIWindow* prevActive)
   { myOwner->onActiveWindowChanged(newActive,prevActive); }
 private:
   T* myOwner;
@@ -277,17 +255,16 @@ template <class T>
 class FapActiveAnimationChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FapActiveAnimationChangedReceiver() : myOwner(0) {}
   FapActiveAnimationChangedReceiver(T* owner) : myOwner(owner)
   {
-    FFaSwitchBoard::connect( FapEventManager::getSignalConnector(),
-			     FapEventManager::ACTIVE_ANIMATION_CHANGED,
-			     new FFaSlot2<FapActiveAnimationChangedReceiver<T>, FmAnimation*, FmAnimation*>
-			     (this,&FapActiveAnimationChangedReceiver<T>::onActiveAnimationChanged) );
+    FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
+                            FapEventManager::ACTIVE_ANIMATION_CHANGED,
+                            new FFaSlot2<FapActiveAnimationChangedReceiver<T>,FmAnimation*,FmAnimation*>
+                            (this,&FapActiveAnimationChangedReceiver<T>::onChanged));
   }
   virtual ~FapActiveAnimationChangedReceiver() {}
 private:
-  void onActiveAnimationChanged(FmAnimation* newActive, FmAnimation* prevActive)
+  void onChanged(FmAnimation* newActive, FmAnimation* prevActive)
   { myOwner->onActiveAnimationChanged(newActive,prevActive); }
 private:
   T* myOwner;
