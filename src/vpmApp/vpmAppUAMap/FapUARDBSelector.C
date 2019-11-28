@@ -378,10 +378,8 @@ void FapUARDBSelector::finishUI()
 }
 //----------------------------------------------------------------------------
 
-FapUARDBSelector::SignalConnector::SignalConnector(FapUARDBSelector* anOwner)
+FapUARDBSelector::SignalConnector::SignalConnector(FapUARDBSelector* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
 			  FpRDBExtractorManager::MODELEXTRACTOR_ABOUT_TO_DELETE,
 			  FFaSlot1M(SignalConnector,this,onModelExtrDeleted,FFrExtractor*));
@@ -397,5 +395,11 @@ FapUARDBSelector::SignalConnector::SignalConnector(FapUARDBSelector* anOwner)
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberChanged,FmModelMemberBase*));
+}
+//----------------------------------------------------------------------------
+
+FapUARDBSelector::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
 //----------------------------------------------------------------------------

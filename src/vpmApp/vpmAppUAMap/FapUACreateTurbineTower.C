@@ -121,13 +121,18 @@ void FapUACreateTurbineTower::onMaterialSelected(FmModelMemberBase* current)
 }
 //----------------------------------------------------------------------------
 
-FapUACreateTurbineTower::SignalConnector::SignalConnector(FapUACreateTurbineTower* anOwner)
+FapUACreateTurbineTower::SignalConnector::SignalConnector(FapUACreateTurbineTower* ua) : owner(ua)
 {
-  owner = anOwner;
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
 			  FFaSlot1M(SignalConnector,this,
 				    onModelMemberDisconnected,FmModelMemberBase*));
+}
+//----------------------------------------------------------------------------
+
+FapUACreateTurbineTower::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
 //------------------------------------------------------------------------------
 

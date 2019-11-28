@@ -43,20 +43,17 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector() : owner(0) {}
-    SignalConnector(FapUACreateTurbineAssembly* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUACreateTurbineAssembly* ua);
+    virtual ~SignalConnector();
 
   private:
     void onModelMemberConnected(FmModelMemberBase* item);
     void onModelMemberDisconnected(FmModelMemberBase* item);
 
     FapUACreateTurbineAssembly* owner;
-    friend class FapUACreateTurbineAssembly;
   };
 
-  FapUACreateTurbineAssembly::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 };
 
 #endif

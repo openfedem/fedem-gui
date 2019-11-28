@@ -42,12 +42,11 @@ private:
   void onModelMemberConnected(FmModelMemberBase* item);
   void onModelMemberDisconnected(FmModelMemberBase* item);
 
-  class SignalConnector: public FFaSwitchBoardConnector
+  class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector() { owner = 0; }
     SignalConnector(FapUALinkRamSettings* lrs);
-    virtual ~SignalConnector() {}
+    virtual ~SignalConnector();
 
   private:
     void onModelMemberChanged(FmModelMemberBase* item)
@@ -60,8 +59,7 @@ private:
     FapUALinkRamSettings* owner;
   };
 
-  FapUALinkRamSettings::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 
   FuiLinkRamSettings* ui;
 };

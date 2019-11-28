@@ -105,9 +105,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector() : owner(NULL) {}
-    SignalConnector(FapUAGraphView* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUAGraphView* ua);
+    virtual ~SignalConnector();
 
   private:
     // Slots eventmanager
@@ -145,11 +144,9 @@ private:
     }
 
     FapUAGraphView* owner;
-    friend class FapUAGraphView;
   };
 
-  FapUAGraphView::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 };
 
 #endif

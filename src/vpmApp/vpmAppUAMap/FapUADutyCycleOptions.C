@@ -48,17 +48,15 @@ void FapUADutyCycleOptions::setDBValues(FFuaUIValues* values)
   // Clearing
   db->removeAllEvents();
   db->clearLinks();
-  size_t i;
 
   // Adding links
-  for (i = 0; i < v->links.size(); i++)
+  for (size_t i = 0; i < v->links.size(); i++)
     if (v->links[i].second)
       db->addLink((FmLink*) allLinks[i]);
 
   // Adding events
-  for (i = 0; i < v->events.size(); i++)
-    db->addEvent(v->events[i].fmmPath, v->events[i].name,
-		 v->events[i].repeats, v->events[i].master);
+  for (const FuiEventData& event : v->events)
+    db->addEvent(event.fmmPath, event.name, event.repeats, event.master);
 
   db->setEquivalentUnit(v->equivUnit.first, v->equivUnit.second);
 
@@ -79,9 +77,8 @@ void FapUADutyCycleOptions::getDBValues(FFuaUIValues* values)
   FmDB::getAllOfType(this->allLinks,FmLink::getClassTypeID());
   v->links = this->getUILinks();
   v->events.clear();
-  const std::map<std::string,EventData>& eventMap = dbDCOptions->getEvents();
-  for (std::map<std::string,EventData>::const_iterator it = eventMap.begin(); it != eventMap.end(); it++)
-    v->events.push_back(FuiEventData(it->first,it->second.name,it->second.repeats,it->second.isMaster));
+  for (const std::pair<const std::string,EventData>& ev : dbDCOptions->getEvents())
+    v->events.push_back(FuiEventData(ev.first,ev.second.name,ev.second.repeats,ev.second.isMaster));
 
   v->equivUnit.first = dbDCOptions->getEquivUnitScale();
   v->equivUnit.second = dbDCOptions->getEquivUnit();
@@ -107,8 +104,8 @@ void FapUADutyCycleOptions::addEvent()
   std::vector<std::string> files = dialog->execute();
   delete dialog;
 
-  for (size_t i = 0; i < files.size(); i++) {
-    std::string fileName = FFaFilePath::getRelativeFilename(absPath,files[i]);
+  for (const std::string& file : files) {
+    std::string fileName = FFaFilePath::getRelativeFilename(absPath,file);
     if (!this->ui->eventPresent(fileName))
       this->ui->addEvent(FuiEventData(fileName,"",1,false));
   }
@@ -151,8 +148,8 @@ std::vector< std::pair<std::string,bool> > FapUADutyCycleOptions::getUILinks()
   if (!db) return retVal;
 
   std::vector<FmLink*> dbLinks = db->getLinks();
-  for (size_t i = 0; i < this->allLinks.size(); i++) {
-    FmLink* tmp = (FmLink*) this->allLinks[i];
+  for (FmModelMemberBase* link : this->allLinks) {
+    FmLink* tmp = (FmLink*)link;
     bool toggleOn = std::find(dbLinks.begin(),dbLinks.end(),tmp) != dbLinks.end();
     retVal.push_back(std::make_pair(tmp->getLinkIDString(),toggleOn));
   }
@@ -161,10 +158,8 @@ std::vector< std::pair<std::string,bool> > FapUADutyCycleOptions::getUILinks()
 }
 
 
-FapUADutyCycleOptions::SignalConnector::SignalConnector(FapUADutyCycleOptions* anOwner)
+FapUADutyCycleOptions::SignalConnector::SignalConnector(FapUADutyCycleOptions* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberChanged,FmModelMemberBase*));
@@ -174,4 +169,10 @@ FapUADutyCycleOptions::SignalConnector::SignalConnector(FapUADutyCycleOptions* a
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberDisconnected,FmModelMemberBase*));
+}
+
+
+FapUADutyCycleOptions::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }

@@ -148,7 +148,7 @@ private:
   {
   public:
     SignalConnector(FapUAMiniFileBrowser* ua);
-    virtual ~SignalConnector() {}
+    virtual ~SignalConnector();
 
   private:
     void onModelExtractorDeleted(FFrExtractor* extr)
@@ -168,8 +168,7 @@ private:
   };
 
   FuiMiniFileBrowser* ui;
-  FapUAMiniFileBrowser::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 
   std::map<int,FileSpec>      fileMap;
   std::map<std::string,bool>  expandedMap;

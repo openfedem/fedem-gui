@@ -706,10 +706,8 @@ void FapUAGraphView::resetAnimation()
 
 //------------------------------------------------------------------------------
 
-FapUAGraphView::SignalConnector::SignalConnector(FapUAGraphView* anOwner)
+FapUAGraphView::SignalConnector::SignalConnector(FapUAGraphView* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   // DB signals
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CONNECTED,
@@ -741,4 +739,10 @@ FapUAGraphView::SignalConnector::SignalConnector(FapUAGraphView* anOwner)
 			  FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,
 				    onModelExtrHeaderChanged,FFrExtractor*));
+}
+//------------------------------------------------------------------------------
+
+FapUAGraphView::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }

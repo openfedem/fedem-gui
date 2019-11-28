@@ -182,7 +182,10 @@ public:
                             new FFaSlot3<FapPermSelChangedReceiver<T>,FFaViewItems,FFaViewItems,FFaViewItems>
                             (this,&FapPermSelChangedReceiver<T>::onChanged));
   }
-  virtual ~FapPermSelChangedReceiver() {}
+  virtual ~FapPermSelChangedReceiver()
+  {
+    FFaSwitchBoard::removeAllOwnerConnections(this);
+  }
 private:
   void onChanged(FFaViewItems totalSelection, FFaViewItems selectedSinceLast, FFaViewItems unselectedSinceLast)
   { myOwner->onPermSelectionChanged(totalSelection,selectedSinceLast,unselectedSinceLast); }
@@ -203,7 +206,10 @@ public:
                             new FFaSlot3<FapTmpSelChangedReceiver<T>,FFaViewItem*,FFaViewItem*,FFaViewItems>
                             (this,&FapTmpSelChangedReceiver<T>::onChanged));
   }
-  virtual ~FapTmpSelChangedReceiver() {}
+  virtual ~FapTmpSelChangedReceiver()
+  {
+    FFaSwitchBoard::removeAllOwnerConnections(this);
+  }
 private:
   void onChanged(FFaViewItem* tmpSelected, FFaViewItem* tmpUnselected, FFaViewItems totalSelection)
   { myOwner->onTmpSelectionChanged(tmpSelected,tmpUnselected,totalSelection); }
@@ -223,7 +229,10 @@ public:
                             new FFaSlot1<FapPermSelStackChangedReceiver<T>,bool>
                             (this,&FapPermSelStackChangedReceiver<T>::onChanged));
   }
-  virtual ~FapPermSelStackChangedReceiver() {}
+  virtual ~FapPermSelStackChangedReceiver()
+  {
+    FFaSwitchBoard::removeAllOwnerConnections(this);
+  }
 private:
   void onChanged(bool pushed) { myOwner->onPermSelectionStackChanged(pushed); }
 private:
@@ -242,7 +251,10 @@ public:
                             new FFaSlot2<FapActiveWinChangedReceiver<T>,FFuMDIWindow*,FFuMDIWindow*>
                             (this,&FapActiveWinChangedReceiver<T>::onChanged));
   }
-  virtual ~FapActiveWinChangedReceiver() {}
+  virtual ~FapActiveWinChangedReceiver()
+  {
+    FFaSwitchBoard::removeAllOwnerConnections(this);
+  }
 private:
   void onChanged(FFuMDIWindow* newActive, FFuMDIWindow* prevActive)
   { myOwner->onActiveWindowChanged(newActive,prevActive); }
@@ -262,7 +274,10 @@ public:
                             new FFaSlot2<FapActiveAnimationChangedReceiver<T>,FmAnimation*,FmAnimation*>
                             (this,&FapActiveAnimationChangedReceiver<T>::onChanged));
   }
-  virtual ~FapActiveAnimationChangedReceiver() {}
+  virtual ~FapActiveAnimationChangedReceiver()
+  {
+    FFaSwitchBoard::removeAllOwnerConnections(this);
+  }
 private:
   void onChanged(FmAnimation* newActive, FmAnimation* prevActive)
   { myOwner->onActiveAnimationChanged(newActive,prevActive); }

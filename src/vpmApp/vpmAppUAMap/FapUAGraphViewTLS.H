@@ -45,8 +45,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector(FapUAGraphViewTLS* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUAGraphViewTLS* ua);
+    virtual ~SignalConnector();
 
   private:
     // slots from DB

@@ -44,15 +44,13 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector() : owner(0) {}
-    SignalConnector(FapUACreateTurbineTower* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUACreateTurbineTower* ua);
+    virtual ~SignalConnector();
 
   private:
     void onModelMemberDisconnected(FmModelMemberBase* item);
 
     FapUACreateTurbineTower* owner;
-    friend class FapUACreateTurbineTower;
   };
 
   SignalConnector signalConnector;

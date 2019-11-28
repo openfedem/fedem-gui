@@ -94,8 +94,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector(FapUACurveDefine* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUACurveDefine* ua);
+    virtual ~SignalConnector();
 
   private:
     void onModelMemberChanged(FmModelMemberBase* item)
@@ -104,8 +104,7 @@ private:
     FapUACurveDefine* owner;
   };
 
-  FapUACurveDefine::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 };
 
 #endif

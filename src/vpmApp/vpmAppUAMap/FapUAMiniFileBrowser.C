@@ -57,6 +57,9 @@ Fmd_SOURCE_INIT(FcFAPUAMINIFILEBROWSER, FapUAMiniFileBrowser, FapUAExistenceHand
 FapUAMiniFileBrowser::FapUAMiniFileBrowser(FuiMiniFileBrowser* uic)
   : FapUAExistenceHandler(uic), FapUAFinishHandler(uic), signalConnector(this)
 {
+#ifdef FAP_DEBUG
+  std::cout <<"FapUAMiniFileBrowser constructor"<< std::endl;
+#endif
   Fmd_CONSTRUCTOR_INIT(FapUAMiniFileBrowser);
 
   this->ui = uic;
@@ -149,6 +152,9 @@ FapUAMiniFileBrowser::FapUAMiniFileBrowser(FuiMiniFileBrowser* uic)
 
 FapUAMiniFileBrowser::~FapUAMiniFileBrowser()
 {
+#ifdef FAP_DEBUG
+  std::cout <<"FapUAMiniFileBrowser destructor"<< std::endl;
+#endif
   FapSolutionProcessManager::instance()->clearProcessDeathCB();
   this->cleanFileMonitoring();
 }
@@ -1812,6 +1818,9 @@ void FapUAMiniFileBrowser::finishUI()
 
 FapUAMiniFileBrowser::SignalConnector::SignalConnector(FapUAMiniFileBrowser* ua) : owner(ua)
 {
+#ifdef FAP_DEBUG
+  std::cout <<"FapUAMiniFileBrowser::SignalConnector constructor"<< std::endl;
+#endif
   FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
 			  FpRDBExtractorManager::MODELEXTRACTOR_ABOUT_TO_DELETE,
 			  FFaSlot1M(SignalConnector,this,onModelExtractorDeleted,FFrExtractor*));
@@ -1831,4 +1840,13 @@ FapUAMiniFileBrowser::SignalConnector::SignalConnector(FapUAMiniFileBrowser* ua)
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberChanged,FmModelMemberBase*));
+}
+
+
+FapUAMiniFileBrowser::SignalConnector::~SignalConnector()
+{
+#ifdef FAP_DEBUG
+  std::cout <<"FapUAMiniFileBrowser::SignalConnector destructor"<< std::endl;
+#endif
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
