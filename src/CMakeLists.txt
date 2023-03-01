@@ -9,7 +9,7 @@
 include_directories ( "${CMAKE_CURRENT_SOURCE_DIR}" "${MDB_DIR}"
                       "${MDB_DIR}/fedem-foundation/src" )
 
-set ( CXX_FLAGS "-DFFR_LISTVIEW -DQT3_SUPPORT -DFT_USE_VERTEX" )
+set ( CXX_FLAGS "-DFFR_LISTVIEW -DFT_USE_VERTEX" )
 if ( WIN )
   set ( CXX_FLAGS "/bigobj ${CXX_FLAGS}" )
   if ( PLATFORM_BITSIZE_IS_64_BIT )
@@ -50,7 +50,7 @@ endif ( "${USE_QWTLIB}" STREQUAL "External" )
 # List all subfolders from the fedem-foundation repository in this project
 #
 
-set ( USE_QT Qt4 )
+set ( USE_QT Qt5 )
 set ( USE_VISUALS TRUE )
 set ( USE_VERTEXOBJ TRUE )
 set ( USE_REFCOUNT TRUE )

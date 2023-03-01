@@ -4,6 +4,8 @@
 #
 # This file is part of FEDEM - https://openfedem.org
 
+find_package ( Qt5 REQUIRED COMPONENTS Gui Widgets Core )
+
 set ( SUBFOLDER_LIST components )
 
 if ( USE_WINDPOW )
