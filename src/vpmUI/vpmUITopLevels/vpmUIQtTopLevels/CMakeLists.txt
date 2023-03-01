@@ -6,6 +6,9 @@
 
 set ( LIB_ID vpmUIQtTopLevels )
 
+set ( QT_LIBS Core Gui Widgets )
+find_package ( Qt5 REQUIRED COMPONENTS ${QT_LIBS} )
+
 if ( USE_FORTRAN )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_PREVIEW" )
 endif ( USE_FORTRAN )
@@ -77,16 +80,13 @@ endforeach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
 
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
 # Named moc_<filename>.cxx where input is filname.H
-QT4_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
+QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
 
 set ( HEADER_FILES ${HPP_HEADER_FILES} )
 set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 
 
 # Dependencies and system libraries
-
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
 
 set ( DEPENDENCY_LIST vpmUITopLevels vpmUIQtComponents FFuQtComponents FFuQtBaseClasses FFuComponents )
 if ( USE_WINDPOW )
@@ -104,9 +104,8 @@ target_link_libraries ( ${LIB_ID} ${DEPENDENCY_LIST} )
 
 # Install the dependent shared object libraries
 
-set ( QT_LIBS Qt3Support QtCore QtGui QtNetwork QtOpenGL QtSql QtXml )
 foreach ( LIB ${QT_LIBS} )
-  get_target_property ( LIB_PATH Qt4::${LIB} LOCATION )
+  get_target_property ( LIB_PATH Qt5::${LIB} LOCATION )
   if ( WIN )
     string ( REPLACE ".lib" ".dll" DLL_PATH ${LIB_PATH} )
     if ( FTENV_VERBOSE )
