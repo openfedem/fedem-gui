@@ -4,7 +4,10 @@
 #
 # This file is part of FEDEM - https://openfedem.org
 
+# Builds the LIB_ID library
 set ( LIB_ID FFuQtAuxClasses )
+
+find_package ( Qt5 REQUIRED COMPONENTS Widgets Core )
 
 
 ## Files with header and source with same name
@@ -32,13 +35,6 @@ foreach ( FILE ${SOURCE_FILE_LIST} )
 endforeach ( FILE ${SOURCE_FILE_LIST} )
 
 
-#
-# Dependencies and system libraries
-#
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
-
-
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${CPP_SOURCE_FILES} ${HPP_HEADER_FILES} )
-target_link_libraries ( ${LIB_ID} FFuAuxClasses ${QT_QTCORE_LIBRARY_RELEASE} )
+target_link_libraries ( ${LIB_ID} FFuAuxClasses Qt5::Widgets Qt5::Core )
