@@ -50,7 +50,7 @@ endif ( "${USE_QWTLIB}" STREQUAL "External" )
 # List all subfolders from the fedem-foundation repository in this project
 #
 
-set ( USE_QT Qt5 )
+set ( USE_QT Qt6 )
 set ( USE_VISUALS TRUE )
 set ( USE_VERTEXOBJ TRUE )
 set ( USE_REFCOUNT TRUE )
@@ -159,7 +159,7 @@ install ( TARGETS Fedem RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
 # Install some Qt plugins and Fortran redistributables
 #
 if ( WIN )
-  set ( PLUGINS platforms/qwindows.dll styles/qwindowsvistastyle.dll )
+  set ( PLUGINS platforms/qwindows.dll styles/qmodernwindowsstyle.dll )
   file ( TO_CMAKE_PATH $ENV{QT_ROOT}/plugins PLUGIN_PATH )
   foreach ( PLUGIN ${PLUGINS} )
     get_filename_component ( DIR ${PLUGIN} DIRECTORY )

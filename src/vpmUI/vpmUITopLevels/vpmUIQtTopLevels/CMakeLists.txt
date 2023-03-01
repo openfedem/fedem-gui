@@ -7,7 +7,10 @@
 set ( LIB_ID vpmUIQtTopLevels )
 
 set ( QT_LIBS Core Gui Widgets )
-find_package ( Qt5 REQUIRED COMPONENTS ${QT_LIBS} )
+find_package ( Qt6 REQUIRED COMPONENTS ${QT_LIBS} )
+if ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
+  qt_standard_project_setup ()
+endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
 
 if ( USE_FORTRAN )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_PREVIEW" )
@@ -80,7 +83,7 @@ endforeach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
 
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
 # Named moc_<filename>.cxx where input is filname.H
-QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
+QT6_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
 
 set ( HEADER_FILES ${HPP_HEADER_FILES} )
 set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
@@ -105,7 +108,7 @@ target_link_libraries ( ${LIB_ID} ${DEPENDENCY_LIST} )
 # Install the dependent shared object libraries
 
 foreach ( LIB ${QT_LIBS} )
-  get_target_property ( LIB_PATH Qt5::${LIB} LOCATION )
+  get_target_property ( LIB_PATH Qt6::${LIB} LOCATION )
   if ( WIN )
     string ( REPLACE ".lib" ".dll" DLL_PATH ${LIB_PATH} )
     if ( FTENV_VERBOSE )

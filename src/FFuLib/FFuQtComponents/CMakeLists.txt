@@ -7,7 +7,10 @@
 # Builds the LIB_ID library
 set ( LIB_ID FFuQtComponents )
 
-find_package ( Qt5 REQUIRED COMPONENTS Core )
+find_package ( Qt6 REQUIRED COMPONENTS Core )
+if ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
+  qt_standard_project_setup ()
+endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
 
 
 ## Files with header and source with same name
@@ -88,7 +91,7 @@ endforeach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
 
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
 # Named moc_<filename>.cxx where input is filname.H
-QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
+QT6_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
 
 
 foreach ( FILE ${COMPONENT_FILE_LIST} )
