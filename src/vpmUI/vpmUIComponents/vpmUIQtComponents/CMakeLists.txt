@@ -7,6 +7,11 @@
 # Builds the LIB_ID library
 set ( LIB_ID vpmUIQtComponents )
 
+find_package ( Qt5 REQUIRED COMPONENTS Core )
+#if ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
+#  qt_standard_project_setup ()
+#endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
+
 
 ## Files with header and source with same name
 set ( COMPONENT_FILE_LIST  FuiQt3DPoint FuiQtAnimationDefine
@@ -48,7 +53,7 @@ endforeach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
 
 
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
-QT4_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} ) # Named moc_<filename>.cxx where input is filname.H
+QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} ) # Named moc_<filename>.cxx where input is filname.H
 
 
 foreach ( FILE ${COMPONENT_FILE_LIST} )
@@ -74,9 +79,6 @@ set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 #
 # Dependencies and system libraries
 #
-
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
 
 set ( FT_GUI_LIBRARIES vpmUIComponents FFuQtComponents FFuQtBaseClasses )
 set ( DEPENDENCY_LIST ${FT_GUI_LIBRARIES} )
