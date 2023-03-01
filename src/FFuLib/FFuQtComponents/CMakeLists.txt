@@ -7,6 +7,8 @@
 # Builds the LIB_ID library
 set ( LIB_ID FFuQtComponents )
 
+find_package ( Qt5 REQUIRED COMPONENTS Core )
+
 
 ## Files with header and source with same name
 set ( COMPONENT_FILE_LIST  FFuQtButton
@@ -91,7 +93,7 @@ endforeach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
 
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
 # Named moc_<filename>.cxx where input is filname.H
-QT4_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
+QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
 
 
 foreach ( FILE ${COMPONENT_FILE_LIST} )
@@ -117,8 +119,6 @@ set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 #
 # Dependencies and system libraries
 #
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
 
 set ( DEPENDENCY_LIST FFuLib )
 if ( TARGET Qwt )
