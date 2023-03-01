@@ -8,7 +8,7 @@
 # This is the top-level cmake project file for the Fedem GUI sources.
 ################################################################################
 
-cmake_minimum_required ( VERSION 2.8...3.5 )
+cmake_minimum_required ( VERSION 2.8...3.10 )
 
 # Project setup
 
@@ -44,11 +44,6 @@ else ( _MODULES )
   message ( STATUS "ERROR : Missing path to FedemConfig.cmake" )
   message ( FATAL_ERROR "Set environment variable CMAKE_MODULES and try again" )
 endif ( _MODULES )
-set ( _MODULES "${MDB_DIR}/cmake/Modules" )
-if ( IS_DIRECTORY ${_MODULES} )
-  message ( STATUS "NOTE : Using ${_MODULES}" )
-  list ( APPEND CMAKE_MODULE_PATH ${_MODULES} )
-endif ( IS_DIRECTORY ${_MODULES} )
 set ( _MODULES "${PROJECT_SOURCE_DIR}/cmake/Modules" )
 if ( IS_DIRECTORY ${_MODULES} )
   message ( STATUS "NOTE : Using ${_MODULES}" )

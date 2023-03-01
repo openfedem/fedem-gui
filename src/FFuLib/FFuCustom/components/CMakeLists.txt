@@ -25,14 +25,11 @@ else ( USE_WINDPOW )
   set ( QT_MOC_HEADER_FILES ../inputTables/delegates/HeaderDelegate.H )
 endif ( USE_WINDPOW )
 
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
-
-QT4_WRAP_UI ( QT_UI_HEADER_FILES ${QT_UI_FILES} )
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
-QT4_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
+QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
 
 set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${SOURCE_FILES} ${HPP_HEADER_FILES} )
+target_link_libraries ( ${LIB_ID} FFuAuxClasses Qt5::Widgets Qt5::Core )
