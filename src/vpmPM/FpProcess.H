@@ -57,9 +57,12 @@ public:
   // Cleans up and removes the FpProcess if myQProcess is no longer running.
   void update();
 
+  //! \brief Reads from either stdout or stderr of the process.
+  void readChannel(QProcess::ProcessChannel channel);
+
 public slots:
-  void readStdOut();
-  void readStdErr();
+  void readStdOut() { this->readChannel(QProcess::StandardOutput); }
+  void readStdErr() { this->readChannel(QProcess::StandardError); }
   void processFinished(int, QProcess::ExitStatus) { mFinished = true; }
 
 private:
