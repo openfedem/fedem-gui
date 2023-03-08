@@ -21,6 +21,9 @@
 #include <QPushButton>
 #include <QDoubleValidator>
 
+class QRegularExpressionValidator;
+
+
 enum TableOrdering{ ROW_DOMINANT, COLUMN_DOMINANT};
 
 class TableModel : public QAbstractTableModel
@@ -78,7 +81,7 @@ protected:
     int initialRows;
     int initialColumns;
 
-    std::map<int,QRegExpValidator*> validators;
+    std::map<int,QRegularExpressionValidator*> validators;
     std::map<int,QVariant> defaultValues;
 	QVector<QVariant>* apHeaders;
     QVector<QVariant>* apHeadersTooltips;
