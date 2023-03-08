@@ -82,7 +82,7 @@ void FFuQtListView::setListSorting(int column,bool ascending)
 
 void FFuQtListView::setHeaderClickEnabled(int column,bool enable)
 {
-  this->header()->setClickEnabled(enable,column);
+  this->header()->setSectionsClickable(enable);
 }
 //----------------------------------------------------------------------------
 
