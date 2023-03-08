@@ -82,7 +82,7 @@ FdAnimationInfo::buildFontList(SoState* state, int& fldWidth, int& fldHeight)
  
   if (this->fontlist && context == this->fontlistcontext) { 
     QFontMetrics fm((qApp->font())); 
-    fldWidth = fm.width(timeStr); 
+    fldWidth = fm.horizontalAdvance(timeStr);
     fldHeight = fm.height(); 
     return; 
   } 
@@ -107,7 +107,7 @@ FdAnimationInfo::buildFontList(SoState* state, int& fldWidth, int& fldHeight)
 #endif
   // Find text field dimensions.
   QFontMetrics fm((qApp->font()));
-  fldWidth = fm.width(timeStr);
+  fldWidth = fm.horizontalAdvance(timeStr);
   fldHeight = fm.height();
 }
 
