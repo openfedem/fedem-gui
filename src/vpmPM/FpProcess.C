@@ -26,7 +26,7 @@
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
 
-FpProcess::FpProcess(const char* name, int groupID) : QObject(NULL,"Fedem")
+FpProcess::FpProcess(const char* name, int groupID)
 {
   myQProcess = new QProcess(this);
   myPID = 0;
@@ -133,7 +133,7 @@ int FpProcess::run(const FpProcessOptions& options)
   FpProcessManager::instance()->addProcess(this);
 
   // Find process identification
-  Q_PID myPid = myQProcess->pid();
+  qint64 myPid = myQProcess->processId();
 #if defined(win32) || defined(win64)
   myPID = myPid ? ((PROCESS_INFORMATION*)myPid)->dwProcessId : -1;
 #else
@@ -175,10 +175,9 @@ void FpProcess::readStdOut()
   myQProcess->setReadChannel(QProcess::StandardOutput);
   while (myQProcess->canReadLine())
   {
-    QString qline = myQProcess->readLine();
-    const char* line = qline.latin1();
-    if (line)
-      ListUI << myName <<" ["<< myPID <<"]: "<< line;
+    QByteArray qline = myQProcess->readLine();
+    if (!qline.isEmpty())
+      ListUI << myName <<" ["<< myPID <<"]: "<< qline;
   }
 }
 
@@ -188,9 +187,8 @@ void FpProcess::readStdErr()
   myQProcess->setReadChannel(QProcess::StandardError);
   while (myQProcess->canReadLine())
   {
-    QString qline = myQProcess->readLine();
-    const char* line = qline.latin1();
-    if (line)
-      std::cerr << myName <<" ["<< myPID <<"]: "<< line;
+    QByteArray qline = myQProcess->readLine();
+    if (!qline.isEmpty())
+      std::cerr << myName <<" ["<< myPID <<"]: "<< qline;
   }
 }
