@@ -20,6 +20,7 @@
 
 #include "FFuLib/FFuQtComponents/FFuQt2DPlotter.H"
 
+
 //----------------------------------------------------------------------------
 
 FFuQt2DPlotter::FFuQt2DPlotter(QWidget* parent, const char* name)
@@ -1335,7 +1336,7 @@ FFuQt2DPlotter::getPlotterHighlightPenWidth()
 
 bool FFuQt2DPlotter::savePlotterAsImage(const std::string& fName, const char* format)
 {
-  return QPixmap::grabWidget(this).save(fName.c_str(), format, 100);
+  return this->grab().save(fName.c_str(), format, 100);
 }
 
 //----------------------------------------------------------------------------
@@ -1477,7 +1478,7 @@ void FFuQt2DPlotter::onCurvePicked(const QPointF& point)
 void FFuQt2DPlotter::wheelEvent(QWheelEvent* event)
 {
   double zoomFactor;
-  int numSteps = event->delta() / 120;
+  int numSteps = event->angleDelta().y() / 120;
   if (numSteps < 0)
     zoomFactor = 0.8 / static_cast<double>(-numSteps);
   else if (numSteps > 0)
