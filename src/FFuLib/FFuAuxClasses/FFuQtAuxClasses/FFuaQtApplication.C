@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QStyleFactory>
 #include <QSplashScreen>
 #include <QScreen>
@@ -79,12 +78,12 @@ void FFuaApplication::splashScreenOffshore()
 
 int FFuaApplication::getScreenHeight()
 {
-  return qApp->desktop()->screenGeometry(qApp->desktop()->primaryScreen()).height();
+  return qApp->primaryScreen()->geometry().height();
 }
 
 int FFuaApplication::getScreenWidth()
 {
-  return qApp->desktop()->screenGeometry(qApp->desktop()->primaryScreen()).width();
+  return qApp->primaryScreen()->geometry().width();
 }
 
 
