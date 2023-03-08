@@ -211,7 +211,7 @@ int FFuQtOptionMenu::getBasicWidthHint()
   int w = 0, newW = 0;
 
   for (int i = 0; i < this->count(); i++)
-    if ((newW = fm.width(this->itemText(i))) > w)
+    if ((newW = fm.horizontalAdvance(this->itemText(i))) > w)
       w = newW;
 
   w += 30; //down arrow

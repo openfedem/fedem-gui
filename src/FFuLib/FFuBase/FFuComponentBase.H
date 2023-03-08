@@ -102,7 +102,7 @@ public:
 
   virtual int getFontHeigth() const  {return 0;}
   virtual int getFontMaxWidth() const  {return 0;}
-  virtual int getFontWidth(const char*, int = -1) const {return 0;}
+  virtual int getFontWidth(const char*) const {return 0;}
 
   virtual const char* getName() const { return NULL; }
 

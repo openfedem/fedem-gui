@@ -301,9 +301,9 @@ int FFuQtComponentBase::getFontMaxWidth() const
 }
 
 
-int FFuQtComponentBase::getFontWidth(const char* aString, int len) const
+int FFuQtComponentBase::getFontWidth(const char* aString) const
 {
-  return myWidget->fontMetrics().width(aString,len);
+  return myWidget->fontMetrics().horizontalAdvance(aString);
 }
 
 
