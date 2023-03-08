@@ -23,7 +23,7 @@ void HeaderDelegate::paint(QPainter* painter,
 {
   painter->save();
 
-  QStyleOptionViewItemV4 opt = option;
+  QStyleOptionViewItem opt(option);
   initStyleOption(&opt, index);
 
   // draw correct background
@@ -46,8 +46,7 @@ void HeaderDelegate::paint(QPainter* painter,
 
   QPushButton* btn = new QPushButton();
   btn->setFixedSize(rect.width(),rect.height());
-  QPixmap map = QPixmap::grabWidget(btn);
-  painter->drawPixmap(QRect(rect.left(), rect.top(), rect.width(), rect.height()),map);
+  painter->drawPixmap(QRect(rect.left(), rect.top(), rect.width(), rect.height()), btn->grab());
 
   // draw text
   QString name = index.model()->data(index, Qt::DisplayRole).toString();
