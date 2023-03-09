@@ -197,7 +197,7 @@ void FFuQtComponentBase::setFonts(FFuaFontSet aFontSet)
 
 void FFuQtComponentBase::setColors(FFuaPalette aPalette)
 {
-  int r,g,b;
+  int r, g, b;
 
   aPalette.getStdBackground(r, g, b);
   QColor StdBackground(r, g, b);
@@ -223,62 +223,64 @@ void FFuQtComponentBase::setColors(FFuaPalette aPalette)
   aPalette.getLightShadow(r, g, b);
   QColor LightShadow(r, g, b);
 
-  QColorGroup stdNormal        ( TextOnStdBackground,
-                                 StdBackground,
-                                 LightShadow,
-                                 DarkShadow,
-                                 MidShadow,
-                                 TextOnStdBackground,
-                                 FieldBackground );
+  QPalette textFieldPalette;
 
-  QColorGroup stdDisabled      ( stdNormal.foreground().dark(125),
-                                 stdNormal.background(),
-                                 stdNormal.light     (),
-                                 stdNormal.dark      (),
-                                 stdNormal.mid       (),
-                                 stdNormal.text      ().dark(125),
-                                 stdNormal.base      ().dark(80));
+  textFieldPalette.setColorGroup(QPalette::Active,
+                                 TextOnStdBackground, FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground, TextOnStdBackground,
+                                 FieldBackground, StdBackground);
+  textFieldPalette.setColorGroup(QPalette::Disabled,
+                                 TextOnStdBackground.darker(125),
+                                 FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground.darker(125),
+                                 TextOnStdBackground.darker(125),
+                                 FieldBackground, StdBackground.darker(80));
+  textFieldPalette.setColorGroup(QPalette::Inactive,
+                                 TextOnStdBackground, FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground, TextOnStdBackground,
+                                 FieldBackground, StdBackground);
 
-  QPalette stdPalette(stdNormal, stdDisabled, stdNormal );
-
-  myWidget->setPalette(stdPalette);
+  myWidget->setPalette(textFieldPalette);
 }
 
 
 void FFuQtComponentBase::getColors(FFuaPalette& aPalette)
 {
-  QColorGroup stdColorGroup = myWidget->palette().normal();
+  int r, g, b;
 
-  int r,g,b;
+  QPalette colorPalette = myWidget->palette();
   QColor tmpColor;
 
-  tmpColor = stdColorGroup.foreground();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setTextOnStdBackground(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::WindowText);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setTextOnStdBackground(r, g, b);
 
-  tmpColor = stdColorGroup.background();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setStdBackground(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::Window);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setStdBackground(r, g, b);
 
-  tmpColor = stdColorGroup.light();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setLightShadow(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::Light);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setLightShadow(r, g, b);
 
-  tmpColor = stdColorGroup.dark();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setDarkShadow(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::Dark);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setDarkShadow(r, g, b);
 
-  tmpColor = stdColorGroup.mid();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setMidShadow(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::Mid);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setMidShadow(r, g, b);
 
-  tmpColor = stdColorGroup.text();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setTextOnFieldBackground(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::Text);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setTextOnFieldBackground(r, g, b);
 
-  tmpColor = stdColorGroup.base();
-  tmpColor.rgb(&r,&g,&b);
-  aPalette.setFieldBackground(r,g,b);
+  tmpColor = colorPalette.color(QPalette::Normal, QPalette::Base);
+  tmpColor.getRgb(&r, &g, &b);
+  aPalette.setFieldBackground(r, g, b);
 }
 
 
