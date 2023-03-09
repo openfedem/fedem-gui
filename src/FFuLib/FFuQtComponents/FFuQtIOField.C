@@ -137,7 +137,7 @@ void FFuQtIOField::setColors(FFuaPalette aPalette)
   int r,g,b;
 
   aPalette.getStdBackground(r, g, b);
-  QColor StdBackground(r, g, b);
+  QColor StdBackground(255,0,0);
 
   aPalette.getFieldBackground(r, g, b);
   QColor FieldBackground(r, g, b);
@@ -157,17 +157,17 @@ void FFuQtIOField::setColors(FFuaPalette aPalette)
   aPalette.getLightShadow(r, g, b);
   QColor LightShadow(r, g, b);
 
-  QColorGroup textFieldNormal(TextOnFieldBackground,
-			      StdBackground,
-			      LightShadow,
-			      DarkShadow,
-			      MidShadow,
-			      TextOnFieldBackground,
-			      FieldBackground);
-
-  QPalette textFieldPalette(textFieldNormal, textFieldNormal, textFieldNormal);
-
+  QPalette textFieldPalette;
+  textFieldPalette.setColor(QPalette::WindowText, TextOnFieldBackground);
+  textFieldPalette.setColor(QPalette::Window, StdBackground);
+  textFieldPalette.setColor(QPalette::Light, LightShadow);
+  textFieldPalette.setColor(QPalette::Dark, DarkShadow);
+  textFieldPalette.setColor(QPalette::Mid, MidShadow);
+  textFieldPalette.setColor(QPalette::Text, TextOnFieldBackground);
+  textFieldPalette.setColor(QPalette::Base, FieldBackground);
   this->QLineEdit::setPalette(textFieldPalette);
+  this->setAutoFillBackground(true);
+
 }
 
 
@@ -203,15 +203,39 @@ void FFuQtIOField::setBackgroundColor(int r, int g, int b)
 void FFuQtIOField::setSensitivity(bool makeSensitive)
 {
   QPalette desktopP = QApplication::palette();
-  // Irix has a warning about initial value of non-const reference
-  // must be an lvalue
 
   if (!makeSensitive) {
-    QColorGroup disabled = desktopP.disabled();
-    disabled.setColor(QColorGroup::Base,disabled.background());
+    QColor background = desktopP.color(QPalette::Disabled, QPalette::Window);
+    desktopP.setColor(QPalette::Disabled, QPalette::Base, background);
 
-    desktopP.setActive(disabled);
-    desktopP.setInactive(disabled);
+    QColor tmpColor;
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::WindowText);
+    desktopP.setColor(QPalette::Active, QPalette::WindowText, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::WindowText, tmpColor);
+
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::Window);
+    desktopP.setColor(QPalette::Active, QPalette::Window, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::Window, tmpColor);
+
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::Light);
+    desktopP.setColor(QPalette::Active, QPalette::Light, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::Light, tmpColor);
+
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::Dark);
+    desktopP.setColor(QPalette::Active, QPalette::Dark, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::Dark, tmpColor);
+
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::Mid);
+    desktopP.setColor(QPalette::Active, QPalette::Mid, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::Mid, tmpColor);
+
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::Text);
+    desktopP.setColor(QPalette::Active, QPalette::Text, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::Text, tmpColor);
+
+    tmpColor = desktopP.color(QPalette::Disabled, QPalette::Base);
+    desktopP.setColor(QPalette::Active, QPalette::Base, tmpColor);
+    desktopP.setColor(QPalette::Inactive, QPalette::Base, tmpColor);
   }
 
   this->setPalette(desktopP);
