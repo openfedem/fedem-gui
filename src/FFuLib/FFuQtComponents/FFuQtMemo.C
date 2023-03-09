@@ -153,7 +153,7 @@ std::string FFuQtMemo::getText() const
 //! Sets colors used to display text
 void FFuQtMemo::setColors(FFuaPalette aPalette)
 {
-  int r,g,b;
+  int r, g, b;
 
   aPalette.getStdBackground(r, g, b);
   QColor StdBackground(r, g, b);
@@ -179,25 +179,28 @@ void FFuQtMemo::setColors(FFuaPalette aPalette)
   aPalette.getLightShadow(r, g, b);
   QColor LightShadow(r, g, b);
 
-  QColorGroup textFieldNormal  (TextOnFieldBackground,
-				StdBackground,
-				LightShadow,
-				DarkShadow,
-				MidShadow,
-				TextOnFieldBackground,
-				FieldBackground);
+  QPalette textFieldPalette;
 
-  QColorGroup textFieldDisabled(textFieldNormal.foreground().dark(125),
-				textFieldNormal.background(),
-				textFieldNormal.light(),
-				textFieldNormal.dark(),
-				textFieldNormal.mid(),
-				textFieldNormal.text().light(80),
-				textFieldNormal.base().dark(80));
+  textFieldPalette.setColorGroup(QPalette::Active,
+				 TextOnFieldBackground, FieldBackground,
+				 LightShadow, DarkShadow, MidShadow,
+				 TextOnFieldBackground,
+				 TextOnFieldBackground,
+				 FieldBackground, StdBackground);
+  textFieldPalette.setColorGroup(QPalette::Disabled,
+				 TextOnFieldBackground, FieldBackground,
+				 LightShadow, DarkShadow, MidShadow,
+				 TextOnFieldBackground,
+				 TextOnFieldBackground,
+				 FieldBackground, StdBackground);
+  textFieldPalette.setColorGroup(QPalette::Inactive,
+				 TextOnFieldBackground, FieldBackground,
+				 LightShadow, DarkShadow, MidShadow,
+				 TextOnFieldBackground,
+				 TextOnFieldBackground,
+				 FieldBackground, StdBackground);
 
-  QPalette textFieldPalette(textFieldNormal, textFieldNormal, textFieldNormal);
-
-  this->Q3TextEdit::setPalette(textFieldPalette);
+  this->setPalette(textFieldPalette);
 }
 
 

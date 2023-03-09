@@ -99,11 +99,15 @@ void FFuQtScrolledList::setSensitivity(bool isSensitive)
 {
   if (isSensitive) {
     this->setSelectionMode(Single);
-    this->setPaletteForegroundColor(QColor(0, 0, 0));
+    QPalette currPalette = this->palette();
+    currPalette.setColor(QPalette::Text, QColor(0, 0, 0));
+    this->setPalette(currPalette);
   }
   else {
     this->setSelectionMode(NoSelection);
-    this->setPaletteForegroundColor(QColor(160, 160, 160));
+    QPalette currPalette = this->palette();
+    currPalette.setColor(QPalette::Text, QColor(160, 160, 160));
+    this->setPalette(currPalette);
   }
   IAmEnabled = isSensitive;
 }
