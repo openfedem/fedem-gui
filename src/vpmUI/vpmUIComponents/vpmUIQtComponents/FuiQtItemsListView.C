@@ -58,7 +58,7 @@ bool FuiQtItemsListView::event(QEvent* e)
 
 void FuiQtItemsListView::dropEvent(QDropEvent* e)
 {
-  QTreeWidgetItem* qtDropItem = this->itemAt(e->pos());
+  QTreeWidgetItem* qtDropItem = this->itemAt(e->position().toPoint());
   FFuQtListViewItem* dropItem = dynamic_cast<FFuQtListViewItem*>(qtDropItem);
   int dropAction = e->dropAction() & Qt::CopyAction;
   droppedCB.invoke(dropItem ? dropItem->getItemId() : -1, dropAction);
