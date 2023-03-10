@@ -59,13 +59,13 @@ void FuiItemsListView::setItemText(int item, const std::vector<std::string>& tex
 
 void FuiItemsListView::setItemTextBold(int item, bool bold)
 {
-  this->getListItem(item)->setItemTextBold(bold);
+  this->getListItem(item)->setItemTextBold(0,bold);
 }
 //----------------------------------------------------------------------------
 
 void FuiItemsListView::setItemTextItalic(int item, bool italic)
 {
-  this->getListItem(item)->setItemTextItalic(italic);
+  this->getListItem(item)->setItemTextItalic(0,italic);
 }
 //----------------------------------------------------------------------------
 

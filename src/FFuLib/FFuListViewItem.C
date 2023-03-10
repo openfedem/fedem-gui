@@ -8,54 +8,36 @@
 #include "FFuLib/FFuListViewItem.H"
 #include "FFuLib/FFuListView.H"
 
-#include "FFuLib/FFuAuxClasses/FFuAuxPixmaps/toggled.xpm"
-#include "FFuLib/FFuAuxClasses/FFuAuxPixmaps/untoggled.xpm"
-#include "FFuLib/FFuAuxClasses/FFuAuxPixmaps/halftoggled.xpm"
-
-
-int FFuListViewItem::itemCount = 0;
-const char** FFuListViewItem::togglepx[] = { untoggled_xpm,
-                                             toggled_xpm,
-                                             halftoggled_xpm };
-
 
 FFuListViewItem::FFuListViewItem()
 {
+  static int itemCount = 0;
+
   this->itemId = itemCount++;
 
+  this->toggle = UNTOGGLED;
   this->toggleAble = false;
-  this->threeStepToggleAble = false;
-  this->toggle = 0;
   this->boldtext = false;
   this->italictext = false;
-  this->col0Pixmap = NULL;
-}
-//----------------------------------------------------------------------------
-
-FFuListViewItem::~FFuListViewItem()
-{
 }
 //----------------------------------------------------------------------------
 
 void FFuListViewItem::copyData(FFuListViewItem* original)
 {
-  this->col0Pixmap = original->col0Pixmap;
   this->copyPixmaps(original);
-
   this->setItemTextBold(original->boldtext);
   this->setItemTextItalic(original->italictext);
   for (int i=0;i<this->getListView()->getNColumns();i++)
-    this->setItemText(i,original->getItemText(i));
+    this->setItemText(i,original->getItemText(i).c_str());
 
   if (original->toggleAble) {
     this->setItemToggleAble(original->toggleAble);
-    this->setItemThreeStepToggleAble(original->threeStepToggleAble);
     this->setToggleValue(original->toggle);
   }
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuListViewItem::getPreviousSiblingItem()
+FFuListViewItem* FFuListViewItem::getPreviousSiblingItem() const
 {
   FFuListViewItem* item = this->getParentItem();
   if (item)
@@ -76,7 +58,7 @@ FFuListViewItem* FFuListViewItem::getPreviousSiblingItem()
 }
 //----------------------------------------------------------------------------
 
-int FFuListViewItem::getItemPosition()
+int FFuListViewItem::getItemPosition() const
 {
   FFuListViewItem* sibling = this->getParentItem();
   if (sibling)
@@ -94,25 +76,30 @@ int FFuListViewItem::getItemPosition()
 }
 //----------------------------------------------------------------------------
 
-bool FFuListViewItem::isFirstLevel()
+int FFuListViewItem::getDepth() const
+{
+  FFuListViewItem* parent = this->getParentItem();
+  return parent ? parent->getDepth()+1 : 0;
+}
+//----------------------------------------------------------------------------
+
+bool FFuListViewItem::isFirstLevel() const
 {
   return this->getParentItem() ? false : true;
 }
 //----------------------------------------------------------------------------
 
-bool FFuListViewItem::isSecondLevel()
+bool FFuListViewItem::isSecondLevel() const
 {
-  if (this->getParentItem())
-    return this->getParentItem()->isFirstLevel();
-  return false;
+  FFuListViewItem* parent = this->getParentItem();
+  return parent ? parent->isFirstLevel() : false;
 }
 //----------------------------------------------------------------------------
 
-bool FFuListViewItem::isThirdLevel()
+bool FFuListViewItem::isThirdLevel() const
 {
-  if (this->getParentItem())
-    return this->getParentItem()->isSecondLevel();
-  return false;
+  FFuListViewItem* parent = this->getParentItem();
+  return parent ? parent->isSecondLevel() : false;
 }
 //----------------------------------------------------------------------------
 
@@ -123,7 +110,7 @@ void FFuListViewItem::toggleItem(bool notify)
     this->setToggleValue(TOGGLED,notify);
     break;
   case TOGGLED:
-    if (this->threeStepToggleAble)
+    if (this->toggleAble > 1)
       this->setToggleValue(HALFTOGGLED,notify);
     else
       this->setToggleValue(UNTOGGLED,notify);
@@ -132,5 +119,14 @@ void FFuListViewItem::toggleItem(bool notify)
     this->setToggleValue(UNTOGGLED,notify);
     break;
   }
+}
+//----------------------------------------------------------------------------
+
+void FFuListViewItem::setItemThreeStepToggleAble(bool able)
+{
+  if (able)
+    this->setItemToggleAble(3);
+  else if (this->toggleAble > 1)
+    this->toggleAble = 1;
 }
 //----------------------------------------------------------------------------
