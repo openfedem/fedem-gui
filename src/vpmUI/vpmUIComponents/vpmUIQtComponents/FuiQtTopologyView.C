@@ -5,6 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QStyleFactory>
+
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
 #include "FFuLib/FFuQtComponents/FFuQtFrame.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtTopologyView.H"
@@ -20,6 +22,7 @@ FuiQtTopologyView::FuiQtTopologyView(QWidget* parent, const char* name)
   FFuQtListView* qlv;
   myView = qlv = new FFuQtListView(qfr,3);
   qlv->setFocusPolicy(Qt::NoFocus);
+  qlv->setStyle(QStyleFactory::create("windows")); // enable connector lines
 
   this->initWidgets();
 }

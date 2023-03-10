@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QtGui/QPixmap>
-#include <QtGui/QPainter>
 
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
 #include "FFuLib/FFuQtComponents/FFuQtListViewItem.H"
@@ -19,7 +18,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 FFuQtListViewItem::FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* after,const char* label)
-  : Q3ListViewItem(parent,after)
+  : QTreeWidgetItem(parent,after)
 {
   this->setItemText(0,label);
 }
@@ -27,14 +26,14 @@ FFuQtListViewItem::FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* af
 
 FFuQtListViewItem::FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* after,
 				     FFuQtListViewItem* original)
-  : Q3ListViewItem(parent,after)
+  : QTreeWidgetItem(parent,after)
 {
   this->copyData(original);
 }
 //----------------------------------------------------------------------------
 
 FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,const char* label)
-  : Q3ListViewItem(parent,after)
+  : QTreeWidgetItem(parent,after)
 {
   this->setItemText(0,label);
 }
@@ -42,7 +41,7 @@ FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem
 
 FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,
 				     FFuQtListViewItem* original)
-  : Q3ListViewItem(parent,after)
+  : QTreeWidgetItem(parent,after)
 {
   this->copyData(original);
 }
@@ -50,19 +49,31 @@ FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem
 
 void FFuQtListViewItem::copyPixmaps(FFuListViewItem* original)
 {
-  for (int i = 0; i < this->getListView()->getNColumns(); i++)
+  QTreeWidgetItem* item = dynamic_cast<QTreeWidgetItem*>(original);
+  if (!item) return;
+
+  for (int col = 0; col < this->columnCount(); col++)
   {
-    Q3ListViewItem* qitem = dynamic_cast<Q3ListViewItem*>(original);
-    if (qitem)
-    {
-      const QPixmap* pm = qitem->pixmap(i);
-      if (pm) this->setPixmap(i,QPixmap(*pm));
-    }
+    QIcon ic = item->icon(col);
+    if (!ic.isNull()) this->setIcon(col,ic);
   }
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListViewItem::setItemText(int col,const char* text)
+void FFuQtListViewItem::copyTexts(FFuListViewItem* original)
+{
+  QTreeWidgetItem* item = dynamic_cast<QTreeWidgetItem*>(original);
+  if (!item) return;
+
+  for (int col = 0; col < item->columnCount(); col++)
+  {
+    this->setText(col,item->text(col));
+    this->setFont(col,item->font(col));
+  }
+}
+//----------------------------------------------------------------------------
+
+void FFuQtListViewItem::setItemText(int col, const char* text)
 {
   this->setText(col,text);
 }
@@ -76,40 +87,35 @@ std::string FFuQtListViewItem::getItemText(int col) const
 
 void FFuQtListViewItem::setItemTextBold(int col, bool bold)
 {
-  this->boldtext = bold;
-  this->repaint();
+  QFont myFont(this->font(col));
+  myFont.setBold(bold);
+  this->setFont(col,myFont);
 }
-
 //----------------------------------------------------------------------------
 
 void FFuQtListViewItem::setItemTextItalic(int col, bool italic)
 {
-  this->italictext = italic;
-  this->repaint();
+  QFont myFont(this->font(col));
+  myFont.setItalic(italic);
+  this->setFont(col,myFont);
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListViewItem::setItemImage(int col,const char **pixmap)
+void FFuQtListViewItem::setItemImage(int col, const char** pixmap)
 {
-  this->setPixmap(col, FFuaQtPixmapCache::getPixmap(pixmap));
-}
-//----------------------------------------------------------------------------
-
-bool FFuQtListViewItem::isItemSelected() const
-{
-  return this->isSelected();
+  this->setIcon(col, QIcon(FFuaQtPixmapCache::getPixmap(pixmap)));
 }
 //----------------------------------------------------------------------------
 
 void FFuQtListViewItem::setItemSelectable(bool enable)
 {
-  this->setSelectable(enable);
+  this->toggleFlag(enable,Qt::ItemIsSelectable);
 }
 //----------------------------------------------------------------------------
 
 FFuListView* FFuQtListViewItem::getListView() const
 {
-  return dynamic_cast<FFuListView*>(this->listView());
+  return dynamic_cast<FFuListView*>(this->treeWidget());
 }
 //----------------------------------------------------------------------------
 
@@ -121,23 +127,33 @@ FFuListViewItem* FFuQtListViewItem::getParentItem() const
 
 FFuListViewItem* FFuQtListViewItem::getFirstChildItem() const
 {
-  return dynamic_cast<FFuListViewItem*>(this->firstChild());
+  return dynamic_cast<FFuListViewItem*>(this->child(0));
 }
 //----------------------------------------------------------------------------
 
 FFuListViewItem* FFuQtListViewItem::getNextSiblingItem() const
 {
-  return dynamic_cast<FFuListViewItem*>(this->nextSibling());
+  QTreeWidgetItem* nSI = NULL;
+  if (this->parent())
+  {
+    for (int i = 0; i+1 < this->parent()->childCount() && !nSI; i++)
+      if (this->parent()->child(i) == this)
+        nSI = this->parent()->child(i+1);
+  }
+  else if (this->treeWidget())
+  {
+    for (int i = 0; i+1 < this->treeWidget()->topLevelItemCount() && !nSI; i++)
+      if (this->treeWidget()->topLevelItem(i) == this)
+        nSI = this->treeWidget()->topLevelItem(i+1);
+  }
+
+  return dynamic_cast<FFuListViewItem*>(nSI);
 }
 //----------------------------------------------------------------------------
 
 FFuListViewItem* FFuQtListViewItem::getLastChildItem() const
 {
-  Q3ListViewItem* item = this->firstChild();
-  while (item && item->nextSibling())
-    item = item->nextSibling();
-
-  return dynamic_cast<FFuListViewItem*>(item);
+  return dynamic_cast<FFuListViewItem*>(this->child(this->childCount()-1));
 }
 //----------------------------------------------------------------------------
 
@@ -146,13 +162,7 @@ int FFuQtListViewItem::getNSiblings() const
   if (this->parent())
     return this->parent()->childCount();
   else
-    return this->listView()->childCount();
-}
-//----------------------------------------------------------------------------
-
-int FFuQtListViewItem::getNChildren() const
-{
-  return this->childCount();
+    return this->treeWidget()->topLevelItemCount();
 }
 //----------------------------------------------------------------------------
 
@@ -165,7 +175,7 @@ void FFuQtListViewItem::setItemToggleAble(unsigned char able)
   if (this->toggleAble)
     this->setToggleValue(this->toggle,false);
   else {
-    this->setPixmap(0,QPixmap(untoggled_xpm));
+    this->setIcon(0,QIcon(QPixmap(untoggled_xpm)));
     this->toggle = UNTOGGLED;
   }
 }
@@ -183,9 +193,9 @@ void FFuQtListViewItem::setToggleValue(int toggleVal, bool notify)
   this->setItemToggleAble(true);
 
   switch (this->toggle) {
-  case UNTOGGLED:   this->setPixmap(0,QPixmap(untoggled_xpm)); break;
-  case TOGGLED:     this->setPixmap(0,QPixmap(toggled_xpm)); break;
-  case HALFTOGGLED: this->setPixmap(0,QPixmap(halftoggled_xpm)); break;
+  case UNTOGGLED:   this->setIcon(0,QIcon(QPixmap(untoggled_xpm))); break;
+  case TOGGLED:     this->setIcon(0,QIcon(QPixmap(toggled_xpm))); break;
+  case HALFTOGGLED: this->setIcon(0,QIcon(QPixmap(halftoggled_xpm))); break;
   }
 
   if (notify)
@@ -193,36 +203,19 @@ void FFuQtListViewItem::setToggleValue(int toggleVal, bool notify)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListViewItem::setSelected(bool isSelected)
-{
-  this->Q3ListViewItem::setSelected(isSelected);
-}
-//----------------------------------------------------------------------------
-
-void FFuQtListViewItem::paintCell(QPainter* p,const QColorGroup& cg,int column,int width,int align)
-{
-  QFont newfont(p->font());
-  newfont.setBold(this->boldtext);
-  newfont.setItalic(this->italictext);
-  p->setFont(newfont);
-
-  this->Q3ListViewItem::paintCell(p,cg,column,width,align);
-}
-//----------------------------------------------------------------------------
-
-void FFuQtListViewItem::paintFocus(QPainter* p,const QColorGroup& cg,const QRect& r)
-{
-  this->Q3ListViewItem::paintFocus(p,cg,r);
-}
-//----------------------------------------------------------------------------
-
 void FFuQtListViewItem::setItemDropable(bool enable)
 {
-  this->setDropEnabled(enable);
+  this->toggleFlag(enable,Qt::ItemIsDropEnabled);
 }
 //----------------------------------------------------------------------------
 
 void FFuQtListViewItem::setItemDragable(bool enable)
 {
-  this->setDragEnabled(enable);
+  this->toggleFlag(enable,Qt::ItemIsDragEnabled);
+}
+//----------------------------------------------------------------------------
+
+void FFuQtListViewItem::toggleFlag(bool enable, Qt::ItemFlags flag)
+{
+  this->setFlags(enable ? this->flags() | flag : this->flags() & ~flag);
 }

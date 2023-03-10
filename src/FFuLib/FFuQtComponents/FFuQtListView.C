@@ -5,7 +5,7 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <Qt3Support/Q3Header>
+#include <QHeaderView>
 #include <QMouseEvent>
 
 #include "FFuLib/FFuQtComponents/FFuQtListViewItem.H"
@@ -15,32 +15,27 @@
 //----------------------------------------------------------------------------
 
 FFuQtListView::FFuQtListView(QWidget* parent, int nColumns, const char* name)
-  : Q3ListView(parent)
+  : QTreeWidget(parent)
 {
-  this->setObjectName(name);
   this->setWidget(this);
-
-  for (int c = 0; c < nColumns; c++)
-    this->addColumn("empty");
+  this->setColumnCount(nColumns);
+  this->setObjectName(name);
+  this->setSglSelectionMode(true);
+  this->setListSorting(-1,true); // disable sorting
+  this->setAllListColumnsShowSelection(true);
 
   this->popUpMenu = new FFuQtPopUpMenu(this);
 
-#ifndef linux
-  this->setSglSelectionMode(true);
-  this->setListSorting(-1); // disable sorting
-  this->setAllListColumnsShowSelection(true);
-#endif
-
-  QObject::connect(this,SIGNAL(selectionChanged()),
-		   this,SLOT(fwdSelectionChanged()));
-  QObject::connect(this,SIGNAL(expanded(Q3ListViewItem*)),
-		   this,SLOT(fwdExpanded(Q3ListViewItem*)));
-  QObject::connect(this,SIGNAL(collapsed(Q3ListViewItem*)),
-		   this,SLOT(fwdCollapsed(Q3ListViewItem*)));
-  QObject::connect(this,SIGNAL(returnPressed(Q3ListViewItem*)),
-		   this,SLOT(fwdReturnPressed(Q3ListViewItem*)));
-  QObject::connect(this,SIGNAL(doubleClicked(Q3ListViewItem*)),
-		   this,SLOT(fwdDoubleClicked(Q3ListViewItem*)));
+  QObject::connect(this, SIGNAL(itemSelectionChanged()),
+                   this, SLOT(fwdSelectionChanged()));
+  QObject::connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)),
+                   this, SLOT(fwdExpanded(QTreeWidgetItem*)));
+  QObject::connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)),
+                   this, SLOT(fwdCollapsed(QTreeWidgetItem*)));
+  QObject::connect(this, SIGNAL(itemActivated(QTreeWidgetItem*,int)),
+                   this, SLOT(fwdReturnPressed(QTreeWidgetItem*,int)));
+  QObject::connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
+                   this, SLOT(fwdDoubleClicked(QTreeWidgetItem*,int)));
 }
 //----------------------------------------------------------------------------
 
@@ -50,39 +45,39 @@ void FFuQtListView::fwdSelectionChanged()
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::fwdExpanded(Q3ListViewItem* item)
+void FFuQtListView::fwdExpanded(QTreeWidgetItem* item)
 {
   this->onListItemOpened(dynamic_cast<FFuListViewItem*>(item),true);
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::fwdCollapsed(Q3ListViewItem* item)
+void FFuQtListView::fwdCollapsed(QTreeWidgetItem* item)
 {
   this->onListItemOpened(dynamic_cast<FFuListViewItem*>(item),false);
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::fwdReturnPressed(Q3ListViewItem* item)
+void FFuQtListView::fwdReturnPressed(QTreeWidgetItem* item, int)
 {
   this->invokeReturnPressedCB(dynamic_cast<FFuListViewItem*>(item));
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::fwdDoubleClicked(Q3ListViewItem* item)
+void FFuQtListView::fwdDoubleClicked(QTreeWidgetItem* item, int)
 {
   this->invokeDoubleClickedCB(dynamic_cast<FFuListViewItem*>(item));
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::setListSorting(int column,bool ascending)
+void FFuQtListView::setListSorting(int column, bool ascnd)
 {
-  this->setSorting(column,ascending);
+  this->sortByColumn(column, ascnd ? Qt::AscendingOrder : Qt::DescendingOrder);
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::setHeaderClickEnabled(int column,bool enable)
+void FFuQtListView::setHeaderClickEnabled(int, bool enable)
 {
-  this->header()->setClickEnabled(enable,column);
+  this->header()->setClickable(enable);
 }
 //----------------------------------------------------------------------------
 
@@ -94,7 +89,7 @@ void FFuQtListView::setListRootIsDecorated(bool enable)
 
 void FFuQtListView::setSglSelectionMode(bool single)
 {
-  this->setSelectionMode(single ? Q3ListView::Single : Q3ListView::Extended);
+  this->setSelectionMode(single ? SingleSelection : ExtendedSelection);
 }
 //----------------------------------------------------------------------------
 
@@ -122,8 +117,11 @@ void FFuQtListView::clearList()
 
 void FFuQtListView::setListColumns(const std::vector<const char*>& labels)
 {
+  QStringList qLabels;
+  qLabels.reserve(labels.size());
   for (const char* label : labels)
-    this->addColumn(label);
+    qLabels.push_back(label);
+  this->setHeaderLabels(qLabels);
 }
 //----------------------------------------------------------------------------
 
@@ -133,16 +131,24 @@ void FFuQtListView::setListColumnWidth(int column, int width)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::permSelectListItem(FFuListViewItem* item, bool select, bool notify)
+void FFuQtListView::resizeListColumnsToContents()
 {
-  Q3ListViewItem* qitem = dynamic_cast<Q3ListViewItem*>(item);
+  for (int col = 0; col < this->columnCount(); col++)
+    this->resizeColumnToContents(col);
+}
+//----------------------------------------------------------------------------
+
+void FFuQtListView::permSelectListItem(FFuListViewItem* item,
+                                       bool select, bool notify)
+{
+  QTreeWidgetItem* qitem = dynamic_cast<QTreeWidgetItem*>(item);
   if (!qitem) return;
 
   bool wasblocked = this->areLibSignalsBlocked();
 
   if (!notify)
     this->blockLibSignals(true);
-  this->setSelected(qitem,select);
+  qitem->setSelected(select);
 
   this->blockLibSignals(wasblocked);
 }
@@ -160,37 +166,32 @@ void FFuQtListView::clearListSelection(bool notify)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::openListItem(FFuListViewItem* item,bool open,bool notify)
+void FFuQtListView::openListItem(FFuListViewItem* item,
+                                 bool open, bool notify)
 {
-  Q3ListViewItem* qitem = dynamic_cast<Q3ListViewItem*>(item);
+  QTreeWidgetItem* qitem = dynamic_cast<QTreeWidgetItem*>(item);
   if (!qitem) return;
 
   bool wasblocked = this->areLibSignalsBlocked();
 
   if (!notify)
     this->blockLibSignals(true);
-  qitem->setOpen(open);
+  qitem->setExpanded(open);
 
   this->blockLibSignals(wasblocked);
 }
 //----------------------------------------------------------------------------
 
-bool FFuQtListView::isExpanded(FFuListViewItem* item)
+void FFuQtListView::ensureListItemVisible(FFuListViewItem* item, bool notify)
 {
-  Q3ListViewItem* qitem = dynamic_cast<Q3ListViewItem*>(item);
-  return qitem ? this->isOpen(qitem) : false;
-}
-
-void FFuQtListView::ensureListItemVisible(FFuListViewItem* item,bool notify)
-{
-  Q3ListViewItem* qitem = dynamic_cast<Q3ListViewItem*>(item);
+  QTreeWidgetItem* qitem = dynamic_cast<QTreeWidgetItem*>(item);
   if (!qitem) return;
 
   bool wasblocked = this->areLibSignalsBlocked();
 
   if (!notify)
     this->blockLibSignals(true);
-  this->ensureItemVisible(qitem);
+  this->scrollTo(this->indexFromItem(qitem));
 
   this->blockLibSignals(wasblocked);
 }
@@ -198,7 +199,10 @@ void FFuQtListView::ensureListItemVisible(FFuListViewItem* item,bool notify)
 
 FFuListViewItem* FFuQtListView::getSelectedListItemSglMode()
 {
-  return dynamic_cast<FFuListViewItem*>(this->selectedItem());
+  QList<QTreeWidgetItem*> selected = this->selectedItems();
+  if (selected.isEmpty()) return NULL;
+
+  return dynamic_cast<FFuListViewItem*>(selected.front());
 }
 //----------------------------------------------------------------------------
 
@@ -210,20 +214,13 @@ FFuListViewItem* FFuQtListView::getCurrentListItem()
 
 FFuListViewItem* FFuQtListView::getFirstChildItem()
 {
-  return dynamic_cast<FFuListViewItem*>(this->firstChild());
+  return dynamic_cast<FFuListViewItem*>(this->topLevelItem(0));
 }
 //----------------------------------------------------------------------------
-
 
 bool FFuQtListView::isSglSelectionMode() const
 {
-  return this->selectionMode() == Q3ListView::Single;
-}
-//----------------------------------------------------------------------------
-
-int FFuQtListView::getNColumns()
-{
-  return this->columns();
+  return this->selectionMode() == SingleSelection;
 }
 //----------------------------------------------------------------------------
 
@@ -303,7 +300,7 @@ void FFuQtListView::setColors(FFuaPalette aPalette)
 
   QPalette textFieldPalette(textFieldNormal, textFieldDisabled, textFieldNormal);
 
-  this->Q3ListView::setPalette(textFieldPalette);
+  this->setPalette(textFieldPalette);
 
   QColorGroup stdNormal   (TextOnStdBackground,
 			   StdBackground,
@@ -335,7 +332,7 @@ void FFuQtListView::setFonts (FFuaFontSet aFontSet)
   listviewFont.setBold     (aFontSet.TextFieldFont.IsBold  );
   listviewFont.setItalic   (aFontSet.TextFieldFont.IsItalic);
 
-  this->Q3ListView::setFont(listviewFont);
+  this->setFont(listviewFont);
 
   QFont stdFont;
   stdFont.setFamily   (aFontSet.StandardFont.Family.c_str());
@@ -347,43 +344,39 @@ void FFuQtListView::setFonts (FFuaFontSet aFontSet)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::viewportMousePressEvent(QMouseEvent* e)
+void FFuQtListView::mousePressEvent(QMouseEvent* e)
 {
-  // every press not only on items
-  FFuListViewItem* listItem = dynamic_cast<FFuListViewItem*>(this->itemAt(e->pos()));
-  if (listItem && e->button() == Qt::LeftButton)
+  FFuListViewItem* item = dynamic_cast<FFuListViewItem*>(this->itemAt(e->pos()));
+  if (e->button() & Qt::LeftButton)
+  {
+    if (item && item->isItemToggleAble()) // Manual toggling
     {
-      // manual toggling
-      if (listItem->isItemToggleAble()) {
-	int offset = this->rootIsDecorated() ? this->treeStepSize() : 0;
-	FFuListViewItem* parent = listItem;
-	while ((parent = parent->getParentItem()))
-	  offset += this->treeStepSize();
-	if (offset < e->pos().x() && e->pos().x() < offset+15) {
-	  listItem->toggleItem(true);
-	  return;
-	}
+      int levels = item->getDepth() + (this->rootIsDecorated() ? 1 : 0);
+      int offset = e->pos().x() - this->indentation()*levels;
+      if (offset > 0 && offset < 15)
+      {
+        item->toggleItem(true);
+        return;
       }
+    }
 
-      // Changed 28.10.16 (kmo): Invoke call-back method before
-      // the Q3ListView::viewportMousePressEvent call
-      this->invokeLeftMouseBPressedCB(listItem);
-      this->Q3ListView::viewportMousePressEvent(e);
-    }
-  else if (e->button() == Qt::RightButton)
-    {
-      this->invokeRightMouseBPressedCB(listItem);
-      this->executePopUp(listItem);
-    }
+    this->invokeLeftMouseBPressedCB(item);
+  }
+  else if (e->button() & Qt::RightButton)
+  {
+    this->invokeRightMouseBPressedCB(item);
+    this->executePopUp(item);
+  }
+
+  this->QTreeWidget::mousePressEvent(e);
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::viewportMouseReleaseEvent(QMouseEvent* e)
+void FFuQtListView::mouseReleaseEvent(QMouseEvent* e)
 {
-  // every release not only on items
-  if (e->button() == Qt::LeftButton)
+  if (e->button() & Qt::LeftButton)
     this->invokeLeftMouseBReleaseCB();
 
-  this->Q3ListView::viewportMouseReleaseEvent(e);
+  this->QTreeWidget::mouseReleaseEvent(e);
 }
 //----------------------------------------------------------------------------

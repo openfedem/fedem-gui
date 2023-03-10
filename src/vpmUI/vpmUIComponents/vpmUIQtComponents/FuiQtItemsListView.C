@@ -7,20 +7,19 @@
 
 #include <QEvent>
 #include <QDropEvent>
+#include <QStyleFactory>
 
+#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtItemsListView.H"
 #include "FFuLib/FFuQtComponents/FFuQtListViewItem.H"
-#include "FuiQtItemsListView.H"
 
 //----------------------------------------------------------------------------
 
 FuiQtItemsListView::FuiQtItemsListView(QWidget* parent, const char* name)
   : FFuQtListView(parent,1,name)
 {
-  connect(this, SIGNAL(dropped(QDropEvent*)),
-          this, SLOT(onDropped(QDropEvent*)));
-
-  setStyleSheet("selection-color: white;"
-                "selection-background-color: #3399ff;");
+  this->setStyle(QStyleFactory::create("windows")); // enable connector lines
+  this->setStyleSheet("selection-color: white;"
+                      "selection-background-color: #3399ff;");
 }
 //----------------------------------------------------------------------------
 
@@ -57,11 +56,10 @@ bool FuiQtItemsListView::event(QEvent* e)
 }
 //----------------------------------------------------------------------------
 
-void FuiQtItemsListView::onDropped(QDropEvent* e)
+void FuiQtItemsListView::dropEvent(QDropEvent* e)
 {
-  Q3ListViewItem* dropItem = this->itemAt(this->contentsToViewport(e->pos()));
-  FFuQtListViewItem* dropItemFFu = dynamic_cast<FFuQtListViewItem*>(dropItem);
-
-  int itemId = dropItemFFu ? dropItemFFu->getItemId() : -1;
-  this->droppedCB.invoke(itemId, e->dropAction() == Qt::CopyAction, e);
+  QTreeWidgetItem* qtDropItem = this->itemAt(e->pos());
+  FFuQtListViewItem* dropItem = dynamic_cast<FFuQtListViewItem*>(qtDropItem);
+  this->droppedCB.invoke(dropItem ? dropItem->getItemId() : -1,
+                         e->dropAction() & Qt::CopyAction, e);
 }

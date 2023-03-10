@@ -100,6 +100,7 @@ public:
   virtual void setListColumns(const std::vector<const char*>& labels) = 0;
   // sets the width mode to MANUAL for this column, default is MAXIMUM
   virtual void setListColumnWidth(int column, int width) = 0;
+  virtual void resizeListColumnsToContents() = 0;
 
   // The notify setting is loyal to FFuComponentBase::blockNotification
   // In single sel mode this method touches other items selection, in other modes it does not.
@@ -122,9 +123,6 @@ public:
   std::vector<FFuListViewItem*> getListChildren(FFuListViewItem* parent);//ordered in lv order 
   //all levels below parent, if parent = 0 all lv
   std::vector<FFuListViewItem*> getAllListChildren(FFuListViewItem* parent);//ordered in lv order 
-
-  virtual bool isExpanded(FFuListViewItem* item) = 0;
-  virtual int getNColumns() = 0;
 
   FFuListViewItem* getListItem(int itemId);
 

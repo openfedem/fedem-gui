@@ -17,18 +17,13 @@ FFuListViewItem::FFuListViewItem()
 
   this->toggle = UNTOGGLED;
   this->toggleAble = false;
-  this->boldtext = false;
-  this->italictext = false;
 }
 //----------------------------------------------------------------------------
 
 void FFuListViewItem::copyData(FFuListViewItem* original)
 {
   this->copyPixmaps(original);
-  this->setItemTextBold(original->boldtext);
-  this->setItemTextItalic(original->italictext);
-  for (int i=0;i<this->getListView()->getNColumns();i++)
-    this->setItemText(i,original->getItemText(i).c_str());
+  this->copyTexts(original);
 
   if (original->toggleAble) {
     this->setItemToggleAble(original->toggleAble);

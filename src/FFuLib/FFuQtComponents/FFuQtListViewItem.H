@@ -9,12 +9,12 @@
 #define FFU_QT_LIST_VIEW_ITEM_H
 
 #include "FFuLib/FFuListViewItem.H"
-#include <Qt3Support/Q3ListView>
-
+#include <QTreeWidgetItem>
 
 class FFuQtListView;
 
-class FFuQtListViewItem : public Q3ListViewItem, public FFuListViewItem
+
+class FFuQtListViewItem : public QTreeWidgetItem, public FFuListViewItem
 {
 public:
   // If parent=0, the item is created at top level in the list view
@@ -24,7 +24,9 @@ public:
   FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,const char* label);
   FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,FFuQtListViewItem* original);
   virtual ~FFuQtListViewItem() {}
+
   virtual void copyPixmaps(FFuListViewItem* original);
+  virtual void copyTexts(FFuListViewItem* original);
 
   virtual void        setItemText(int col, const char* text);
   virtual std::string getItemText(int col) const;
@@ -32,7 +34,8 @@ public:
   virtual void setItemTextItalic(int col, bool italic);
   virtual void setItemImage(int col, const char** pixmap);
   virtual void setItemSelectable(bool enable);
-  virtual bool isItemSelected() const;
+  virtual bool isItemSelected() const { return this->isSelected(); }
+  virtual bool isItemExpanded() const { return this->isExpanded(); }
 
   virtual FFuListView*     getListView() const;
   virtual FFuListViewItem* getParentItem() const;
@@ -40,7 +43,8 @@ public:
   virtual FFuListViewItem* getLastChildItem() const;
   virtual FFuListViewItem* getNextSiblingItem() const;
   virtual int              getNSiblings() const;
-  virtual int              getNChildren() const;
+  virtual int              getNChildren() const { return this->childCount(); }
+  virtual int              getNColumns() const { return this->columnCount(); }
 
   virtual void setItemToggleAble(unsigned char able);
   virtual void setToggleValue(int toggle, bool notify);
@@ -49,10 +53,7 @@ public:
   virtual void setItemDragable(bool enable);
 
 private:
-  //reimpl from QListItem
-  virtual void setSelected(bool selected);
-  virtual void paintCell(QPainter* p,const QColorGroup& cg,int column,int width,int align);
-  virtual void paintFocus(QPainter* p,const QColorGroup& cg,const QRect& r);
+  void toggleFlag(bool enable, Qt::ItemFlags flag);
 };
 
 #endif

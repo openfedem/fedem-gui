@@ -145,7 +145,7 @@ bool FuiMiniFileBrowser::isItemPresent(int id)
 bool FuiMiniFileBrowser::isItemExpanded(int id)
 {
   FFuListViewItem* item = listView->getListItem(id);
-  return item ? listView->isExpanded(item) : false;
+  return item ? item->isItemExpanded() : false;
 }
 
 

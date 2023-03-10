@@ -36,6 +36,7 @@ protected:
   // Copy text/toggle etc, but not ID (this item is unique)
   void copyData(FFuListViewItem* original);
   virtual void copyPixmaps(FFuListViewItem* original)=0;
+  virtual void copyTexts(FFuListViewItem* original)=0;
 
 public:
   // Basic item functions
@@ -50,6 +51,8 @@ public:
   virtual void setItemSelectable(bool enable) = 0;
   virtual bool isItemSelected() const = 0;
 
+  virtual bool isItemExpanded() const = 0;
+
   // Relations
   virtual FFuListView*     getListView() const = 0;
   virtual FFuListViewItem* getParentItem() const = 0;
@@ -59,6 +62,7 @@ public:
           FFuListViewItem* getPreviousSiblingItem() const;
   virtual int              getNSiblings() const = 0; // with me included
   virtual int              getNChildren() const = 0;
+  virtual int              getNColumns() const = 0;
 
   int getItemPosition() const; // starts with 0
   int getDepth() const;
@@ -85,9 +89,6 @@ protected:
   int itemId;
   int toggle;
   unsigned char toggleAble; // 0, 1 or 3=three-step-toggleble
-
-  //itemtext manipulations
-  bool boldtext,italictext;  
 };
 
 #endif

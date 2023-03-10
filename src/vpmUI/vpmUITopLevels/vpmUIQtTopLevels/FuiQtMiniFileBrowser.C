@@ -5,6 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QStyleFactory>
+
 #include "FFuLib/FFuQtComponents/FFuQtMemo.H"
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
 #include "FFuLib/FFuQtComponents/FFuQtSplitter.H"
@@ -28,8 +30,8 @@ FuiQtMiniFileBrowser::FuiQtMiniFileBrowser(int xpos, int ypos,
   FFuQtListView* qListView = new FFuQtListView(qSplitter);
   FFuQtMemo*     qInfoView = new FFuQtMemo(qSplitter);
 
-  QFont afont("Courier",8);
-  qInfoView->setFont(afont);
+  qListView->setStyle(QStyleFactory::create("windows"));
+  qInfoView->setFont({"Courier",8});
 
   dialogButtons = new FFuQtDialogButtons(this);
 
