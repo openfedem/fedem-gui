@@ -16,11 +16,10 @@
 FuiQtItemsListView::FuiQtItemsListView(QWidget* parent, const char* name)
   : FFuQtListView(parent,1,name)
 {
-  connect(this, SIGNAL(dropped(QDropEvent*)),
-          this, SLOT(onDropped(QDropEvent*)));
+  connect(this, SIGNAL(dropped(QDropEvent*)), this, SLOT(onDropped(QDropEvent*)));
 
-  setStyleSheet("selection-color: white;"
-                "selection-background-color: #3399ff;");
+  this->setStyleSheet("selection-color: white;"
+                      "selection-background-color: #3399ff;");
 }
 //----------------------------------------------------------------------------
 
@@ -59,7 +58,7 @@ bool FuiQtItemsListView::event(QEvent* e)
 
 void FuiQtItemsListView::onDropped(QDropEvent* e)
 {
-  Q3ListViewItem* dropItem = this->itemAt(this->contentsToViewport(e->pos()));
+  QTreeWidgetItem* dropItem = this->itemAt(e->pos()); // this->contentsToViewport(e->pos())); // TODO contentsToViewport does not exist in Qt6, need replacement?
   FFuQtListViewItem* dropItemFFu = dynamic_cast<FFuQtListViewItem*>(dropItem);
 
   int itemId = dropItemFFu ? dropItemFFu->getItemId() : -1;

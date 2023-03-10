@@ -32,20 +32,13 @@ FFuListViewItem::FFuListViewItem()
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem::~FFuListViewItem()
-{
-}
-//----------------------------------------------------------------------------
-
 void FFuListViewItem::copyData(FFuListViewItem* original)
 {
   this->col0Pixmap = original->col0Pixmap;
   this->copyPixmaps(original);
-
+  this->copyTexts(original);
   this->setItemTextBold(original->boldtext);
   this->setItemTextItalic(original->italictext);
-  for (int i=0;i<this->getListView()->getNColumns();i++)
-    this->setItemText(i,original->getItemText(i));
 
   if (original->toggleAble) {
     this->setItemToggleAble(original->toggleAble);
@@ -55,7 +48,7 @@ void FFuListViewItem::copyData(FFuListViewItem* original)
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuListViewItem::getPreviousSiblingItem()
+FFuListViewItem* FFuListViewItem::getPreviousSiblingItem() const
 {
   FFuListViewItem* item = this->getParentItem();
   if (item)
@@ -76,7 +69,7 @@ FFuListViewItem* FFuListViewItem::getPreviousSiblingItem()
 }
 //----------------------------------------------------------------------------
 
-int FFuListViewItem::getItemPosition()
+int FFuListViewItem::getItemPosition() const
 {
   FFuListViewItem* sibling = this->getParentItem();
   if (sibling)
@@ -94,25 +87,30 @@ int FFuListViewItem::getItemPosition()
 }
 //----------------------------------------------------------------------------
 
-bool FFuListViewItem::isFirstLevel()
+int FFuListViewItem::getDepth() const
+{
+  FFuListViewItem* parent = this->getParentItem();
+  return parent ? parent->getDepth()+1 : 0;
+}
+//----------------------------------------------------------------------------
+
+bool FFuListViewItem::isFirstLevel() const
 {
   return this->getParentItem() ? false : true;
 }
 //----------------------------------------------------------------------------
 
-bool FFuListViewItem::isSecondLevel()
+bool FFuListViewItem::isSecondLevel() const
 {
-  if (this->getParentItem())
-    return this->getParentItem()->isFirstLevel();
-  return false;
+  FFuListViewItem* parent = this->getParentItem();
+  return parent ? parent->isFirstLevel() : false;
 }
 //----------------------------------------------------------------------------
 
-bool FFuListViewItem::isThirdLevel()
+bool FFuListViewItem::isThirdLevel() const
 {
-  if (this->getParentItem())
-    return this->getParentItem()->isSecondLevel();
-  return false;
+  FFuListViewItem* parent = this->getParentItem();
+  return parent ? parent->isSecondLevel() : false;
 }
 //----------------------------------------------------------------------------
 

@@ -8,7 +8,7 @@
 #ifndef FFU_LIST_VIEW_ITEM_H
 #define FFU_LIST_VIEW_ITEM_H
 
-#include "FFaLib/FFaDynCalls/FFaDynCB.H"
+#include <string>
 
 class FFuListView;
 
@@ -23,23 +23,24 @@ class FFuListView;
   \date Mar 5 1999
 */
 
-class FFuListViewItem 
+class FFuListViewItem
 {
 public:
   FFuListViewItem();
-  virtual ~FFuListViewItem();
+  virtual ~FFuListViewItem() {}
   
   // Unique item identifier
-  int  getItemId()       { return this->itemId;}
-  void setItemId(int id) { this->itemId = id ; }
+  int  getItemId() const { return itemId; }
+  void setItemId(int id) { itemId = id; }
 
   // Copy text/toggle etc, but not ID (this item is unique)
   void copyData(FFuListViewItem* original);
-  virtual void copyPixmaps(FFuListViewItem* original)=0;
+  virtual void copyPixmaps(FFuListViewItem* original) = 0;
+  virtual void copyTexts(FFuListViewItem* original) = 0;
   
   // Basic item functions
-  virtual void  setItemText(int col,const char* text)=0;
-  virtual char* getItemText(int col=0)=0;
+  virtual void        setItemText(int col, const char* text) = 0;
+  virtual std::string getItemText(int col) const = 0;
 
   virtual void  setItemTextBold(bool bold=true)=0;
   virtual void  setItemTextItalic(bool italic=true)=0;
@@ -48,35 +49,35 @@ public:
 
   virtual bool  isItemSelected()= 0;
 
-  virtual int   getDepth()=0;
-
   virtual void  setItemSelectable(bool enable)=0;
 
   // Relations
-  virtual FFuListView*     getListView()= 0;
-  virtual FFuListViewItem* getParentItem()= 0;
-  virtual FFuListViewItem* getFirstChildItem()= 0;
-  virtual FFuListViewItem* getLastChildItem()= 0;
-  virtual FFuListViewItem* getNextSiblingItem()= 0;
-          FFuListViewItem* getPreviousSiblingItem();
-  virtual int              getNSiblings() = 0;//with me included
-  virtual int              getNChildren() = 0;
-  int              getItemPosition();//starts with 0
-  
+  virtual FFuListView*     getListView() const = 0;
+  virtual FFuListViewItem* getParentItem() const = 0;
+  virtual FFuListViewItem* getFirstChildItem() const = 0;
+  virtual FFuListViewItem* getLastChildItem() const = 0;
+  virtual FFuListViewItem* getNextSiblingItem() const = 0;
+          FFuListViewItem* getPreviousSiblingItem() const;
+  virtual int              getNSiblings() const = 0; //with me included
+  virtual int              getNChildren() const = 0;
+
+  int getItemPosition() const; // starts with 0
+  int getDepth() const;
+
   virtual void setItemDropable(bool enable) = 0;
   virtual void setItemDragable(bool enable) = 0;
 
-
   // Levels
-  bool isFirstLevel(); // no parent 
-  bool isSecondLevel(); // no grandparent but parent 
-  bool isThirdLevel();  // no grand-grandparent but grandparent and parent 
+  bool isFirstLevel() const;  // no parent
+  bool isSecondLevel() const; // no grandparent but parent
+  bool isThirdLevel() const;  // no grand-grandparent but grandparent and parent
   
   
 
   //Toggle
   enum {UNTOGGLED,TOGGLED,HALFTOGGLED,NTOGGLES};//toggle
-  bool isItemToggleAble() {return this->toggleAble;}
+  bool isItemToggleAble() const { return toggleAble; }
+  int getToggleValue() const { return toggle; }
 
   //Togglestatus starts always on UNTOGGLED.
   virtual void setItemToggleAble(bool able)=0;
@@ -86,8 +87,6 @@ public:
   }
   virtual void setToggleValue(int toggle,bool notify=false)=0;
   void toggleItem(bool notify=false);
-
-  int getToggleValue() {return this->toggle;}
 
 protected:
   int itemId; 

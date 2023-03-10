@@ -9,12 +9,12 @@
 #define FFU_QT_LIST_VIEW_ITEM_H
 
 #include "FFuLib/FFuListViewItem.H"
-#include <Qt3Support/Q3ListView>
-
+#include <QTreeWidgetItem>
 
 class FFuQtListView;
 
-class FFuQtListViewItem : public Q3ListViewItem, public FFuListViewItem
+
+class FFuQtListViewItem : public QTreeWidgetItem, public FFuListViewItem
 {
 public:
   // If parent=0, the item is created at top level in the list view
@@ -24,36 +24,38 @@ public:
   FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,const char* label);
   FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,FFuQtListViewItem* original);
   virtual ~FFuQtListViewItem() {}
-  virtual void copyPixmaps(FFuListViewItem* original);
 
-  virtual void  setItemText(int col,const char* text);
-  virtual char* getItemText(int col=0);
-  virtual void setItemTextBold(bool bold=true);
-  virtual void setItemTextItalic(bool italic=true);
-  virtual void setItemImage(int col,const char **pixmap);
+  virtual void copyPixmaps(FFuListViewItem* original);
+  virtual void copyTexts(FFuListViewItem* original);
+
+  virtual void        setItemText(int col, const char* text);
+  virtual std::string getItemText(int col) const;
+  virtual void setItemTextBold(bool bold);
+  virtual void setItemTextItalic(bool italic);
+  virtual void setItemImage(int col, const char** pixmap);
   virtual bool isItemSelected();
-  virtual int  getDepth();
   virtual void setItemSelectable(bool enable);
 
-  virtual FFuListView*     getListView();
-  virtual FFuListViewItem* getParentItem();
-  virtual FFuListViewItem* getFirstChildItem();
-  virtual FFuListViewItem* getLastChildItem();
-  virtual FFuListViewItem* getNextSiblingItem();
-  virtual int              getNSiblings();
-  virtual int              getNChildren();
+  virtual FFuListView*     getListView() const;
+  virtual FFuListViewItem* getParentItem() const;
+  virtual FFuListViewItem* getFirstChildItem() const;
+  virtual FFuListViewItem* getLastChildItem() const;
+  virtual FFuListViewItem* getNextSiblingItem() const;
+  virtual int              getNSiblings() const;
+  virtual int              getNChildren() const;
 
   virtual void setItemToggleAble(bool able);
-  virtual void setToggleValue(int toggle,bool notify=false);
+  virtual void setToggleValue(int toggle, bool notify);
 
   virtual void setItemDropable(bool enable);
   virtual void setItemDragable(bool enable);
 
 private:
-  //reimpl from QListItem
   virtual void setSelected(bool selected);
+  /* TODO Not yet ported to Qt6
   virtual void paintCell(QPainter* p,const QColorGroup& cg,int column,int width,int align);
   virtual void paintFocus(QPainter* p,const QColorGroup& cg,const QRect& r);
+  end TODO */
 };
 
 #endif

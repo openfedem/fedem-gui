@@ -202,7 +202,7 @@ void FuiObjectBrowser::onSearchViewSelectionChanged()
   std::vector<FFuListViewItem*> lvItems = searchView->getSelectedListItems();
   if (lvItems.empty()) return;
 
-  int nBaseId = atol(lvItems.front()->getItemText(0));
+  int nBaseId = std::stoi(lvItems.front()->getItemText(0));
   FmSimulationModelBase* obj = dynamic_cast<FmSimulationModelBase*>(FmDB::findObject(nBaseId));
   if (obj) outputMemo->setAllText(obj->getObjectInfo().c_str());
 }
