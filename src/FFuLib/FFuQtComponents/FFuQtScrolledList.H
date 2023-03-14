@@ -8,13 +8,15 @@
 #ifndef FFU_QT_SCROLLED_LIST_H
 #define FFU_QT_SCROLLED_LIST_H
 
-#include <Qt3Support/Q3ListBox>
+#include <QListWidget>
 
 #include "FFuLib/FFuScrolledList.H"
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 
+class QModelIndex;
 
-class FFuQtScrolledList : public Q3ListBox, public FFuScrolledList, public FFuQtComponentBase
+
+class FFuQtScrolledList : public QListWidget, public FFuScrolledList, public FFuQtComponentBase
 {
   Q_OBJECT
 
@@ -41,8 +43,8 @@ public:
   virtual void setSensitivity(bool isSensitive);
 
 private slots:
-  void browseSelect(int index);
-  void activate(int index);
+  void browseSelect(const QModelIndex& index);
+  void activate(const QModelIndex& index);
   void deleteAll();
   void paste();
 

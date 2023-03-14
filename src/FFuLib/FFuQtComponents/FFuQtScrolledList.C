@@ -17,14 +17,16 @@
 #include "FFuLib/FFuQtComponents/FFuQtScrolledList.H"
 
 
-FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : Q3ListBox(parent,"FFuQtScrolledList")
+FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : QListWidget(parent)
 {
   this->setWidget(this);
   this->setAcceptDrops(true);
   this->setFocusPolicy(Qt::StrongFocus);
 
-  QObject::connect(this,SIGNAL(selected(int)),this,SLOT(activate(int)));
-  QObject::connect(this,SIGNAL(highlighted(int)),this,SLOT(browseSelect(int)));
+  QObject::connect(this, SIGNAL(activated(const QModelIndex&)),
+                   this, SLOT(activate(const QModelIndex&)));
+  QObject::connect(this, SIGNAL(pressed(const QModelIndex&)),
+                   this, SLOT(browseSelect(const QModelIndex&)));
 
   QShortcut* qPaste = new QShortcut(Qt::CTRL + Qt::Key_V, this);
   QObject::connect(qPaste, SIGNAL(activated()), this, SLOT(paste()));
@@ -38,24 +40,25 @@ FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : Q3ListBox(parent,"FFuQtS
 
 void FFuQtScrolledList::addItem(const std::string& item)
 {
-  this->insertItem(item.c_str());
+  this->QListWidget::addItem(item.c_str());
 }
 
 
 void FFuQtScrolledList::setItems(const std::vector<std::string>& items)
 {
-  this->setAutoUpdate(false);
-  this->clear();
+  QStringList itemList;
+  itemList.reserve(items.size());
   for (const std::string& item : items)
-    this->insertItem(item.c_str());
-  this->setAutoUpdate(true);
+    itemList.push_back(item.c_str());
+  this->clear();
+  this->addItems(itemList);
   this->repaint();
 }
 
 
 void FFuQtScrolledList::deleteItem(int index)
 {
-  this->removeItem(index);
+  this->removeItemWidget(this->item(index));
 }
 
 
@@ -67,19 +70,22 @@ void FFuQtScrolledList::deleteAllItems()
 
 int FFuQtScrolledList::getSelectedItemIndex() const
 {
-  return this->currentItem();
+  return this->indexFromItem(this->currentItem()).row();
 }
 
 void FFuQtScrolledList::selectItem(int index, bool notify)
 {
-  this->setCurrentItem(index);
-  if (notify)
-    this->browseSelect(index);
+  this->setCurrentRow(index);
+  if (notify) {
+    QListWidgetItem* item = this->item(index);
+    if (item) this->browseSelect(this->indexFromItem(item));
+  }
 }
 
 std::string FFuQtScrolledList::getItemText(int index) const
 {
-  return this->text(index).toStdString();
+  QListWidgetItem* item = this->item(index);
+  return item ? item->text().toStdString() : "";
 }
 
 int FFuQtScrolledList::getNumberOfItems() const
@@ -89,16 +95,16 @@ int FFuQtScrolledList::getNumberOfItems() const
 
 bool FFuQtScrolledList::isItemSelected(int index) const
 {
-  if (index < (int)this->count())
-    return this->isSelected(index);
-  else
+  if (index < 0 || index >= this->count())
     return false;
+
+  return this->getSelectedItemIndex() == index;
 }
 
 void FFuQtScrolledList::setSensitivity(bool isSensitive)
 {
   if (isSensitive) {
-    this->setSelectionMode(Single);
+    this->setSelectionMode(SingleSelection);
     this->setPaletteForegroundColor(QColor(0, 0, 0));
   }
   else {
@@ -109,14 +115,14 @@ void FFuQtScrolledList::setSensitivity(bool isSensitive)
 }
 
 
-void FFuQtScrolledList::browseSelect(int index)
+void FFuQtScrolledList::browseSelect(const QModelIndex&  index)
 {
-  myBrowseSelectCB.invoke(index);
+  myBrowseSelectCB.invoke(index.row());
 }
 
-void FFuQtScrolledList::activate(int index)
+void FFuQtScrolledList::activate(const QModelIndex&  index)
 {
-  myActivateCB.invoke(index);
+  myActivateCB.invoke(index.row());
 }
 
 void FFuQtScrolledList::deleteAll()
@@ -179,5 +185,5 @@ void FFuQtScrolledList::mousePressEvent(QMouseEvent* e)
   }
 #endif
 
-  this->Q3ListBox::mousePressEvent(e);
+  this->QListWidget::mousePressEvent(e);
 }
