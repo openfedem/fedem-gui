@@ -17,14 +17,16 @@ void FuiSummaryTable::initWidgets()
   mySummaryTable->setTableReadOnly(true);
   mySummaryTable->setSelectionPolicy(FFuTable::NO_SELECTION);
 
+/* Does not work with Qt4 due to unexpected recursion
   mySummaryTable->setColumnResizedCB(FFaDynCB3M(FuiSummaryTable,this,
 						columnSizeChanged,int,int,int));
+*/
   mySummaryTable->setCellDoubleClicked(FFaDynCB3M(FuiSummaryTable,this,
 						  tableDoubleClicked,int,int,int));
 
   myAddBCLabel->setLabel(" *) Fixed in initial equilibrium analysis");
   myAddBCLabel->setToolTip("Also fixed in eigenmode analysis\n"
-			   "if activated in the \"Dynamics Solver Setup\" dialog");
+                           "if activated in the \"Dynamics Solver\" dialog");
 }
 
 
