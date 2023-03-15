@@ -38,7 +38,7 @@ void FFuQtAction::toggled()
 }
 
 
-FFuQtPopUpMenu::FFuQtPopUpMenu(QWidget* parent) : Q3PopupMenu(parent)
+FFuQtPopUpMenu::FFuQtPopUpMenu(QWidget* parent) : QMenu(parent)
 {
   this->setWidget(this);
 }
@@ -46,7 +46,7 @@ FFuQtPopUpMenu::FFuQtPopUpMenu(QWidget* parent) : Q3PopupMenu(parent)
 
 FFuaCmdItem* FFuQtPopUpMenu::executeAtCursorPos()
 {
-  return this->findCmdItem(this->exec(QCursor::pos(),0));
+  return this->findCmdItem(this->actions().indexOf(this->exec(QCursor::pos())));
 }
 
 
@@ -58,7 +58,7 @@ bool FFuQtPopUpMenu::isMenuEmpty() const
 
 int FFuQtPopUpMenu::basicNewItem(FFuaCmdItem* item, FFuPopUpMenu* menu)
 {
-  Q3PopupMenu* qMenu = dynamic_cast<Q3PopupMenu*>(menu);
+  QMenu* qMenu = dynamic_cast<QMenu*>(menu);
   QAction* action = NULL;
 
   if (item->hasIcon() && !item->getText().empty())
