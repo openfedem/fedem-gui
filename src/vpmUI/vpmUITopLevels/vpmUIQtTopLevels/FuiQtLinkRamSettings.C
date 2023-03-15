@@ -27,10 +27,7 @@ FuiQtLinkRamSettings::FuiQtLinkRamSettings(QWidget* parent,
 					   const char* name)
   : FFuQtTopLevelShell(parent,xpos,ypos,width,height,title,name)
 {
-  FFuQtTable* tab = new FFuQtTable(this);
-  tab->setSorting(true);
-  tab->setVScrollBarMode(Q3ScrollView::AlwaysOn);
-  myTable = tab;
+  myTable = new FFuQtTable(this, false, true);
 
   dialogButtons = new FFuQtDialogButtons(this);
 

@@ -54,7 +54,7 @@ void FuiLinkRamSettings::initWidgets()
   myTable->setSelectionPolicy(FFuTable::NO_SELECTION);
 
   myTable->setColumnResizedCB(FFaDynCB3M(FuiLinkRamSettings, this, columnSizeChanged, int, int, int));
-  myTable->setCellDoubleClicked(FFaDynCB3M(FuiLinkRamSettings, this, tableDoubleClicked, int, int, int));
+  myTable->setCellDoubleClicked(FFaDynCB2M(FuiLinkRamSettings,this,tableDoubleClicked,int,int));
 
   this->FuiTopLevelDialog::initWidgets();
 }
@@ -187,11 +187,5 @@ void FuiLinkRamSettings::columnSizeChanged(int col, int oldSize, int newSize)
   for (i = ucol+1; i < myRelColWidths.size(); ++i)
     myRelColWidths[i] -= myRelColWidths[i]*difference/totRelColWidthRest;
 
-  this->updateColumnWidths();
-}
-
-
-void FuiLinkRamSettings::tableDoubleClicked(int, int, int)
-{
   this->updateColumnWidths();
 }

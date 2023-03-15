@@ -40,7 +40,7 @@ private:
 
   void updateColumnWidths();
   void columnSizeChanged(int col, int oldSize, int newSize);
-  void tableDoubleClicked(int row, int col, int button);
+  void tableDoubleClicked(int,int) { this->updateColumnWidths(); }
 
 protected:
   FFuTable* myTable;
