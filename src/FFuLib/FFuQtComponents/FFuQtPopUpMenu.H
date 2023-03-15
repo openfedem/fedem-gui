@@ -16,7 +16,7 @@
 #ifndef FFU_QT_POP_UP_MENU_H
 #define FFU_QT_POP_UP_MENU_H
 
-#include <Qt3Support/Q3PopupMenu>
+#include <QMenu>
 
 #include "FFuLib/FFuPopUpMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtMenuBase.H"
@@ -51,7 +51,7 @@ private slots:
 };
 
 
-class FFuQtPopUpMenu : public Q3PopupMenu, public FFuPopUpMenu,
+class FFuQtPopUpMenu : public QMenu, public FFuPopUpMenu,
                        public FFuQtMenuBase, public FFuQtComponentBase
 {
   Q_OBJECT
