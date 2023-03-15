@@ -20,11 +20,11 @@ FuiQtJointSummary::FuiQtJointSummary(QWidget* parent, int xpos, int ypos,
 				     int width, int height, const char* name)
   : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
 {
-  FFuQtTable* qsummaryTable;
-  mySummaryTable = qsummaryTable = new FFuQtTable(this);
+  FFuQtTable* qsummaryTable = new FFuQtTable(this,false,true);
   qsummaryTable->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
   qsummaryTable->setLineWidth(2);
-  qsummaryTable->setHScrollBarMode(Q3ScrollView::AlwaysOff);
+
+  mySummaryTable      = qsummaryTable;
   myAddBCLabel        = new FFuQtLabel(this);
   myDefDamperLabel    = new FFuQtLabel(this);
   myDOF_TZ_Toggle     = new FFuQtToggleButton(this);

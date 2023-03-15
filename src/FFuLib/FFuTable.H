@@ -15,7 +15,7 @@
 
 
 /*!
-  \brief Wrapper around QTable
+  \brief Wrapper around QTableWidget
 
   Looks and behaves like a spreadsheet (sort of). Note that the table takes
   ownership of the inserted items, and deletes them whenever it feels necessary.
@@ -44,7 +44,7 @@ public:
   //! Adds row of components. Append if row is negative or out of bounds.
   virtual void addRow(const std::vector<FFuComponentBase*>& cells, int row = -1) = 0;
 
-  //! Inserts item at position. Note that the cell must exist.
+  //! Inserts item at the position.
   virtual void insertWidget(int row, int col, FFuComponentBase* item) = 0;
   //! Gets item at the position.
   virtual FFuComponentBase* getWidget(int row, int col) = 0;
@@ -53,29 +53,26 @@ public:
   //! Fetches the text at the position. Returns empty string if not text.
   virtual std::string getText(int row, int col) = 0;
 
-  // Interface to QTableItem objects instead of implementing FFu wrapper
+  // Interfaces to QTableWidgetItem objects instead of implementing FFu wrapper
 
-  // Interface to QComboTableItem
-  /*! Inserts a combo item into the cell. CB on changed is accessed throuh FFuTable */
+  //! Inserts a combo item into the cell. CB on changed is accessed through FFuTable.
   virtual void insertComboItem(int row, int col, const std::vector<std::string>& items) = 0;
-  /*! Get selection */
+  //! Gets current selection.
   virtual int getComboItemSelection(int row, int col) = 0;
-  /*! Sets current item */
+  //! Sets new selection.
   virtual void setComboItemCurrent(int row, int col, int i) = 0;
-
-  // Interface to QCheckTableItem
-  /*! Inserts a check box item to the list. CB on changed accessed throuch FFuTable */
+  //! Inserts a check box item to the cell. CB on changed accessed through FFuTable.
   virtual void insertCheckBoxItem(int row, int col, const std::string& text, bool setChecked) = 0;
-  /*! Retrieves current toggle */
+  //! Retrieves current toggle.
   virtual bool getCheckBoxItemToggle(int row, int col) = 0;
-  /*! Sets a toggle value */
+  //! Sets a toggle value.
   virtual void setCheckBoxItemToggle(int row, int col, bool toggle) = 0;
 
   /*! Deletes widgets and sets sizes to 0. This might not be what you want. \sa clearTableItems */
   void clearTable() { this->clearTableItems(); this->setNumberRows(0); this->setNumberColumns(0); }
   /*! Deletes items (not widgets?) contained in table, but leaves dimensions */
   void clearTableItems() { for (int i = 0; i < this->getNumberRows(); i++) this->deleteRow(i); }
-  /*! Delete the widget at position */
+  /*! Deletes the widget at position */
   virtual void clearCellContents(int row, int cell) = 0;
   /*! Deletes the widgets in row */
   virtual void deleteRow(int row) = 0;
@@ -172,22 +169,36 @@ public:
 
   void setRowSensitivity(int row, bool isSensitive)
   {
-    for (int col = 0; col < this->getNumberColumns(); col++)
+    for (int col = 0; col < this->getNumberColumns(); col++) {
       this->setCellSensitivity(row, col, isSensitive);
-    if (row >= 0 && row < this->getNumberRows())
-      this->setTableRowReadOnly(row, !isSensitive);
+      this->setTableCellReadOnly(row, col, !isSensitive);
+    }
   }
   void setColumnSensitivity(int col, bool isSensitive)
   {
-    for (int row = 0; row < this->getNumberRows(); row++)
+    for (int row = 0; row < this->getNumberRows(); row++) {
       this->setCellSensitivity(row, col, isSensitive);
-    if (col >= 0 && col < this->getNumberColumns())
-      this->setTableColumnReadOnly(col, !isSensitive);
+      this->setTableCellReadOnly(row, col, !isSensitive);
+    }
   }
 
-  virtual void setTableReadOnly(bool ro) = 0;
-  virtual void setTableRowReadOnly(int row, bool ro) = 0;
-  virtual void setTableColumnReadOnly(int col, bool ro) = 0;
+  virtual void setTableCellReadOnly(int row, int col, bool ro) = 0;
+
+  void setTableReadOnly(bool ro)
+  {
+    for (int row = 0; row < this->getNumberRows(); row++)
+      this->setTableRowReadOnly(row, ro);
+  }
+  void setTableRowReadOnly(int row, bool ro)
+  {
+    for (int col = 0; col < this->getNumberColumns(); col++)
+      this->setTableCellReadOnly(row, col, ro);
+  }
+  void setTableColumnReadOnly(int col, bool ro)
+  {
+    for (int row = 0; row < this->getNumberRows(); row++)
+      this->setTableCellReadOnly(row, col, ro);
+  }
 
   void setSelectionChangedCB  (const FFaDynCB0&              cb) { mySelectionChangedCB   = cb; }
   void setCurrentCellChangedCB(const FFaDynCB2<int,int>&     cb) { myCurrentCellChangedCB = cb; }

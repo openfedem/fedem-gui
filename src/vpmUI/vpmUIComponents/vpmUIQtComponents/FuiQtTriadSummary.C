@@ -36,12 +36,11 @@ FuiQtTriadSummary::FuiQtTriadSummary(QWidget* parent,
   myConnectorMenu = new FFuQtOptionMenu(this);
   myAddBCLabel = new FFuQtLabel(this);
 
-  FFuQtTable* qSummaryTable;
-  mySummaryTable = qSummaryTable = new FFuQtTable(this);
+  FFuQtTable* qSummaryTable = new FFuQtTable(this);
   qSummaryTable->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
   qSummaryTable->setLineWidth(2);
-  qSummaryTable->setHScrollBarMode(Q3ScrollView::AlwaysOff);
-  qSummaryTable->setVScrollBarMode(Q3ScrollView::AlwaysOff);
+
+  mySummaryTable = qSummaryTable;
 
   this->initWidgets();
 }
