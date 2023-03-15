@@ -19,8 +19,7 @@ void FuiSummaryTable::initWidgets()
 
   mySummaryTable->setColumnResizedCB(FFaDynCB3M(FuiSummaryTable,this,
 						columnSizeChanged,int,int,int));
-  mySummaryTable->setCellDoubleClicked(FFaDynCB3M(FuiSummaryTable,this,
-						  tableDoubleClicked,int,int,int));
+  mySummaryTable->setCellDoubleClicked(FFaDynCB2M(FuiSummaryTable,this,tableDoubleClicked,int,int));
 
   myAddBCLabel->setLabel(" *) Fixed in initial equilibrium analysis");
   myAddBCLabel->setToolTip("Also fixed in eigenmode analysis\n"
@@ -79,11 +78,5 @@ void FuiSummaryTable::columnSizeChanged(int col, int oldSize, int newSize)
   for (i = col+1; i < myRelColWidths.size(); i++)
     myRelColWidths[i] -= myRelColWidths[i]*difference/totRelColWidthRest;
 
-  this->updateColumnWidths();
-}
-
-
-void FuiSummaryTable::tableDoubleClicked(int, int, int)
-{
   this->updateColumnWidths();
 }

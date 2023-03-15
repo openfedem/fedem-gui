@@ -8,19 +8,18 @@
 #ifndef FFU_QT_TABLE_H
 #define FFU_QT_TABLE_H
 
-#include <Qt3Support/Q3Table>
+#include <QTableWidget>
 
 #include "FFuLib/FFuTable.H"
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 
 
-class FFuQtTable : public Q3Table, public FFuTable,
-		   virtual public FFuQtComponentBase
+class FFuQtTable : public QTableWidget, public FFuTable, virtual public FFuQtComponentBase
 {
   Q_OBJECT
 
 public:
-  FFuQtTable(QWidget* parent, const char* name = "FFuQtTable");
+  FFuQtTable(QWidget* parent = NULL, bool hs = false, bool vs = false);
   virtual ~FFuQtTable() {}
 
   virtual void addRow(const std::vector<FFuComponentBase*>& cells, int row);
@@ -47,6 +46,7 @@ public:
   virtual void setRowLabel(int row, const std::string& text);
   virtual void showColumnHeader(bool show);
   virtual void showRowHeader(bool show);
+
   virtual void setColumnHeaderHeight(int height);
   virtual void setRowHeaderWidth(int width);
   virtual int getColumnHeaderHeight();
@@ -79,27 +79,18 @@ public:
 
   virtual void setSensitivity(bool isSensitive);
   virtual void setCellSensitivity(int row, int col, bool isSensitive);
-
-  virtual void setTableReadOnly(bool ro);
-  virtual void setTableRowReadOnly(int row, bool ro);
-  virtual void setTableColumnReadOnly(int col, bool ro);
+  virtual void setTableCellReadOnly(int row, int col, bool ro);
 
 protected slots:
-
-  void fwdSelectionChanged();
-  void fwdCurrentCellChanged(int row, int col);
-  void fwdCellClicked(int row, int col, int button, const QPoint& mousePos);
-  void fwdCellDoubleClicked(int row, int col, int button, const QPoint& mousePos);
-  void fwdCellPressed(int row, int col, int button, const QPoint& mousePos);
-  void fwdColumnResized(int column, int oldSize, int newSize);
-  void fwdCellValueChanged(int row, int col);
+  void fwdSelectionChanged()               { mySelectionChangedCB.invoke(); }
+  void fwdCurrentCellChanged(int r, int c) { myCurrentCellChangedCB.invoke(r,c); }
+  void fwdCellClicked(int r, int c)        { myCellClickedCB.invoke(r,c); }
+  void fwdCellDoubleClicked(int r, int c)  { myCellDoubleClickedCB.invoke(r,c); }
+  void fwdCellPressed(int r, int c)        { myCellPressedCB.invoke(r,c); }
+  void fwdColumnResized(int c,int o,int n) { myColumnResizedCB.invoke(c,o,n); }
 
 private:
-  enum {ITEM = 0, COMBO = 1, CHECK = 2}; // refer Qt doc about rtti()
-  // "Upgrade" these to FFuTable if needed...
-  bool isComboItem(int row, int col);
-  bool isCheckItem(int row, int col);
-  bool isInsideTable(int row, int col);
+  bool isInsideTable(int row, int col) const;
 };
 
 #endif

@@ -88,10 +88,8 @@ FapUARDBMEFatigue::FapUARDBMEFatigue(FuiRDBMEFatigue* uic)
   this->ui->tableMain->insertText(eventCount, 1, "SUM");
 
   // Set callbacks
-  this->ui->tableMain->setCellClickedCB(
-    FFaDynCB3M(FapUARDBMEFatigue, this, onCellClicked, int, int, int));
-  this->ui->useProbToggle->setToggleCB(
-    FFaDynCB1M(FapUARDBMEFatigue, this, onUsePropToggle, bool));
+  this->ui->tableMain->setCellClickedCB(FFaDynCB2M(FapUARDBMEFatigue,this,onCellClicked,int,int));
+  this->ui->useProbToggle->setToggleCB(FFaDynCB1M(FapUARDBMEFatigue,this,onUsePropToggle,bool));
 
   // Show progress dialog
   FFuProgressDialog* progDlg =
@@ -238,19 +236,15 @@ void FapUARDBMEFatigue::finishUI()
 }
 //----------------------------------------------------------------------------
 
-void FapUARDBMEFatigue::onCellClicked(int row, int col, int)
+void FapUARDBMEFatigue::onCellClicked(int row, int col)
 {
-  // Toggle check boxes on/off
-  if (col == 0 && row < (int)probability.size()) {
-    bool t = this->ui->tableMain->getCheckBoxItemToggle(row, col);
-    this->ui->tableMain->setCheckBoxItemToggle(row, col, !t);
-    this->calcTableValues();
-  }
-}
-//----------------------------------------------------------------------------
+  if (col != 0) return;
+  if (row < 0 || row >= (int)probability.size()) return;
 
-void FapUARDBMEFatigue::onUsePropToggle(bool)
-{
+  // Toggle check boxes on/off
+  bool t = ui->tableMain->getCheckBoxItemToggle(row, col);
+  ui->tableMain->setCheckBoxItemToggle(row, col, !t);
+
   this->calcTableValues();
 }
 //----------------------------------------------------------------------------
