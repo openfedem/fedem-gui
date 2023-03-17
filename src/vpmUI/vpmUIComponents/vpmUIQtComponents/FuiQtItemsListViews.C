@@ -5,7 +5,7 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <Qt3Support/Q3DragObject>
+//#include <Qt3Support/Q3DragObject> Find Qt6 replacement?
 
 #include "FuiQtItemsListViews.H"
 
@@ -26,11 +26,12 @@ FuiQtResultListView::FuiQtResultListView(QWidget* parent, const char* name)
   this->viewport()->setAcceptDrops(true);
 }
 
+/* TODO Qt6 port
 Q3DragObject* FuiQtResultListView::dragObject()
 {
   return new Q3TextDrag(this,"Hei");
 }
-
+*/
 //----------------------------------------------------------------------------
 
 FuiQtRDBListView::FuiQtRDBListView(QWidget* parent, const char* name)
@@ -39,10 +40,12 @@ FuiQtRDBListView::FuiQtRDBListView(QWidget* parent, const char* name)
   this->initWidgets();
 }
 
+/* TODO Qt6 port
 Q3DragObject* FuiQtRDBListView::dragObject()
 {
   return new Q3TextDrag(this,"Hei");
 }
+*/
 
 //----------------------------------------------------------------------------
 
@@ -52,10 +55,12 @@ FuiQtSimModelRDBListView::FuiQtSimModelRDBListView(QWidget* parent, const char* 
   this->initWidgets();
 }
 
+/* TODO Qt6 port
 Q3DragObject* FuiQtSimModelRDBListView::dragObject()
 {
   return new Q3TextDrag(this,"Hei");
 }
+*/
 
 //----------------------------------------------------------------------------
 

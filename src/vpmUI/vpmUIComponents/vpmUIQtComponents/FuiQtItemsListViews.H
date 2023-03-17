@@ -40,7 +40,7 @@ public:
   virtual ~FuiQtResultListView() {}
 
 protected:
-  virtual Q3DragObject* dragObject();
+  //virtual Q3DragObject* dragObject(); TODO Qt6 port
 };
 
 
@@ -52,7 +52,7 @@ public:
   virtual ~FuiQtRDBListView() {}
 
 protected:
-  virtual Q3DragObject* dragObject();
+  //virtual Q3DragObject* dragObject(); TODO Qt6 port
 };
 
 
@@ -64,7 +64,7 @@ public:
   virtual ~FuiQtSimModelRDBListView() {}
 
 protected:
-  virtual Q3DragObject* dragObject();
+  //virtual Q3DragObject* dragObject(); TODO Qt6 port
 };
 
 
