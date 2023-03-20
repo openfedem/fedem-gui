@@ -397,17 +397,15 @@ static void showPDFfile(QString& strUrl)
   QString strAR;
 #if defined(win32) || defined(win64)
   // Open registry key
+  const wchar_t* regkey = L"AcroExch.Document\\Shell\\Open\\Command";
   HKEY hk;
-  LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT,
-                            "AcroExch.Document\\Shell\\Open\\Command",
-                            0, KEY_QUERY_VALUE, &hk);
+  LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, regkey, 0, KEY_QUERY_VALUE, &hk);
   if (err == ERROR_SUCCESS) {
     // Get registry value
     char buf[2048];
     DWORD cbData = 2048;
     memset(buf,0,cbData);
-    err = ::RegQueryValueEx(hk, "", NULL, NULL,
-                           (LPBYTE)buf, &cbData);
+    err = ::RegQueryValueEx(hk, NULL, NULL, NULL, (LPBYTE)buf, &cbData);
     ::RegCloseKey(hk);
     if (err == ERROR_SUCCESS)
       strAR = buf;
@@ -470,15 +468,15 @@ bool FuiQtProperties::initStartGuide()
     // Get path of the startguide folder from Windows registry.
     // The path must use forward slashes, and must end with a forward slash.
     std::string regkey = std::string("FMM-file\\internal\\") + FedemAdmin::getVersion();
+    std::wstring wrkey(regkey.begin(),regkey.end());
     HKEY hk;
-    LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, regkey.c_str(), 0, KEY_QUERY_VALUE, &hk);
+    LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, wrkey.c_str(), 0, KEY_QUERY_VALUE, &hk);
     if (err == ERROR_SUCCESS) {
       // Get registry value
       char path[2048];
       DWORD cbData = 2048;
       memset(path,0,cbData);
-      err = ::RegQueryValueEx(hk, "startGuidePath", NULL, NULL,
-                             (LPBYTE)path, &cbData);
+      err = ::RegQueryValueEx(hk, L"startGuidePath", NULL, NULL, (LPBYTE)path, &cbData);
       ::RegCloseKey(hk);
       if (err == ERROR_SUCCESS) {
         appPath = path; // internal url
