@@ -290,13 +290,14 @@ void FapToolsCmds::addonLaunch(int index)
   std::string exePath;
   if (FapToolsCmds::getAddonExe(index,exePath,true))
   {
-    std::string cmd = exePath + " " + std::to_string(GetCurrentProcessId());
+    std::wstring cmd(exePath.begin(),exePath.end());
+    cmd.append(L" " + std::to_wstring(GetCurrentProcessId()));
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     ZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
-    CreateProcess(NULL, const_cast<char*>(cmd.c_str()),
+    CreateProcess(NULL, const_cast<wchar_t*>(cmd.c_str()),
                   NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
   }
 #else
@@ -316,8 +317,8 @@ static bool FmRegCreateKey(const std::string& key, const std::string& val, bool*
     return false; // don't proceed
 
   // Fix slashes
-  std::string strKey(key);
-  for (char& c : strKey)
+  std::wstring strKey(key.begin(),key.end());
+  for (wchar_t& c : strKey)
     if (c == '/') c = '\\';
 
   // Create key
@@ -335,7 +336,7 @@ static bool FmRegCreateKey(const std::string& key, const std::string& val, bool*
 
   // Set default value
   err = ::RegSetValueEx(regKey,
-                        "",
+                        L"",
                         NULL,
                         REG_EXPAND_SZ,
                         (BYTE*)val.c_str(),
@@ -451,17 +452,17 @@ bool FapToolsCmds::checkFileAssociations()
   // Get version
   std::string key("FMM-file\\internal\\");
   key += FedemAdmin::getVersion();
-
+  std::wstring wkey(key.begin(),key.end());
   // Open registry key
   HKEY hk;
-  LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT,key.c_str(),
+  LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT,wkey.c_str(),
                             0,KEY_QUERY_VALUE,&hk);
   if (err != ERROR_SUCCESS)
     return false;
 
   // Get registry value
   DWORD cbData = 0;
-  err = ::RegQueryValueEx(hk,"",NULL,NULL,NULL,&cbData);
+  err = ::RegQueryValueEx(hk,L"",NULL,NULL,NULL,&cbData);
   ::RegCloseKey(hk);
   return (err == ERROR_SUCCESS && cbData == 11);
 
