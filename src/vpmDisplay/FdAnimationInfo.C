@@ -13,7 +13,7 @@
 //
 /////////////////
 
-#include <QtOpenGL/qgl.h>
+#include <QtOpenGL>
 #include <QApplication>
 #include <Inventor/actions/SoGLRenderAction.h>
 #include <Inventor/elements/SoElement.h>
@@ -26,10 +26,6 @@
 
 #include "vpmDisplay/FdAnimationInfo.H"
 
-// SunOS fabsf fix
-#ifdef sun
-#define fabsf fabs
-#endif
 
 SO_NODE_SOURCE(FdAnimationInfo);
 

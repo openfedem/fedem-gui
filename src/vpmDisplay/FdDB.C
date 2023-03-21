@@ -99,7 +99,8 @@
 #include "vpmDB/FmCreate.H"
 #include "vpmApp/FapEventManager.H"
 
-#include <QtOpenGL/qgl.h>
+#include <QtOpenGL>
+#include <QWidget>
 
 #include <Inventor/Qt/SoQt.h>
 
