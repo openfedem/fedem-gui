@@ -99,7 +99,8 @@
 #include "vpmDB/FmCreate.H"
 #include "vpmApp/FapEventManager.H"
 
-#include <QtOpenGL/qgl.h>
+#include <QtOpenGL>
+#include <QWidget>
 
 #ifdef win32
 #include <windows.h>
