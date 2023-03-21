@@ -13,7 +13,7 @@
 //
 /////////////////
 
-#include <QtOpenGL/qgl.h>
+#include <QtOpenGL>
 #include <QApplication>
 #include <Inventor/actions/SoGLRenderAction.h>
 #include <Inventor/elements/SoElement.h>
