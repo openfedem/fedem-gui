@@ -217,7 +217,7 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Up:
 				this->stopAnimating();
 
-				if ( keyEv->state() & Qt::ShiftModifier){
+				if (keyEv->modifiers() & Qt::ShiftModifier){
           float factor = 0.01;
           if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
           if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
@@ -468,20 +468,18 @@ FdQtViewer::processEvent( QEvent *qevent )
 			if ( !this->isAnimating() ){
 				QWheelEvent * wheelEv = (QWheelEvent *) qevent;
 
-				this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
-					this->mousePosMoNot[1]);
-				this->mousePosMoNot[1] = this->mousePosMoNot[1]
-				+ wheelEv->delta() / 4;
+				this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0], this->mousePosMoNot[1]);
+				this->mousePosMoNot[1] += wheelEv->angleDelta().y() / 4;
 
 				this->dollYCamera();
-				if ( wheelEv->delta() < 0 ){
+				if ( wheelEv->angleDelta().y() < 0 ){
 					//this->setFocalDistance(newFd);
 					// Set previous mouse pos to mid of window
 					this->mousePosPrevMoNot.setValue(windowSize[0] / 2,
 						windowSize[1] / 2);
 					// Set mouse pos to emulate a move from the middle of the window to the real mouse position.
-					Xrad = ( wheelEv->x() - windowSize[0] / 2 ) * 3 / 11;
-					Yrad = ( wheelEv->y() - windowSize[1] / 2 ) * 3 / 18;
+					Xrad = ( wheelEv->position().x() - windowSize[0] / 2 ) * 3 / 11;
+					Yrad = ( wheelEv->position().y() - windowSize[1] / 2 ) * 3 / 18;
 					this->mousePosMoNot = ( this->mousePosPrevMoNot + SbVec2s(
 						-Xrad, Yrad) );
 					this->panCamera();
@@ -646,7 +644,7 @@ FdQtViewer::processEvent( QEvent *qevent )
 				}
 			}
 			else if ( this->mode == BASE_MODE ){
-				if ( mouseEv->button() == Qt::MidButton ){
+				if ( mouseEv->button() == Qt::MiddleButton ){
 					this->mode = READY_TO_MIDMOUSE_ROTATE;
 				}
 				if(mouseEv->button() == Qt::RightButton){
