@@ -62,7 +62,9 @@ FFuQtFileDialog::FFuQtFileDialog(const char* dirName, const char* name,
       break;
     }
 
-  if (!this->isModal())
+  if (this->isModal())
+    this->setOptions(QFileDialog::DontUseNativeDialog);
+  else
     this->exec();
 }
 
