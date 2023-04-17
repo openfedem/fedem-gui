@@ -44,7 +44,7 @@ if ( USE_EXT_CTRLSYS )
 endif ( USE_EXT_CTRLSYS )
 
 ## Pure header files, i.e., header files without a corresponding source file
-set ( HEADER_FILE_LIST FuiWorkSpace )
+set ( HEADER_FILE_LIST FuiParameterView FuiWorkSpace )
 ## Pure implementation files, i.e., source files without corresponding header
 set ( SOURCE_FILE_LIST )
 

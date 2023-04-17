@@ -53,7 +53,6 @@ set ( HEADER_FILE_LIST     FFu2DPlotter
                            FFuSpinBox
                            FFuTabbedWidgetStack
                            FFuTable
-                           FFuTableView
                            FFuToggleButton
                            FFuToolBar
                            FFuToolButton

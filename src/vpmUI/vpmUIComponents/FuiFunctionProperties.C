@@ -9,6 +9,7 @@
 
 #include "vpmUI/vpmUIComponents/FuiFunctionProperties.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
+#include "vpmUI/vpmUIComponents/FuiParameterView.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
 #include "FFuLib/FFuTable.H"
 #include "FFuLib/FFuLabel.H"
@@ -20,7 +21,6 @@
 #include "FFuLib/FFuPushButton.H"
 #include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabelField.H"
-#include "FFuLib/FFuTableView.H"
 #include "FFuLib/FFuScrolledList.H"
 #include "FFuLib/FFuToggleButton.H"
 #include "FFuLib/FFuScrolledListDialog.H"
@@ -115,7 +115,8 @@ void FuiFunctionProperties::initWidgets()
   myExtrapolationSwitch->addOption("Flat");
   myExtrapolationSwitch->addOption("Linear");
 
-  myParameterView->stretchContentsWidth(true);
+  myParameterView->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
+                                            onParameterValueChanged,double));
   myParameterView->popDown();
 
   myExpandButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
@@ -449,14 +450,6 @@ void FuiFunctionProperties::placeWidgets(int width, int height)
   myHelpLabel->setEdgeGeometry(2, helpWidth-2, 2, helpHeight-2);
 
   myParameterFrame->setEdgeGeometry(v4,v11,0,height);
-
-  if (v10-v5 < myMinParameterWidth) {
-    myParameterView->stretchContentsWidth(false);
-    myParameterView->setColumnWidth(myMinParameterWidth);
-  }
-  else
-    myParameterView->stretchContentsWidth(true);
-
   myParameterView->setEdgeGeometry(v5,v10,h1,h8);
   myParameterList->setEdgeGeometry(v5,v10,h1,h6);
   myExpandButton->setEdgeGeometry(v10-6*textHeight/5,v10+1,0,textHeight+5);
@@ -645,12 +638,7 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
   }
 
   else if (fv->showParameterView)
-  {
-    FFuLabelField* field;
-    for (size_t i = 0; i < fv->myParameterValues.size(); i++)
-      if ((field = dynamic_cast<FFuLabelField*>(myParameterView->getCell(i,0))))
-	field->setValue(fv->myParameterValues[i]);
-  }
+    myParameterView->setValues(fv->myParameterValues);
 
   else if (fv->showMathExpr)
   {
@@ -854,45 +842,10 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   // Parameter view
 
-  myParameterView->deleteRow(-1);
+  myParameterView->clear();
 
   if (IAmShowingParameterView) {
-
-    int maxLabelWidth = 0;
-    int maxFieldWidth = 0;
-    std::vector<FFuLabelField*> fields;
-    fields.reserve(fv->myParameterNames.size());
-
-    for (const std::string& paraName : fv->myParameterNames) {
-      FFuLabelField* field = FFuLabelField::create(NULL);
-
-      field->setLabelMargin(3);
-      field->setLabel(paraName.c_str());
-      field->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-      field->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
-					       onParameterChanged,char*));
-
-      if (maxLabelWidth < field->myLabel->getWidthHint())
-	maxLabelWidth = field->myLabel->getWidthHint();
-      if (maxFieldWidth < field->myField->getWidthHint())
-	maxFieldWidth = field->myField->getWidthHint();
-
-      myParameterView->addRow({field});
-      fields.push_back(field);
-    }
-
-    for (FFuLabelField* field : fields)
-      field->setLabelWidth(maxLabelWidth);
-
-    myMinParameterWidth = maxLabelWidth + maxFieldWidth + 9;
-
-    if (myParameterView->getWidth() < myMinParameterWidth) {
-      myParameterView->stretchContentsWidth(false);
-      myParameterView->setColumnWidth(myMinParameterWidth);
-    }
-    else
-      myParameterView->stretchContentsWidth(true);
-
+    myParameterView->setFields(fv->myParameterNames);
     myParameterView->popUp();
 
     myExpandButton->setLabel(">");
@@ -1123,14 +1076,9 @@ void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
     values.myJonswapNDir = myJonswapWaveDirsField->myField->getInt();
     values.myJonswapSprExp = myJonswapSpreadExpField->myField->getInt();
   }
-  else if (IAmShowingParameterView) {
-    FFuLabelField* field;
-    int nRows = myParameterView->getRowCount();
-    values.myParameterValues.clear();
-    for (int i = 0; i < nRows; i++)
-      if ((field = dynamic_cast<FFuLabelField*>(myParameterView->getCell(i,0))))
-	values.myParameterValues.push_back(field->getValue());
-  }
+  else if (IAmShowingParameterView)
+    myParameterView->getValues(values.myParameterValues);
+
   else if (IAmShowingParameterList)
     values.myExtrapolationType = myExtrapolationSwitch->getSelectedOption();
 
