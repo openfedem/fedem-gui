@@ -16,6 +16,7 @@
 #include "vpmUI/vpmUIComponents/FuiInputSelector.H"
 #include "vpmUI/vpmUIComponents/FuiThreshold.H"
 
+class FuiParameterView;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
 class FFuIOField;
@@ -27,7 +28,6 @@ class FFuMemo;
 class FFuFrame;
 class FFuLabel;
 class FFuLabelField;
-class FFuTableView;
 class FFuSpinBox;
 class FFuScrolledList;
 class FFuToggleButton;
@@ -154,8 +154,8 @@ protected:
   FFuLabelField   * myVerticalShiftField;
   FFuToggleButton * myZeroAdjustToggle;
 
-  FFuTableView  * myParameterView;
-  FFuPushButton * myExpandButton;
+  FuiParameterView* myParameterView;
+  FFuPushButton*    myExpandButton;
 
   FFuScrolledList * myParameterList;
   FFuIOField    * myXValueInputField;

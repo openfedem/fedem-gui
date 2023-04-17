@@ -16,10 +16,7 @@ class FuiQtFunctionProperties : public virtual FFuQtMultUIComponent,
                                 public FuiFunctionProperties
 {
 public:
-  FuiQtFunctionProperties(QWidget* parent,
-                          int xpos=100, int ypos=100,
-                          int width=800,int height=35,
-                          const char* name="FunctionProperties");
+  FuiQtFunctionProperties(QWidget* parent);
   virtual ~FuiQtFunctionProperties() {}
 
   virtual void setSensitivity(bool sensitive)

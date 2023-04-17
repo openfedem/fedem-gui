@@ -6,17 +6,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmUI/vpmUIComponents/FuiCtrlElemProperties.H"
+#include "vpmUI/vpmUIComponents/FuiParameterView.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuLabelField.H"
 #include "FFuLib/FFuLabelFrame.H"
-#include "FFuLib/FFuTableView.H"
 
 
 void FuiCtrlElemProperties::initWidgets()
 {
   myParameterFrame->setLabel("Parameters");
-  myParameterView->stretchContentsWidth(true);
+
+  myParameterView->setAcceptedCB(FFaDynCB1M(FuiCtrlElemProperties,this,onValueChanged,double));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
@@ -40,10 +41,7 @@ void FuiCtrlElemProperties::placeWidgets(int width, int height)
 
 void FuiCtrlElemProperties::setSensitivity(bool isSensitive)
 {
-  FFuLabelField* field;
-  for (int i = 0; i < myParameterView->getRowCount(); i++)
-    if ((field = dynamic_cast<FFuLabelField*>(myParameterView->getCell(i,0))))
-      field->setSensitivity(isSensitive);
+  myParameterView->setSensitivity(isSensitive);
 }
 
 
@@ -52,11 +50,12 @@ void FuiCtrlElemProperties::setUIValues(const FFuaUIValues* values)
   const FuaCtrlElemPropertiesValues* data = dynamic_cast<const FuaCtrlElemPropertiesValues*>(values);
   if (!data) return;
 
-  FFuLabelField* field;
-  for (size_t i = 0; i < data->parameters.size(); i++)
-    if ((field = dynamic_cast<FFuLabelField*>(myParameterView->getCell(i,0))))
-      field->setValue(data->parameters[i].value);
+  std::vector<double> params;
+  params.reserve(data->parameters.size());
+  for (const FuaCtrlElemPropertiesValues::CtrlParameter& prm : data->parameters)
+    params.push_back(prm.value);
 
+  myParameterView->setValues(params);
   myElemPixmap->setPixMap(data->pixmap);
 }
 
@@ -76,30 +75,12 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
       myParameterFrame->popUp();
       myParameterView->popUp();
 
-      int maxLabelWidth = 0;
-      std::vector<FFuLabelField*> fields;
+      std::vector<std::string> fields;
       fields.reserve(data->parameters.size());
-
       for (const FuaCtrlElemPropertiesValues::CtrlParameter& param : data->parameters)
-	{
-	  FFuLabelField* field = this->makeALabelField();
-	  field->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-	  field->myField->setDoubleDisplayMode(FFuIOField::AUTO,12,1);
-	  field->setLabel(param.description.c_str());
-	  field->myField->setAcceptedCB(FFaDynCB1M(FuiCtrlElemProperties,this,onValueChanged,char*));
-	  if (field->myLabel->getWidthHint() > maxLabelWidth)
-	    maxLabelWidth = field->myLabel->getWidthHint();
-
-	  fields.push_back(field);
-	  myParameterView->addRow({field});
+        fields.push_back(param.description);
+	  myParameterView->setFields(fields);
 	}
-
-      for (FFuLabelField* field : fields)
-      {
-        field->setLabelMargin(3);
-        field->setLabelWidth(maxLabelWidth);
-      }
-    }
 
   this->placeWidgets(this->getWidth(), this->getHeight());
 }
@@ -107,18 +88,19 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
 void FuiCtrlElemProperties::eraseDynamicWidgets()
 {
-  myParameterView->deleteRow(-1);
+  myParameterView->clear();
 }
 
 
-void FuiCtrlElemProperties::onValueChanged(char*)
+void FuiCtrlElemProperties::onValueChanged(double)
 {
-  FuaCtrlElemPropertiesValues values;
+  std::vector<double> params;
+  myParameterView->getValues(params);
 
-  FFuLabelField* field;
-  for (int i = 0; i < myParameterView->getRowCount(); i++)
-    if ((field = dynamic_cast<FFuLabelField*>(myParameterView->getCell(i,0))))
-      values.parameters.push_back(FuaCtrlElemPropertiesValues::CtrlParameter(field->getValue()));
+  FuaCtrlElemPropertiesValues values;
+  values.parameters.reserve(params.size());
+  for (double prm : params)
+    values.parameters.push_back(FuaCtrlElemPropertiesValues::CtrlParameter(prm));
 
   this->invokeSetAndGetDBValuesCB(&values);
   this->setUIValues(&values);

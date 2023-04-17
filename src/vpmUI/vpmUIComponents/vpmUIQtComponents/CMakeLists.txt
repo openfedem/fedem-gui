@@ -20,6 +20,7 @@ set ( COMPONENT_FILE_LIST  FuiQt3DPoint FuiQtAnimationDefine
                            FuiQtSpringDefCalc FuiQtTimeInterval FuiQtTopologyView
                            FuiQtTriadDOF FuiQtTriadSummary FuiQtVariableType FuiQtWorkSpace
                            FuiQtBeamPropSummary FuiQtBeamPropHydro FuiQtResultTabs FuiQtThreshold
+                           FuiQtParameterView
 )
 
 if ( Qwt_LIBRARY )
