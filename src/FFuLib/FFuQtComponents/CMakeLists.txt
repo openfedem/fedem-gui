@@ -39,7 +39,6 @@ set ( COMPONENT_FILE_LIST  FFuQtButton
                            FFuQtSplitter
                            FFuQtTabbedWidgetStack
                            FFuQtTable
-                           FFuQtTableView
                            FFuQtToggleButton
                            FFuQtToolBar
                            FFuQtToolButton
@@ -73,7 +72,6 @@ set ( QT_MOC_HEADER_FILE_LIST  FFuQtColorComboBox
                                FFuQtSpinBox
                                FFuQtTabbedWidgetStack
                                FFuQtTable
-                               FFuQtTableView
                                FFuQtToggleButton
                                FFuQtToolButton
                                FFuQtLabel

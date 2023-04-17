@@ -30,7 +30,8 @@ set ( COMPONENT_FILE_LIST  Fui3DPoint FuiAnimationDefine
                            FuiSimpleLoad FuiSprDaForce FuiSpringChar FuiSpringDefCalc
                            FuiSummaryTable FuiTimeInterval FuiTopologyView
                            FuiTriadDOF FuiTriadSummary FuiVariableType
-                           FuiBeamPropSummary FuiBeamPropHydro FuiResultTabs FuiThreshold
+                           FuiBeamPropSummary FuiBeamPropHydro FuiResultTabs
+                           FuiThreshold FuiParameterView
 )
 
 if ( Qwt_LIBRARY )
