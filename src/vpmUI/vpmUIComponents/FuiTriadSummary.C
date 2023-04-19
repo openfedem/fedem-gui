@@ -168,4 +168,6 @@ void FuiTriadSummary::setSummary(int dof, const FuiTriadDOFValues& tval)
 
   // Initial velocity
   mySummaryTable->insertText(dof, 2, FFaNumStr(tval.myInitVel,1,8));
+
+  mySummaryTable->adjustRowHeight(dof);
 }
