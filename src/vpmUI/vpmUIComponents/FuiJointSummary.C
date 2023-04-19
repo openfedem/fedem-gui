@@ -431,4 +431,6 @@ void FuiJointSummary::setSummary(int jv, const FuiJointDOFValues& jval)
       colText = jval.myDamperFCVals.selectedScaleEngine->getInfoString();
 
   mySummaryTable->insertText(jv, col, colText);
+
+  mySummaryTable->adjustRowHeight(jv);
 }
