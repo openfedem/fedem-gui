@@ -151,8 +151,8 @@ FuiQtMainWindow::FuiQtMainWindow()
   this->workSpace = new FuiQtWorkSpace(items__ws);
 
   this->setCentralWidget(items_ws__props);
-  items_ws__props->setWidgetSizes({ 765, 235 });
-  items__ws->setWidgetSizes({ 180, 800 });
+  items_ws__props->setSizes({ 765, 235 });
+  items__ws->setSizes({ 180, 800 });
 
   this->initWidgets();
 }
