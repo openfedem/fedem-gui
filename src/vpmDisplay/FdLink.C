@@ -47,6 +47,427 @@
 #endif
 
 #include <fstream>
+#include <cstring>
+#include <cstdio>
+#include <cctype>
+
+
+namespace
+{
+  // Wavefront OBJ model parser.
+  SoSeparator* loadObjFile(const char* fName, bool triangles, float scale,
+                           int& groupId, FdCadHandler* cad, FdFEModelKit* feKit)
+  {
+    FILE* file = fopen(fName,"r");
+    if (!file)
+    {
+      perror(fName);
+      return NULL;
+    }
+
+    // Lambda function reading next word from the file.
+    auto&& getWord = [file](char* word, int n)
+    {
+      long int pos = ftell(file);
+      int i, c;
+      for (i = 0; i < n; i++)
+        if ((c = fgetc(file)) < 0)
+          return c; // end-of-file reached
+        else if (isspace(c))
+          break;
+        else
+          word[i] = c;
+
+      word[i == n ? --i : i] = 0;
+
+#ifdef FD_DEBUG
+      std::cout << pos <<" "<< ftell(file) <<" got word \""<< word <<"\""
+                << std::endl;
+#endif
+      return i;
+    };
+
+    //TODO(Runar): Add parsing of material info
+
+    std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+    std::vector<FaVec3> vertices, uvs, normals;
+
+    char lineHeader[256];
+    float x, y, z;
+
+    std::vector< std::pair<std::string,long int> > geometryGroups;
+
+    // read the first word of the line
+    while (getWord(lineHeader,256) != EOF)
+      if (strcmp(lineHeader,"v") == 0)
+      {
+        if (fscanf(file,"%f %f %f\n",&x,&y,&z) >= 0)
+          vertices.emplace_back(x,y,z);
+#ifdef FD_DEBUG
+        std::cout <<"Read vertex "<< vertices.size() <<": "<< vertices.back()
+                  << std::endl;
+#endif
+      }
+      else if (strcmp(lineHeader,"vt") == 0)
+      {
+        if (fscanf(file,"%f %f\n",&x,&y) >= 0)
+          uvs.emplace_back(x,y,0.0);
+      }
+      else if (strcmp(lineHeader,"vn") == 0)
+      {
+        if (fscanf(file,"%f %f %f\n",&x,&y,&z) >= 0)
+          normals.emplace_back(x,y,z);
+#ifdef FD_DEBUG
+        std::cout <<"Read normal "<< normals.size() <<": "<< normals.back()
+                  << std::endl;
+#endif
+      }
+      else if (strcmp(lineHeader,"g") == 0)
+      {
+        long int pos = ftell(file);
+        if (!fgets(lineHeader,256,file))
+          perror("fgets");
+        else
+          lineHeader[strlen(lineHeader)-1] = 0; // Replace newline by 0
+        geometryGroups.emplace_back(lineHeader,pos);
+#ifdef FD_DEBUG
+        std::cout <<"Read group "<< geometryGroups.size() <<": \""
+                  << geometryGroups.back().first <<"\" "
+                  << geometryGroups.back().second << std::endl;
+#endif
+      }
+
+    ListUI <<"("<< vertices.size() <<" vertices";
+    if (!uvs.empty()) ListUI <<", "<< uvs.size() <<" uvs";
+    if (!normals.empty()) ListUI <<", "<< normals.size() <<" normals";
+    int numGroups = geometryGroups.size();
+    int allGroups = groupId == numGroups ? 1 : 0;
+    ListUI <<", "<< numGroups <<" groups";
+
+    if (groupId < 0 || groupId > numGroups)
+    {
+      if (numGroups > 1) {
+        allGroups = FFaMsg::dialog("Multiple geometry groups in obj-file. "
+                                   "Import all?",FFaMsg::FFaDialogType::YES_NO);
+        if (allGroups)
+          groupId = numGroups;
+        else
+        {
+          std::vector<std::string> buttonText = { "Select" };
+          std::vector<std::string> selectionList;
+          selectionList.reserve(numGroups);
+          for (int k = 0; k < numGroups; k++)
+            selectionList.push_back(std::to_string(k));
+          FFaMsg::dialog(groupId,"Multiple geometry groups in obj file. "
+                         "Please select group",FFaMsg::FFaDialogType::GENERIC,
+                         buttonText,selectionList);
+        }
+      }
+      else if (numGroups == 1)
+        groupId = 0;
+    }
+
+    long int pos = 0;
+    if (allGroups)
+      pos = geometryGroups.front().second;
+    else if (numGroups > 0)
+      pos = geometryGroups[groupId].second;
+    std::cout <<"\nReset file position to "<< pos << std::endl;
+    if (fseek(file,pos,SEEK_SET) < 0)
+      perror("fseek");
+
+    int numFaces = 0;
+    while (getWord(lineHeader,256) != EOF)
+      if (strcmp(lineHeader,"f") == 0)
+      {
+        if (!fgets(lineHeader,256,file))
+          perror("fgets");
+        else
+          lineHeader[strlen(lineHeader)-1] = 0; // Replace newline by 0
+
+        std::vector<int> ints;
+        size_t j = 0;
+        for (size_t i = 0; i < strlen(lineHeader); i++)
+        {
+          char c = lineHeader[i];
+          if (c == '#') //comment
+            break;
+          else if (isdigit(c) || c == '-' || c == '+')
+            continue;
+          else if (i > j)
+          {
+            ints.push_back(atoi(lineHeader+j));
+            j = i+1;
+          }
+        }
+        // Add final number
+        if (j < strlen(lineHeader))
+          ints.push_back(atoi(lineHeader+j));
+
+        int matches = ints.size();
+        std::cout <<"Face indices \""<< lineHeader <<"\": #"<< matches;
+        for (int i : ints) std::cout <<" "<< i;
+        std::cout << std::endl;
+
+        // TODO(Runar): Handle both triangles and quads
+        if (triangles)
+        {
+          if (matches == 6)
+          {
+            vertexIndices.push_back(ints[0]);
+            vertexIndices.push_back(ints[2]);
+            vertexIndices.push_back(ints[4]);
+            normalIndices.push_back(ints[1]);
+            normalIndices.push_back(ints[3]);
+            normalIndices.push_back(ints[5]);
+          }
+          else if (matches == 9)
+          {
+            vertexIndices.push_back(ints[0]);
+            vertexIndices.push_back(ints[3]);
+            vertexIndices.push_back(ints[6]);
+            uvIndices.push_back(ints[1]);
+            uvIndices.push_back(ints[4]);
+            uvIndices.push_back(ints[7]);
+            normalIndices.push_back(ints[2]);
+            normalIndices.push_back(ints[5]);
+            normalIndices.push_back(ints[8]);
+          }
+          else
+            matches = 0;
+        }
+        else
+        {
+          if (matches == 8)
+          {
+            vertexIndices.push_back(ints[0]);
+            vertexIndices.push_back(ints[2]);
+            vertexIndices.push_back(ints[4]);
+            vertexIndices.push_back(ints[6]);
+            normalIndices.push_back(ints[1]);
+            normalIndices.push_back(ints[3]);
+            normalIndices.push_back(ints[5]);
+            normalIndices.push_back(ints[7]);
+          }
+          else if (matches == 12)
+          {
+            vertexIndices.push_back(ints[0]);
+            vertexIndices.push_back(ints[3]);
+            vertexIndices.push_back(ints[6]);
+            vertexIndices.push_back(ints[9]);
+            uvIndices.push_back(ints[1]);
+            uvIndices.push_back(ints[4]);
+            uvIndices.push_back(ints[7]);
+            uvIndices.push_back(ints[10]);
+            normalIndices.push_back(ints[2]);
+            normalIndices.push_back(ints[5]);
+            normalIndices.push_back(ints[8]);
+            normalIndices.push_back(ints[11]);
+          }
+          else
+            matches = 0;
+        }
+        if (matches > 0)
+          numFaces++;
+        else
+        {
+          FFaMsg::list("Could not parse obj-file. "
+                       "Try exporting faces as triangles.\n");
+          fclose(file);
+          return NULL;
+        }
+      }
+      else if (!allGroups && strcmp(lineHeader,"g") == 0)
+        break;
+
+    // Clean up
+    fclose(file);
+    if (cad->hasPart() || cad->hasAssembly())
+      cad->deleteCadData();
+
+    ListUI <<", "<< numFaces <<" faces) ";
+
+    // Get cad part
+    FdCadPart* part = cad->getCadPart();
+    if (part == NULL)
+      return NULL; // unexpected
+
+    // Create cad solid and wire representations
+    FdCadSolid* body = new FdCadSolid();
+    FdCadSolidWire* wire = new FdCadSolidWire();
+    part->addSolid(body, wire);
+
+    SoCoordinate3* coords = new SoCoordinate3();
+    body->insertChild(coords,0);
+    wire->insertChild(coords,0);
+    coords->point.setNum(vertices.size());
+
+    // Add points to coordinate-array
+    SbVec3f* coord = coords->point.startEditing();
+    for (int i = 0; i < vertices.size(); i++)
+      coord[i].setValue(vertices[i].x(),vertices[i].y(),vertices[i].z());
+
+    coords->point.finishEditing();
+
+    int nface = vertexIndices.size() / (triangles ? 3 : 4);
+    int* idx = new int[vertexIndices.size() * (triangles ? 3 : 4)];
+
+    // Create cad face
+    FdCadFace* face = new FdCadFace();
+    face->coordIndex.enableNotify(false);
+    face->coordIndex.deleteValues(0);
+    if (triangles)
+      for (int i = 0; i < nface; i++)
+      {
+        idx[i * 4    ] = vertexIndices[i * 3    ] - 1;
+        idx[i * 4 + 1] = vertexIndices[i * 3 + 1] - 1;
+        idx[i * 4 + 2] = vertexIndices[i * 3 + 2] - 1;
+        idx[i * 4 + 3] = -1;
+      }
+    else
+      for (int i = 0; i < nface; i++)
+      {
+        idx[i * 5    ] = vertexIndices[i * 4    ] - 1;
+        idx[i * 5 + 1] = vertexIndices[i * 4 + 1] - 1;
+        idx[i * 5 + 2] = vertexIndices[i * 4 + 2] - 1;
+        idx[i * 5 + 3] = vertexIndices[i * 4 + 3] - 1;
+        idx[i * 5 + 4] = -1;
+      }
+    face->coordIndex.setValues(0,vertexIndices.size()+nface,idx);
+    face->coordIndex.enableNotify(true);
+    face->coordIndex.touch();
+    body->addChild(face);
+
+    // Create cad edge
+    FdCadEdge* edge = new FdCadEdge();
+    if (triangles)
+      for (int i = 0; i < nface; i++)
+      {
+        idx[i * 9    ] = vertexIndices[i * 3    ] - 1;
+        idx[i * 9 + 1] = vertexIndices[i * 3 + 1] - 1;
+        idx[i * 9 + 2] = -1;
+
+        idx[i * 9 + 3] = vertexIndices[i * 3 + 1] - 1;
+        idx[i * 9 + 4] = vertexIndices[i * 3 + 2] - 1;
+        idx[i * 9 + 5] = -1;
+
+        idx[i * 9 + 6] = vertexIndices[i * 3 + 2] - 1;
+        idx[i * 9 + 7] = vertexIndices[i * 3    ] - 1;
+        idx[i * 9 + 8] = -1;
+      }
+    else
+      for (int i = 0; i < nface; i++)
+      {
+        idx[i * 12    ] = vertexIndices[i * 4    ] - 1;
+        idx[i * 12 + 1] = vertexIndices[i * 4 + 1] - 1;
+        idx[i * 12 + 2] = -1;
+
+        idx[i * 12 + 3] = vertexIndices[i * 4 + 1] - 1;
+        idx[i * 12 + 4] = vertexIndices[i * 4 + 2] - 1;
+        idx[i * 12 + 5] = -1;
+
+        idx[i * 12 + 6] = vertexIndices[i * 4 + 2] - 1;
+        idx[i * 12 + 7] = vertexIndices[i * 4 + 3] - 1;
+        idx[i * 12 + 8] = -1;
+
+        idx[i * 12 +  9] = vertexIndices[i * 4 + 3] - 1;
+        idx[i * 12 + 10] = vertexIndices[i * 4    ] - 1;
+        idx[i * 12 + 11] = -1;
+      }
+
+    edge->coordIndex.enableNotify(false);
+    edge->coordIndex.deleteValues(0);
+    edge->coordIndex.setValues(0,vertexIndices.size()*(triangles ? 3 : 4),idx);
+    edge->coordIndex.enableNotify(true);
+    edge->coordIndex.touch();
+    wire->addChild(edge);
+
+    delete[] idx;
+
+    SoSeparator* linesSep = new SoSeparator();
+    SoSeparator* facesSep = new SoSeparator();
+
+    facesSep->addChild(body);
+    linesSep->addChild(wire);
+
+    SoSeparator* objRoot = new SoSeparator;
+    SoShapeHints* sh = new SoShapeHints;
+    SoScale* unitConv = new SoScale;
+
+    objRoot->addChild(sh);
+    objRoot->addChild(unitConv);
+    objRoot->addChild(facesSep);
+
+    sh->shapeType = SoShapeHints::UNKNOWN_SHAPE_TYPE;
+    sh->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
+    sh->creaseAngle = 0.3f;
+    unitConv->scaleFactor.setValue(SbVec3f(scale,scale,scale));
+
+    feKit->addGroupPart(FdFEGroupPartSet::SURFACE_FACES,facesSep);
+    //feKit->addGroupPart(FdFEGroupPartSet::RED_SURFACE_FACES,facesSep);
+    //feKit->addGroupPart(FdFEGroupPartSet::OUTLINE_LINES,linesSep);
+    feKit->addGroupPart(FdFEGroupPartSet::RED_OUTLINE_LINES,linesSep);
+
+    return facesSep;
+  }
+
+
+  bool createCadPartViz(SoSeparator* linesParent, SoSeparator* facesParent,
+                        FdCadPart* part, bool isLinkPart)
+  {
+    if (!part)
+      return false;
+    else if (part->size() < 1)
+      return true;
+
+    if (part->myVisProp.isDefined && !isLinkPart)
+    {
+      SoMaterial* m = new SoMaterial();
+      m->ambientColor = FdConverter::toSbVec3f(part->myVisProp.ambientColor);
+      m->specularColor = FdConverter::toSbVec3f(part->myVisProp.specularColor);
+      m->emissiveColor = FdConverter::toSbVec3f(part->myVisProp.emissiveColor);
+      m->diffuseColor = FdConverter::toSbVec3f(part->myVisProp.diffuseColor);
+      m->transparency = part->myVisProp.transparency;
+      m->shininess = part->myVisProp.shininess;
+      facesParent->addChild(m);
+    }
+
+    for (size_t j = 0; j < part->size(); j++)
+    {
+      linesParent->addChild(part->getSolid(j).second);
+      facesParent->addChild(part->getSolid(j).first);
+    }
+
+    return true;
+  }
+
+
+  bool createCadAssemblyViz(SoSeparator* linesParent, SoSeparator* facesParent,
+                            FdCadAssembly* fAss)
+  {
+    if (!fAss || !linesParent || !facesParent)
+      return false;
+
+    for (FdCadComponent* cmp : fAss->myComponents)
+    {
+      SoTransform* xf   = new SoTransform();
+      SoSeparator* lsep = new SoSeparator();
+      SoSeparator* fsep = new SoSeparator();
+
+      xf->setMatrix(FdConverter::toSbMatrix(cmp->myPartCS));
+      linesParent->addChild(lsep);
+      facesParent->addChild(fsep);
+      lsep->addChild(xf);
+      fsep->addChild(xf);
+
+      if (!createCadAssemblyViz(lsep, fsep, dynamic_cast<FdCadAssembly*>(cmp)))
+        if (!createCadPartViz(lsep, fsep, dynamic_cast<FdCadPart*>(cmp), false))
+          return false;
+    }
+
+    return true;
+  }
+}
 
 
 /**********************************************************************
@@ -54,7 +475,6 @@
  * CLASS FdLink
  *
  **********************************************************************/
-
 
 Fmd_SOURCE_INIT(FDLINK,FdLink,FdObject);
 
@@ -108,11 +528,11 @@ bool FdLink::updateFdApperance()
   myFEKit->setLook(look);
 
   // Link coordinate system symbol color
-  itsKit->setPart("symbolMaterial", NULL);
-  SoMaterial* symbolMaterial = SO_GET_PART(itsKit, "symbolMaterial", SoMaterial);
-  symbolMaterial->diffuseColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
-  symbolMaterial->ambientColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
-  symbolMaterial->emissiveColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
+  itsKit->setPart("symbolMaterial",NULL);
+  SoMaterial* mat = SO_GET_PART(itsKit,"symbolMaterial",SoMaterial);
+  mat->diffuseColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
+  mat->ambientColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
+  mat->emissiveColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
 
   return true;
 }
@@ -210,15 +630,15 @@ bool FdLink::loadVrmlViz()
   FFaMsg::list("  -> Reading visualization data for " + link->getIdString(true) +
 	       "\n     from file \"" + fileName + "\" ... ");
 
+  double scaleF = 1.0;
+  link->visDataFileUnitConverter.getValue().convert(scaleF, "LENGTH");
+
   SoSeparator* vrmlSep = NULL;
   switch (FdDB::getCadFileType(fileName))
     {
     case FdDB::FD_VRML_FILE:
-      {
-	SoInput soFile;
-	if (soFile.openFile(fileName.c_str()))
-	  vrmlSep = SoDB::readAll(&soFile);
-      }
+      if (SoInput soFile; soFile.openFile(fileName.c_str()))
+        vrmlSep = SoDB::readAll(&soFile);
       break;
 
     case FdDB::FD_BREP_FILE:
@@ -228,403 +648,40 @@ bool FdLink::loadVrmlViz()
 #ifdef USE_OPENCASCADE
 	SoBrepShape reader;
 	reader.SetFile(fileName.c_str());
-	vrmlSep = new SoSeparator;
-	vrmlSep->ref();
-	if (!reader.Compute(vrmlSep)) {
-	  vrmlSep->unref();
-	  vrmlSep = NULL;
-	}
+	SoSeparator* tmpSep = new SoSeparator;
+	tmpSep->ref();
+	if (reader.Compute(tmpSep))
+	  vrmlSep = tmpSep;
+	else
+	  tmpSep->unref();
 #endif
       }
       break;
 
     case FdDB::FD_FCAD_FILE:
+      if (std::ifstream in(fileName.c_str(),std::ios::in);
+          myCadHandler->read(in) && this->createCadViz())
       {
-	std::ifstream in(fileName.c_str(), std::ios::in);
-	if (myCadHandler->read(in))
-	  if (this->createCadViz()) {
-	    FFaMsg::list(" OK.\n");
-	    IHaveLoadedVrmlViz = true;
-	    return true;
-	  }
+        FFaMsg::list("OK.\n");
+        return true;
       }
-	case FdDB::FD_OBJ_FILE:
-	{
-		//TODO(Runar): Add parsing of material info
+      break;
 
-		bool triangles = true;
-		std::vector< unsigned int > vertexIndices, uvIndices, normalIndices;
-		std::vector< FaVec3 >* vertices = new std::vector<FaVec3>();
-		std::vector< FaVec3 >* uvs =   new std::vector<FaVec3>();
-		std::vector< FaVec3 >* normals = new std::vector<FaVec3>();
-
-		FILE * file = fopen(fileName.c_str(), "r");
-
-
-		int numGroups = 0;
-		std::vector<std::tuple<std::string, long>> geometryGroups;
-
-		while (1){
-
-			char lineHeader[256];
-			// read the first word of the line
-			int res = fscanf(file, "%s", lineHeader);
-			if (res == EOF)
-				break; // EOF = End Of File. Quit the loop.
-
-			if (strcmp(lineHeader, "v") == 0){
-				float x, y, z;
-				fscanf(file, "%f %f %f\n", &x, &y, &z);
-				FaVec3 vertex(x, y, z);
-				vertices->push_back(vertex);
-			}
-			else if (strcmp(lineHeader, "vt") == 0){
-				float x, y;
-				fscanf(file, "%f %f\n", &x, &y);
-				FaVec3 uv(x, y, 0);
-				uvs->push_back(uv);
-			}
-			else if (strcmp(lineHeader, "vn") == 0){
-				float x, y, z;
-				fscanf(file, "%f %f %f\n", &x, &y, &z);
-				FaVec3 normal(x, y, z);
-				normals->push_back(normal);
-			}
-			else if (strcmp(lineHeader, "g") == 0){
-				long pos = ftell(file);
-				//TODO(runar): Fix this. Parse line in better way
-				fscanf(file, "%s", lineHeader);
-				geometryGroups.push_back(std::make_tuple(lineHeader, pos));
-				fseek(file, pos, SEEK_SET);
-				numGroups++;
-			}
-		}
-
-		int allGroups = 0;
-		int groupId = link->objFileGroupIndex.getValue();
-
-        if (groupId == numGroups)
-            allGroups = 1;
-
-		if (!(groupId >= 0) || groupId > numGroups)
-		{
-
-			if (numGroups > 1){
-				//Import all groups?
-				allGroups = FFaMsg::dialog("Multiple geometry groups in obj-file. Import all?", FFaMsg::FFaDialogType::YES_NO);
-
-				if (!allGroups){
-					std::vector<std::string> buttonText;
-					std::vector<std::string> selectionList;
-					for (int k = 0; k < numGroups; k++)
-					{
-						selectionList.push_back(std::to_string(k));
-						//selectionList.push_back(std::get<0>(geometryGroups[groupId]));
-					}
-					buttonText.push_back("Select");
-					FFaMsg::dialog(groupId, "Multiple geometry groups in obj file. Please select group", FFaMsg::FFaDialogType::GENERIC, buttonText,
-						selectionList);
-
-					link->objFileGroupIndex.setValue(groupId);
-				}
-                else
-                    link->objFileGroupIndex.setValue(numGroups);
-			}
-			else if (numGroups == 1)
-			{
-				link->objFileGroupIndex.setValue(0);
-				groupId = 0;
-			}
-		}
-
-		if (allGroups)
-		{
-			fseek(file, std::get<1>(geometryGroups[0]), SEEK_SET);
-		}
-		else if (numGroups > 0)
-		{
-			fseek(file, std::get<1>(geometryGroups[groupId]), SEEK_SET);
-		}
-		else
-		{
-			fseek(file,0, SEEK_SET);
-		}
-
-    auto getIntsFromString = [](const std::string& input)
-    {
-      std::vector<int> foundInts;
-      std::string activeInt;
-      for (char c : input)
-        if (c == '#')//comment
-          break;
-        else if (isdigit(c))
-          activeInt += c;
-        else if (c == '-')
-          activeInt += c;
-        else if (c == '+')
-          activeInt += c;
-        else
-        {
-          if (activeInt.length() > 0)
-            foundInts.push_back(atoi(activeInt.c_str()));
-
-          activeInt = "";
-        }
-
-      //Add final number
-      if (activeInt.length() > 0)
-        foundInts.push_back(atoi(activeInt.c_str()));
-
-      return foundInts;
-    };
-
-		while (1){
-
-			char lineHeader[256];
-			int res = fscanf(file, "%s", lineHeader);
-			if (res == EOF)
-				break;
-
-			if (strcmp(lineHeader, "f") == 0){
-				//TODO(Runar): Handle both triangles and quads
-				if (triangles)
-				{
-                    fscanf(file,"%[^\n]", lineHeader);
-
-                    std::vector<int> ints = getIntsFromString(std::string(lineHeader));
-                    int matches = ints.size();
-
-                    if (matches == 6)
-                    {
-                        vertexIndices.push_back(ints[0]);
-                        vertexIndices.push_back(ints[2]);
-                        vertexIndices.push_back(ints[4]);
-
-                        normalIndices.push_back(ints[1]);
-                        normalIndices.push_back(ints[3]);
-                        normalIndices.push_back(ints[5]);
-                    }
-                    else if (matches == 9) 
-                    {
-                        vertexIndices.push_back(ints[0]);
-                        vertexIndices.push_back(ints[3]);
-                        vertexIndices.push_back(ints[6]);
-                        uvIndices.push_back(ints[1]);
-                        uvIndices.push_back(ints[4]);
-                        uvIndices.push_back(ints[7]);
-                        normalIndices.push_back(ints[2]);
-                        normalIndices.push_back(ints[5]);
-                        normalIndices.push_back(ints[8]);
-                    }
-                    else
-                    {
-                        FFaMsg::list("Could not parse obj-file. Try exporting faces as triangles.\n");
-                        return false;
-                    }
-				}
-				else
-				{
-                    fscanf(file, "%[^\n]", lineHeader);
-
-                    std::vector<int> ints = getIntsFromString(std::string(lineHeader));
-                    int matches = ints.size();
-
-                    if (matches == 8)
-                    {
-                        vertexIndices.push_back(ints[0]);
-                        vertexIndices.push_back(ints[2]);
-                        vertexIndices.push_back(ints[4]);
-                        vertexIndices.push_back(ints[6]);
-
-                        normalIndices.push_back(ints[1]);
-                        normalIndices.push_back(ints[3]);
-                        normalIndices.push_back(ints[5]);
-                        normalIndices.push_back(ints[7]);
-                    }
-                    else if (matches == 12)
-                    {
-                        vertexIndices.push_back(ints[0]);
-                        vertexIndices.push_back(ints[3]);
-                        vertexIndices.push_back(ints[6]);
-                        vertexIndices.push_back(ints[9]);
-                        uvIndices.push_back(ints[1]);
-                        uvIndices.push_back(ints[4]);
-                        uvIndices.push_back(ints[7]);
-                        uvIndices.push_back(ints[10]);
-                        normalIndices.push_back(ints[2]);
-                        normalIndices.push_back(ints[5]);
-                        normalIndices.push_back(ints[8]);
-                        normalIndices.push_back(ints[11]);
-                    }
-                    else
-                        printf("Could not parse obj-file. Try exporting faces as triangles.\n");
-                    return false;
-				}
-			}
-			if (!allGroups)
-			{
-				if (strcmp(lineHeader, "g") == 0){
-					break;
-				}
-			}
-		}
-
-		// Clean up
-		if (myCadHandler->hasPart() || myCadHandler->hasAssembly())
-			myCadHandler->deleteCadData();
-
-		// Get cad part
-		FdCadPart* part = myCadHandler->getCadPart();
-		if (part == NULL)
-			return false; // unexpected
-
-
-		// Create cad solid and wire representations
-		FdCadSolid* body = new FdCadSolid();
-		FdCadSolidWire* wire = new FdCadSolidWire();
-		part->addSolid(body, wire);
-
-		SoCoordinate3* coords = new SoCoordinate3();
-		body->insertChild(coords, 0);
-		wire->insertChild(coords, 0);
-		coords->point.setNum(vertices->size());
-		SbVec3f* coord = coords->point.startEditing();
-
-                // Add points to coordinate-array
-                for (size_t i = 0; i < vertices->size(); i++)
-                  coord[i].setValue((*vertices)[i].x(), (*vertices)[i].y(), (*vertices)[i].z());
-
-		coords->point.finishEditing();
-
-		// Create cad face
-		FdCadFace* face = new FdCadFace();
-		int *idx = new int[20000000];//TODO(runar): Pull this out as parameter?
-		//int idx[65536];
-		face->coordIndex.enableNotify(false);
-		face->coordIndex.deleteValues(0);
-		if (triangles)
-		{
-			for (size_t i = 0; i < vertexIndices.size()/3; i++){
-				idx[i * 4] = vertexIndices[i * 3] - 1;
-				idx[i * 4 + 1] = vertexIndices[i * 3 + 1] - 1;
-				idx[i * 4 + 2] = vertexIndices[i * 3 + 2] - 1;
-				idx[i * 4 + 3] = -1;
-			}
-			face->coordIndex.setValues(0, vertexIndices.size() + vertexIndices.size() / 3, &(idx[0]));
-		}
-		else
-		{
-			for (size_t i = 0; i < vertexIndices.size()/4; i++){
-				idx[i * 5] = vertexIndices[i * 4] - 1;
-				idx[i * 5 + 1] = vertexIndices[i * 4 + 1] - 1;
-				idx[i * 5 + 2] = vertexIndices[i * 4 + 2] - 1;
-				idx[i * 5 + 3] = vertexIndices[i * 4 + 3] - 1;
-				idx[i * 5 + 4] = -1;
-			}
-			face->coordIndex.setValues(0, vertexIndices.size() + vertexIndices.size() / 4, &(idx[0]));
-		}
-
-		face->coordIndex.enableNotify(true);
-		face->coordIndex.touch();
-		body->addChild(face);
-
-		// Create cad edge
-		FdCadEdge* edge = new FdCadEdge();
-		if (triangles)
-		{
-			for (size_t i = 0; i < vertexIndices.size()/3; i++){
-				idx[i * 9] = vertexIndices[i * 3] - 1;
-				idx[i * 9 + 1] = vertexIndices[i * 3 + 1] - 1;
-				idx[i * 9 + 2] = -1;
-
-				idx[i * 9 + 3] = vertexIndices[i * 3 + 1] - 1;
-				idx[i * 9 + 4] = vertexIndices[i * 3 + 2] - 1;
-				idx[i * 9 + 5] = -1;
-
-				idx[i * 9 + 6] = vertexIndices[i * 3 + 2] - 1;
-				idx[i * 9 + 7] = vertexIndices[i * 3] - 1;
-				idx[i * 9 + 8] = -1;
-			}
-		}
-		else
-		{
-			for (size_t i = 0; i < vertexIndices.size()/4; i++){
-				idx[i * 12] = vertexIndices[i * 4] - 1;
-				idx[i * 12 + 1] = vertexIndices[i * 4 + 1] - 1;
-				idx[i * 12 + 2] = -1;
-
-				idx[i * 12 + 3] = vertexIndices[i * 4 + 1] - 1;
-				idx[i * 12 + 4] = vertexIndices[i * 4 + 2] - 1;
-				idx[i * 12 + 5] = -1;
-
-				idx[i * 12 + 6] = vertexIndices[i * 4 + 2] - 1;
-				idx[i * 12 + 7] = vertexIndices[i * 4 + 3] - 1;
-				idx[i * 12 + 8] = -1;
-
-				idx[i * 12 + 9] = vertexIndices[i * 4 + 3] - 1;
-				idx[i * 12 + 10] = vertexIndices[i * 4] - 1;
-				idx[i * 12 + 11] = -1;
-			}
-		}
-
-		edge->coordIndex.enableNotify(false);
-		edge->coordIndex.deleteValues(0);
-		if (triangles)
-		{
-			edge->coordIndex.setValues(0, vertexIndices.size() * 3, &(idx[0]));
-		}
-		else
-		{
-			edge->coordIndex.setValues(0, vertexIndices.size() * 4, &(idx[0]));
-		}
-		edge->coordIndex.enableNotify(true);
-		edge->coordIndex.touch();
-		wire->addChild(edge);
-
-		SoSeparator* linesSep = new SoSeparator();
-		SoSeparator* facesSep = new SoSeparator();
-
-		facesSep->addChild(body);
-		linesSep->addChild(wire);
-
-		IHaveCreatedCadViz = true;
-		vrmlSep = facesSep;
-
-		SoSeparator* objRoot = new SoSeparator;
-		SoShapeHints* sh = new SoShapeHints;
-		SoScale* unitConv = new SoScale;
-
-		objRoot->addChild(sh);
-		objRoot->addChild(unitConv);
-		objRoot->addChild(vrmlSep);
-
-		sh->shapeType = SoShapeHints::UNKNOWN_SHAPE_TYPE;
-		sh->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
-		sh->creaseAngle = 0.3f;
-		double scaleF = 1.0;
-		link->visDataFileUnitConverter.getValue().convert(scaleF, "LENGTH");
-		unitConv->scaleFactor.setValue(SbVec3f((float)scaleF, (float)scaleF, (float)scaleF));
-
-		((FdFEModelKit*)myFEKit)->addGroupPart(FdFEGroupPartSet::SURFACE_FACES, facesSep);
-		//((FdFEModelKit*)myFEKit)->addGroupPart(FdFEGroupPartSet::RED_SURFACE_FACES, facesSep);
-		//((FdFEModelKit*)myFEKit)->addGroupPart(FdFEGroupPartSet::OUTLINE_LINES, linesSep);
-		((FdFEModelKit*)myFEKit)->addGroupPart(FdFEGroupPartSet::RED_OUTLINE_LINES, linesSep);
-
-		// Touch visualization
-		myFEKit->setDrawDetail(FdFEVisControl::OFF);
-		myFEKit->setLineDetail(FdFEVisControl::OFF);
-		myFEKit->updateVisControl();
-
-
-		delete vertices;
-		delete uvs;
-		delete normals;
-		delete [] idx;
-
-		FFaMsg::list(" OK.\n");
-		IHaveLoadedVrmlViz = true;
-		return true;
-	}
+    case FdDB::FD_OBJ_FILE:
+      if ((vrmlSep = loadObjFile(fileName.c_str(), true, scaleF,
+                                 link->objFileGroupIndex.getValue(),
+                                 myCadHandler, (FdFEModelKit*)myFEKit)))
+      {
+        // Touch visualization
+        myFEKit->setDrawDetail(FdFEVisControl::OFF);
+        myFEKit->setLineDetail(FdFEVisControl::OFF);
+        myFEKit->updateVisControl();
+        FFaMsg::list("OK.\n");
+        IHaveLoadedVrmlViz = true;
+        IHaveCreatedCadViz = true;
+        return true;
+      }
+      break;
    }
 
   if (!vrmlSep) {
@@ -643,8 +700,6 @@ bool FdLink::loadVrmlViz()
   sh->shapeType      = SoShapeHints::UNKNOWN_SHAPE_TYPE;
   sh->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
   sh->creaseAngle    = 0.3f;
-  double scaleF = 1.0;
-  link->visDataFileUnitConverter.getValue().convert(scaleF, "LENGTH");
   unitConv->scaleFactor.setValue(SbVec3f((float)scaleF, (float)scaleF, (float)scaleF));
 
   ((FdFEModelKit*)myFEKit)->addGroupPart(FdFEGroupPartSet::SURFACE_FACES,vrmlRoot);
@@ -658,62 +713,6 @@ bool FdLink::loadVrmlViz()
   FFaMsg::list(" OK.\n");
   IHaveLoadedVrmlViz = true;
   return true;
-}
-
-
-namespace {
-bool createCadPartViz(SoSeparator * linesParent, SoSeparator * facesParent, FdCadPart * part, bool isLinkPart)
-{
-  if (!part)
-    return false;
-
-  if (part->myVisProp.isDefined && !isLinkPart) {
-    SoMaterial * mat = new SoMaterial();
-    mat->ambientColor = FdConverter::toSbVec3f(part->myVisProp.ambientColor);
-    mat->specularColor = FdConverter::toSbVec3f(part->myVisProp.specularColor);
-    mat->emissiveColor = FdConverter::toSbVec3f(part->myVisProp.emissiveColor);
-    mat->diffuseColor = FdConverter::toSbVec3f(part->myVisProp.diffuseColor);
-    mat->transparency = part->myVisProp.transparency;
-    mat->shininess = part->myVisProp.shininess;
-
-    if (part->size())
-      facesParent->addChild(mat);
-  }
-
-  for (size_t j = 0; j < part->size(); ++j)
-    {
-      linesParent->addChild(part->getSolid(j).second);
-      facesParent->addChild(part->getSolid(j).first);
-    }
-
-  return true;
-}
-
-
-bool createCadAssemblyViz(SoSeparator * linesParent, SoSeparator * facesParent, FdCadAssembly * fAss)
-{
-  if (!fAss || !linesParent || !facesParent)
-    return false;
-
-  for (FdCadComponent* cmp : fAss->myComponents)
-  {
-    SoTransform* xf   = new SoTransform();
-    SoSeparator* lsep = new SoSeparator();
-    SoSeparator* fsep = new SoSeparator();
-
-    xf->setMatrix(FdConverter::toSbMatrix(cmp->myPartCS));
-    linesParent->addChild(lsep);
-    facesParent->addChild(fsep);
-    lsep->addChild(xf);
-    fsep->addChild(xf);
-
-    if (!createCadAssemblyViz(lsep, fsep, dynamic_cast<FdCadAssembly*>(cmp)))
-      if (!createCadPartViz(lsep, fsep, dynamic_cast<FdCadPart*>(cmp), false))
-        return false;
-  }
-
-  return true;
-}
 }
 
 
@@ -742,6 +741,7 @@ bool FdLink::createCadViz()
   myFEKit->setLineDetail(FdFEVisControl::OFF);
   myFEKit->updateVisControl();
 
+  IHaveLoadedVrmlViz = true;
   IHaveCreatedCadViz = true;
   return true;
 }
@@ -870,16 +870,14 @@ void FdLink::showHighlight()
   this->highlightBoxId = NULL;
 
   SbBox3f bbox;
-  if (IAmUsingGenPartVis) {
-    SoNode* n = itsKit->getPart("groupParts", false);
-    if (n) {
+  if (IAmUsingGenPartVis)
+    if (SoNode* n = itsKit->getPart("groupParts",false); n) {
       SoGetBoundingBoxAction* action = new SoGetBoundingBoxAction(SbViewportRegion());
       action->apply(n);
       SbBox3f box = action->getBoundingBox();
       if (!box.isEmpty())
 	bbox.extendBy(box);
     }
-  }
 
   FaVec3 max, min;
   FmLink* link = (FmLink*)this->itsFmOwner;
@@ -888,7 +886,7 @@ void FdLink::showHighlight()
     bbox.extendBy(FdConverter::toSbVec3f(max));
   }
 
-  if (!bbox.isEmpty()){
+  if (!bbox.isEmpty()) {
     min = FdConverter::toFaVec3(bbox.getMin());
     max = FdConverter::toFaVec3(bbox.getMax());
   }
@@ -1002,8 +1000,8 @@ void FdLink::removeDisplayData()
 
   myCadHandler->deleteCadData();
 
-  IHaveLoadedVrmlViz = false;
   IAmUsingGenPartVis = false;
+  IHaveLoadedVrmlViz = false;
   IHaveCreatedCadViz = false;
 }
 
@@ -1021,8 +1019,8 @@ void FdLink::removeVisualizationData(bool removeCadDataToo)
   if (removeCadDataToo)
     myCadHandler->deleteCadData();
 
-  IHaveLoadedVrmlViz = false;
   IAmUsingGenPartVis = false;
+  IHaveLoadedVrmlViz = false;
   IHaveCreatedCadViz = false;
 }
 
