@@ -3800,7 +3800,8 @@ void FapUAProperties::linkChangeCB()
 
 namespace
 {
-  using FileFilter = std::map<std::string,Strings>;
+  using FilterItem = std::pair<const std::string,Strings>;
+  using FileFilter = std::vector<FilterItem>;
 
   bool browseDataFile(std::string& fName, const std::string& type,
                       const FileFilter& filter, bool allFilesFilter = false)
@@ -3812,7 +3813,7 @@ namespace
     dialog->setTitle(("Select " + type + " file").c_str());
     dialog->addAllFilesFilter(allFilesFilter);
     bool lFirst = true;
-    for (const std::pair<const std::string,Strings>& ff : filter)
+    for (const FilterItem& ff : filter)
     {
       if (ff.second.size() == 1)
         dialog->addFilter(ff.first,ff.second.front(),lFirst);
@@ -3855,36 +3856,38 @@ namespace
 }
 
 
-void FapUAProperties::linkChangeVizCB(const std::string& file, bool promptForFile)
+void FapUAProperties::linkChangeVizCB(const std::string& file, bool promptFile)
 {
   FmPart* part = dynamic_cast<FmPart*>(mySelectedFmItem);
   if (!part) return;
 
-  Fui::noUserInputPlease();
-  bool changed = false;
-  if (promptForFile)
+  std::string fileName;
+  if (promptFile)
   {
-    FileFilter filter;
-    filter["VRML File"]                  = { "vrml", "wrl", "vrl", "wrz" };
-    filter["Fedem Technology CAD model"] = { "ftc" };
-    filter["Wavefront obj"]              = { "obj" };
-    std::string fileName = part->visDataFile.getValue();
-    if (browseDataFile(fileName,"visualization",filter))
-      changed = part->setVisualizationFile(fileName);
+    fileName = part->visDataFile.getValue();
+
+    static FileFilter filter = {
+      { "VRML model",                 { "vrml", "vrl", "wrl", "wrz" } },
+      { "Fedem Technology CAD model", { "ftc" } },
+      { "Wavefront OBJ model",        { "obj" } }
+    };
+    if (!browseDataFile(fileName,"visualization",filter)) return;
   }
   else if (!file.empty())
   {
-    std::string fileName(file);
+    fileName = file;
     std::string tmp(FFaFilePath::checkName(fileName));
     FFaFilePath::makeItAbsolute(tmp,FmDB::getMechanismObject()->getAbsModelFilePath());
-    if (FpFileSys::isReadable(tmp))
-      changed = part->setVisualizationFile(fileName);
-    else
+    if (!FpFileSys::isReadable(tmp))
+    {
       FFaMsg::dialog("Non-existing visualization file:\n" + fileName);
+      this->updateUIValues();
+      return;
+    }
   }
-  else
-    changed = part->setVisualizationFile("");
 
+  Fui::noUserInputPlease();
+  bool changed = part->setVisualizationFile(fileName);
   Fui::okToGetUserInput();
   this->updateUIValues();
 
@@ -3899,16 +3902,16 @@ void FapUAProperties::tireDataFileBrowseCB()
 
   std::string fileName = tire->tireDataFileName.getValue();
 
-  FileFilter filter;
-  filter["TNO Tire file"]      = { "tpf" };
-  filter["JD Tire file"]       = { "jdt" };
-  filter["Tire property file"] = { "tir" };
-
+  static FileFilter filter = {
+    { "TNO Tire file",      { "tpf" } },
+    { "JD Tire file",       { "jdt" } },
+    { "Tire property file", { "tir" } }
+  };
   if (!browseDataFile(fileName,"tire",filter,true)) return;
 
-  tire->tireDataFileName = fileName;
+  tire->tireDataFileName.setValue(fileName);
   tire->tireDataFileRef.setPointerToNull();
-  tire->tireType = "";
+  tire->tireType.setValue("");
   tire->updateFromFile();
   tire->draw();
 
@@ -3924,13 +3927,13 @@ void FapUAProperties::roadDataFileBrowseCB()
 
   std::string fileName = road->roadDataFileName.getValue();
 
-  FileFilter filter;
-  filter["Road property file"]    = { "rdf" };
-  filter["JD Road property file"] = { "jdr" };
-
+  static FileFilter filter = {
+    { "Road property file",    { "rdf" } },
+    { "JD Road property file", { "jdr" } }
+  };
   if (!browseDataFile(fileName,"road",filter,true)) return;
 
-  road->roadDataFileName = fileName;
+  road->roadDataFileName.setValue(fileName);
   road->roadDataFileRef.setPointerToNull();
 
   this->updateUIValues();
@@ -3945,12 +3948,10 @@ void FapUAProperties::raoFileBrowseCB()
 
   std::string fileName = vm->raoFile.getValue();
 
-  FileFilter filter;
-  filter["RAO file"] = { "rao" };
-
+  static FileFilter filter = { { "RAO file", { "rao" } } };
   if (!browseDataFile(fileName,"RAO",filter,true)) return;
 
-  vm->raoFile = fileName;
+  vm->raoFile.setValue(fileName);
   vm->raoFileRef.setPointerToNull();
 
   this->updateUIValues();
@@ -3977,13 +3978,14 @@ void FapUAProperties::simEventSelectedCB()
 void FapUAProperties::dofStatusToggledCB(int dof, int stat)
 {
   FmHasDOFsBase* item = dynamic_cast<FmHasDOFsBase*>(mySelectedFmItem);
-  if (!item) return;
+  if (!item || dof < 0) return;
 
+  size_t idof = static_cast<size_t>(dof);
   IntVec dofs;
   item->getDOFs(dofs);
-  if (dof < 0 || (size_t)dof >= dofs.size()) return;
+  if (dofs.size() <= idof) return;
 
-  item->setStatusForDOF(dofs[dof],stat);
+  item->setStatusForDOF(dofs[idof],stat);
   if (item->isOfType(FmTriad::getClassTypeID()))
     item->onChanged(); // to update triad icon
   else
@@ -3994,11 +3996,11 @@ void FapUAProperties::dofStatusToggledCB(int dof, int stat)
     if ((item = dynamic_cast<FmHasDOFsBase*>(obj)))
     {
       item->getDOFs(dofs);
-      if ((size_t)dof < dofs.size())
+      if (dofs.size() > idof)
       {
-	item->setStatusForDOF(dofs[dof],stat);
-	if (item->isOfType(FmTriad::getClassTypeID()))
-	  item->onChanged(); // to update triad icon
+        item->setStatusForDOF(dofs[idof],stat);
+        if (item->isOfType(FmTriad::getClassTypeID()))
+          item->onChanged(); // to update triad icon
       }
     }
 }

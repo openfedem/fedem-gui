@@ -407,7 +407,7 @@ void FapFileCmds::loadLink()
   // Set up the file dialog
   FFuFileDialog* aDialog = openFiles("Load Part");
 
-  // Obtain filters from the part reader factory
+  // Obtain filters from the FE part reader factory
   bool vrmlIsDefault = (FapLicenseManager::isFreeEdition() ||
 			FapLicenseManager::isLimEdition());
   FFlReaderInfo defReader = FFlReaders::instance()->getDefaultReader();
@@ -425,30 +425,20 @@ void FapFileCmds::loadLink()
 
   // ...and for CAD-model file names
   std::vector<std::string> vrmlExts;
-  vrmlExts.push_back("wrl");
-  vrmlExts.push_back("vrml");
-  vrmlExts.push_back("vrl");
-  vrmlExts.push_back("wrz");
+  vrmlExts = { "vrml", "vrl", "wrl", "wrz" };
   aDialog->addFilter("VRML model", vrmlExts, vrmlIsDefault);
   /*
-  vrmlExts.clear();
-  vrmlExts.push_back("igs");
-  vrmlExts.push_back("iges");
+  vrmlExts = { "igs", "iges" };
   aDialog->addFilter("IGES model", vrmlExts);
-
-  vrmlExts.clear();
-  vrmlExts.push_back("stp");
-  vrmlExts.push_back("step");
+  vrmlExts = { "stp", "step" };
   aDialog->addFilter("STEP based model", vrmlExts);
-
-  vrmlExts.clear();
-  vrmlExts.push_back("brep");
-  vrmlExts.push_back("rle");
+  vrmlExts = { "brep", "rle" };
   aDialog->addFilter("Open Cascade based model", vrmlExts);
   */
-  vrmlExts.clear();
-  vrmlExts.push_back("ftc");
+  vrmlExts = { "ftc" };
   aDialog->addFilter("Fedem Technology CAD model", vrmlExts);
+  vrmlExts = { "obj" };
+  aDialog->addFilter("Wavefront OBJ model", vrmlExts);
 
   aDialog->addAllFilesFilter(true);
 
@@ -567,7 +557,7 @@ void FapFileCmds::changeLink()
   // Set up the file dialog
   FFuFileDialog* aDialog = openFile("Change Part");
 
-  // Obtain filters from the part reader factory
+  // Obtain filters from the FE Part reader factory
   FFlReaderInfo defReader = FFlReaders::instance()->getDefaultReader();
   std::vector<FFlReaderInfo> regReaders;
   if (defReader.name.empty())
