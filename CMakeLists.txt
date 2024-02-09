@@ -31,6 +31,12 @@ else ( USE_FORTRAN )
 endif ( USE_FORTRAN )
 message ( STATUS "Generating build project for ${PROJECT_SOURCE_DIR}" )
 
+if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+  # It is quite important that c++17 standard is enforced in gcc
+  set ( CMAKE_CXX_STANDARD 17 )
+  set ( CMAKE_CXX_STANDARD_REQUIRED ON )
+endif ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+
 set ( MDB_DIR ${PROJECT_SOURCE_DIR}/fedem-mdb )
 
 find_path ( _MODULES FedemConfig.cmake
