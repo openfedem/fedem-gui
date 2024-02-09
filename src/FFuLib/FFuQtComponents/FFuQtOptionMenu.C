@@ -18,7 +18,7 @@ FFuQtOptionMenu::FFuQtOptionMenu(QWidget* parent) : QComboBox(parent)
 
   QObject::connect(this,SIGNAL(activated(int)),
                    this,SLOT(activatedFwd(int)));
-  QObject::connect(this,SIGNAL(activated(const QString&)),
+  QObject::connect(this,SIGNAL(textActivated(const QString&)),
                    this,SLOT(activatedFwd(const QString&)));
   QObject::connect(this,SIGNAL(highlighted(int)),
                    this,SLOT(highlightedFwd(int)));
