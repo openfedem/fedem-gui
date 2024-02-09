@@ -99,7 +99,9 @@ FdAnimationInfo::buildFontList(SoState* state, int& fldWidth, int& fldHeight)
  //wglUseFontBitmaps(qt_display_dc(), 32, 96, this->fontlist->getFirstIndex()); 
   wglUseFontBitmaps(GetDC(0), 32, 96, this->fontlist->getFirstIndex()); 
 #else
-  glXUseXFont(qApp->font().handle(), 32, 96, this->fontlist->getFirstIndex()); 
+  // BUG: For the time being I disable this, which does not exists on Qt6
+  // anymore
+  // glXUseXFont(qApp->font().handle(), 32, 96, this->fontlist->getFirstIndex()); 
 #endif
   // Find text field dimensions.
   QFontMetrics fm((qApp->font()));
