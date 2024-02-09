@@ -28,10 +28,10 @@ FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : QListWidget(parent)
   QObject::connect(this, SIGNAL(pressed(const QModelIndex&)),
                    this, SLOT(browseSelect(const QModelIndex&)));
 
-  QShortcut* qPaste = new QShortcut(Qt::CTRL + Qt::Key_V, this);
+  QShortcut* qPaste = new QShortcut(Qt::CTRL | Qt::Key_V, this);
   QObject::connect(qPaste, SIGNAL(activated()), this, SLOT(paste()));
 
-  QShortcut* qDelete = new QShortcut(Qt::CTRL + Qt::Key_X, this);
+  QShortcut* qDelete = new QShortcut(Qt::CTRL | Qt::Key_X, this);
   QObject::connect(qDelete, SIGNAL(activated()), this, SLOT(deleteAll()));
 
   IAmEnabled = true;
@@ -154,7 +154,7 @@ void FFuQtScrolledList::keyPressEvent(QKeyEvent* e)
 void FFuQtScrolledList::mousePressEvent(QMouseEvent* e)
 {
 #if !defined(win32) && !defined(win64)
-  if (IAmEnabled && e->button() == Qt::MidButton)
+  if (IAmEnabled && e->button() == Qt::MiddleButton)
   {
     this->paste();
     e->accept();
