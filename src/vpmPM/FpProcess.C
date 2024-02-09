@@ -175,9 +175,9 @@ void FpProcess::readStdOut()
   myQProcess->setReadChannel(QProcess::StandardOutput);
   while (myQProcess->canReadLine())
   {
-    QByteArray qline = myQProcess->readLine();
+    QString qline = myQProcess->readLine();
     if (!qline.isEmpty())
-      ListUI << myName <<" ["<< myPID <<"]: "<< qline;
+      ListUI << myName <<" ["<< myPID <<"]: "<< qline.toStdString();
   }
 }
 
@@ -187,8 +187,8 @@ void FpProcess::readStdErr()
   myQProcess->setReadChannel(QProcess::StandardError);
   while (myQProcess->canReadLine())
   {
-    QByteArray qline = myQProcess->readLine();
+    QString qline = myQProcess->readLine();
     if (!qline.isEmpty())
-      std::cerr << myName <<" ["<< myPID <<"]: "<< qline;
+      std::cerr << myName <<" ["<< myPID <<"]: "<< qline.toStdString();
   }
 }
