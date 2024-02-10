@@ -154,3 +154,20 @@ if ( FTENV_VERBOSE )
   message ( STATUS "Installing Fedem to ${CMAKE_INSTALL_PREFIX}" )
 endif ( FTENV_VERBOSE )
 install ( TARGETS Fedem RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
+
+#
+# Install some Qt plugins
+#
+if ( WIN )
+  set ( PLUGINS platforms/qwindows.dll styles/qwindowsvistastyle.dll )
+  file ( TO_CMAKE_PATH $ENV{QT_ROOT}/plugins PLUGIN_PATH )
+  foreach ( PLUGIN ${PLUGINS} )
+    get_filename_component ( DIR ${PLUGIN} DIRECTORY )
+    if ( FTENV_VERBOSE )
+      message ( STATUS "Installing ${PLUGIN} to ${CMAKE_INSTALL_PREFIX}" )
+    endif ( FTENV_VERBOSE )
+    install ( FILES ${PLUGIN_PATH}/${PLUGIN}
+              DESTINATION "${CMAKE_INSTALL_PREFIX}/bin/${DIR}"
+              CONFIGURATIONS Release RelWithDebInfo )
+  endforeach ( PLUGIN ${PLUGINS} )
+endif ( WIN )
