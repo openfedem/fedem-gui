@@ -154,3 +154,34 @@ if ( FTENV_VERBOSE )
   message ( STATUS "Installing Fedem to ${CMAKE_INSTALL_PREFIX}" )
 endif ( FTENV_VERBOSE )
 install ( TARGETS Fedem RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
+
+#
+# Install some Qt plugins and Fortran redistributables
+#
+if ( WIN )
+  set ( PLUGINS platforms/qwindows.dll styles/qwindowsvistastyle.dll )
+  file ( TO_CMAKE_PATH $ENV{QT_ROOT}/plugins PLUGIN_PATH )
+  foreach ( PLUGIN ${PLUGINS} )
+    get_filename_component ( DIR ${PLUGIN} DIRECTORY )
+    if ( FTENV_VERBOSE )
+      message ( STATUS "Installing ${PLUGIN} to ${CMAKE_INSTALL_PREFIX}" )
+    endif ( FTENV_VERBOSE )
+    install ( FILES ${PLUGIN_PATH}/${PLUGIN}
+              DESTINATION "${CMAKE_INSTALL_PREFIX}/bin/${DIR}"
+              CONFIGURATIONS Release RelWithDebInfo )
+  endforeach ( PLUGIN ${PLUGINS} )
+
+  if ( DEFINED ENV{IFORT_COMPILER23} )
+    file ( TO_CMAKE_PATH $ENV{IFORT_COMPILER23}redist/intel64_win/compiler IFORT_PATH )
+  elseif ( DEFINED ENV{IFORT_COMPILER24} )
+    file ( TO_CMAKE_PATH $ENV{IFORT_COMPILER24}bin IFORT_PATH )
+  endif ( DEFINED ENV{IFORT_COMPILER23} )
+
+  if ( IFORT_PATH )
+    file ( GLOB FTN_REDIST ${IFORT_PATH}/libif*md.dll ${IFORT_PATH}/libmmd.dll )
+    if ( FTENV_VERBOSE )
+      message ( STATUS "Installing Fortran redistributables from ${IFORT_PATH} to ${CMAKE_INSTALL_PREFIX}" )
+    endif ( FTENV_VERBOSE )
+    install ( FILES ${FTN_REDIST} DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
+  endif ( IFORT_PATH )
+endif ( WIN )

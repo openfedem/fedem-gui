@@ -48,9 +48,6 @@ set ( COMPONENT_FILE_LIST  FFuQtButton
                            FFuQtDropDownBox
                            FFuQ3ScrolledList
 )
-if ( Qwt_LIBRARY )
-  list ( APPEND COMPONENT_FILE_LIST FFuQt2DPlotter )
-endif ( Qwt_LIBRARY )
 
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST )
@@ -126,8 +123,15 @@ if ( TARGET Qwt )
 elseif ( Qwt_LIBRARY )
   list ( APPEND DEPENDENCY_LIST ${Qwt_LIBRARY} )
   if ( WIN )
+    string ( REPLACE ".lib" ".dll" QWT_LIBRARY ${Qwt_LIBRARY} )
     string ( APPEND CMAKE_CXX_FLAGS " -DQWT_DLL" )
+  else ( WIN )
+    set ( QWT_LIBRARY ${Qwt_LIBRARY} )
   endif ( WIN )
+  if ( FTENV_VERBOSE )
+    message ( STATUS "Installing ${QWT_LIBRARY} to ${CMAKE_INSTALL_PREFIX}" )
+  endif ( FTENV_VERBOSE )
+  install ( FILES ${QWT_LIBRARY} DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
 endif ( TARGET Qwt )
 
 message ( STATUS "Building library ${LIB_ID}" )
