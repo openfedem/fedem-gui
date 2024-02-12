@@ -28,8 +28,8 @@ private:
   virtual bool event(QEvent* e);
   virtual void setVisible(bool visible);
 
-private slots:
-  void onDropped(QDropEvent* e);
+protected:
+  void dropEvent(QDropEvent *e);
 };
 
 #endif
