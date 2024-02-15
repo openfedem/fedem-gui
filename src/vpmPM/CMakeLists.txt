@@ -8,7 +8,9 @@
 set ( LIB_ID vpmPM )
 
 find_package ( Qt6 REQUIRED COMPONENTS Core )
-qt_standard_project_setup ()
+if ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
+  qt_standard_project_setup ()
+endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
 
 if ( USE_WINDPOW )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_WND" )
