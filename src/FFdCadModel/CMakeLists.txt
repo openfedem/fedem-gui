@@ -7,10 +7,14 @@
 # Builds the LIB_ID library
 set ( LIB_ID FFdCadModel )
 
-if ( WIN AND Coin_library )
-  string ( APPEND CMAKE_CXX_FLAGS " -DCOIN_DLL" )
-  include_directories ( "$ENV{COIN_ROOT}/include" )
-endif ( WIN AND Coin_library )
+if ( Coin_library )
+  if ( WIN )
+    string ( APPEND CMAKE_CXX_FLAGS " -DCOIN_DLL" )
+  endif ( WIN )
+  if ( DEFINED ENV{COIN_ROOT} )
+    include_directories ( "$ENV{COIN_ROOT}/include" )
+  endif ( DEFINED ENV{COIN_ROOT} )
+endif ( Coin_library )
 
 
 ## Files with header and source with same name
@@ -19,22 +23,16 @@ set ( COMPONENT_FILE_LIST FdCadHandler FdCadEdge FdCadFace
     )
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST FdCadInfo FFdUtils/FFdLook )
-## Pure implementation files, i.e., source files without corresponding header
-set ( SOURCE_FILE_LIST )
 
 
 foreach ( FILE ${COMPONENT_FILE_LIST} )
-  set ( CPP_SOURCE_FILES ${CPP_SOURCE_FILES} ${FILE}.C )
-  set ( HPP_HEADER_FILES ${HPP_HEADER_FILES} ${FILE}.H )
+  list ( APPEND CPP_SOURCE_FILES ${FILE}.C )
+  list ( APPEND HPP_HEADER_FILES ${FILE}.H )
 endforeach ( FILE ${COMPONENT_FILE_LIST} )
 
 foreach ( FILE ${HEADER_FILE_LIST} )
-  set ( HPP_HEADER_FILES ${HPP_HEADER_FILES} ${FILE}.H )
+  list ( APPEND HPP_HEADER_FILES ${FILE}.H )
 endforeach ( FILE ${HEADER_FILE_LIST} )
-
-foreach ( FILE ${SOURCE_FILE_LIST} )
-  set ( CPP_SOURCE_FILES ${CPP_SOURCE_FILES} ${FILE}.C )
-endforeach ( FILE ${SOURCE_FILE_LIST} )
 
 
 message ( STATUS "Building library ${LIB_ID}" )

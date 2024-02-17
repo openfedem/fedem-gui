@@ -22,6 +22,8 @@ endif ( USE_PROFILER )
 
 if ( WIN )
   find_library ( Coin_library coin4 $ENV{COIN_ROOT}/lib )
+elseif ( DEFINED ENV{COIN_ROOT} )
+  find_library ( Coin_library Coin $ENV{COIN_ROOT}/lib )
 else ( WIN )
   find_library ( Coin_library Coin )
 endif ( WIN )
