@@ -546,7 +546,7 @@ void FapGeneralSpiderCmds::windowSelectionFinishedCB(void*, SoSelection*)
 #ifdef USE_INVENTOR
   // Insert the complete selection into the point selector.
   // Toggle or add as prescribed.
-  for (const std::pair<int,FaVec3>& node : ourWindowedNodes)
+  for (const std::pair<const int,FaVec3>& node : ourWindowedNodes)
     FdPickedPoints::selectNodeSet(node.first, node.second, ourSelectionType);
 
   ourWindowedNodes.clear();

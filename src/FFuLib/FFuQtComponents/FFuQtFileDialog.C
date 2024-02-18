@@ -92,7 +92,7 @@ void FFuQtFileDialog::setFileFilter()
     memFilt = FFuFileDialogMemoryMap::instance()->fileDialogMemory[myMemorizer].currentFilter;
 
   QStringList filters;
-  for (const std::pair<std::string,FileFilter>& filter : myFilterMap)
+  for (const std::pair<const std::string,FileFilter>& filter : myFilterMap)
     if (memFilt != filter.first) {
       if (myDefaultFilter != filter.first)
 	filters.append(filter.first.c_str());

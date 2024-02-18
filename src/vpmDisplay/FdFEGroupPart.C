@@ -80,7 +80,7 @@ void FdFEGroupPart::updateOverallLook(void* id, const FFdLook& look)
   myAccumulatedLooks[id] = look;
 
   int nLooks = 0;
-  for (const std::pair<void*,FFdLook>& alook : myAccumulatedLooks)
+  for (const std::pair<void* const,FFdLook>& alook : myAccumulatedLooks)
     if (++nLooks == 1)
       myAccumulatedLook = alook.second;
     else

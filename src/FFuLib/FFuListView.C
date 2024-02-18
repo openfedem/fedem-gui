@@ -41,7 +41,7 @@ void FFuListView::permTotSelectListItems(const std::vector<FFuListViewItem*>& to
 std::vector<FFuListViewItem*> FFuListView::getSelectedListItems()
 {
   std::vector<FFuListViewItem*> items;
-  for (const std::pair<int,FFuListViewItem*>& lvi : this->lviMap)
+  for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
     if (lvi.second->isItemSelected())
       items.push_back(lvi.second);
 
@@ -97,7 +97,7 @@ std::vector<FFuListViewItem*> FFuListView::getAllListChildren(FFuListViewItem* p
   std::vector<FFuListViewItem*> items;
 
   if (!parent)
-    for (const std::pair<int,FFuListViewItem*>& lvi : this->lviMap)
+    for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
       items.push_back(lvi.second);
   else // traversing the tree
     for (FFuListViewItem* item = parent->getFirstChildItem(); item;) {
@@ -135,7 +135,7 @@ std::vector<FFuListViewItem*> FFuListView::arePresent(const std::vector<FFuListV
   std::vector<FFuListViewItem*> present;
 
   for (FFuListViewItem* item : in)
-    for (const std::pair<int,FFuListViewItem*>& lvi : this->lviMap)
+    for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
       if (item == lvi.second) {
 	present.push_back(item);
 	break;

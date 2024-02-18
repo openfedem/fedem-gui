@@ -953,7 +953,7 @@ void FapAnimationCreator::initDeformationReading(FmPart* part, FFrExtractor* ext
   }
 
   if (!FFlrResultResolver::errMsg.empty()) {
-    for (const std::pair<std::string,int>& msg : FFlrResultResolver::errMsg)
+    for (const std::pair<const std::string,int>& msg : FFlrResultResolver::errMsg)
       ListUI <<"  ** "<< msg.first <<" ("<< msg.second <<").\n";
     ListUI <<" *** "<< part->getIdString(true) <<" will lack some deformations"
            <<" due to the above error(s).\n";
@@ -1184,7 +1184,7 @@ int FapAnimationCreator::initFringeReading(FmPart* part,
 #endif
 
   if (!FFlrResultResolver::errMsg.empty()) {
-    for (const std::pair<std::string,int>& msg : FFlrResultResolver::errMsg)
+    for (const std::pair<const std::string,int>& msg : FFlrResultResolver::errMsg)
       ListUI <<"  ** "<< msg.first <<" ("<< msg.second <<").\n";
     ListUI <<" *** "<< part->getIdString(true) <<" will lack some fringe values"
            <<" due to the above error(s).\n";
