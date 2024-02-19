@@ -417,11 +417,12 @@ void FuiFunctionProperties::placeWidgets(int width, int height)
   // Add or remove the threshold fields as a third tab
   if (IAmShowingOutput == 3)
   {
-    if (myTabStack->addTabPage(myThreshold2, "Threshold"))
 #ifdef FT_HAS_PREVIEW
+    if (myTabStack->addTabPage(myThreshold2, "Threshold"))
       myTabStack->renameTabPage(myHelpFrame, "Prm. Help");
 #else
-      ; // No preview tab - don't need to change tab label
+    // No preview tab - don't need to change tab label
+    myTabStack->addTabPage(myThreshold2, "Threshold");
 #endif
   }
   else if (IAmShowingCurvePreview || IAmShowingHelpPixmap)
