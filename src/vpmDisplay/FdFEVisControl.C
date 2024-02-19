@@ -335,11 +335,13 @@ void FdFEVisControl::updateContrast()
   // make them background like if shiowing as hidden line
 
   if (!(IAmShowingResults && IAmShowingColorResults))
+  {
     for (GroupPartType gpType : facesOn)
       if (myDrawStyle == HIDDEN_LINES)
         this->pushContrastGPTOverrideLook(backgroundLook,gpType);
       else
         this->popContrastGPTOverrideLook(gpType);
+  }
 
   // Highlight :
 

@@ -92,10 +92,12 @@ void FdPickedPoints::setPickedPoint(unsigned int idx, bool global, const FaVec3&
     globPoint = ourEditablePPoints[idx].objectToWorldMatrix * point;
 
   if (pointHighlighter)
+  {
     if (ourEditablePPoints[idx].highlightId == -1)
       ourEditablePPoints[idx].highlightId = pointHighlighter->addPoint(FdConverter::toSbVec3f(globPoint));
     else
       pointHighlighter->movePoint(ourEditablePPoints[idx].highlightId, FdConverter::toSbVec3f(globPoint));
+  }
 }
 
 
@@ -111,10 +113,12 @@ void FdPickedPoints::setPP(unsigned int idx, const FaVec3& point, const FaMat34&
   ourEditablePPoints[idx].worldToObjectMatrix = ourEditablePPoints[idx].objectToWorldMatrix.inverse();
 
   if (pointHighlighter)
+  {
     if (ourEditablePPoints[idx].highlightId == -1)
       ourEditablePPoints[idx].highlightId = pointHighlighter->addPoint(FdConverter::toSbVec3f(point));
     else
       pointHighlighter->movePoint(ourEditablePPoints[idx].highlightId, FdConverter::toSbVec3f(point));
+  }
 }
 
 void FdPickedPoints::removePP(unsigned int idx)
