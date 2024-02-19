@@ -140,13 +140,14 @@ bool FdLink::updateFdTopology(bool updateChildrenDisplay)
 #endif
   this->updateFdCS();
 
-  // Recursive update of the display topology of the
+  /* Recursive update of the display topology of the
   // enteties affected by this entety:
   //              Axial Spring/Damper
   //            /
   // Link->Triad->Joint->HP
   //            \
   //              Load
+  */
 
   if (updateChildrenDisplay)
     this->itsFmOwner->updateChildrenDisplayTopology();
@@ -490,11 +491,9 @@ bool FdLink::loadVrmlViz()
 		coords->point.setNum(vertices->size());
 		SbVec3f* coord = coords->point.startEditing();
 
-
-		//Add points to coordinate-array
-		for (int i = 0; i< vertices->size(); i++){
-			coord[i].setValue((*vertices)[i].x(), (*vertices)[i].y(), (*vertices)[i].z());
-		}
+                // Add points to coordinate-array
+                for (size_t i = 0; i < vertices->size(); i++)
+                  coord[i].setValue((*vertices)[i].x(), (*vertices)[i].y(), (*vertices)[i].z());
 
 		coords->point.finishEditing();
 
@@ -506,7 +505,7 @@ bool FdLink::loadVrmlViz()
 		face->coordIndex.deleteValues(0);
 		if (triangles)
 		{
-			for (int i = 0; i < vertexIndices.size() / 3; i++){
+			for (size_t i = 0; i < vertexIndices.size()/3; i++){
 				idx[i * 4] = vertexIndices[i * 3] - 1;
 				idx[i * 4 + 1] = vertexIndices[i * 3 + 1] - 1;
 				idx[i * 4 + 2] = vertexIndices[i * 3 + 2] - 1;
@@ -516,7 +515,7 @@ bool FdLink::loadVrmlViz()
 		}
 		else
 		{
-			for (int i = 0; i < vertexIndices.size() / 4; i++){
+			for (size_t i = 0; i < vertexIndices.size()/4; i++){
 				idx[i * 5] = vertexIndices[i * 4] - 1;
 				idx[i * 5 + 1] = vertexIndices[i * 4 + 1] - 1;
 				idx[i * 5 + 2] = vertexIndices[i * 4 + 2] - 1;
@@ -534,7 +533,7 @@ bool FdLink::loadVrmlViz()
 		FdCadEdge* edge = new FdCadEdge();
 		if (triangles)
 		{
-			for (int i = 0; i < vertexIndices.size() / 3; i++){
+			for (size_t i = 0; i < vertexIndices.size()/3; i++){
 				idx[i * 9] = vertexIndices[i * 3] - 1;
 				idx[i * 9 + 1] = vertexIndices[i * 3 + 1] - 1;
 				idx[i * 9 + 2] = -1;
@@ -550,7 +549,7 @@ bool FdLink::loadVrmlViz()
 		}
 		else
 		{
-			for (int i = 0; i < vertexIndices.size() / 4; i++){
+			for (size_t i = 0; i < vertexIndices.size()/4; i++){
 				idx[i * 12] = vertexIndices[i * 4] - 1;
 				idx[i * 12 + 1] = vertexIndices[i * 4 + 1] - 1;
 				idx[i * 12 + 2] = -1;
