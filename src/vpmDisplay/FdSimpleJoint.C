@@ -178,13 +178,14 @@ bool FdSimpleJoint::updateFdTopology(bool updateChildrenDisplay)
   lineSymbol->connectFirstSpace(transLink,jointTransLocal);
   lineSymbol->connectSecondSpace(firstTrans,secondTrans);
 
-  // Recursive update of the display topology of the
+  /* Recursive update of the display topology of the
   // entities affected by this entity:
   //              Axial Spring/Damper
   //            /
   // Link->Triad->Joint->HP
   //            \
   //              Load
+  */
 
   if (updateChildrenDisplay)
     itsFmOwner->updateChildrenDisplayTopology();

@@ -168,13 +168,14 @@ bool FdLinJoint::updateFdTopology(bool updateChildrenDisplay)
     lineSymbol->connectSecondSpace(transLink, transLocal);
   }
 
-  // Recursive update of the display topology of the
+  /* Recursive update of the display topology of the
   // entities affected by this entity:
   //              Axial Spring/Damper
   //            /
   // Link->Triad->Joint->HP
   //            \
   //              Load
+  */
 
   if (updateChildrenDisplay)
     itsFmOwner->updateChildrenDisplayTopology();
