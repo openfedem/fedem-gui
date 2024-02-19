@@ -48,7 +48,6 @@
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtJointTabAdvanced.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQt3DPoint.H"
 #include "vpmUI/Pixmaps/startGuideLogo.xpm"
-#include "vpmUI/Pixmaps/startGuideLogoWP.xpm"
 #include "vpmUI/Pixmaps/startGuideBorderRight.xpm"
 #include "vpmUI/Pixmaps/startGuideBorderTop.xpm"
 
