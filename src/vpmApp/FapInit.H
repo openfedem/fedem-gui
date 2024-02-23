@@ -30,6 +30,5 @@
 #include "vpmApp/vpmAppCmds/FapStrainCoatCmds.H"
 #include "vpmApp/vpmAppCmds/FapLinkVisualCmds.H"
 #include "vpmApp/vpmAppCmds/FapListViewCmds.H"
-#include "vpmApp/vpmAppCmds/FapOutputListCmds.H"
 
 #endif
