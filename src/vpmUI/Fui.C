@@ -927,11 +927,10 @@ void Fui::outputListUI(bool onScreen, bool inMem)
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiOutputList::getClassTypeID());
 
-  if ((onScreen || inMem) && uic == NULL)
-    {
-      UIgeo geo = Fui::getUIgeo(FUI_OUTPUTLIST_GEO);
-      uic = FuiOutputList::create(NULL ,geo.xPos, geo.yPos, geo.width, geo.height);
-    }
+  if ((onScreen || inMem) && uic == NULL) {
+    UIgeo geo = Fui::getUIgeo(FUI_OUTPUTLIST_GEO);
+    uic = FuiOutputList::create(geo.xPos, geo.yPos, geo.width, geo.height);
+  }
 
   if (uic) uic->manage(onScreen,inMem);
 }
