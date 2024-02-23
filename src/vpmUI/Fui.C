@@ -951,7 +951,7 @@ void Fui::outputListUI(bool onScreen, bool inMem)
 
   if ((onScreen || inMem) && uic == NULL) {
     Fui::Geo geo = Fui::getGeo(OUTPUTLIST_GEO);
-    uic = FuiOutputList::create(NULL, geo.xPos, geo.yPos, geo.width, geo.height);
+    uic = FuiOutputList::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
   if (uic) uic->manage(onScreen,inMem);
