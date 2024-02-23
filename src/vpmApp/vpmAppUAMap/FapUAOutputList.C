@@ -15,7 +15,7 @@ Fmd_SOURCE_INIT(FAPUAOUTPUTLIST, FapUAOutputList, FapUAExistenceHandler);
 //----------------------------------------------------------------------------
 
 FapUAOutputList::FapUAOutputList(FuiOutputList* uic)
-  : FapUAExistenceHandler(uic), FapUAFinishHandler(uic), FapUACommandHandler(uic)
+  : FapUAExistenceHandler(uic), FapUAFinishHandler(uic)
 {
   Fmd_CONSTRUCTOR_INIT(FapUAOutputList);
 
@@ -26,19 +26,4 @@ FapUAOutputList::FapUAOutputList(FuiOutputList* uic)
 void FapUAOutputList::finishUI()
 {
   Fui::outputListUI(false,true);
-}
-//----------------------------------------------------------------------------
-
-FFuaUICommands* FapUAOutputList::getCommands()
-{
-  FuaOutputListCommands* cmds = new FuaOutputListCommands();
-
-  cmds->popUpMenu = {
-    FFuaCmdItem::getCmdItem("cmdId_outputList_copy"),
-    FFuaCmdItem::getCmdItem("cmdId_outputList_selectAll"),
-    &this->separator,
-    FFuaCmdItem::getCmdItem("cmdId_outputList_clear")
-  };
-
-  return cmds;
 }

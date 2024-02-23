@@ -13,15 +13,13 @@
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "FFuLib/FFuMemo.H"
 
-class QMenu;
-
 
 class FFuQtMemo : public QTextEdit, public FFuMemo, public FFuQtComponentBase
 {
   Q_OBJECT
 
 public:
-  FFuQtMemo(QWidget* parent = NULL);
+  FFuQtMemo(QWidget* parent = NULL, bool withClearCmd = false);
   virtual ~FFuQtMemo() {}
 
   virtual void displayTextFile(const char* fileName);
@@ -74,8 +72,12 @@ protected:
   virtual void setColors(FFuaPalette aPalette);
   virtual void setFonts (FFuaFontSet aFontSet);
 
+  // Reimplement virtual methods from QTextEdit
   virtual void keyPressEvent(QKeyEvent* event);
-  virtual QMenu* createPopupMenu(const QPoint& pos);
+  virtual void contextMenuEvent(QContextMenuEvent* event);
+
+private:
+  bool haveClearCmd;
 };
 
 #endif

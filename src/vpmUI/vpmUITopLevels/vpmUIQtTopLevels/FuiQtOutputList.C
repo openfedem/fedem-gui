@@ -5,46 +5,32 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-/*! 
-  \class FuiQtOutputList FuiQtOutputList.H
-
+/*!
+  \file FuiQtOutputList.C
   \author Jacob Storen
-
-  \date 
-      \b 13.08.99 Created (\e JL) 
-  
-*/////////////////////////////////////////////////////////////////////
+  \date 13.08.99
+*/
 
 #include "FFuLib/FFuQtComponents/FFuQtMemo.H"
 #include "FuiQtOutputList.H"
 
-FuiOutputList* FuiOutputList::create(FFuComponentBase* parent,
-				     int xpos,int ypos,
-                                     int width,int height, 
-                                     const char* title,
-                                     const char* name)
+
+FuiOutputList* FuiOutputList::create(int xpos, int ypos, int width, int height)
 {
-  return new FuiQtOutputList(dynamic_cast<QWidget*>(parent),xpos,ypos,width,height,title,name);
+  return new FuiQtOutputList(xpos,ypos,width,height);
 }
 
-FuiQtOutputList::FuiQtOutputList(QWidget* parent,int xpos,int ypos,
-                                 int width,int height, 
-                                 const char* title,
-                                 const char* name)
-  : FFuQtTopLevelShell(parent,xpos,ypos,width,height,title,name,Qt::Dialog)
+
+FuiQtOutputList::FuiQtOutputList(int xpos, int ypos, int width, int height,
+                                 const char* title, const char* name)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name,Qt::Dialog)
 {
-  FFuQtMemo* list;
-  myMemo = list = new FFuQtMemo(this);
-  list->setReadOnly(true);
+  FFuQtMemo* list = new FFuQtMemo(this,true);
+  myMemo = list;
 
   QFont fnt("Courier",8);
   fnt.setStyleHint(QFont::Courier);
   list->setFont(fnt);
 
   this->initWidgets();
-}
-
-FuiQtOutputList::~FuiQtOutputList()
-{
- 
 }
