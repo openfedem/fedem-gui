@@ -5,26 +5,20 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTOUTPUTLIST_H
-#define FUIQTOUTPUTLIST_H
+#ifndef FUI_QT_OUTPUT_LIST_H
+#define FUI_QT_OUTPUT_LIST_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMDIWindow.H"
 #include "vpmUI/vpmUITopLevels/FuiOutputList.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
 
 
-
-class FuiQtOutputList : public FFuQtTopLevelShell, // public FFuQtMDIWindow, 
-                        public FuiOutputList
+class FuiQtOutputList : public FFuQtTopLevelShell, public FuiOutputList
 {
 public:
-  FuiQtOutputList(QWidget* parent=0,int xpos =100 ,int ypos = 100,
-                  int width = 500,int height = 300, 
-                  const char* title = "List",
-                  const char* name = "FuiQtOutputList");
-  virtual ~FuiQtOutputList();
- 
-
-private:
+  FuiQtOutputList(int xpos, int ypos, int width, int height,
+                  const char* title = "Output List",
+                  const char* name  = "FuiOutputList");
+  virtual ~FuiQtOutputList() {}
 };
 
 #endif
