@@ -5,52 +5,37 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIOUTPUTLIST_H
-#define FUIOUTPUTLIST_H
-
-#include <vector>
+#ifndef FUI_OUTPUT_LIST_H
+#define FUI_OUTPUT_LIST_H
 
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
-#include "FFuLib/FFuBase/FFuUACommandHandler.H"
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 
-
 class FFuMemo;
-class FFuPushButton;
 
-class FuiOutputList : public virtual FFuTopLevelShell, 
-                      public FFuUAExistenceHandler, public FFuUAFinishHandler, public FFuUACommandHandler
+
+class FuiOutputList : public virtual FFuTopLevelShell,
+                      public FFuUAExistenceHandler, public FFuUAFinishHandler
 {
   Fmd_HEADER_INIT();
+
 public:
   FuiOutputList();
-  virtual ~FuiOutputList();
+  virtual ~FuiOutputList() {}
 
   // Static create method to use instead of constructor :
-  // Implementation in GUILib Dependenet implementation file 
-  static FuiOutputList* create(FFuComponentBase* parent =0,
-			       int xpos = 100, int ypos  = 100,
-			       int width= 500, int height= 100,
-			       const char* title= "Output List",
-			       const char* name = "FuiOutputList");
+  // Implementation in GUILib-dependent implementation file
+  static FuiOutputList* create(int xpos, int ypos, int width, int height);
 
-  void addText(const char * text);
+  void addText(const char* text);
 
   // Slots from commands
   void clearList();
   void selectAll();
   void copySelected();
-  
   bool hasText();
   bool hasSelectedText();
-
-
-  // From command handler
-  virtual void setUICommands(const FFuaUICommands* cmds);
-  virtual void updateUICommandsSensitivity(const FFuaUICommands* cmds);
-  
-
 
 protected:
   void initWidgets();
@@ -58,20 +43,8 @@ protected:
   virtual void placeWidgets(int width,int height);
 
   virtual bool onClose();
- 
-  FFuMemo * myMemo;
 
-};
-
-/////////////////////////////////////////////////////////////////////////////
-
-class FuaOutputListCommands : public FFuaUICommands
-{
-public:
-  FuaOutputListCommands() {}
-  virtual ~FuaOutputListCommands() {}
-
-  std::vector<FFuaCmdItem*> popUpMenu;
+  FFuMemo* myMemo;
 };
 
 #endif

@@ -60,7 +60,6 @@ set ( SOURCE_FILE_LIST FFuQtPushButton )
 set ( QT_MOC_HEADER_FILE_LIST  FFuQtColorComboBox
                                FFuQtIOField
                                FFuQtListView
-                               FFuQtMemo
                                FFuQtMenuBar
                                FFuQtOptionMenu
                                FFuQtPopUpMenu
