@@ -6,11 +6,11 @@
   This file is part of FEDEM - https://openfedem.org
 --->
 
-[![REUSE status](https://api.reuse.software/badge/github.com/SAP/fedem-gui)](https://api.reuse.software/info/github.com/SAP/fedem-gui)
+[![REUSE status](https://api.reuse.software/badge/github.com/openfedem/fedem-gui)](https://api.reuse.software/info/github.com/openfedem/fedem-gui)
 
 # FEDEM GUI
 
-![Fedem Logo](https://github.com/SAP/fedem-foundation/blob/main/cfg/FedemLogo.png "Welcome to FEDEM")
+![Fedem Logo](https://github.com/openfedem/fedem-foundation/blob/main/cfg/FedemLogo.png "Welcome to FEDEM")
 
 **Welcome to FEDEM! - Finite Element Dynamics of Elastic Mechanisms.**
 
@@ -18,12 +18,12 @@
 
 This project contains the complete source code of
 the Graphical User Interface of FEDEM. It also uses elements from
-the [fedem-mdb](https://github.com/SAP/fedem-mdb) project,
+the [fedem-mdb](https://github.com/openfedem/fedem-mdb) project,
 which is consumed as a submodule by this repository.
 See [src/README.md](src/README.md) for details on the source code organization.
 
 The FEDEM solvers themselves are maintained in a parallel project
-[fedem-solvers](https://github.com/SAP/fedem-solvers).
+[fedem-solvers](https://github.com/openfedem/fedem-solvers).
 
 Refer to our web page [openfedem.org](https://openfedem.org/)
 for overall information on the FEDEM project.
@@ -90,13 +90,13 @@ Currently, the following options can be specified to toggle features On or Off:
 
 You can install a pre-compiled release of FEDEM for the Windows platform
 (64-bit only) by downloading any of the zip-files `FedemInstaller-*.zip`
-from the [Releases](https://github.com/SAP/fedem-gui/releases) page.
+from the [Releases](https://github.com/openfedem/fedem-gui/releases) page.
 Unzip this file in an arbitrary location, and execute the file `INSTALL.bat`
 as administrator to install the software on your PC.
 See also [Install/README.txt](Install/README.txt).
 
 Unless you already have Microsoft Visual Studio installed (2015 or later),
-you also need to download and install some C++ runtime libraries from
+you may also need to download and install some C++ runtime libraries from
 [Microsoft](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
 before you can run the installed FEDEM GUI or solvers on Windows.
 Simply download the file [vc_redist.x64.exe](https://aka.ms/vs/17/release/vc_redist.x64.exe)
@@ -105,19 +105,14 @@ and execute it as administrator.
 ## Contributing
 
 This project is open to feature requests, suggestions, bug reports, etc.,
-via [GitHub issues](https://github.com/SAP/fedem-gui/issues).
+via [GitHub issues](https://github.com/openfedem/fedem-gui/issues).
 Contributions and feedback are encouraged and always welcome.
 For more information about how to contribute,
 see our [Contribution Guidelines](.github/CONTRIBUTING.md).
 
-## Security / Disclosure
-
-If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/fedem-gui/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
-
-## Code of Conduct
-
-We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone. By participating in this project, you agree to abide by its [Code of Conduct](https://github.com/SAP/.github/blob/main/CODE_OF_CONDUCT.md) at all times.
-
 ## Licensing
 
-Copyright 2023 SAP SE or an SAP affiliate company and fedem-gui contributors. Please see our [LICENSE](LICENSE) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/SAP/fedem-gui).
+Copyright 2023 SAP SE or an SAP affiliate company and fedem-gui contributors.
+Please see our [LICENSE](LICENSE) for copyright and license information.
+Detailed information including third-party components and their licensing/copyright information
+is available via the [REUSE tool](https://api.reuse.software/info/github.com/openfedem/fedem-gui).

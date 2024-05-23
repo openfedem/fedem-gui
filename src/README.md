@@ -24,7 +24,7 @@ file structure. The top-level modules are as follows.
   The `vpmAppDisplay` sub-folder has classes to perform the animation and graph
   reading and manipulation.
 
-* [vpmDB](https://github.com/SAP/fedem-mdb/tree/master/vpmDB) -
+* [vpmDB](https://github.com/openfedem/fedem-mdb/tree/master/vpmDB) -
   The mechanism database.
   Contains classes representing the model entities of a FEDEM model,
   with methods for file input/output, topology, etc.
@@ -39,7 +39,7 @@ file structure. The top-level modules are as follows.
   or at least once inside some other UI-classes.
   The `vpmUITopLevels` classes are typically single window UIs.
 
-* [assemblyCreators](https://github.com/SAP/fedem-mdb/tree/master/assemblyCreators) -
+* [assemblyCreators](https://github.com/openfedem/fedem-mdb/tree/master/assemblyCreators) -
   Generation of parameterized wind turbine and marine structure models.
 
 * [FFuLib](FFuLib) - Application-independent user interface classes.
@@ -59,7 +59,7 @@ The classes are typically named by what module they belong to.
 Classes prefixed with a double 'F', e.g., `FFaVec3`, belong to the
 "Fedem Foundation" set of classes. They are application-independent classes that
 can be used as a building block. Most of the FF-classes are located in the
-repository [fedem-foundation](https://github.com/SAP/fedem-foundation),
+repository [fedem-foundation](https://github.com/openfedem/fedem-foundation),
 which is included as a submodule of the
 [fedem-mdb](https://github.com/SAM/fedem-mdb) repository.
 
