@@ -101,7 +101,8 @@ FuiQtMainWindow::FuiQtMainWindow()
   this->QMainWindow::statusBar()->addWidget(this->mySubTaskLabel,3);
 
   this->myProgBar = new QProgressBar(this->QMainWindow::statusBar());
-  this->QMainWindow::statusBar()->addWidget(myProgBar,10);
+  this->QMainWindow::statusBar()->addWidget(this->myProgBar,10);
+  this->myProgBar->hide();
 
   FFuQtSplitter* items_ws__props = new FFuQtSplitter(Qt::Vertical,this);
   FFuQtSplitter* items__ws       = new FFuQtSplitter(Qt::Horizontal,items_ws__props);
@@ -208,19 +209,21 @@ void FuiQtMainWindow::clearStatusBarMessage()
 
 void FuiQtMainWindow::enableProgress(int steps)
 {
-  if (myProgBar) myProgBar->setMaximum(steps);
+  myProgBar->show();
+  myProgBar->setMaximum(steps);
 }
 //----------------------------------------------------------------------------
 
 void FuiQtMainWindow::setProgress(int step)
 {
-  if (myProgBar) myProgBar->setValue(step);
+  myProgBar->setValue(step);
 }
 //----------------------------------------------------------------------------
 
 void FuiQtMainWindow::disableProgress()
 {
-  if (myProgBar) myProgBar->reset();
+  myProgBar->reset();
+  myProgBar->hide();
 }
 //----------------------------------------------------------------------------
 
@@ -249,6 +252,7 @@ void FuiQtMainWindow::setSubStep(int step)
 
 void FuiQtMainWindow::disableSubSteps()
 {
+  mySubStepCount = 0;
   mySubStepLabel->setText("");
   mySubStepLabel->repaint();
 }

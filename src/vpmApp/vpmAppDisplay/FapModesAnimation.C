@@ -96,16 +96,19 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
   const double scale = animation->eigenmodeAmplitude.getValue();
   const double epssq = 1.0e-8;
 
-  FFaMsg::setSubTask("Creating Frames");
-  FFaMsg::enableProgress(100);
-
   if (modeType == FmAnimation::SYSTEM_MODES)
     FmDB::getAllOfType(links,FmLink::getClassTypeID());
 
+  FFaMsg::setSubTask("Creating Frames");
+  FFaMsg::enableProgress(links.size());
+
   // Loop over all links in the model
-  for (size_t i = 0; i < links.size(); i++)
+  int count = 0;
+  for (FmModelMemberBase* obj : links)
   {
-    FmLink* link = static_cast<FmLink*>(links[i]);
+    FFaMsg::setProgress(++count);
+
+    FmLink* link = static_cast<FmLink*>(obj);
     if (link->isSuppressed()) continue; // skip suppressed links
 
     linkPos = link->getGlobalCS();
@@ -154,8 +157,8 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
     //////////////////////////////////////////////////////////////////
 
     // Get position matrix of current link
-    baseId = link->getBaseID();
-    FmPart* part = dynamic_cast<FmPart*>(link);
+    baseId = obj->getBaseID();
+    FmPart* part = dynamic_cast<FmPart*>(obj);
     const char* typeName = part ? "Part" : "Beam";
     getPosition(rdb,typeName,baseId,linkPos);
 #ifdef FAP_DEBUG
@@ -288,8 +291,6 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
           visMod->setResultDeformation(frameId,vtxFrame);
 #endif
         }
-
-        FFaMsg::setProgress(100*i/links.size());
         continue; // go on with the next part
       }
       else
@@ -350,8 +351,6 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
       fdlink->getVisualModel()->setResultTransform(frameId,curPos);
 #endif
     }
-
-    FFaMsg::setProgress(100.0*i/links.size());
   }
 
 
