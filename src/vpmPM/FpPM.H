@@ -113,6 +113,7 @@ public:
   static std::string createUuid();
 
   static std::vector<std::string>& recentModels() { return recentFiles; }
+  static void addRecent(const std::string& name);
   static void removeRecent(size_t idx);
 
 private:
