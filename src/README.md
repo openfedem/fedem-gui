@@ -51,7 +51,7 @@ file structure. The top-level modules are as follows.
 
 Note that the `vpmDB` and `assemblyCreators` modules are included through
 a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules)
-reference to the repository [fedem-mdb](https://github.com/SAM/fedem-mdb).
+reference to the repository [fedem-mdb](https://github.com/openfedem/fedem-mdb).
 
 ## Class name convention
 
@@ -61,7 +61,7 @@ Classes prefixed with a double 'F', e.g., `FFaVec3`, belong to the
 can be used as a building block. Most of the FF-classes are located in the
 repository [fedem-foundation](https://github.com/openfedem/fedem-foundation),
 which is included as a submodule of the
-[fedem-mdb](https://github.com/SAM/fedem-mdb) repository.
+[fedem-mdb](https://github.com/openfedem/fedem-mdb) repository.
 
 * FFa - Auxiliary classes
 * FFl - FE part handling

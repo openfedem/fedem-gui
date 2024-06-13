@@ -101,9 +101,9 @@ void FapMoveToCenterCmds::cancelMode()
 }
 
 
-void FapMoveToCenterCmds::setState(int)
+void FapMoveToCenterCmds::setState(int newState)
 {
-  switch (FapMoveToCenterCmds::ourState)
+  switch (FapMoveToCenterCmds::ourState = newState)
     {
     case START:
       Fui::tip("Select the object to move");
@@ -130,7 +130,7 @@ void FapMoveToCenterCmds::setState(int)
       break;
     case P_1_SELECTED:
       Fui::tip("Accept by pressing Done,\n"
-               "OR pick again to reselect first circle point.");
+               "or pick again to reselect first circle point.");
       FapUAModeller::showPointUI(true);
       FapUAModeller::setLocal();
       FapUAModeller::updatePointUI();
@@ -173,7 +173,7 @@ void FapMoveToCenterCmds::setState(int)
       FdExtraGraphics::showCylinder(FaMat34(),ourCirclePoints);
 #endif
       Fui::tip("Accept position by pressing Done,\n"
-               "Or select a point to place the object along the circle axis");
+               "or select a point to place the object along the circle axis");
       FapUAModeller::setPointIdx(3);
       FapUAModeller::showPointUI(false);
       break;
@@ -254,17 +254,15 @@ void FapMoveToCenterCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
     FdSelector::getSelectedObjects(selectedObjects);
 
     std::vector<int> types;
-    bool typesIsInteresting = false;
-    if (state == START || OBJECT_SELECTED)
-    {
-      // Build array of interesting types
-      typesIsInteresting = true;
-      types.resize(5,FdLink::getClassTypeID());
-      types[1] = FdTriad::getClassTypeID();
-      types[2] = FdSimpleJoint::getClassTypeID();
-      types[3] = FdFreeJoint::getClassTypeID();
-      types[4] = FdRefPlane::getClassTypeID();
-    }
+    bool typesIsInteresting = state <= OBJECT_SELECTED;
+    if (typesIsInteresting) // Build array of interesting types
+      types = {
+        FdLink::getClassTypeID(),
+        FdTriad::getClassTypeID(),
+        FdSimpleJoint::getClassTypeID(),
+        FdFreeJoint::getClassTypeID(),
+        FdRefPlane::getClassTypeID()
+      };
 
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
@@ -273,7 +271,7 @@ void FapMoveToCenterCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
                                                               types,typesIsInteresting, // Filter variables
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
 
-    if (state == START || state == OBJECT_SELECTED)
+    if (state <= OBJECT_SELECTED)
     {
       if (!event->wasCtrlDown())
         FapEventManager::permUnselectLast();
@@ -310,9 +308,10 @@ void FapMoveToCenterCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
       FapEventManager::permSelect(pickedObject->getFmOwner());
 
       FaVec3 worldPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
-      if (pickDetail) delete pickDetail;
+      delete pickDetail;
 
-      int pointIdx = 0, newState = P_1_SELECTED;
+      unsigned int pointIdx = 0;
+      int newState = P_1_SELECTED;
       if (state == P_1_ACCEPTED || state == P_2_SELECTED)
       {
         pointIdx = 1;
@@ -330,7 +329,7 @@ void FapMoveToCenterCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
       }
 
       FdPickedPoints::setPP(pointIdx,worldPoint,FdConverter::toFaMat34(objToWorld));
-      if ((int)ourCirclePoints.size() < pointIdx+1)
+      if (ourCirclePoints.size() <= pointIdx)
         ourCirclePoints.resize(pointIdx+1);
       ourCirclePoints[pointIdx] = worldPoint;
       FapMoveToCenterCmds::setState(newState);
