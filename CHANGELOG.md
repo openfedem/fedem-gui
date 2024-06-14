@@ -18,6 +18,8 @@
   the visualization model of the FE parts.
 - The content of the View control toolbar in the GUI will depend on whether
   Modeler view, at least one Graph view, or both are open.
+- The links to external web-sites in the Fedem.chm file are now opened
+  in the default web-browser.
 
 ### :bug: Fixed
 
