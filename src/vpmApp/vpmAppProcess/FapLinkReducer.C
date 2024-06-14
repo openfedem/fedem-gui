@@ -547,7 +547,7 @@ void FapLinkReducer::onActualProcessDeath(int exitValue)
 		"     This may happen when you, e.g., import a Nastran bulk data file\n"
 		"     and reduce it in the same session without saving the model first.\n"
 		"     It may help to save the model at this point and then reopen it.\n"
-		"     Contact Fedem Technical Support (support@fedem.com) for assistance\n"
+		"     Contact the OpenFEDEM team (developers@openfedem.org) for assistance\n"
 		"     if the problem persists.\n");
       myWorkPart->forceSave(); // Ensure that the part file is rewritten on next save
     }
