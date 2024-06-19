@@ -198,7 +198,7 @@ bool FdPart::updateFdApperance()
 }
 
 
-bool FdPart::updateSpecialLines(float scale)
+bool FdPart::updateSpecialLines(double scale)
 {
   if (!myGroupPartCreator) return false;
 
