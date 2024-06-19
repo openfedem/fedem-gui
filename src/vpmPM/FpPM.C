@@ -993,7 +993,6 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
 
   // Move the file name to the top of the recent file list
   FpPM::addRecent(name);
-
   Fui::updateUICommands();
 
   return true;
@@ -1177,8 +1176,8 @@ bool FpPM::loadParts(const std::vector<FmPart*>& allParts)
       "To continue with this model, you have to save it into a new model first.";
     if (FapLicenseManager::isLimEdition())
       msg += "\n\nTo use flexible parts, "
-        "you have to purchase the FullFlex edition of Fedem.\n"
-        "You can also try out the Demo edition, see http://www.fedem.com for details.";
+        "you need to have the FullFlex edition of Fedem.\n"
+        "You can also try out the Demo edition.";
     FpPM::unTouchModel(true); // set model view-only
   }
 
@@ -1798,6 +1797,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
 
   // Move the file name to the top of the recent file list
   FpPM::addRecent(name);
+  Fui::updateUICommands();
 
   FapEventManager::permUnselectAll();
   return isModelSaved;
