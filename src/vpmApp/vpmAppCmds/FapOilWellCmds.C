@@ -1131,8 +1131,6 @@ void FapOilWellCmds::createRiser(const std::string& fileName)
   std::ifstream is(fileName.c_str());
   if (!FaParse::skipWhiteSpaceAndComments(is)) return;
 
-  const std::string& modelPath = FmDB::getMechanismObject()->getAbsModelFilePath();
-
   Fui::noUserInputPlease();
   ListUI <<"===> Reading beamstring definition from "<< fileName <<"\n";
   FFaMsg::pushStatus("Reading beamstring definition");
@@ -1480,7 +1478,10 @@ void FapOilWellCmds::createRiser(const std::string& fileName)
 	{
 	  FmPart* tempPart = new FmPart();
 	  FFaFilePath::makeItAbsolute(vizFile,FFaFilePath::getPath(fileName));
-	  if (!tempPart->setVisualizationFile(vizFile,false)) {
+	  if (tempPart->setVisualizationFile(vizFile,false))
+	    vizFile = FmDB::getMechanismObject()->getRelativePath(vizFile);
+	  else
+	  {
 	    ListUI <<" *** Ignoring invalid visualization file "
 		   << vizFile <<"\n";
 	    vizFile = "";
@@ -1509,7 +1510,7 @@ void FapOilWellCmds::createRiser(const std::string& fileName)
 	beam->connect();
 	beam->setTriad(triad,0);
 	beam->setProperty(elmProp);
-	beam->visDataFile = FFaFilePath::getRelativeFilename(modelPath,vizFile);
+	beam->visDataFile = vizFile;
 	bea2 = bea1;
 	bea1 = beam;
 	tr1 = triad;

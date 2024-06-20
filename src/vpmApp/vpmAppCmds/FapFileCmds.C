@@ -475,7 +475,6 @@ void FapFileCmds::loadLink()
 
   FpPM::vpmSetUndoPoint("Load part");
 
-  const std::string& absModFilePath = FmDB::getMechanismObject()->getAbsModelFilePath();
   const FFaUnitCalculator* uc = FFaUnitCalculatorProvider::instance()->getCalculator(converter);
 
   std::vector<FmModelMemberBase*> csel;
@@ -507,7 +506,7 @@ void FapFileCmds::loadLink()
       FFaMsg::list("===> Open visualization file: " + fName + "\n");
 
       if (useRelativePath)
-        part->visDataFile = FFaFilePath::getRelativeFilename(absModFilePath,fName);
+        part->visDataFile = FmDB::getMechanismObject()->getRelativePath(fName);
 
       if (uc)
         part->visDataFileUnitConverter = *uc;
@@ -542,7 +541,7 @@ void FapFileCmds::loadLink()
 
     if (useSpecificPartRepository)
     {
-      part->myRepository = FFaFilePath::getRelativeFilename(absModFilePath,FFaFilePath::getPath(fName));
+      part->myRepository = FmDB::getMechanismObject()->getRelativePath(FFaFilePath::getPath(fName));
       FFaMsg::list("  -> Using part-specific repository: " +
 		   part->myRepository.getValue() + "\n");
     }
@@ -582,16 +581,16 @@ void FapFileCmds::changeLink()
 
   aDialog->addAllFilesFilter(true);
 
-  const std::string& absModFilePath = FmDB::getMechanismObject()->getAbsModelFilePath();
+  FmMechanism* mech = FmDB::getMechanismObject();
   std::string origPart = part->originalFEFile.getValue();
   bool isRelativeNameWanted = FFaFilePath::isRelativePath(origPart);
 
   if (!origPart.empty())
   {
     FFaFilePath::checkName(origPart);
-    FFaFilePath::makeItAbsolute(origPart,absModFilePath);
+    FFaFilePath::makeItAbsolute(origPart,mech->getAbsModelFilePath());
     if (!FpFileSys::verifyDirectory(FFaFilePath::getPath(origPart),false))
-      FFaFilePath::setPath(origPart,absModFilePath);
+      FFaFilePath::setPath(origPart,mech->getAbsModelFilePath());
     aDialog->setDefaultName(origPart);
   }
 
@@ -662,7 +661,7 @@ void FapFileCmds::changeLink()
 
   if (useSpecificPartRepository)
   {
-    part->myRepository = FFaFilePath::getRelativeFilename(absModFilePath,FFaFilePath::getPath(fName));
+    part->myRepository.setValue(mech->getRelativePath(FFaFilePath::getPath(fName)));
     FFaMsg::list("  -> Using part-specific repository: " +
 		 part->myRepository.getValue() + "\n");
   }
@@ -708,8 +707,8 @@ void FapFileCmds::setModelLinkRep(bool switchToInternal)
 
   if (!switchToInternal)
   {
-    const std::string& absModFilePath = mech->getAbsModelFilePath();
-    FFuFileDialog* aDialog = FFuFileDialog::create(absModFilePath, "Select FE part repository directory",
+    FFuFileDialog* aDialog = FFuFileDialog::create(mech->getAbsModelFilePath(),
+						   "Select FE part repository directory",
 						   FFuFileDialog::FFU_DIRECTORY_ONLY);
     aDialog->addUserToggle("relToggle", "Use path relative to model-file location",
                            FFaFilePath::isRelativePath(oldRepDir));
@@ -722,8 +721,8 @@ void FapFileCmds::setModelLinkRep(bool switchToInternal)
 
     if (dirs.front().empty())
       switchToInternal = true;
-    else if (useRelativePath && absModFilePath != dirs.front())
-      selectedRepDir = FFaFilePath::getRelativeFilename(absModFilePath,dirs.front());
+    else if (useRelativePath && mech->getAbsModelFilePath() != dirs.front())
+      selectedRepDir = mech->getRelativePath(dirs.front());
     else
       selectedRepDir = dirs.front();
   }
