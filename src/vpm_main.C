@@ -383,9 +383,9 @@ int doMainLoopSEH ()
       "FEDEM has experienced an unrecoverable error and must shut down.\n\n"
       "Note: Two log-files have been created in the Windows temp-directory.\n"
       "We would appreciate it very much if you could send these files to\n"
-      "support@fedem.com. The files are FedemCrash.log and FedemCrash*.dmp.\n"
+      "developers@openfedem.org. The files are FedemCrash.log and FedemCrash*.dmp.\n"
       "They are usually located in: C:\\Users\\(username)\\AppData\\Local\\Temp\n"
-      "The files do not contain any information about the FEDEM model content.";
+      "The files do not contain any personal data or information about the FEDEM model content.";
     if (FFaAppInfo::isConsole())
       std::cerr << msg << std::endl;
     else

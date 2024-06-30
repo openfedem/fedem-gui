@@ -28,15 +28,15 @@ public:
   virtual void updateSimplifiedViz();
   virtual void updateElementVisibility();
 
-  void updateConnectorElements() { this->updateSpecialLines(0.0f); }
-  bool updateSpecialLines(float scale);
+  bool updateSpecialLines(double scale = 0.0);
 
   virtual void smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof);
   virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
 				const SbMatrix& objToWorld,
 				SoDetail* pickDetail = NULL,
 				SoPickedPoint* pPoint = NULL);
-  bool findNode(int& nodeID, FaVec3& worldNodePos, const SbVec3f& pickPoint) const;
+  bool findNode(int& nodeID, FaVec3& worldNodePos,
+                const SbVec3f& pickPoint) const;
   virtual int getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction);
 
   void showInternalCSs(bool doShow);

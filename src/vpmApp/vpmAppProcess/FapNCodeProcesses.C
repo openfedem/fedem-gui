@@ -593,8 +593,8 @@ int FapFEFCOM::checkDependencies()
 
     if (tmpFiles.size() != dataMap.size()) {
       FFaMsg::list("===> ERROR in Duty Cycle. You have encountered a bug.\n"
-		   "     Please send an e-mail to support@fedem.com with a description\n"
-		   "     of the problem.\n", true);
+		   "     Please send an e-mail to developers@openfedem.org\n"
+		   "     with a description of the problem.\n", true);
       return FAP_NOT_EXECUTABLE;
     }
 
