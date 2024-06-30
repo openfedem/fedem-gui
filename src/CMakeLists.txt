@@ -96,7 +96,7 @@ if ( WIN )
   endif ( USE_COMAPI )
 
 # Resource file for the executable
-  set ( APP_ICON "vpmUI/Icons/win32AppIcon/fedem_app_icon.rc" )
+  set ( RESOURCES vpmUI/Icons/win32AppIcon/fedem_app_icon.rc )
 endif ( WIN )
 
 set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CXX_FLAGS}" CACHE STRING "Flags needed by the C++ compiler" FORCE )
@@ -132,9 +132,21 @@ if ( Coin_library )
 endif ( Coin_library )
 list ( APPEND DEPENDENCY_LIST vpmDB FiUserElmPlugin FFaOperation )
 
+# Main program source file(s)
+file ( GLOB CPP_SOURCE_FILES *.C )
+
+# Target Qt4::rcc is defined in FindQt4.cmake but is not propagated to here
+if ( NOT TARGET Qt4::rcc AND QT_RCC_EXECUTABLE )
+  add_executable ( Qt4::rcc IMPORTED )
+  set_property ( TARGET Qt4::rcc PROPERTY IMPORTED_LOCATION ${QT_RCC_EXECUTABLE} )
+endif ( NOT TARGET Qt4::rcc AND QT_RCC_EXECUTABLE )
+
+# Add resource file for toolbar and menu icons
+qt4_add_resources ( RESOURCES ../resources/fedem_icons.qrc )
+
 message ( STATUS "Building executable Fedem" )
 string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_CONNECTORS" )
-add_executable ( Fedem WIN32 vpm_main.C vpm_main_init.C ${COM_FILES} ${APP_ICON} )
+add_executable ( Fedem WIN32 ${CPP_SOURCE_FILES} ${COM_FILES} ${RESOURCES} )
 target_link_libraries ( Fedem ${DEPENDENCY_LIST} )
 
 #
