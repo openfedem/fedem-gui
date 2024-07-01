@@ -14,6 +14,9 @@ and with Intel&reg; Fortran Compilers for the Fortran modules.
 The build system is based on the [CMake](https://cmake.org/) tool,
 which is embedded in the Visual Studio 2019 installation.
 
+See [below](#build-fedem-gui-application-on-linux) for ongoing effort to
+build the GUI application on Linux.
+
 ## Build of external 3rd-party modules
 
 Before you can build the FEDEM GUI itself, you first need to build and install
@@ -26,91 +29,54 @@ The [Qt framework](https://www.qt.io/product/framework) is a huge package,
 and FEDEM only uses a small part of it. The following description therefore
 focuses on the necessary steps to build only what is needed for FEDEM usage.
 
-The current version of FEDEM still uses
-[Qt 4.8](https://doc.qt.io/archives/qt-4.8/index.html).
-However, the work of porting to Qt 6 has started,
-and these instructions will be updated when that effort is completed.
+To build and install the components needed by FEDEM on Windows,
+proceed as follows. The description below assumes you're using version 6.5.0
+for which the FEDEM build process has been tested, but it may also apply
+for later versions with minor modifications.
 
-To build and install the Qt components needed in FEDEM on Windows,
-proceed as follows:
+- Clone the top-level Qt module from the git repository:
 
-- Download the open source version of
-  [Qt 4.8.7](https://download.qt.io/archive/qt/4.8/4.8.7/).
-  Choose the file `qt-everywhere-opensource-src-4.8.7.zip`
-  (or the equivalent `.tar.gz` file).
-
-- Unzip the sources in some arbitrary location,
-  e.g., `%USERPROFILE%\Fedem-src\qt-everywhere-opensource-src-4.8.7`.
-  To save time (and disk space), you can unzip only the sources
-  (skipping the documentation, demos, examples, etc.).
-  Using the `unzip` tool in a bash shell, that is:
-
-      mkdir ~/Fedem-src
       cd ~/Fedem-src
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/*'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/configure.*'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/bin/**'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/include/**'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/lib/**'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/mkspecs/**'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/qmake/**'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/src/**'
-      unzip ~/Downloads/qt-everywhere-opensource-src-4.8.7.zip 'qt-everywhere-opensource-src-4.8.7/tools/**'
+      git clone git://code.qt.io/qt/qt5.git Qt6
 
-- Open the `x64 Native Tools Command Prompt for VS 2019`
-  Windows app to configure Qt:
+- Checkout the 6.5.0 branch:
 
-      cd %USERPROFILE%\Fedem-src\qt-everywhere-opensource-src-4.8.7
-      configure -opensource -fast -release -platform win32-msvc2015 ^
-      -no-declarative -no-gif -no-multimedia -no-libjpeg -no-libmng -no-libtiff -no-openssl -no-phonon -no-script -no-scripttools -no-webkit -no-xmlpatterns
+      cd Qt6
+      git checkout 6.5.0
 
-  You need to press `y` to accept the Open Source licensing terms.
-  Then to build the Qt modules, execute:
+- FEDEM only requires the `qtbase` submodule of Qt,
+  so to clone the corresponding branch for that:
 
-      nmake
+      ./init-repository --branch --module-subset=qtbase
 
-  This will run for several minutes, so go and take a coffee in the meantime..
-  After a while, the build process will probably fail due to a compiler error,
-  but only after all libraries needed by FEDEM has been successfully built,
-  so don't worry about that.
+- Comment out the freetype subdirectory from `qtbase/src/3rdparty/CMakeLists.txt`,
+  as this may not build and is not needed by FEDEM anyway, i.e.:
 
-- Install the Qt binaries required for building FEDEM.
-  Open a command prompt in administrator mode, then:
+      12c12
+      <     add_subdirectory(freetype)
+      ---
+      > #    add_subdirectory(freetype)
 
-      mkdir C:\Qt-4.8.7
-      cd C:\Qt-4.8.7
-      mkdir bin lib
-      cd %USERPROFILE%\Fedem-src\qt-everywhere-opensource-src-4.8.7
-      copy bin\qmake.exe C:\Qt-4.8.7\bin\
-      copy bin\moc.exe C:\Qt-4.8.7\bin\
-      copy bin\rcc.exe C:\Qt-4.8.7\bin\
-      copy bin\uic.exe C:\Qt-4.8.7\bin\
-      copy lib\qtmain.lib C:\Qt-4.8.7\lib
-      copy lib\Qt3Support4.* C:\Qt-4.8.7\lib
-      copy lib\QtCore4.* C:\Qt-4.8.7\lib
-      copy lib\QtGui4.* C:\Qt-4.8.7\lib
-      copy lib\QtNetwork4.* C:\Qt-4.8.7\lib
-      copy lib\QtOpenGL4.* C:\Qt-4.8.7\lib
-      copy lib\QtSql4.* C:\Qt-4.8.7\lib
-      copy lib\QtXml4.* C:\Qt-4.8.7\lib
+- With Visual Studio 2019, configure the Qt build by executing the following
+  commands from a DOS shell (put this in a bat-file for the convenience):
 
-- Install the Qt header files required for building FEDEM.
-  Open a bash shell in administrator mode,
-  then run the script (or do the equivalent in DOS):
+      @echo off
+      title Qt6 configuration
+      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+      mkdir %USERPROFILE%\Qt6-build\qtbase
+      cd %USERPROFILE%\Qt6-build\qtbase
+      call %USERPROFILE%\Fedem-src\Qt6\qtbase\configure.bat ^
+      -top-level -release -prefix C:\Qt-6.5.0 ^
+      -nomake examples -nomake tests ^
+      -no-dbus -no-ssl -no-openssl -no-harfbuzz -no-gif -no-libjpeg ^
+      -no-freetype -qt-zlib
+      pause
 
-      #!/bin/bash
-      for dir in Qt3Support QtCore QtGui QtNetwork QtOpenGL QtSql; do
-        mkdir -p C:/Qt-4.8.7/include/$dir/private
-        cd ~/Fedem-src/qt-everywhere-opensource-src-4.8.7/include/$dir
-        cp Q* C:/Qt-4.8.7/include/$dir/
-        for file in `cat *.h | awk -F'"' '{print$2}'`; do
-          cp $file C:/Qt-4.8.7/include/$dir/
-        done
-        cd private
-        for file in `cat *.h | awk -F'"' '{print$2}'`; do
-          cp $file C:/Qt-4.8.7/include/$dir/private
-        done
-      done
+- Build and install Qt:
+
+      cd %USERPROFILE%\Qt6-build
+      cmake --build . --parallel
+      cmake --install .
 
 ### Coin
 
@@ -195,26 +161,11 @@ and can therefore be built only *after* you have installed those two modules.
 To build and install SoQt, proceed as follows:
 
 - Download the sources from [github](https://github.com/coin3d/soqt).
-  Since we still are building with Qt 4.8, you have to use
-  [SoQt 1.6.0](https://github.com/coin3d/soqt/releases/tag/SoQt-1.6.0),
-  and not the more recent 1.6.1 release (which contains porting to Qt 5).
-  Choose the file `soqt-1.6.0-src.zip` (or the equivalent `.tar.gz` file).
+  Use the latest release [SoQt 1.6.2](https://github.com/coin3d/soqt/releases/tag/soqt-v1.6.2),
+  and choose the file `soqt-1.6.2-src.zip` (or the equivalent `.tar.gz` file).
 
 - Unzip the sources in arbitrary location,
-  e.g., `%USERPROFILE%\Fedem-src\SoQt-1.6.0`.
-
-- Comment out lines 392 and 396 in the file
-  `~/Fedem-src/SoQt-1.6.0/CMakeLists.txt` which add the sub-directories
-  `test-code` and `cpack.d` to the build, that is:
-
-      392c392
-      < #add_subdirectory(test-code)
-      ---
-      > add_subdirectory(test-code)
-      396c396
-      < #add_subdirectory(cpack.d)
-      ---
-      > add_subdirectory(cpack.d)
+  e.g., `%USERPROFILE%\Fedem-src\SoQt-1.6.2`.
 
 - With Visual Studio 2019, configure the SoQt build by executing the following
   commands from a DOS shell (put this in a bat-file for the convenience):
@@ -224,10 +175,11 @@ To build and install SoQt, proceed as follows:
       call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
       "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
       -G "Visual Studio 16 2019" ^
-      -S %USERPROFILE%\Fedem-src\SoQt-1.6.0 ^
+      -S %USERPROFILE%\Fedem-src\SoQt ^
       -B %USERPROFILE%\Coin-build\SoQt ^
       -DCMAKE_INSTALL_PREFIX=C:\Coin-4 ^
-      -DCMAKE_PREFIX_PATH=C:\Qt-4.8.7
+      -DCMAKE_PREFIX_PATH=C:\Qt-6.5.0 ^
+      -DSOQT_BUILD_TESTS=OFF
       pause
 
 - Open the generated solution file `%USERPROFILE%\Coin-build\SoQt\SoQt.sln`
@@ -235,31 +187,14 @@ To build and install SoQt, proceed as follows:
 
 ### SmallChange
 
-To build and install SmallChange, proceed as follows:
+The lastest release on github is not compatible with Qt 6.
+Therefore, we need to build this package from HEAD of the master branch.
+To do this proceeed as follows:
 
-- Download the sources from [github](https://github.com/coin3d/smallchange).
-  Use the latest (and so far the only) release
-  [SmallChange 1.0.0](https://github.com/coin3d/smallchange/releases/tag/smallchange-1.0.0),
-  and choose the file `smallchange-1.0.0-src.zip`
-  (or the equivalent `.tar.gz` file).
+- Clone the sources from the github repository:
 
-- Unzip the sources in arbitrary location,
-  e.g., `%USERPROFILE%\Fedem-src\SmallChange-1.0.0`.
-
-- Comment out lines 186, 187 and 228 in the file
-  `~/Fedem-src/SmallChange-1.0.0/CMakeLists.txt` which add the sub-directories
-  `test-code`, `docs` and `cpack.d` to the build, that is:
-
-      186,187c186,187
-      < #add_subdirectory(test-code)
-      < #add_subdirectory(docs)
-      ---
-      > add_subdirectory(test-code)
-      > add_subdirectory(docs)
-      228c228
-      < #add_subdirectory(cpack.d)
-      ---
-      > add_subdirectory(cpack.d)
+      cd ~/Fedem-src
+      git clone git@github.com:coin3d/smallchange.git SmallChange
 
 - With Visual Studio 2019, configure the SmallChange build
   by executing the following commands from a DOS shell
@@ -270,10 +205,10 @@ To build and install SmallChange, proceed as follows:
       call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
       "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
       -G "Visual Studio 16 2019" ^
-      -S %USERPROFILE%\Fedem-src\SmallChange-1.0.0 ^
+      -S %USERPROFILE%\Fedem-src\SmallChange ^
       -B %USERPROFILE%\Coin-build\SmallChange ^
       -DCMAKE_INSTALL_PREFIX=C:\Coin-4 ^
-      -DCMAKE_PREFIX_PATH=C:\Qt-4.8.7
+      -DCMAKE_PREFIX_PATH=C:\Qt-6.5.0
       pause
 
 - Open the generated solution file
@@ -403,14 +338,14 @@ Proceed as follows:
       title Fedem GUI configuration
       call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64 vs2019
       set COIN_ROOT=C:\Coin-4
-      set QT_ROOT=C:\Qt-4.8.7
-      set PATH=%PATH%;%QT_ROOT%\bin
+      set QT_ROOT=C:\Qt-6.5.0
       set /p VERSION=<%USERPROFILE%\Fedem-src\fedem-gui\cfg\VERSION
       "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
       -G "Visual Studio 16 2019" ^
       -S %USERPROFILE%\Fedem-src\fedem-gui ^
       -B %USERPROFILE%\Fedem-build\fedemGUI ^
       -DCMAKE_INSTALL_PREFIX=%USERPROFILE%\Fedem-install\%VERSION% ^
+      -DCMAKE_PREFIX_PATH=%QT_ROOT% ^
       -DUSE_FORTRAN=ON
       pause
 
@@ -422,7 +357,7 @@ Proceed as follows:
   and remove the option `-DUSE_FORTRAN=ON`.
   It will then configure without Fortran support.
   This implies that the *Previewing of Functions* feature will not be available
-  in your build of FEDEM GUI. You can also specify any of the options listed
+  in your build of the FEDEM GUI. You can also specify any of the options listed
   [here](README.md#activation-of-features-compile-time) in a similar way,
   to tailor your build further.
 
@@ -448,9 +383,10 @@ Proceed as follows:
   you first need to build the `INSTALL` target of this project
   as described [above](#build-the-fedem-gui-application), as well as for
   the parallel projects [fedem-solvers](https://github.com/openfedem/fedem-solvers)
-  and [fedem-mdb](https://github.com/openfedem/fedem-mdb).
+  and [fedem-mdb](https://github.com/openfedem/fedem-mdb). Finally, you need to build
+  the end-user documentation in [fedem-docs](https://github.com/openfedem/fedem-docs).
 
-  Make sure that all three projects use the same installation destination,
+  Make sure that all four projects use the same installation destination,
   by setting the `CMAKE_INSTALL_PREFIX` variable to the same value for all
   when running the `cmake` configuration steps.
 
@@ -464,3 +400,100 @@ Proceed as follows:
       11 SET VERSION=8.0.0
       12 REM All binaries are assumed to have been built and placed in folder %INST_DIR%.
       13 SET INST_DIR=%USERPROFILE%\Fedem-install\3.0.1\bin
+
+## Build FEDEM GUI application on Linux
+
+It is possible to configure and build the GUI application on Linux as well.
+The following configuration steps have been used so far:
+
+- System: Ubuntu 22.04 with gcc 11.4
+
+- Qt packages: Install Qt 6.2 and dependencies using the package manager
+
+      sudo apt install libqt6core6 libqt6gui6 libqt6widgets6 libqt6opengl6
+      sudo apt install libvulkan-dev libxkbcommon-dev
+
+- Coin3D: Download the latest release from github. The binary package
+  [coin-4.0.2-Ubuntu2204-gcc11-x64](https://github.com/coin3d/coin/releases/download/v4.0.2/coin-4.0.2-Ubuntu2204-gcc11-x64.tar.gz)
+  can be used, unless you want to compile from the sources
+  [coin-4.0.2-src](https://github.com/coin3d/coin/releases/download/v4.0.2/coin-4.0.2-src.tar.gz).
+  Extract the binary package in arbitrary location, e.g., under `/usr/local/Coin3D`
+
+- SoQt: Download the latest version from github.
+  No binary package built with Qt 6 for Ubuntu is available, so here you need to build from the sources
+  [soqt-1.6.2-src](https://github.com/coin3d/soqt/releases/download/v1.6.2/soqt-1.6.2-src.tar.gz):
+
+      tar zxfv ~/Downloads/soqt-1.6.2-src.tar.gz
+      mkdir soqt/Release
+      cd soqt/Release
+      cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/Coin3D -DSOQT_BUILD_TESTS=OFF
+      make
+      sudo make install
+
+  The `CMAKE_INSTALL_PREFIX` variable has to point to the location where you chose to extract the Coin package.
+
+- Smallchange: The lastest release on github is not compatible with Qt 6.
+  Therefore, we need to build this package from HEAD of the master branch:
+
+      git clone git@github.com:coin3d/smallchange.git
+      mkdir smallchange/Release
+      cd smallchange/Release
+      cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/Coin3D
+      make
+      sudo make install
+
+- Qwt (optional): If you want to build with the graph view widgets (curve plotting), the Qwt package
+  needs to be installed first. You can check out its source code from the git repository as follows:
+
+      git clone https://git.code.sf.net/p/qwt/git Qwt
+      git checkout v6.3.0
+
+  To reduce the size of the build, some features not used in FEDEM may be deactivated by commenting out
+  these lines in the [qwtconfig.pri](https://sourceforge.net/p/qwt/git/ci/develop/tree/qwtconfig.pri) file:
+
+      89c89
+      < QWT_CONFIG       += QwtPolar
+      ---
+      > #QWT_CONFIG       += QwtPolar
+      103c103
+      < QWT_CONFIG     += QwtSvg
+      ---
+      > #QWT_CONFIG     += QwtSvg
+      117c117
+      < QWT_CONFIG     += QwtDesigner
+      ---
+      > #QWT_CONFIG     += QwtDesigner
+      140c140
+      < QWT_CONFIG     += QwtExamples
+      ---
+      > #QWT_CONFIG     += QwtExamples
+      151c151
+      < QWT_CONFIG     += QwtPlayground
+      ---
+      > #QWT_CONFIG     += QwtPlayground
+      158c158
+      < QWT_CONFIG     += QwtTests
+      ---
+      > #QWT_CONFIG     += QwtTests
+
+  Now configure, build and install the Qwt package through the commands:
+
+      qmake6 qwt.pro
+      make
+      sudo make install
+
+  This will install Qwt in the default location, which is `/usr/local/qwt-6.3.0-dev/`.
+  You may use any other location by editing the `QWT_INSTALL_PREFIX` variable in the `qwtconfig.pri` file,
+  before running the `qmake6` command.
+  In that case, remember to also modify [FindQwt.cmake](cmake/Modules/FindQwt.cmake) before proceeding.
+
+- Configure and build FEDEM GUI from the qt6-port branch:
+
+      git clone -b qt6-port git@github.com:openfedem/fedem-gui.git
+      mkdir fedem-gui/Release fedem-gui/Debug
+      cd fedem-gui/Release
+      COIN_ROOT=/usr/local/Coin3D cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_QWTLIB=External
+      make
+      cd ../Debug
+      COIN_ROOT=/usr/local/Coin3D cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_QWTLIB=External
+      make
