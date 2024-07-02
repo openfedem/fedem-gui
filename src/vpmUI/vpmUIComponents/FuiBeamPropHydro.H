@@ -15,7 +15,7 @@ class FFuToggleButton;
 class FFuLabelField;
 
 
-class FuiBeamPropHydro : public FFuMultUIComponent
+class FuiBeamPropHydro : public virtual FFuMultUIComponent
 {
 public:
   FuiBeamPropHydro() {}
@@ -41,8 +41,8 @@ public:
   void setAcceptedCBs(const FFaDynCB1<double>& aDynCB);
   void onBeamHydroToggled(bool value);
   void setPropSensitivity(bool makeSensitive);
-  void setValues(const std::vector<double>& values);
-  void getValues(std::vector<double>& values) const;
+  void setValues(const std::array<double,10>& values);
+  void getValues(std::array<double,10>& values) const;
 };
 
 #endif

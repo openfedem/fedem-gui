@@ -873,8 +873,8 @@ public:
   FmModelMemberBase*    mySelectedMaterial;
   bool                  myBeamBreakDependence;
   bool                  myBeamHydroToggle;
-  std::vector<double>   myBeamProp;
-  std::vector<double>   myHydroProp;
+  std::array<double,18> myBeamProp;
+  std::array<double,10> myHydroProp;
 
   // Strain rosette
 

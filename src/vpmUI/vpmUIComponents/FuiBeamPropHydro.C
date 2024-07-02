@@ -144,7 +144,7 @@ void FuiBeamPropHydro::setPropSensitivity(bool makeSensitive)
 }
 
 
-void FuiBeamPropHydro::setValues(const std::vector<double>& values)
+void FuiBeamPropHydro::setValues(const std::array<double,10>& values)
 {
   myBeamHydroDbField->setValue(values[0]);
   myBeamHydroDdField->setValue(values[1]);
@@ -159,19 +159,19 @@ void FuiBeamPropHydro::setValues(const std::vector<double>& values)
 }
 
 
-void FuiBeamPropHydro::getValues(std::vector<double>& values) const
+void FuiBeamPropHydro::getValues(std::array<double,10>& values) const
 {
-  values.clear();
-  values.reserve(10);
-  values.push_back(myBeamHydroDbField->getValue());
-  values.push_back(myBeamHydroDdField->getValue());
-  values.push_back(myBeamHydroCdField->getValue());
-  values.push_back(myBeamHydroCaField->getValue());
-  values.push_back(myBeamHydroCmField->getValue());
-  values.push_back(myBeamHydroCdAxialField->getValue());
-  values.push_back(myBeamHydroCaAxialField->getValue());
-  values.push_back(myBeamHydroCmAxialField->getValue());
-  values.push_back(myBeamHydroCdSpinField->getValue());
-  values.push_back(myBeamHydroDiField->getValue());
+  values = {
+    myBeamHydroDbField->getValue(),
+    myBeamHydroDdField->getValue(),
+    myBeamHydroCdField->getValue(),
+    myBeamHydroCaField->getValue(),
+    myBeamHydroCmField->getValue(),
+    myBeamHydroCdAxialField->getValue(),
+    myBeamHydroCaAxialField->getValue(),
+    myBeamHydroCmAxialField->getValue(),
+    myBeamHydroCdSpinField->getValue(),
+    myBeamHydroDiField->getValue()
+  };
 }
 

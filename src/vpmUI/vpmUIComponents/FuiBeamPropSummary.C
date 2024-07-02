@@ -349,9 +349,9 @@ void FuiBeamPropSummary::setPropSensitivity(bool makeSensitive)
 }
 
 
-void FuiBeamPropSummary::setValues(const std::vector<double>& values)
+void FuiBeamPropSummary::setValues(const std::array<double,18>& values)
 {
-  std::vector<double>::const_iterator it = values.begin();
+  std::array<double,18>::const_iterator it = values.begin();
   myDoField->setValue(*(it++));
   myDiField->setValue(*(it++));
   myGEAField->setValue(*(it++));
@@ -373,26 +373,26 @@ void FuiBeamPropSummary::setValues(const std::vector<double>& values)
 }
 
 
-void FuiBeamPropSummary::getValues(std::vector<double>& values) const
+void FuiBeamPropSummary::getValues(std::array<double,18>& values) const
 {
-  values.clear();
-  values.reserve(18);
-  values.push_back(myDoField->getValue());
-  values.push_back(myDiField->getValue());
-  values.push_back(myGEAField->getValue());
-  values.push_back(myGEIyyField->getValue());
-  values.push_back(myGEIzzField->getValue());
-  values.push_back(myGItField->getValue());
-  values.push_back(myGmlField->getValue());
-  values.push_back(myGIpField->getValue());
-  values.push_back(myAField->getValue());
-  values.push_back(myIyField->getValue());
-  values.push_back(myIzField->getValue());
-  values.push_back(myIpField->getValue());
-  values.push_back(myShearKYField->getValue());
-  values.push_back(myShearKZField->getValue());
-  values.push_back(myShearGAsyField->getValue());
-  values.push_back(myShearGAszField->getValue());
-  values.push_back(myShearSYField->getValue());
-  values.push_back(myShearSZField->getValue());
+  values = {
+    myDoField->getValue(),
+    myDiField->getValue(),
+    myGEAField->getValue(),
+    myGEIyyField->getValue(),
+    myGEIzzField->getValue(),
+    myGItField->getValue(),
+    myGmlField->getValue(),
+    myGIpField->getValue(),
+    myAField->getValue(),
+    myIyField->getValue(),
+    myIzField->getValue(),
+    myIpField->getValue(),
+    myShearKYField->getValue(),
+    myShearKZField->getValue(),
+    myShearGAsyField->getValue(),
+    myShearGAszField->getValue(),
+    myShearSYField->getValue(),
+    myShearSZField->getValue()
+  };
 }

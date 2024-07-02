@@ -15,7 +15,7 @@ class FFuIOField;
 class FFuToggleButton;
 
 
-class FuiScaleShiftWidget : public FFuMultUIComponent
+class FuiScaleShiftWidget : public virtual FFuMultUIComponent
 {
 public:
   FuiScaleShiftWidget();
