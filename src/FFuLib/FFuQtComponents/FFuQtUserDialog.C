@@ -20,14 +20,6 @@
 #include "FFuLib/FFuQtComponents/FFuQtUserDialog.H"
 
 
-inline QMessageBox::StandardButtons StdButtons(int nB)
-{
-  if (nB < 1) return QMessageBox::NoButton;
-  if (nB < 2) return QMessageBox::Yes;
-  if (nB < 3) return QMessageBox::Yes | QMessageBox::No;
-  return QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel;
-}
-
 //----------------------------------------------------------------------------
 
 FFuUserDialog* FFuUserDialog::create(const char*  msgText,
@@ -41,35 +33,32 @@ FFuUserDialog* FFuUserDialog::create(const char*  msgText,
 //----------------------------------------------------------------------------
 
 FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
-				 const char** buttonTexts,
-				 unsigned int nButtons, bool isModal)
-  : QMessageBox(QMessageBox::NoIcon,"Fedem",msgText,StdButtons(nButtons))
+                                 const char** buttonTexts, unsigned int nButton,
+                                 bool isModal)
+  : QMessageBox(QMessageBox::NoIcon,"Fedem",msgText)
 {
   this->setWidget(this);
   this->setModal(isModal);
 
-  //set buttontext
-  if (nButtons>0) this->setButtonText(QMessageBox::Yes   ,buttonTexts[0]);
-  if (nButtons>1) this->setButtonText(QMessageBox::No    ,buttonTexts[1]);
-  if (nButtons>2) this->setButtonText(QMessageBox::Cancel,buttonTexts[2]);
-  if (nButtons>2) this->setEscapeButton(QMessageBox::Cancel);
+  // Add buttons
+  if (nButton > 0) this->addButton(buttonTexts[0], QMessageBox::YesRole);
+  if (nButton > 1) this->addButton(buttonTexts[1], QMessageBox::NoRole);
+  if (nButton > 2) this->addButton(buttonTexts[2], QMessageBox::RejectRole);
+  if (nButton > 3) this->setEscapeButton(QMessageBox::Cancel);
 
-  //set icon
-  QPixmap pixmap;
+  // Set icon
   if (dialogType == FFuDialog::INFO)
-    pixmap = FFuaQtPixmapCache::getPixmap(infoDialog);
+    this->setIconPixmap(FFuaQtPixmapCache::getPixmap(infoDialog));
   else if (dialogType == FFuDialog::ERROR)
-    pixmap = FFuaQtPixmapCache::getPixmap(errorDialog);
+    this->setIconPixmap(FFuaQtPixmapCache::getPixmap(errorDialog));
   else if (dialogType == FFuDialog::WARNING)
-    pixmap = FFuaQtPixmapCache::getPixmap(warningDialog);
+    this->setIconPixmap(FFuaQtPixmapCache::getPixmap(warningDialog));
   else if (dialogType == FFuDialog::QUESTION)
-    pixmap = FFuaQtPixmapCache::getPixmap(questionDialog);
+    this->setIconPixmap(FFuaQtPixmapCache::getPixmap(questionDialog));
   else if (dialogType == FFuDialog::FT_LOGO)
-    pixmap = FFuaQtPixmapCache::getPixmap(LetterLogoColorTranspAbout_xpm);
+    this->setIconPixmap(FFuaQtPixmapCache::getPixmap(LetterLogoColorTranspAbout_xpm));
   else if (dialogType == FFuDialog::SAP_LOGO)
-    pixmap = FFuaQtPixmapCache::getPixmap(SAPlogo_xpm,128);
-
-  this->setIconPixmap(pixmap);
+    this->setIconPixmap(FFuaQtPixmapCache::getPixmap(SAPlogo_xpm,128));
 
   if (dialogType >= FFuDialog::FT_LOGO)
     this->findChild<QLabel*>("qt_msgbox_label")->setFixedWidth(400);
@@ -85,16 +74,17 @@ FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
 int FFuQtUserDialog::execute()
 {
   FFuaApplication::breakUserEventBlock(true);
-  int ret = this->exec();
+  this->exec();
   FFuaApplication::breakUserEventBlock(false);
 
-  switch (ret) {
-  case QMessageBox::Yes:
+  switch (this->buttonRole(this->clickedButton())) {
+  case QMessageBox::YesRole:
     return 0;
-  case QMessageBox::No:
+  case QMessageBox::NoRole:
     return 1;
-  case QMessageBox::Cancel:
+  case QMessageBox::RejectRole:
     return 2;
+  default:
+    return -1; // if accidentally called on a modeless dialog
   }
-  return -1; //if accidentally called on a modeless dialog
 }
