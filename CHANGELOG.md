@@ -78,4 +78,7 @@
 - This is the first open source version of FEDEM,
   including binaries for GUI and solvers on Windows platform.
 
-[fedem-8.0.1]: https://github.com/SAP/fedem-gui/compare/fedem-8.0.0...fedem-8.0.1
+[fedem-8.0.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.0...fedem-8.0.1
+[fedem-8.0.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.1...fedem-8.0.2
+[fedem-8.0.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.2...fedem-8.0.3
+[fedem-8.0.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.3...fedem-8.0.4
