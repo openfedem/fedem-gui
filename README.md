@@ -80,6 +80,7 @@ with their default value in brackets [].
 * USE_FREQDOMAIN - Build with frequency-domain support [ON]
 * USE_MESHING - Build with FE meshing support [OFF]
 * USE_OILWELL - Build with oil well modeling support [OFF]
+* USE_QWTLIB - Build with Qwt curve plotting library [ON]
 * USE_RISER - Build with marine structures modeling support [OFF]
 * USE_SEVENTS - Build with simulation event support [OFF]
 * USE_SOLVERS - Build with solver support [ON]
