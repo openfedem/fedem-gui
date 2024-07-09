@@ -22,13 +22,10 @@
 
 //----------------------------------------------------------------------------
 
-FFuQt2DPlotter::FFuQt2DPlotter( QWidget* parent, const char* name )
+FFuQt2DPlotter::FFuQt2DPlotter(QWidget* parent, const char* name)
   : QwtPlot(QwtText(name), parent)
 {
-  this->setAutoScaleOnLoadCurve(false);
   this->setWidget(this);
-
-  this->setBackgroundColor(QColor("white"));
   this->setContentsMargins(10, 10, 10, 10);
 
   ((QFrame*)this->canvas())->setLineWidth(1);
@@ -40,11 +37,6 @@ FFuQt2DPlotter::FFuQt2DPlotter( QWidget* parent, const char* name )
 		   this,SLOT(fwdCurveHighlightChanged()));
   QObject::connect(this,SIGNAL(graphSelected()),
 		   this,SLOT(fwdGraphSelected()));
-
-  // Setting up printer
-  myPrinter.setOrientation(QPrinter::Portrait);
-  myPrinter.setPageSize(QPrinter::A4);
-  myPrinter.setNumCopies(1);
 
   // Initialize map for storing curveId to QwtPlotCurve connections
   QwtCurves.clear();
@@ -89,8 +81,6 @@ FFuQt2DPlotter::FFuQt2DPlotter( QWidget* parent, const char* name )
   plotGrid = NULL;
   xViewMin = yViewMin = 0.0;
   xViewMax = yViewMax = 1.0;
-  autoScaleOnLoadcurve = true;
-  d_shiftFactor = 0.1;
 }
 
 //--------------------------- texts ------------------------------------------
@@ -236,7 +226,7 @@ std::string
 FFuQt2DPlotter::getPlotterAxisTitle( int axis )
 {
   if ( axis == X_AXIS )
-    return this->axisTitle(xBottom).text().toStdString(); 
+    return this->axisTitle(xBottom).text().toStdString();
   else if ( axis == Y_AXIS )
     return this->axisTitle(yLeft).text().toStdString();
   else
@@ -249,7 +239,7 @@ double FFuQt2DPlotter::getPlotterXAxisMax()
 {
   double max = 0.0;
   bool first = true;
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
     CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
     double currValue = data->boundingRect().x() + data->boundingRect().width();
@@ -270,7 +260,7 @@ double FFuQt2DPlotter::getPlotterXAxisMin()
 {
   double min = 0.0;
   bool first = true;
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
     CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
     double currValue = data->boundingRect().x();
@@ -291,7 +281,7 @@ double FFuQt2DPlotter::getPlotterYAxisMax()
 {
   double max = 0.0;
   bool first = true;
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
     CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
     double currValue = data->boundingRect().y();
@@ -312,7 +302,7 @@ double FFuQt2DPlotter::getPlotterYAxisMin()
 {
   double min = 0.0;
   bool first = true;
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
     CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
     double currValue = data->boundingRect().y() - data->boundingRect().height();
@@ -355,10 +345,8 @@ FFuQt2DPlotter::loadNewPlotterCurve(std::vector<double>* const x_data,
 	this->setPlotterScaleAndOffset(curveId, scaleX, offsetX, zeroAdjustX, scaleY, offsetY, zeroAdjustY,false);
 
 
-	if (this->getAutoScaleOnLoadCurve()){
+	if (autoScaleOnLoadCurve)
 		this->autoScalePlotter();
-	}
-
 
 	return curveId;
 }
@@ -384,13 +372,10 @@ bool FFuQt2DPlotter::loadPlotterCurveData(int curveid,
 		this->setPlotterScaleAndOffset(curveid, scaleX, offsetX, zeroAdjustX, scaleY,
 			offsetY, zeroAdjustY, false);
 
-		if (this->getAutoScaleOnLoadCurve()){
+		if (autoScaleOnLoadCurve)
 			this->autoScalePlotter();
-		}
 		else
-		{
-			replotAllPlotterCurves();
-		}
+			this->replotAllPlotterCurves();
 
 		return true;
 	}
@@ -418,10 +403,10 @@ FFuQt2DPlotter::setPlotterScaleAndOffset( int curveid, double scaleX,
 
 	if (doUpdate)
 	{
-		if (getAutoScaleOnLoadCurve())
-			autoScalePlotter();
+		if (autoScaleOnLoadCurve)
+			this->autoScalePlotter();
 		else
-			replotAllPlotterCurves();
+			this->replotAllPlotterCurves();
 	}
 }
 
@@ -445,7 +430,7 @@ FFuQt2DPlotter::removePlotterCurve( int curveid )
 
 void FFuQt2DPlotter::removePlotterCurves()
 {
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
     curve.second->detach();
     delete curve.second;
@@ -477,7 +462,7 @@ std::vector<int> FFuQt2DPlotter::getPlotterCurves()
 {
   std::vector<int> vec;
   vec.reserve(QwtCurves.size());
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
     vec.push_back(curve.first);
 
   return vec;
@@ -489,7 +474,7 @@ void FFuQt2DPlotter::setPlotterCurveStyle(int curveid, int style, int width,
                                           const UColor& color, bool redraw)
 {
   QwtPlotCurve* activeCurve = this->GetCurveFromID(curveid);
-  if (activeCurve != NULL)
+  if (activeCurve)
   {
     if (style != (int)activeCurve->style())
       switch (style) {
@@ -506,13 +491,10 @@ void FFuQt2DPlotter::setPlotterCurveStyle(int curveid, int style, int width,
 
     QPen newPen = QPen(QColor(color[0],color[1],color[2]),width);
 
-    for (std::pair<int,QPen>& curve : highlightedCurves)
-      if (curve.first == curveid) {
-        curve.second = newPen;
-        activeCurve = NULL;
-      }
-
-    if (activeCurve)
+    std::map<int,QPen>::iterator curve = highlightedCurves.find(curveid);
+    if (curve != highlightedCurves.end())
+      curve->second = newPen;
+    else
       activeCurve->setPen(newPen);
 
     if (redraw)
@@ -727,18 +709,18 @@ FFuQt2DPlotter::showPlotterGridX( int gridtype )
 	switch (gridtype)
 	{
 	case NOGRID:
-		plotGrid->enableX(FALSE);
-		plotGrid->enableXMin(FALSE);
+		plotGrid->enableX(false);
+		plotGrid->enableXMin(false);
 		break;
 
 	case FINEGRID:
-		plotGrid->enableX(TRUE);
-		plotGrid->enableXMin(TRUE);
+		plotGrid->enableX(true);
+		plotGrid->enableXMin(true);
 		break;
 
 	case COARSEGRID:
-		plotGrid->enableX(TRUE);
-		plotGrid->enableXMin(FALSE);
+		plotGrid->enableX(true);
+		plotGrid->enableXMin(false);
 		break;
 	}
 
@@ -760,18 +742,18 @@ FFuQt2DPlotter::showPlotterGridY( int gridtype )
 	switch (gridtype)
 	{
 	case NOGRID:
-		plotGrid->enableY(FALSE);
-		plotGrid->enableYMin(FALSE);
+		plotGrid->enableY(false);
+		plotGrid->enableYMin(false);
 		break;
 
 	case FINEGRID:
-		plotGrid->enableY(TRUE);
-		plotGrid->enableYMin(TRUE);
+		plotGrid->enableY(true);
+		plotGrid->enableYMin(true);
 		break;
 
 	case COARSEGRID:
-		plotGrid->enableY(TRUE);
-		plotGrid->enableYMin(FALSE);
+		plotGrid->enableY(true);
+		plotGrid->enableYMin(false);
 		break;
 	}
 
@@ -780,38 +762,22 @@ FFuQt2DPlotter::showPlotterGridY( int gridtype )
 
 //----------------------------------------------------------------------------
 
-int
-FFuQt2DPlotter::getPlotterGridTypeX()
+int FFuQt2DPlotter::getPlotterGridTypeX()
 {
-	if (plotGrid == NULL)
-	{
-		return NOGRID;
-	}
+  if (!plotGrid || !plotGrid->xEnabled())
+    return NOGRID;
 
-	if (!plotGrid->xEnabled())
-		return NOGRID;
-	else if (plotGrid->xMinEnabled())
-		return FINEGRID;
-	else
-		return COARSEGRID;
+  return plotGrid->xMinEnabled() ? FINEGRID : COARSEGRID;
 }
 
 //----------------------------------------------------------------------------
 
-int
-FFuQt2DPlotter::getPlotterGridTypeY()
+int FFuQt2DPlotter::getPlotterGridTypeY()
 {
-	if (plotGrid == NULL)
-	{
-		return NOGRID;
-	}
+  if (!plotGrid || !plotGrid->yEnabled())
+    return NOGRID;
 
-	if (!plotGrid->yEnabled())
-		return NOGRID;
-	else if (plotGrid->yMinEnabled())
-		return FINEGRID;
-	else
-		return COARSEGRID;
+  return plotGrid->yMinEnabled() ? FINEGRID : COARSEGRID;
 }
 
 //----------------------------------------------------------------------------
@@ -1022,7 +988,7 @@ FFuQt2DPlotter::removePlotterMarker( int id )
 
 void FFuQt2DPlotter::removePlotterMarkers()
 {
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
     curve.second->detach();
     delete curve.second;
@@ -1063,26 +1029,10 @@ FFuQt2DPlotter::autoScalePlotter()
 //----------------------------------------------------------------------------
 
 void
-FFuQt2DPlotter::setAutoScaleOnLoadCurve( bool a )
-{
-	autoScaleOnLoadcurve = a;
-}
-
-//----------------------------------------------------------------------------
-
-bool
-FFuQt2DPlotter::getAutoScaleOnLoadCurve()
-{
-	return autoScaleOnLoadcurve;
-}
-
-//----------------------------------------------------------------------------
-
-void
 FFuQt2DPlotter::zoomPlotterWindow()
 {
 		zoomer->setZoomBase();
-		this->canvas()->setCursor(Qt::crossCursor);
+		this->canvas()->setCursor(Qt::CrossCursor);
 		this->zoomer->setEnabled(true);
 		this->picker->setEnabled(false);
 		this->appendPicker->setEnabled(false);
@@ -1094,9 +1044,9 @@ void
 FFuQt2DPlotter::zoomPlotterAllInWindow()
 {
 //	this->unsetCursor();
-	this->canvas()->setCursor(Qt::crossCursor);
+	this->canvas()->setCursor(Qt::CrossCursor);
 	this->zoomer->setEnabled(true);
-	//TODOthis->setZoomAllInRectMode(true);
+//TODO  this->setZoomAllInRectMode(true);
 }
 
 //----------------------------------------------------------------------------
@@ -1104,9 +1054,8 @@ FFuQt2DPlotter::zoomPlotterAllInWindow()
 void
 FFuQt2DPlotter::zoomPlotterOut()
 {
-	setAutoScaleOnLoadCurve(false);
-	double zoomFactor = 1.25;
-	zoomPlotter(zoomFactor);
+  autoScaleOnLoadCurve = false;
+  this->zoomPlotter(1.25);
 }
 
 //----------------------------------------------------------------------------
@@ -1114,9 +1063,8 @@ FFuQt2DPlotter::zoomPlotterOut()
 void
 FFuQt2DPlotter::zoomPlotterIn()
 {
-	setAutoScaleOnLoadCurve(false);
-	double zoomFactor = 0.8;
-	zoomPlotter(zoomFactor);
+  autoScaleOnLoadCurve = false;
+  this->zoomPlotter(0.8);
 }
 
 //----------------------------------------------------------------------------
@@ -1153,7 +1101,7 @@ void FFuQt2DPlotter::zoomPlotter(double zoomFactor)
 void
 FFuQt2DPlotter::shiftPlotterLeft()
 {
-	setAutoScaleOnLoadCurve(false);
+	autoScaleOnLoadCurve = false;
 	double min = xViewMin;
 	double max = xViewMax;
 	double dx = (max - min)*(d_shiftFactor);
@@ -1171,7 +1119,7 @@ FFuQt2DPlotter::shiftPlotterLeft()
 void
 FFuQt2DPlotter::shiftPlotterRight()
 {
-	setAutoScaleOnLoadCurve(false);
+	autoScaleOnLoadCurve = false;
 	double min = xViewMin;
 	double max = xViewMax;
 	double dx = (max - min)*(d_shiftFactor);
@@ -1189,7 +1137,7 @@ FFuQt2DPlotter::shiftPlotterRight()
 void
 FFuQt2DPlotter::shiftPlotterUp()
 {
-	setAutoScaleOnLoadCurve(false);
+	autoScaleOnLoadCurve = false;
 	double  min = yViewMin;
 	double  max = yViewMax;
 	double  dy = (max - min)*(d_shiftFactor);
@@ -1206,7 +1154,7 @@ FFuQt2DPlotter::shiftPlotterUp()
 void
 FFuQt2DPlotter::shiftPlotterDown()
 {
-	setAutoScaleOnLoadCurve(false);
+	autoScaleOnLoadCurve = false;
 	double  min = yViewMin;
 	double  max = yViewMax;
 	double  dy = (max - min)*(d_shiftFactor);
@@ -1216,22 +1164,6 @@ FFuQt2DPlotter::shiftPlotterDown()
 	yViewMin = min;
 	yViewMax = max;
 	replotAllPlotterCurves();
-}
-
-//----------------------------------------------------------------------------
-
-void
-FFuQt2DPlotter::setPlotterShiftFactor( double factor )
-{
-	d_shiftFactor = factor;
-}
-
-//----------------------------------------------------------------------------
-
-double
-FFuQt2DPlotter::getPlotterShiftFactor()
-{
-	return d_shiftFactor;
 }
 
 //----------------------------------------------------------------------------
@@ -1288,10 +1220,7 @@ FFuQt2DPlotter::getPlotterHighlightCurveOnPick()
 
 bool FFuQt2DPlotter::isPlotterCurvehighlighted(int curveid)
 {
-  for (const std::pair<int,QPen>& curve : highlightedCurves)
-    if (curve.first == curveid) return true;
-
-  return false;
+  return highlightedCurves.find(curveid) != highlightedCurves.end();
 }
 
 //----------------------------------------------------------------------------
@@ -1305,22 +1234,20 @@ void FFuQt2DPlotter::highlightPlotterCurve(int curveid, bool highlight, bool not
   {
     QwtPlotCurve* c = this->GetCurveFromID(curveid);
     QPen pen = c->pen();
-    highlightedCurves.push_back(std::pair<int,QPen>(curveid,pen));
+    highlightedCurves[curveid] = pen;
     pen.setColor(QColor("red"));
     c->setPen(pen);
     c->setZ(21);
   }
   else
   {
-    std::vector< std::pair<int,QPen> >:: iterator it;
-    for (it = highlightedCurves.begin(); it != highlightedCurves.end(); ++it)
-      if (it->first == curveid) {
-	QwtPlotCurve* c = this->GetCurveFromID(it->first);
-	c->setPen(it->second);
-	c->setZ(20);
-	highlightedCurves.erase(it);
-	break;
-      }
+    std::map<int,QPen>::iterator it = highlightedCurves.find(curveid);
+    if (it != highlightedCurves.end()) {
+      QwtPlotCurve* c = this->GetCurveFromID(curveid);
+      c->setPen(it->second);
+      c->setZ(20);
+      highlightedCurves.erase(it);
+    }
   }
 
   this->blockLibSignals(wasblocked);
@@ -1334,10 +1261,10 @@ void FFuQt2DPlotter::highlightAllPlotterCurves(bool highlight, bool notify)
   if (!notify) this->blockLibSignals(true);
 
   if (highlight)
-    for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+    for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
     {
       QPen pen = curve.second->pen();
-      highlightedCurves.push_back(std::make_pair(curve.first,pen));
+      highlightedCurves[curve.first] = pen;
       pen.setColor(QColor("red"));
       curve.second->setPen(pen);
       curve.second->setZ(21);
@@ -1345,7 +1272,7 @@ void FFuQt2DPlotter::highlightAllPlotterCurves(bool highlight, bool notify)
   else
   {
     QwtPlotCurve* c;
-    for (const std::pair<int,QPen>& curve : highlightedCurves)
+    for (const std::pair<const int,QPen>& curve : highlightedCurves)
       if ((c = this->GetCurveFromID(curve.first))) {
         c->setPen(curve.second);
         c->setZ(20);
@@ -1362,7 +1289,7 @@ std::vector<int> FFuQt2DPlotter::getPlotterHighlightedCurves()
 {
   std::vector<int> vec;
   vec.reserve(highlightedCurves.size());
-  for (const std::pair<int,QPen>& curve : highlightedCurves)
+  for (const std::pair<const int,QPen>& curve : highlightedCurves)
     vec.push_back(curve.first);
   return vec;
 }
@@ -1404,64 +1331,19 @@ FFuQt2DPlotter::getPlotterHighlightPenWidth()
 	return 0;
 }
 
-
-
-void
-FFuQt2DPlotter::printPlotter()
-{
- /*TODO if ( myPrinter.printerName().isEmpty() )
-    this->printPlotterSetup();
-  else
-  {
-    myPrinter.setOutputFileName(0);
-    QPen oldMaj = this->gridMajPen();
-    QPen oldMin = this->gridMinPen();
-    this->setGridMajPen(QPen(QColor("darkGrey")));
-    this->setGridMinPen(QPen(QColor("lightGrey")));
-    this->print(myPrinter);
-    this->setGridMajPen(oldMaj);
-    this->setGridMinPen(oldMin);
-  }*/
-}
-
 //----------------------------------------------------------------------------
 
-void
-FFuQt2DPlotter::printPlotterSetup()
+bool FFuQt2DPlotter::savePlotterAsImage(const std::string& fName, const char* format)
 {
-  if ( myPrinter.setup() )
-    this->printPlotter();
+  return QPixmap::grabWidget(this).save(fName.c_str(), format, 100);
 }
-
-//----------------------------------------------------------------------------
-
-bool
-FFuQt2DPlotter::savePlotterAsImage( const std::string& fileName,
-    const char* format )
-{
-	QPixmap p;
-	p = p.grabWidget(this);
-	return  p.save(QString(fileName.c_str()), format, 100);
-	//TODOreturn this->saveAsImage(fileName.c_str(), format);
-	return true;
-}
-
-//----------------------------------------------------------------------------
-
-void FFuQt2DPlotter::enablePlotterDemoWarning(bool /*enable*/)
-{
-	//TODOthis->enableDemoWarning(enable);
-}
-
 
 //----------------------------------------------------------------------------
 
 void FFuQt2DPlotter::fwdCurveHighlightChanged()
 {
   this->invokeCurveHighlightChangedCB();
-  this->onCurveHighlightChanged();
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -1473,12 +1355,12 @@ void FFuQt2DPlotter::fwdGraphSelected()
 void FFuQt2DPlotter::zoomComplete()
 {
 	zoomer->setZoomBase();
-	setAutoScaleOnLoadCurve(false);
+	autoScaleOnLoadCurve = false;
 
 	this->zoomer->setEnabled(false);
 	this->picker->setEnabled(true);
 	this->appendPicker->setEnabled(true);
-	this->canvas()->setCursor(Qt::arrowCursor);
+	this->canvas()->setCursor(Qt::ArrowCursor);
 
 	yViewMin = this->axisScaleDiv(yLeft).lowerBound();
 	yViewMax = this->axisScaleDiv(yLeft).upperBound();
@@ -1493,7 +1375,7 @@ void FFuQt2DPlotter::panComplete(int, int)
 	xViewMin = this->axisScaleDiv(xBottom).lowerBound();
 	xViewMax = this->axisScaleDiv(xBottom).upperBound();
 
-	setAutoScaleOnLoadCurve(false);
+	autoScaleOnLoadCurve = false;
 }
 
 //----------------------------------------------------------------------------
@@ -1501,7 +1383,7 @@ int FFuQt2DPlotter::GetNewQwtCurveId()
 {
   // Find biggest curve-index already in use. Return the next
   int biggestIndex = 0;
-  for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves)
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
     if (curve.first > biggestIndex)
       biggestIndex = curve.first;
 
@@ -1512,7 +1394,7 @@ int FFuQt2DPlotter::GetNewQwtMarkerId()
 {
   // Find biggest marker-index already in use. Return the next
   int biggestIndex = 0;
-  for (const std::pair<int,QwtPlotMarker*>& marker : QwtMarkers)
+  for (const std::pair<const int,QwtPlotMarker*>& marker : QwtMarkers)
     if (marker.first > biggestIndex)
       biggestIndex = marker.first;
 
@@ -1566,8 +1448,7 @@ void FFuQt2DPlotter::onCurvePicked(const QPointF& point)
 	bool highlighted = isPlotterCurvehighlighted(curveid);
 
 	if (!d_ctrlPressed) {        // !ctrlPressed
-		if (!highlighted ||
-			(highlighted && highlightedCurves.size()>1)) {
+		if (!highlighted || highlightedCurves.size() > 1) {
 			highlightAllPlotterCurves(false, true);
 			highlightPlotterCurve(curveid, true, true);
 			replotAllPlotterCurves();
@@ -1594,19 +1475,17 @@ void FFuQt2DPlotter::onCurvePicked(const QPointF& point)
 
 void FFuQt2DPlotter::wheelEvent(QWheelEvent* event)
 {
-	int numSteps = event->delta() / 120;
-	double zoomFactor = 0;
+  double zoomFactor;
+  int numSteps = event->delta() / 120;
+  if (numSteps < 0)
+    zoomFactor = 0.8 / static_cast<double>(-numSteps);
+  else if (numSteps > 0)
+    zoomFactor = 1.2 * static_cast<double>(numSteps);
+  else
+    return;
 
-	if (numSteps < 0)
-		zoomFactor = 0.8 / abs((double)numSteps);
-	else if (numSteps > 0)
-		zoomFactor = 1.2*(double)numSteps;
-
-	if (zoomFactor > 0)
-	{
-		setAutoScaleOnLoadCurve(false);
-		zoomPlotter(zoomFactor);
-	}
+  autoScaleOnLoadCurve = false;
+  this->zoomPlotter(zoomFactor);
 }
 
 
@@ -1622,7 +1501,7 @@ long FFuQt2DPlotter::closestCurveFaster(double xpos, double ypos, double distX, 
 	QwtSeriesData<QPointF> *points;
 
 	// Going into loop over curves
-	for (const std::pair<int,QwtPlotCurve*>& curve : QwtCurves){
+	for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves){
 		if (curve.second->isVisible()) {
 			points = curve.second->data();
 			xMin = xpos - distX;

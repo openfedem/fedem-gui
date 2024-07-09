@@ -11,9 +11,8 @@
 #include <string>
 #include <vector>
 
-#include <QtGui/QPen>
+#include <QPen>
 #include <QWidget>
-#include <QPrinter>
 
 #include "qwt_plot.h"
 #include "qwt_series_data.h"
@@ -162,10 +161,6 @@ public:
   virtual void
   autoScalePlotter();
   virtual void
-  setAutoScaleOnLoadCurve( bool a );
-  virtual bool
-  getAutoScaleOnLoadCurve();
-  virtual void
   zoomPlotterIn();
   virtual void
   zoomPlotterOut();
@@ -184,10 +179,6 @@ public:
   shiftPlotterUp();
   virtual void
   shiftPlotterDown();
-  virtual void
-  setPlotterShiftFactor( double factor );
-  virtual double
-  getPlotterShiftFactor();
   virtual void
   enablePlotterDynamicView( bool yesOrNo );
   virtual bool
@@ -223,17 +214,10 @@ public:
   virtual int
   getPlotterHighlightPenWidth();
 
-  // misc
-  virtual void
-  printPlotter();
-  virtual void
-  printPlotterSetup();
-  virtual bool
-  savePlotterAsImage( const std::string& fileName, const char* format = "PNG" );
-  virtual void
-  enablePlotterDemoWarning( bool enable );
+  virtual bool savePlotterAsImage(const std::string& fName, const char* format);
 
-  void wheelEvent(QWheelEvent* event);
+protected:
+  virtual void wheelEvent(QWheelEvent* event) override;
 
 private slots:
   void fwdCurveHighlightChanged();
@@ -245,25 +229,20 @@ private slots:
 private:
   int GetNewQwtCurveId();
   int GetNewQwtMarkerId();
-  QPen getPenBeforeHighlighting(int curveID);
   QwtPlotCurve* GetCurveFromID(int curveID);
   QwtPlotMarker* GetMarkerFromID(int markerID);
 
-  QPrinter myPrinter;
-  std::map<int, QwtPlotCurve*> QwtCurves;
+  std::map<int,QwtPlotCurve*> QwtCurves;
   QwtPlotGrid* plotGrid;
-  std::map<int, QwtPlotMarker*> QwtMarkers;
+  std::map<int,QwtPlotMarker*> QwtMarkers;
   QwtPlotZoomer* zoomer;
   QwtPlotPicker* picker;
   QwtPlotPicker* appendPicker;
   QwtPlotPanner* panner;
-  std::vector< std::pair<int,QPen> > highlightedCurves;
+  std::map<int,QPen> highlightedCurves;
 
   double xViewMin, yViewMin;
   double xViewMax, yViewMax;
-
-  bool autoScaleOnLoadcurve;
-  double d_shiftFactor;
 
 signals:
   void graphSelected();
