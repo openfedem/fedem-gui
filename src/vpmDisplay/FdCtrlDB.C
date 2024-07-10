@@ -282,7 +282,7 @@ SbVec3f FdCtrlDB::getNewVec(const SbVec2f& currPos, bool ignoreSnap)
   if (!ignoreSnap)
     FdCtrlGrid::snapToNearestPoint(newVec);
 
-  return std::move(newVec);
+  return newVec;
 }
 
 
