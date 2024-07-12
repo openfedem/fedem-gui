@@ -8,6 +8,13 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.4] (2024-07-12)
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/13 :
+  Dynamics solver does not start if the model uses single-channel input functions.
+
 ## [fedem-8.0.3] (2024-06-13)
 
 ### :rocket: Added
