@@ -70,7 +70,7 @@ void FapFileCmds::init()
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapFileCmds::getChangeModelSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_file_open");
-  cmdItem->setSmallIcon(open_xpm);
+  cmdItem->setSvgIcon(":/open.svg");
   cmdItem->setText("Open...");
   cmdItem->setToolTip("Open");
   cmdItem->setAccelKey(FFuaKeyCode::CtrlAccel+FFuaKeyCode::O);
@@ -78,7 +78,7 @@ void FapFileCmds::init()
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapFileCmds::getChangeModelSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_file_save");
-  cmdItem->setSmallIcon(save_xpm);
+  cmdItem->setSvgIcon(":/save.svg");
   cmdItem->setText("Save");
   cmdItem->setToolTip("Save");
   cmdItem->setAccelKey(FFuaKeyCode::CtrlAccel+FFuaKeyCode::S);
