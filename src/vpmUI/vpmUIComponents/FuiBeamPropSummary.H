@@ -9,7 +9,7 @@
 #define FUI_BEAM_PROP_SUMMARY_H
 
 #include "FFuLib/FFuBase/FFuMultUIComponent.H"
-#include <vector>
+#include <array>
 
 class FFuLabel;
 class FFuLabelFrame;
@@ -70,8 +70,8 @@ public:
   void onCrossSectionTypeChanged(int value);
   void onBreakDependencyToggled(bool value);
   void setPropSensitivity(bool makeSensitive);
-  void setValues(const std::vector<double>& values);
-  void getValues(std::vector<double>& values) const;
+  void setValues(const std::array<double,18>& values);
+  void getValues(std::array<double,18>& values) const;
 };
 
 #endif

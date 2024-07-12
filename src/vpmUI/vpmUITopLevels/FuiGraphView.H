@@ -25,9 +25,6 @@ public:
   FuiGraphView() {}
   virtual ~FuiGraphView() {}
 
-  virtual void print() { this->printPlotter(); }
-  virtual void printWithSetUp() { this->printPlotterSetup(); }
-
   //see FFu2DPlotter for format
   bool saveAsImage(const std::string& fileName, const char* format)
   {

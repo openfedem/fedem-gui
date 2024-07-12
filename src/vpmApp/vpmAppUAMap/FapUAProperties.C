@@ -1203,39 +1203,39 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myBeamBreakDependence = item->breakDependence.getValue();
       pv->myBeamHydroToggle = item->hydroToggle.getValue();
 
-      pv->myBeamProp.clear();
-      pv->myBeamProp.reserve(18);
-      pv->myBeamProp.push_back(item->Do.getValue());
-      pv->myBeamProp.push_back(item->Di.getValue());
-      pv->myBeamProp.push_back(item->EA.getValue());
-      pv->myBeamProp.push_back(item->EI.getValue().first);
-      pv->myBeamProp.push_back(item->EI.getValue().second);
-      pv->myBeamProp.push_back(item->GIt.getValue());
-      pv->myBeamProp.push_back(item->Mass.getValue());
-      pv->myBeamProp.push_back(item->RoIp.getValue());
-      pv->myBeamProp.push_back(item->A.getValue());
-      pv->myBeamProp.push_back(item->Iy.getValue());
-      pv->myBeamProp.push_back(item->Iz.getValue());
-      pv->myBeamProp.push_back(item->Ip.getValue());
-      pv->myBeamProp.push_back(item->ShrRed.getValue().first);
-      pv->myBeamProp.push_back(item->ShrRed.getValue().second);
-      pv->myBeamProp.push_back(item->GAs.getValue().first);
-      pv->myBeamProp.push_back(item->GAs.getValue().second);
-      pv->myBeamProp.push_back(item->ShrCentre.getValue().first);
-      pv->myBeamProp.push_back(item->ShrCentre.getValue().second);
+      pv->myBeamProp = {
+        item->Do.getValue(),
+        item->Di.getValue(),
+        item->EA.getValue(),
+        item->EI.getValue().first,
+        item->EI.getValue().second,
+        item->GIt.getValue(),
+        item->Mass.getValue(),
+        item->RoIp.getValue(),
+        item->A.getValue(),
+        item->Iy.getValue(),
+        item->Iz.getValue(),
+        item->Ip.getValue(),
+        item->ShrRed.getValue().first,
+        item->ShrRed.getValue().second,
+        item->GAs.getValue().first,
+        item->GAs.getValue().second,
+        item->ShrCentre.getValue().first,
+        item->ShrCentre.getValue().second
+      };
 
-      pv->myHydroProp.clear();
-      pv->myHydroProp.reserve(10);
-      pv->myHydroProp.push_back(item->Db.getValue());
-      pv->myHydroProp.push_back(item->Dd.getValue());
-      pv->myHydroProp.push_back(item->Cd.getValue());
-      pv->myHydroProp.push_back(item->Ca.getValue());
-      pv->myHydroProp.push_back(item->Cm.getValue());
-      pv->myHydroProp.push_back(item->Cd_axial.getValue());
-      pv->myHydroProp.push_back(item->Ca_axial.getValue());
-      pv->myHydroProp.push_back(item->Cm_axial.getValue());
-      pv->myHydroProp.push_back(item->Cd_spin.getValue());
-      pv->myHydroProp.push_back(item->Di_hydro.getValue());
+      pv->myHydroProp = {
+        item->Db.getValue(),
+        item->Dd.getValue(),
+        item->Cd.getValue(),
+        item->Ca.getValue(),
+        item->Cm.getValue(),
+        item->Cd_axial.getValue(),
+        item->Ca_axial.getValue(),
+        item->Cm_axial.getValue(),
+        item->Cd_spin.getValue(),
+        item->Di_hydro.getValue()
+      };
 
       // Topology view:
 

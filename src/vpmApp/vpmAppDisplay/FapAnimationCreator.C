@@ -775,36 +775,36 @@ bool FapAnimationCreator::loadAnimation(FmAnimation* animation,
       if (DfProg > prevLinkProg) prevLinkProg = DfProg;
     }
 
-    catch (std::bad_alloc)
-      {
-        // Not enough memory, clean up
+    catch (const std::bad_alloc&)
+    {
+      // Not enough memory, clean up
 
-        if (!IHaveInitedAllPosMxReading)
-          FapAnimationCreator::finishPosMxReading(myLinks[i]);
+      if (!IHaveInitedAllPosMxReading)
+        FapAnimationCreator::finishPosMxReading(myLinks[i]);
 
-        if (IAmLoadingFringeData) {
+      if (IAmLoadingFringeData) {
 #ifdef FT_USE_MEMPOOL
-          FFlFEElmResult::freePool();
-          FFlFENodeResult::freePool();
+        FFlFEElmResult::freePool();
+        FFlFENodeResult::freePool();
 #endif
-          if (FEpart)
-            FapAnimationCreator::finishFringeReading(FEpart);
-        }
-
-        if (IAmLoadingDeformData && FEpart)
-          FapAnimationCreator::finishDeformationReading(FEpart);
-
-#ifdef FT_USE_MEMPOOL
-        if (!IHaveInitedAllPosMxReading)
-          FFaOperationBase::freeMemPools();
-#endif
-
-        FpModelRDBHandler::clearPreReadTimeStep();
-        FFaMsg::dialog("Not enough memory!\n"
-		       "Some of the animation data could not be read.",
-		       FFaMsg::DISMISS_ERROR);
-        break;
+        if (FEpart)
+          FapAnimationCreator::finishFringeReading(FEpart);
       }
+
+      if (IAmLoadingDeformData && FEpart)
+        FapAnimationCreator::finishDeformationReading(FEpart);
+
+#ifdef FT_USE_MEMPOOL
+      if (!IHaveInitedAllPosMxReading)
+        FFaOperationBase::freeMemPools();
+#endif
+
+      FpModelRDBHandler::clearPreReadTimeStep();
+      FFaMsg::dialog("Not enough memory!\n"
+                     "Some of the animation data could not be read.",
+                     FFaMsg::DISMISS_ERROR);
+      break;
+    }
   }
 
   // Read loop TRIADS
@@ -834,7 +834,7 @@ bool FapAnimationCreator::loadAnimation(FmAnimation* animation,
       if (!IHaveInitedAllPosMxReading)
         FapAnimationCreator::finishPosMxReading(myTriads[i]);
     }
-    catch (std::bad_alloc)
+    catch (const std::bad_alloc&)
     {
       // Not enough memory, clean up
       if (!IHaveInitedAllPosMxReading)

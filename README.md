@@ -10,9 +10,9 @@
 
 # FEDEM GUI
 
-![Fedem Logo](https://github.com/openfedem/fedem-foundation/blob/main/cfg/FedemLogo.png "Welcome to FEDEM")
+![Fedem Logo](https://github.com/openfedem/.github/blob/main/profile/FedemLogo.png "Welcome to FEDEM")
 
-**Welcome to FEDEM! - Finite Element Dynamics of Elastic Mechanisms.**
+**Welcome to FEDEM! - Finite Element Dynamics in Elastic Mechanisms.**
 
 ## About this project
 
@@ -69,22 +69,24 @@ Many of the features in the FEDEM GUI can be activated/deactivated compile-time
 using command-line options on the form `-DUSE_(feature)=ON/OFF`
 when running cmake, where `=ON` activates a feature which is off by default,
 and `=OFF` deactivates a feature which is on by default.
-Currently, the following options can be specified to toggle features On or Off:
+Currently, the following options can be specified to toggle features on or off,
+with their default value in brackets [].
 
-* USE_CHSHAPE - Build with mooring line calculation support
-* USE_COMAPI - Build with the COM API
-* USE_CONTROL - Build with control system support
-* USE_DIGTWIN - Build with some Digitial Twin features
-* USE_FATIGUE - Build with durability calculation support
-* USE_FREQDOMAIN - Build with frequency-domain support
-* USE_MESHING - Build with FE meshing support
-* USE_OILWELL - Build with oil well modeling support
-* USE_RISER - Build with marine structures modeling support
-* USE_SEVENTS - Build with simulation event support
-* USE_SOLVERS - Build with solver support
-* USE_TIREAPI - Build with the Tire model API
-* USE_VTF - Build with VTF export support
-* USE_WINDPOW - Build with Wind turbine modeling support
+* USE_CHSHAPE - Build with mooring line calculation support [OFF]
+* USE_COMAPI - Build with the COM API [ON]
+* USE_CONTROL - Build with control system support [ON]
+* USE_DIGTWIN - Build with some Digitial Twin features [OFF]
+* USE_FATIGUE - Build with durability calculation support [OFF]
+* USE_FREQDOMAIN - Build with frequency-domain support [ON]
+* USE_MESHING - Build with FE meshing support [OFF]
+* USE_OILWELL - Build with oil well modeling support [OFF]
+* USE_QWTLIB - Build with Qwt curve plotting library [ON]
+* USE_RISER - Build with marine structures modeling support [OFF]
+* USE_SEVENTS - Build with simulation event support [OFF]
+* USE_SOLVERS - Build with solver support [ON]
+* USE_TIREAPI - Build with the Tire model API [OFF]
+* USE_VTF - Build with VTF export support [OFF]
+* USE_WINDPOW - Build with Wind turbine modeling support [OFF]
 
 ## Installation
 

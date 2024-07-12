@@ -8,6 +8,13 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.4] (2024-07-12)
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/13 :
+  Dynamics solver does not start if the model uses single-channel input functions.
+
 ## [fedem-8.0.3] (2024-06-13)
 
 ### :rocket: Added
@@ -78,4 +85,7 @@
 - This is the first open source version of FEDEM,
   including binaries for GUI and solvers on Windows platform.
 
-[fedem-8.0.1]: https://github.com/SAP/fedem-gui/compare/fedem-8.0.0...fedem-8.0.1
+[fedem-8.0.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.0...fedem-8.0.1
+[fedem-8.0.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.1...fedem-8.0.2
+[fedem-8.0.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.2...fedem-8.0.3
+[fedem-8.0.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.3...fedem-8.0.4

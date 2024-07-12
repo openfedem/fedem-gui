@@ -5,17 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-/* TODO
-   - Fiks opplosning ved printing !! VIKTIG !!
-     Dette skjer i QwtPlot::print() i qwt_plot.cpp.
-     Hint til losning er setViewport/setWindow og evt. scale i QPainter.
-   - Mye luft mellom legend og x-akse.
-   - Sjekk opp hoyre marg. Mulig at tallet lengst til hoyre paa
-     x-aksen forsvinner ut i det blaa naar det blir veldig langt.
-     Men lite trolig....
-   - Dynamisk zoom og shift kan sikkert forbedres slik at det gaar raskere.
-*/
-
 #ifndef FFU_2D_PLOTTER_H
 #define FFU_2D_PLOTTER_H
 
@@ -31,7 +20,7 @@ typedef std::array<int,3> UColor;
 class FFu2DPlotter : virtual public FFuComponentBase
 {
 public:
-  FFu2DPlotter() {}
+  FFu2DPlotter() { autoScaleOnLoadCurve = true; d_shiftFactor = 0.1; }
   virtual ~FFu2DPlotter() {}
 
 
@@ -142,7 +131,6 @@ public:
   virtual int  getPlotterGridTypeX() = 0; // svenev: Needs testing
   virtual int  getPlotterGridTypeY() = 0; // but should work...
 
-  // Printing with maj penwidth=2 gives an ugly grid!
   virtual void setPlotterGridMajPen(const std::string& color="black",
 				    unsigned int width=2) = 0;
   // Width 0 equals one pixel
@@ -181,11 +169,11 @@ public:
   // ============================= ZOOM ================================
   // -------------------------------------------------------------------
 
+  void setAutoScaleOnLoadCurve(bool a) { autoScaleOnLoadCurve = a; }
+  bool getAutoScaleOnLoadCurve() const { return autoScaleOnLoadCurve; }
+
   // Scales axes so that all points are visible
   virtual void   autoScalePlotter() = 0;
-
-  virtual void   setAutoScaleOnLoadCurve(bool a) = 0;
-  virtual bool   getAutoScaleOnLoadCurve() = 0;
 
   // Zooms in/out by a certain factor
   virtual void   zoomPlotterIn() = 0;
@@ -210,8 +198,8 @@ public:
   virtual void   shiftPlotterDown() = 0;
   // Should probably be around 0.1 - 0.3
   // No restrictions apply. Default is 0.07
-  virtual void   setPlotterShiftFactor(double factor) = 0;
-  virtual double getPlotterShiftFactor() = 0;
+  void   setPlotterShiftFactor(double f) { d_shiftFactor = f; }
+  double getPlotterShiftFactor() const { return d_shiftFactor; }
 
 
   // =========================== HIGHLIGHT =============================
@@ -244,20 +232,16 @@ public:
 
   // ============================= MISC ================================
   // -------------------------------------------------------------------
-  virtual void printPlotter() = 0;
-  virtual void printPlotterSetup() = 0;
   // Available formats:
   // BMP PBM PGM PNG PPM XBM XPM - JPEG might be available
-  // if so and so... see Qt manual on QImageIO
-  virtual bool savePlotterAsImage(const std::string& fileName,
-				  const char* format="PNG") = 0;
+  // See https://doc.qt.io/qt-6.5/qpixmap.html#reading-and-writing-image-files
+  virtual bool savePlotterAsImage(const std::string& fName, const char* format) = 0;
 
   virtual void setPlotterScaleAndOffset(int curveid, double scaleX, double offsetX,
 					bool zeroAdjustX, double scaleY, double offsetY,
 					bool zeroAdjustY, bool doUpdate=true) = 0;
 
-  virtual void enablePlotterDemoWarning(bool enable) = 0;
-  virtual void onCurveHighlightChanged() {}
+  void enablePlotterDemoWarning(bool) {} // TODO remove
 
   void setCurveHighlightChangedCB(const FFaDynCB0& aDynCB)
     {this->curveHighlightChangedCB = aDynCB;}
@@ -277,6 +261,10 @@ private:
   FFaDynCB0 curveHighlightChangedCB;
   FFaDynCB0 axisScaleChangedCB;
   FFaDynCB0 graphSelectedCB;
+
+protected:
+  bool   autoScaleOnLoadCurve;
+  double d_shiftFactor;
 };
 
 #endif
