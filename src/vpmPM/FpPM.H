@@ -43,8 +43,7 @@ public:
 
   static const char* getVpmVersion();
 
-  static std::string getFullFedemPath(const std::string& fileName,
-                                      bool checkHomeFirst = false);
+  static std::string getFullFedemPath(const std::string& fName, char check = 0);
 
   /////////////////////
   // File And Quitting

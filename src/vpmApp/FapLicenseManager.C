@@ -12,8 +12,6 @@
 #include "vpmDisplay/FdDB.H"
 #endif
 #include "vpmPM/FpPM.H"
-#include "vpmPM/FpFileSys.H"
-#include "FFaLib/FFaOS/FFaFilePath.H"
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
 
@@ -148,23 +146,23 @@ bool FapLicenseManager::checkVTFExportLicense(bool checkOut)
 
 bool FapLicenseManager::hasUserGuide()
 {
-  return FpFileSys::isReadable(FpPM::getFullFedemPath("Doc/FedemUsersGuide.pdf"));
+  return !FpPM::getFullFedemPath("Doc/FedemUsersGuide.pdf",'e').empty();
 }
 
 
 bool FapLicenseManager::hasTheoryGuide()
 {
-  return FpFileSys::isReadable(FpPM::getFullFedemPath("Doc/FedemTheoryGuide.pdf"));
+  return !FpPM::getFullFedemPath("Doc/FedemTheoryGuide.pdf",'e').empty();
 }
 
 
 bool FapLicenseManager::hasReferenceGuide()
 {
-  return FpFileSys::isReadable(FpPM::getFullFedemPath("Doc/Fedem.chm"));
+  return !FpPM::getFullFedemPath("Doc/Fedem.chm",'e').empty();
 }
 
 
 bool FapLicenseManager::hasComAPIGuide()
 {
-  return FpFileSys::isReadable(FpPM::getFullFedemPath("Doc/ComAPI.chm"));
+  return !FpPM::getFullFedemPath("Doc/ComAPI.chm",'e').empty();
 }

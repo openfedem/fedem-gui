@@ -152,32 +152,33 @@ void FpPM::init(const char* program)
 }
 
 
-std::string FpPM::getFullFedemPath(const std::string& fileName, bool checkHomeFirst)
+std::string FpPM::getFullFedemPath(const std::string& fName, char check)
 {
-  std::string fName(fileName);
-  if (checkHomeFirst)
+  std::string fileName(fName);
+  if (check == 'h')
   {
     // First, check if the file exists in the users home directory
-    FFaFilePath::makeItAbsolute(fName,FpFileSys::getHomeDir());
-    if (FpFileSys::isReadable(FFaFilePath::checkName(fName)))
-      return fName;
+    FFaFilePath::makeItAbsolute(fileName,FpFileSys::getHomeDir());
+    if (FpFileSys::isReadable(FFaFilePath::checkName(fileName)))
+      return fileName;
     else
-      fName = "resources/" + fileName;
+      fileName = "resources/" + fName;
   }
 
   // Next, check if the file exists together with this executable
-  FFaFilePath::makeItAbsolute(fName,FFaAppInfo::getProgramPath());
-  if (FpFileSys::isReadable(FFaFilePath::checkName(fName)))
-    return fName;
+  FFaFilePath::makeItAbsolute(fileName,FFaAppInfo::getProgramPath());
+  if (FpFileSys::isReadable(FFaFilePath::checkName(fileName)))
+    return fileName;
 
   // Last resort is the current working directory
-  return FFaFilePath::getFileName(fileName);
+  fileName = FFaFilePath::getFileName(fileName);
+  return check != 'e' || FpFileSys::isReadable(fileName) ? fileName : "";
 }
 
 
 void FpPM::loadUnitConvertionFile()
 {
-  std::string unitFile = FpPM::getFullFedemPath("units.fcd",true);
+  std::string unitFile = FpPM::getFullFedemPath("units.fcd",'h');
   if (!FpFileSys::isFile(unitFile))
     return;
 
@@ -210,7 +211,7 @@ void FpPM::loadResultPosFiles()
 void FpPM::loadSNCurveFile()
 {
 #ifdef FT_HAS_GRAPHVIEW
-  std::string curveFile = FpPM::getFullFedemPath("sn_curves.fsn",true);
+  std::string curveFile = FpPM::getFullFedemPath("sn_curves.fsn",'h');
   if (!FpFileSys::isFile(curveFile))
     return;
 
