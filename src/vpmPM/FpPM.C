@@ -154,12 +154,23 @@ void FpPM::init(const char* program)
 
 std::string FpPM::getFullFedemPath(const std::string& fName, char check)
 {
+  auto&& existingFile = [check](std::string& fileName)
+  {
+    if (!FpFileSys::isReadable(FFaFilePath::checkName(fileName)))
+      return false;
+#ifdef FP_DEBUG
+    else if (check == 'e')
+      std::cout <<"   * Found file "<< fileName << std::endl;
+#endif
+    return true;
+  };
+
   std::string fileName(fName);
   if (check == 'h')
   {
     // First, check if the file exists in the users home directory
     FFaFilePath::makeItAbsolute(fileName,FpFileSys::getHomeDir());
-    if (FpFileSys::isReadable(FFaFilePath::checkName(fileName)))
+    if (existingFile(fileName))
       return fileName;
     else
       fileName = "resources/" + fName;
@@ -167,12 +178,12 @@ std::string FpPM::getFullFedemPath(const std::string& fName, char check)
 
   // Next, check if the file exists together with this executable
   FFaFilePath::makeItAbsolute(fileName,FFaAppInfo::getProgramPath());
-  if (FpFileSys::isReadable(FFaFilePath::checkName(fileName)))
+  if (existingFile(fileName))
     return fileName;
 
   // Last resort is the current working directory
   fileName = FFaFilePath::getFileName(fileName);
-  return check != 'e' || FpFileSys::isReadable(fileName) ? fileName : "";
+  return check != 'e' || existingFile(fileName) ? fileName : "";
 }
 
 

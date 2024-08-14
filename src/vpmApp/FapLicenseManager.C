@@ -11,6 +11,7 @@
 #ifdef USE_INVENTOR
 #include "vpmDisplay/FdDB.H"
 #endif
+#include "vpmUI/Fui.H"
 #include "vpmPM/FpPM.H"
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
@@ -98,7 +99,7 @@ bool FapLicenseManager::checkLicense(const char* feature, bool checkOut)
   if (!strcmp(feature,"FA-RIS")) return true;
 #endif
 #ifdef FT_HAS_WND
-  if (!strcmp(feature,"FA-WND")) return true;
+  if (!strcmp(feature,"FA-WND")) return Fui::haveAeroDyn;
 #endif
 #ifdef FT_HAS_SEV
   if (!strcmp(feature,"FA-SEV")) return true;

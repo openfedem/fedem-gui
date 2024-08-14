@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmPM/FpRDBExtractorManager.H"
-#include "vpmPM/FpFileSys.H"
 #include "vpmPM/FpPM.H"
 #include "vpmPM/FpExtractor.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
@@ -174,13 +173,17 @@ void FpRDBExtractorManager::onPosExtractorHeaderChanged(const FFrExtractor*)
 
 std::vector<std::string> FpRDBExtractorManager::getPredefPosFiles()
 {
-  std::string response = FpPM::getFullFedemPath("resources/response_pos.frs");
-  std::string stress   = FpPM::getFullFedemPath("resources/stress_pos.frs");
+  std::string response = FpPM::getFullFedemPath("resources/response_pos.frs",'e');
+  std::string stress   = FpPM::getFullFedemPath("resources/stress_pos.frs",'e');
 
-  std::vector<std::string> files;
-  if (FpFileSys::isFile(response)) files.push_back(response);
-  if (FpFileSys::isFile(stress))   files.push_back(stress);
-  return files;
+  if (!response.empty() && !stress.empty())
+    return { response, stress };
+  else if (!response.empty())
+    return { response };
+  else if (!stress.empty())
+    return { stress };
+
+  return std::vector<std::string>();
 }
 //----------------------------------------------------------------------------
 
