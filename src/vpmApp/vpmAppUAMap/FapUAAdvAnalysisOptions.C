@@ -76,7 +76,9 @@ void FapUAAdvAnalysisOptions::setDBValues(FFuaUIValues* values)
   timeOptStatus[FuiAdvAnalysisOptions::RESTART_TIME] = true;
   analysis->restartTime.setValue(timeOptValues[FuiAdvAnalysisOptions::RESTART_TIME]);
   analysis->doRestart.setValue(timeOpToggles[FuiAdvAnalysisOptions::RESTART]);
+#ifndef FT_HAS_SOLVERS
   analysis->solverAddOpts.setValue(advValues->addOptions);
+#endif
 
   // Integration options
   BoolMap&    intOptStatus = advValues->valueStatus[FuiAdvAnalysisOptions::INTOPTIONS];
@@ -255,7 +257,9 @@ void FapUAAdvAnalysisOptions::getDBValues(FFuaUIValues* values)
 
   advValues->myTimeIncQuery = FapUAEngineQuery::instance();
   advValues->mySelectedTimeEngine = analysis->getEngine();
+#ifndef FT_HAS_SOLVERS
   advValues->addOptions = analysis->solverAddOpts.getValue();
+#endif
 
   // Integration options
 
