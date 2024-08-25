@@ -27,16 +27,15 @@ FuiCreateTurbineAssembly* FuiCreateTurbineAssembly::create(int xpos, int ypos,
 							   const char* title,
 							   const char* name)
 {
-  return new FuiQtCreateTurbineAssembly(NULL,xpos,ypos,width,height,title,name);
+  return new FuiQtCreateTurbineAssembly(xpos,ypos,width,height,title,name);
 }
 
 
-FuiQtCreateTurbineAssembly::FuiQtCreateTurbineAssembly(QWidget* parent,
-						       int xpos, int ypos,
+FuiQtCreateTurbineAssembly::FuiQtCreateTurbineAssembly(int xpos, int ypos,
 						       int width, int height,
 						       const char* title,
 						       const char* name)
-  : FFuQtTopLevelShell(parent,xpos,ypos,width,height,title,name,Qt::MSWindowsFixedSizeDialogHint)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name,Qt::MSWindowsFixedSizeDialogHint)
 {
   this->headerImage         = new FFuQtLabel(this);
   this->modelImage          = new FFuQtLabel(this);
@@ -49,6 +48,7 @@ FuiQtCreateTurbineAssembly::FuiQtCreateTurbineAssembly(QWidget* parent,
   this->hubFrame            = new FFuQtLabelFrame(this);
   this->drivelineFrame      = new FFuQtLabelFrame(this);
   this->nacelleFrame        = new FFuQtLabelFrame(this);
+  this->nameField           = new FFuQtLabelField(this);
   for (FFuLabelField*& field : myFields) field = new FFuQtLabelField(this);
   this->copyButton          = new FFuQtPushButton(this);
   this->pasteButton         = new FFuQtPushButton(this);
@@ -73,6 +73,7 @@ void FuiQtCreateTurbineAssembly::onCopyButtonClicked()
   text.append("\n");
   text.append(QString::number(bearingsMenu->getSelectedOption()));
   text.append("\n");
+  text.append((nameField->getText()+"\n").c_str());
   for (FFuLabelField* field : myFields)
     text.append((field->getText()+"\n").c_str());
 
@@ -99,8 +100,8 @@ void FuiQtCreateTurbineAssembly::onPasteButtonClicked()
     this->onBearingsChanged(n);
   }
 
-  if (list.size() > 2 && myFields.front()->getSensitivity())
-    myFields.front()->setValue(list.at(2).toStdString());
+  if (list.size() > 2 && nameField->getSensitivity())
+    nameField->setValue(list.at(2).toStdString());
 
   for (size_t i = 3; (int)i < list.size() && i-3 < myFields.size(); i++)
     if (myFields[i-3]->getSensitivity())

@@ -34,7 +34,7 @@ FapUACreateTurbineAssembly::FapUACreateTurbineAssembly(FuiCreateTurbineAssembly*
 
 FFuaUIValues* FapUACreateTurbineAssembly::createValuesObject()
 {
-  return new FuaCreateTurbineAssemblyValues(FWP::NUM_FIELDS);
+  return new FuaCreateTurbineAssemblyValues();
 }
 //----------------------------------------------------------------------------
 

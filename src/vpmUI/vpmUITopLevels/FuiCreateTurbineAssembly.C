@@ -32,10 +32,9 @@ extern const char* info_xpm[];
 #include "FFuLib/FFuFileBrowseField.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
 
-#include "vpmPM/FpFileSys.H"
 #include "vpmPM/FpPM.H"
-
 #include "vpmDB/FmDB.H"
+#include "vpmDB/FmFileSys.H"
 #include "vpmDB/FmBladeProperty.H"
 #include "vpmDB/FmMechanism.H"
 
@@ -53,10 +52,11 @@ Fmd_SOURCE_INIT(FUI_CREATETURBINEASSEMBLY,FuiCreateTurbineAssembly,FFuTopLevelSh
 
 //----------------------------------------------------------------------------
 
-FuiCreateTurbineAssembly::FuiCreateTurbineAssembly() : myFields(NUM_FIELDS,NULL)
+FuiCreateTurbineAssembly::FuiCreateTurbineAssembly() : myFields{}
 {
   Fmd_CONSTRUCTOR_INIT(FuiCreateTurbineAssembly);
 
+  nameField = NULL;
   haveTurbine = false;
   currentBladeDesign = NULL;
 }
@@ -97,8 +97,8 @@ void FuiCreateTurbineAssembly::initWidgets()
   this->bearingsMenu->setOptionSelectedCB(FFaDynCB1M(FuiCreateTurbineAssembly,this,onBearingsChanged,int));
 
   this->nameLabel->setLabel("Name");
-  this->myFields[NAME]->setLabelMargin(0);
-  this->myFields[NAME]->setLabelWidth(0);
+  this->nameField->setLabelMargin(0);
+  this->nameField->setLabelWidth(0);
 
   this->towerBaseFrame->setLabel("Tower base");
   this->myFields[TOWER_X]->setLabel("X");
@@ -199,7 +199,7 @@ void FuiCreateTurbineAssembly::placeWidgets(int, int height)
 
   this->drivelineTypeMenu->setEdgeGeometry(v1, v1+110, y, y+fieldHeight);
   this->bearingsMenu->setEdgeGeometry(v2, v2+100, y, y+fieldHeight);
-  this->myFields[NAME]->setEdgeGeometry(v2+110, v2+210, y, y+fieldHeight);
+  this->nameField->setEdgeGeometry(v2+110, v2+210, y, y+fieldHeight);
   y += fieldHeight+border;
 
   // tower base
@@ -443,7 +443,7 @@ void FuiCreateTurbineAssembly::onBladeDesignFileSelected(const std::string& fNam
   this->bladesDesignField->setFileName(fName);
 
   FFuaPalette aPalette;
-  if (!FpFileSys::isFile(fName))
+  if (!FmFileSys::isFile(fName))
     aPalette.setFieldBackground(255,155,155); // RED
   else if (FFaFilePath::getPath(fName,false) == FmDB::getMechanismObject()->getAbsBladeFolderPath())
     aPalette.setFieldBackground(215,255,215); // GREEN
@@ -456,7 +456,7 @@ void FuiCreateTurbineAssembly::onBladeDesignFileSelected(const std::string& fNam
 
 FFuaUIValues* FuiCreateTurbineAssembly::createValuesObject()
 {
-  return new FuaCreateTurbineAssemblyValues(NUM_FIELDS);
+  return new FuaCreateTurbineAssemblyValues();
 }
 //----------------------------------------------------------------------------
 
@@ -475,8 +475,8 @@ void FuiCreateTurbineAssembly::setUIValues(const FFuaUIValues* values)
   this->bearingsMenu->selectOption(turbValues->bearings);
   this->bearingsMenu->setSensitivity(!turbValues->haveTurbine);
   this->onBearingsChanged(turbValues->bearings);
-  this->myFields.front()->setValue(turbValues->name);
-  for (size_t i = 1; i < turbValues->geom.size() && i < this->myFields.size(); i++)
+  this->nameField->setValue(turbValues->name);
+  for (size_t i = 0; i < turbValues->geom.size() && i < this->myFields.size(); i++)
     this->myFields[i]->setValue(turbValues->geom[i]);
 
   this->myFields[TOWER_X]->setSensitivity(turbValues->haveTurbine < 2);
@@ -542,8 +542,8 @@ void FuiCreateTurbineAssembly::getUIValues(FFuaUIValues* values)
 
   turbValues->drivelineType = this->drivelineTypeMenu->getSelectedOption();
   turbValues->bearings      = this->bearingsMenu->getSelectedOption();
-  turbValues->name          = this->myFields.front()->getText();
-  for (size_t i = 1; i < turbValues->geom.size() && i < this->myFields.size(); i++)
+  turbValues->name          = this->nameField->getText();
+  for (size_t i = 0; i < turbValues->geom.size() && i < this->myFields.size(); i++)
     turbValues->geom[i]     = this->myFields[i]->getValue();
   turbValues->bladesNum     = this->bladesNumField->getIntValue();
   turbValues->bladesDesign  = this->currentBladeDesign;
@@ -553,53 +553,8 @@ void FuiCreateTurbineAssembly::getUIValues(FFuaUIValues* values)
 
 void FuiCreateTurbineAssembly::createOrUpdateTurbine()
 {
-  // Read blade-design from selected file
-  std::string dstBladePath = this->bladesDesignField->getFileName();
-  FmBladeDesign* pDesign = FmBladeDesign::readFromFMM(dstBladePath);
-  if (pDesign)
-  {
-    std::string srcBladePath = pDesign->myModelFile.getValue();
-    if (currentBladeDesign)
-    {
-      const std::string& oldBladePath = currentBladeDesign->myModelFile.getValue();
-      currentBladeDesign->erase();
-      if (srcBladePath != oldBladePath)
-	FpFileSys::removeDir(FFaFilePath::getBaseName(oldBladePath).append("_airfoils"));
-    }
-    currentBladeDesign = pDesign;
-
-    // Copy the blade to the model's blade-folder. Create folder if necessary
-    std::string dstBladeFolder = FmDB::getMechanismObject()->getAbsBladeFolderPath();
-    if (FpFileSys::verifyDirectory(dstBladeFolder))
-    {
-      // Clean the directory for any existing fmm-files
-      std::vector<std::string> oldBlades;
-      if (FpFileSys::getFiles(oldBlades,dstBladeFolder,"*.fmm"))
-        for (const std::string& bladeFile : oldBlades)
-          if (!FpFileSys::deleteFile(FFaFilePath::appendFileNameToPath(dstBladeFolder,bladeFile)))
-            std::cerr <<"  ** Could not delete file "<< bladeFile
-                      <<" from folder "<< dstBladeFolder << std::endl;
-
-      // Get the source blade's path. copy to folder
-      dstBladePath = FFaFilePath::appendFileNameToPath(dstBladeFolder,FFaFilePath::getFileName(srcBladePath));
-      pDesign->myModelFile.setValue(dstBladePath);
-      pDesign->writeToFMM(dstBladePath);
-    }
-
-    // Get the blade's airfoil paths and copy to this model's airfoil folder
-    std::string srcAirfoilFolder = FFaFilePath::getBaseName(srcBladePath).append("_airfoils");
-    std::string dstAirfoilFolder = FFaFilePath::getBaseName(dstBladePath).append("_airfoils");
-    if (FpFileSys::verifyDirectory(dstAirfoilFolder))
-    {
-      std::vector<FmBladeProperty*> bprops;
-      pDesign->getBladeSegments(bprops);
-      for (FmBladeProperty* prop : bprops)
-        if (!FpFileSys::copyFile(prop->AirFoil.getValue(),srcAirfoilFolder,dstAirfoilFolder))
-          std::cerr <<"  ** Could not copy file "<< prop->AirFoil.getValue()
-                    <<"\n     from folder "<< srcAirfoilFolder
-                    <<"\n     to folder "<< dstAirfoilFolder << std::endl;
-    }
-  }
+  // Read turbine blade design from selected file
+  FapDBCreateCmds::readBladeDesign(bladesDesignField->getFileName(),currentBladeDesign);
 
   bool hadTurbine = haveTurbine; // changes after updateDBValues()
   FpPM::vpmSetUndoPoint("Turbine definition");

@@ -12,7 +12,7 @@
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
-#include <vector>
+#include <array>
 
 class FFuOptionMenu;
 class FFuLabel;
@@ -29,29 +29,28 @@ class FmBladeDesign;
 
 namespace FWP {
   enum FieldNames {
-    NAME = 0,
-    TOWER_X = 1,
-    TOWER_Y = 2,
-    TOWER_Z = 3,
-    TOWER_T = 4,
-    H1 = 5,
-    HR = 6,
-    ALPHA = 7,
-    BETA = 8,
-    D1 = 9,
-    D2 = 10,
-    D3 = 11,
-    D4 = 12,
-    D5 = 13,
-    D6 = 14,
-    B1 = 15,
-    B2 = 16,
-    S = 17,
-    THETA = 18,
-    COG_X = 19,
-    COG_Y = 20,
-    COG_Z = 21,
-    NUM_FIELDS = 22
+    TOWER_X,
+    TOWER_Y,
+    TOWER_Z,
+    TOWER_T,
+    H1,
+    HR,
+    ALPHA,
+    BETA,
+    D1,
+    D2,
+    D3,
+    D4,
+    D5,
+    D6,
+    B1,
+    B2,
+    S,
+    THETA,
+    COG_X,
+    COG_Y,
+    COG_Z,
+    NUM_FIELDS
   };
 }
 
@@ -111,7 +110,8 @@ protected:
   FFuLabelFrame*      hubFrame;
   FFuLabelFrame*      drivelineFrame;
   FFuLabelFrame*      nacelleFrame;
-  std::vector<FFuLabelField*> myFields;
+  FFuLabelField*      nameField;
+  std::array<FFuLabelField*,FWP::NUM_FIELDS> myFields;
   FFuPushButton*      copyButton;
   FFuPushButton*      pasteButton;
   FFuLabel*           bladesNumLabel;
@@ -134,7 +134,7 @@ private:
 class FuaCreateTurbineAssemblyValues : public FFuaUIValues
 {
 public:
-  FuaCreateTurbineAssemblyValues(size_t nval = 0) : geom(nval,0.0) {
+  FuaCreateTurbineAssemblyValues() : geom{} {
     haveTurbine = incCtrlSys = false;
     drivelineType = bearings = bladesNum = 0;
     bladesDesign = NULL;
@@ -142,14 +142,14 @@ public:
   }
   virtual ~FuaCreateTurbineAssemblyValues() {}
 
-  char                haveTurbine;   //!< 0: no turbine, 1=unattached, 2=attached
-  int                 drivelineType; //!< Drive line type (=gearbox 1=direct)
-  int                 bearings;      //!< Number of bearings (0, 1 or 2)
-  int                 bladesNum;     //!< Number of blades (3 or 4)
-  FmModelMemberBase*  bladesDesign;  //!< Pointer to turbine blade design object
-  std::string         name;          //!< Name field
-  std::vector<double> geom;          //!< Geometry parameters
-  bool                incCtrlSys;    //!< Include control system?
+  char               haveTurbine;   //!< 0: no turbine, 1=unattached, 2=attached
+  int                drivelineType; //!< Drive line type (=gearbox 1=direct)
+  int                bearings;      //!< Number of bearings (0, 1 or 2)
+  int                bladesNum;     //!< Number of blades (3 or 4)
+  bool               incCtrlSys;    //!< Include control system?
+  FmModelMemberBase* bladesDesign;  //!< Pointer to turbine blade design object
+  std::string        name;          //!< Turbine name
+  std::array<double,FWP::NUM_FIELDS> geom; //!< Geometry parameters
 
   bool isSensitive;
 };
