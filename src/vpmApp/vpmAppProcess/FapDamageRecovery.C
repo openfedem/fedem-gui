@@ -199,7 +199,7 @@ int FapDamageRecovery::createInput(std::string& rdbPath)
     {
       // Using Fedem's internal fatigue solver
       fcoArgs.add("-HistDataType", fpp->histType.getValue());
-      fcoArgs.add("-SNfile", FpPM::getFullFedemPath("sn_curves.fsn",true));
+      fcoArgs.add("-SNfile", FpPM::getFullFedemPath("sn_curves.fsn",'h'));
     }
     double scale = 1.0e-6;
     if (myWorkMech->modelDatabaseUnits.getValue().convert(scale,"FORCE/AREA"))

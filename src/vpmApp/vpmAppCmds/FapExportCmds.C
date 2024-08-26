@@ -187,14 +187,16 @@ void FapExportCmds::init()
   cmdItem->setText("Export Digital Twin...");
   cmdItem->setToolTip("Export current model to a zip'ed Digital Twin");
   cmdItem->setActivatedCB(FFaDynCB0S(FapExportCmds::exportDTSDigitalTwin));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive, bool&));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
-#ifdef FT_HAS_OWL
   cmdItem = new FFuaCmdItem("cmdId_export_pipeStringWear");
   cmdItem->setText("Export Pipe String Wear...");
   cmdItem->setToolTip("Export wear data for selected pipe string");
   cmdItem->setActivatedCB(FFaDynCB0S(FapExportCmds::exportPipeWear));
+#ifdef FT_HAS_OWL
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapOilWellCmds::getExportPipeWearSensitivity,bool&));
+#else
+  cmdItem->setGetSensitivityCB(FFaDynCB1S([](bool& s){ s = false; },bool&));
 #endif
 }
 
@@ -1819,7 +1821,7 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
   // Copy template files
   FmMechanism* mech = FmDB::getMechanismObject();
   std::string modelIdentifier = mech->getModelName();
-  std::string templPath = FpPM::getFullFedemPath("Templates/cloudsim", false);
+  std::string templPath = FpPM::getFullFedemPath("Templates/cloudsim");
 
   // Copy shared library. Windows
   if (!FpFileSys::copyFile(FFaFilePath::appendFileNameToPath(templPath, "fedem_fmu.dll"),

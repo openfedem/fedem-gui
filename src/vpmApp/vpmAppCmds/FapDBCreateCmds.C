@@ -938,6 +938,24 @@ void FapDBCreateCmds::createAssembly()
 }
 //----------------------------------------------------------------------------
 
+bool FapDBCreateCmds::readBladeDesign(const std::string& bdFile,
+                                      FmBladeDesign*& currentDesign)
+{
+#ifdef FT_HAS_WND
+  FmBladeDesign* pDesign = FWP::readBladeDesign(bdFile,currentDesign);
+  if (pDesign)
+  {
+    currentDesign = pDesign;
+    return true;
+  }
+#else
+  // Dummy statement to suppress compiler warning
+  if (bdFile.empty() || !currentDesign) return false;
+#endif
+  return false;
+}
+//----------------------------------------------------------------------------
+
 bool FapDBCreateCmds::updateWindTurbine(bool haveTurbine)
 {
   bool status = false;

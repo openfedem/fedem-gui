@@ -15,11 +15,10 @@
 class FuiQtCreateTurbineAssembly : public FFuQtTopLevelShell, public FuiCreateTurbineAssembly
 {
 public:
-  FuiQtCreateTurbineAssembly(QWidget* parent = 0,
-		      int xpos =100, int ypos  =100,
-		      int width=100, int height=100,
-		      const char* title= "Fedem",
-		      const char* name = "FuiQtCreateTurbineAssembly");
+  FuiQtCreateTurbineAssembly(int xpos =100, int ypos  =100,
+                             int width=100, int height=100,
+                             const char* title= "Fedem",
+                             const char* name = "FuiQtCreateTurbineAssembly");
   virtual ~FuiQtCreateTurbineAssembly() {}
 
 private:

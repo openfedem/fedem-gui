@@ -12,6 +12,7 @@
 #include "FFaLib/FFaPatterns/FFaInitialisation.H"
 
 class FmBase;
+class FmBladeDesign;
 
 
 class FapDBCreateCmds : public FapCmdsBase
@@ -63,6 +64,8 @@ private:
 
 public:
   static FmBase* getSelectedAssembly(int classType = -1);
+  static bool readBladeDesign(const std::string& bdFile,
+                              FmBladeDesign*& currentDesign);
   static bool updateWindTurbine(bool haveTurbine);
   static bool updateWindTurbineTower();
 

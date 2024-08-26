@@ -72,11 +72,13 @@
 // Initializing static variables
 ////////////////////////////////
 
-UIgeo Fui::screen;
-int   Fui::borderWidth = 0;
-int   Fui::titleBarHeight = 0;
+static int uiTitleBarHeight = 0;
+static int uiScreenHeight = 0;
+static int uiScreenWidth = 0;
+static int uiBorderWidth = 0;
 
 FuiMainWindow* Fui::mainWindow = NULL;
+bool           Fui::haveAeroDyn = false;
 
 
 void Fui::init(int& argc, char** argv)
@@ -89,13 +91,22 @@ void Fui::init(int& argc, char** argv)
   // GUI lib initialisation
   FFuaApplication::init(argc,argv,!consoleOnly);
 
+#ifdef FT_HAS_WND
+  // Check if Windpower features are available through the existence of AeroDyn
+#if defined(win32) || defined(win64)
+  Fui::haveAeroDyn = !FpPM::getFullFedemPath("AeroDyn.dll",'e').empty();
+#else
+  Fui::haveAeroDyn = !FpPM::getFullFedemPath("libAeroDyn.so",'e').empty();
+#endif
+#endif
+
   // Init user feedback method
   FFaMsg::setMessager(new FuiMsg);
   if (consoleOnly) return;
 
   // Getting screen geometry
-  Fui::screen.width  = FFuaApplication::getScreenWidth();
-  Fui::screen.height = FFuaApplication::getScreenHeight();
+  uiScreenHeight = FFuaApplication::getScreenHeight();
+  uiScreenWidth  = FFuaApplication::getScreenWidth();
 
   // Create the main window
   UIgeo geo = Fui::getUIgeo(FUI_MAINWINDOW_GEO);
@@ -109,8 +120,8 @@ void Fui::start()
 
   // Get decoration properties from project UI
   // FIXME - find these values somehow.
-  Fui::borderWidth = 8;
-  Fui::titleBarHeight = 23;
+  uiTitleBarHeight = 23;
+  uiBorderWidth = 8;
 
   // Create the other UIs
   Fui::outputListUI(false,true);
@@ -378,8 +389,8 @@ UIgeo Fui::getUIgeo(int fuiType)
   const int mainWidth  = 990;
   const int mainHeight = 820;
 
-  int modellerWidth  = mainWidth*784/1000; // 78.4% of main window width
-  int modellerHeight = mainHeight*65/100;  // 65% of main window height
+  const int modellerWidth  = mainWidth*784/1000; // 78.4% of main window width
+  const int modellerHeight = mainHeight*65/100;  // 65% of main window height
 
   UIgeo geo;
 
@@ -410,8 +421,8 @@ UIgeo Fui::getUIgeo(int fuiType)
     case FUI_OUTPUTLIST_GEO:
       geo.width  = 600;
       geo.height = 150;
-      geo.xPos   = screen.width - geo.width - 3;
-      geo.yPos   = screen.height - geo.height - 40; // Room for Windows task bar
+      geo.xPos   = uiScreenWidth - geo.width - 3;
+      geo.yPos   = uiScreenHeight - geo.height - 40; // Room for Windows task bar
       break;
     case FUI_APPEARANCE_GEO:
       geo.xPos   = 4*modellerWidth/5;
@@ -427,7 +438,7 @@ UIgeo Fui::getUIgeo(int fuiType)
       break;
     case FUI_STRESSOPTIONS_GEO:
       geo.xPos   = 2*modellerWidth/9;
-      geo.yPos   = modellerHeight - (275-Fui::borderWidth-Fui::titleBarHeight);
+      geo.yPos   = modellerHeight - (275-uiBorderWidth-uiTitleBarHeight);
       geo.width  = 375;
       geo.height = 550;
       break;
@@ -435,7 +446,7 @@ UIgeo Fui::getUIgeo(int fuiType)
       geo.width  = 350;
       geo.height = 460;
       geo.xPos   = modellerWidth - geo.width;
-      geo.yPos   = modellerHeight - 275 - 210 - Fui::borderWidth;
+      geo.yPos   = modellerHeight - 275 - 210 - uiBorderWidth;
       break;
     case FUI_GAGEOPTIONS_GEO:
       geo.xPos   = 100;
@@ -454,7 +465,7 @@ UIgeo Fui::getUIgeo(int fuiType)
       geo.width  = 650;
       geo.height = 400;
       geo.xPos   = modellerWidth - geo.width;
-      geo.yPos   = modellerHeight - 275 - 210 - Fui::borderWidth;
+      geo.yPos   = modellerHeight - 275 - 210 - uiBorderWidth;
       break;
 #endif
     case FUI_ANIMATIONCONTROL_GEO:
@@ -464,31 +475,31 @@ UIgeo Fui::getUIgeo(int fuiType)
       geo.height = 565;
       break;
     case FUI_VIEWSETTINGS_GEO:
-      geo.xPos   = Fui::screen.width - 300;
-      geo.yPos   = 2*Fui::titleBarHeight + Fui::borderWidth;
+      geo.xPos   = uiScreenWidth - 300;
+      geo.yPos   = 2*uiTitleBarHeight + uiBorderWidth;
       geo.width  = 300;
       geo.height = 900;
       break;
     case FUI_MODELMANAGER_GEO:
       geo.width  = 200;
-      geo.height = modellerHeight - 2*Fui::borderWidth - Fui::titleBarHeight;
+      geo.height = modellerHeight - 2*uiBorderWidth - uiTitleBarHeight;
       break;
     case FUI_RDBSELECTOR_GEO:
       geo.width  = 300;
-      geo.height = modellerHeight - 2*Fui::borderWidth - Fui::titleBarHeight;
+      geo.height = modellerHeight - 2*uiBorderWidth - uiTitleBarHeight;
       geo.xPos   = 10;
       geo.yPos   = 20;
       break;
     case FUI_RDBMEFATIGUE_GEO:
       geo.width  = 400;
       geo.height = 450;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_PREFERENCES_GEO:
       geo.width  = 430;
       geo.height = 650;
-      geo.xPos   = Fui::screen.width - geo.width;
+      geo.xPos   = uiScreenWidth - geo.width;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_RESULTFILEBROWSER_GEO:
@@ -506,61 +517,61 @@ UIgeo Fui::getUIgeo(int fuiType)
     case FUI_MODELPREFERENCES_GEO:
       geo.width  = 400;
       geo.height = 600;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_SEAENVIRONMENT_GEO:
       geo.width  = 400;
       geo.height = 470;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_AIRENVIRONMENT_GEO:
       geo.width  = 400;
       geo.height = 550;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_BLADEDEFINITION_GEO:
       geo.width  = 885;
       geo.height = 660;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_AIRFOILDEFINITION_GEO:
       geo.width  = 827;
       geo.height = 710;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_EVENTDEFINITION_GEO:
       geo.width  = 827;
       geo.height = 620;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_TURBINEASSEMBLY_GEO:
       geo.width  = 827;
       geo.height = 670;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_TURBINETOWER_GEO:
       geo.width  = 672;
       geo.height = 494;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_BEAMSTRINGPAIR_GEO:
       geo.width  = 827;
       geo.height = 350;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_OBJECTBROWSER_GEO:
       geo.width  = 827;
       geo.height = 650;
-      geo.xPos   = (Fui::screen.width - geo.width)/2;
+      geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
     case FUI_BEAMCSSELECTOR_GEO:
@@ -570,10 +581,10 @@ UIgeo Fui::getUIgeo(int fuiType)
       geo.yPos   = 200;
       break;
     case FUI_MODELEXPORT_GEO:
-      geo.width = 1000;
+      geo.width  = 1000;
       geo.height = 550;
-      geo.xPos = (Fui::screen.width - geo.width) / 2;
-      geo.yPos = modellerHeight / 3;
+      geo.xPos   = (uiScreenWidth - geo.width) / 2;
+      geo.yPos   = modellerHeight / 3;
       break;
     default:
       geo.xPos   = 200;
@@ -959,7 +970,7 @@ void Fui::airEnvironmentUI(bool onScreen, bool inMem)
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAirEnvironment::getClassTypeID());
-  if ((onScreen || inMem) && uic == NULL) {
+  if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
     UIgeo geo = Fui::getUIgeo(FUI_AIRENVIRONMENT_GEO);
     uic = FuiAirEnvironment::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
@@ -977,7 +988,7 @@ FuiTurbWind* Fui::turbWindUI(bool onScreen, bool inMem)
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiTurbWind::getClassTypeID());
-  if ((onScreen || inMem) && uic == NULL)
+  if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn)
     uic = FuiTurbWind::create();
 #else
   FFuTopLevelShell* uic = NULL;
@@ -994,7 +1005,7 @@ void Fui::bladeDefinitionUI(bool onScreen, bool inMem)
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiBladeDefinition::getClassTypeID());
-  if ((onScreen || inMem) && uic == NULL) {
+  if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
     UIgeo geo = Fui::getUIgeo(FUI_BLADEDEFINITION_GEO);
     uic = FuiBladeDefinition::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
@@ -1012,7 +1023,7 @@ void Fui::airfoilDefinitionUI(bool onScreen, bool inMem)
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAirfoilDefinition::getClassTypeID());
-  if ((onScreen || inMem) && uic == NULL) {
+  if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
     UIgeo geo = Fui::getUIgeo(FUI_AIRFOILDEFINITION_GEO);
     uic = FuiAirfoilDefinition::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
@@ -1030,7 +1041,7 @@ void Fui::turbineAssemblyUI(bool onScreen, bool inMem)
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
-  if ((onScreen || inMem) && uic == NULL) {
+  if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
     UIgeo geo = Fui::getUIgeo(FUI_TURBINEASSEMBLY_GEO);
     uic = FuiCreateTurbineAssembly::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
@@ -1048,7 +1059,7 @@ void Fui::turbineTowerUI(bool onScreen, bool inMem)
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineTower::getClassTypeID());
-  if ((onScreen || inMem) && uic == NULL) {
+  if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
     UIgeo geo = Fui::getUIgeo(FUI_TURBINETOWER_GEO);
     uic = FuiCreateTurbineTower::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }

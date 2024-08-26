@@ -7,13 +7,11 @@
 # Library setup
 
 set ( LIB_ID vpmApp )
-set ( LIB_ID_LIST vpmAppCmds vpmAppDisplay vpmAppProcess vpmAppUAMap )
+set ( LIB_ID_LIST )
 
 string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_CONNECTORS" )
 
-foreach ( FOLDER ${LIB_ID_LIST} )
-  add_subdirectory ( ${FOLDER} )
-endforeach ( FOLDER ${LIB_ID_LIST} )
+add_subdirectory ( vpmAppProcess )
 
 
 # Options for inclusion of various features at compile time
@@ -27,6 +25,37 @@ option ( USE_SEVENTS "Build with Simulation Event support" OFF )
 option ( USE_DIGTWIN "Build with Digital Twin features" OFF )
 option ( USE_VTF     "Use the VTF API (Ceetron)" OFF )
 mark_as_advanced ( USE_TIREAPI USE_MESHING USE_OILWELL USE_VTF )
+
+if ( USE_WINDPOW )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_WND" )
+endif ( USE_WINDPOW )
+
+add_subdirectory ( vpmAppUAMap )
+
+if ( USE_VTF )
+  find_package ( VTFAPI )
+  if ( VTFAPI_FOUND )
+    string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_VTF" )
+  endif ( VTFAPI_FOUND )
+endif ( USE_VTF )
+
+add_subdirectory ( vpmAppDisplay )
+
+if ( USE_OILWELL )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_OWL" )
+endif ( USE_OILWELL )
+if ( USE_RISER )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_RIS" )
+endif ( USE_RISER )
+if ( USE_SEVENTS )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_SEV" )
+endif ( USE_SEVENTS )
+if ( USE_DIGTWIN )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_SAP" )
+endif ( USE_DIGTWIN )
+
+add_subdirectory ( vpmAppCmds )
+
 if ( USE_CONTROL )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_CTR" )
 endif ( USE_CONTROL )
@@ -39,27 +68,6 @@ endif ( USE_FATIGUE )
 if ( USE_MESHING )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_MSH" )
 endif ( USE_MESHING )
-if ( USE_OILWELL )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_OWL" )
-endif ( USE_OILWELL )
-if ( USE_RISER )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_RIS" )
-endif ( USE_RISER )
-if ( USE_WINDPOW )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_WND" )
-endif ( USE_WINDPOW )
-if ( USE_SEVENTS )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_SEV" )
-endif ( USE_SEVENTS )
-if ( USE_DIGTWIN )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_SAP" )
-endif ( USE_DIGTWIN )
-if ( USE_VTF )
-  find_package ( VTFAPI )
-  if ( VTFAPI_FOUND )
-    string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_VTF" )
-  endif ( VTFAPI_FOUND )
-endif ( USE_VTF )
 
 
 ## Files with header and source with same name

@@ -8,18 +8,6 @@
 set ( LIB_ID vpmAppCmds )
 
 
-if ( USE_MEMPOOL )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_MEMPOOL" )
-endif ( USE_MEMPOOL )
-if ( USE_EXT_CTRLSYS )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_EXTCTRL" )
-endif ( USE_EXT_CTRLSYS )
-if ( USE_NCODE_INTERFACE )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_NCODE" )
-endif ( USE_NCODE_INTERFACE )
-
-string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_VISUALS" )
-
 if ( USE_SEVENTS OR USE_RISER OR USE_WINDPOW )
   set ( INCLUDE_ASSEMBLIES TRUE )
 endif ( USE_SEVENTS OR USE_RISER OR USE_WINDPOW )
@@ -34,6 +22,18 @@ endif ( INCLUDE_ASSEMBLIES )
 if ( USE_DIGTWIN )
   find_package ( Zlib )
 endif ( USE_DIGTWIN )
+
+if ( USE_EXT_CTRLSYS )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_EXTCTRL" )
+endif ( USE_EXT_CTRLSYS )
+if ( USE_NCODE_INTERFACE )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_NCODE" )
+endif ( USE_NCODE_INTERFACE )
+if ( USE_MEMPOOL )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_MEMPOOL" )
+endif ( USE_MEMPOOL )
+
+string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_VISUALS" )
 
 
 ## Files with header and source with same name

@@ -1074,7 +1074,7 @@ static bool exportSimulationApp(const char* appname)
   FmMechanism* mech = FmDB::getMechanismObject();
 
   // Copy template app-files
-  std::string templPath = FpPM::getFullFedemPath("Templates/cloudsim", false);
+  std::string templPath = FpPM::getFullFedemPath("Templates/cloudsim");
   std::string appPath = FFaFilePath::appendFileNameToPath(mech->getAbsModelFilePath(), appname);
   bool ok = FpFileSys::verifyDirectory(appPath, true);
   ok &= FpFileSys::copyFile("app.json", templPath, appPath);

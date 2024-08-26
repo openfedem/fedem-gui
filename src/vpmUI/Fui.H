@@ -147,20 +147,16 @@ public:
 
   static FuiGraphView* newGraphViewUI(const char* title);
 
-  // help
+  // context-dependent help
   static void showCHM(const char* topic, const char* subtopic = NULL);
 
-  // updater
-  static bool runUpdater(const char* parameters);
-
 private:
-  static UIgeo screen;         // Screen geometry
-  static int   borderWidth;    // Width of border surrounding top level UIs
-  static int   titleBarHeight; // Height of title bar in top level UIs
 
   static FuiMainWindow* mainWindow;
 
 public:
+
+  static bool haveAeroDyn; //!< If \e true, the installation contains AeroDyn
 
   enum
   {

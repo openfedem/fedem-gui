@@ -35,29 +35,3 @@ void Fui::showCHM(const char* topic, const char* subtopic)
   arguments << "ms-its:" + QApplication::applicationDirPath() + "/Doc/Fedem.chm::/htm/" + chmTopic;
   myProcess->start("hh.exe", arguments);
 }
-
-
-/*!
-  This function runs the FedemUpdater.exe program that is used
-  to check if updates are available. FedemUpdater retrieves an
-  info file from http://www.fedem.no/7qe55pp/FedemUpdater.txt,
-  that is checked for update availability. A user interface is
-  displayed to the user, who may choose to automatically have
-  the FedemInstaller.exe downloaded and installed.
-*/
-
-bool Fui::runUpdater(const char* parameters)
-{
-  // Get updater path and check that it exists
-  QString udPath = QApplication::applicationDirPath() + "/FedemUpdater.exe";
-  QFile file(udPath);
-  if (!file.exists())
-    return false;
-
-  // Run updater
-  QProcess* myProcess = new QProcess();
-  QStringList arguments;
-  arguments << parameters;
-  myProcess->start(udPath, arguments);
-  return true;
-}

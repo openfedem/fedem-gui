@@ -267,11 +267,6 @@ int main (int argc, char** argv)
     memExhaustWarning->popDown();
   }
 
-#ifdef FT_HAS_UPDATER
-  // Check for updates (silent).
-  Fui::runUpdater("/silent");
-#endif
-
 #ifdef FT_REDIRECT_COUT
   // Redirect all std::cout print to a file
   std::ofstream redir("fedem_console.txt");
