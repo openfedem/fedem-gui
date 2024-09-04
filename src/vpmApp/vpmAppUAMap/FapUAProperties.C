@@ -295,17 +295,12 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       }
 
       if (parallelSpring)
-	if (parallelSpring->getLengthEngine())
-	  pv->myAxialDaForceValues.showDefDamper = 1;
-	else
-	  pv->myAxialDaForceValues.showDefDamper = -1;
+        pv->myAxialDaForceValues.showDefDamper = parallelSpring->getLengthEngine() ? 1 : -1;
       else
-	pv->myAxialDaForceValues.showDefDamper = 0;
+        pv->myAxialDaForceValues.showDefDamper = 0;
 
-      if (pv->myAxialDaForceValues.showDefDamper > 0)
-	pv->myAxialDaForceValues.isDefDamper = item->isDefDamper.getValue();
-      else
-	pv->myAxialDaForceValues.isDefDamper = false;
+      pv->myAxialDaForceValues.isDefDamper = (pv->myAxialDaForceValues.showDefDamper > 0 &&
+                                              item->isDefDamper.getValue());
 
       pv->myAxialDaForceValues.functionQuery    = &funcQuery;
       pv->myAxialDaForceValues.selectedFunction = item->getFunction();
@@ -329,7 +324,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       else if (item->isOfType(FmJointDamper::getClassTypeID()))
         {
           this->addTopologyItem(pv->myTopology,((FmJointDamper*)item)->getOwnerJoint());
-	}
+        }
     }
 
   // Spring
@@ -442,8 +437,8 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       std::vector<FmModelMemberBase*> refs, joints;
       sprChar->getReferringObjs(refs,"mySpringChar");
       for (FmModelMemberBase* refObj : refs)
-	if (refObj->isOfType(FmJointSpring::getClassTypeID()))
-	{
+        if (refObj->isOfType(FmJointSpring::getClassTypeID()))
+        {
           // Make sure joints using this in several DOFs are added only once
           FmModelMemberBase* owner = ((FmJointSpring*)refObj)->getOwnerJoint();
           if (std::find(joints.begin(),joints.end(),owner) == joints.end())
@@ -469,10 +464,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->isMaster = item->isMasterTriad();
       pv->myTriadIsAttached = item->isAttached();
       pv->myTriadConnector = item->itsConnectorType.getValue();
-      if (pv->myTriadIsAttached)
-	pv->myFENodeIdx = FFaNumStr(item->FENodeNo.getValue());
-      else
-        pv->myFENodeIdx = "N/A";
+      pv->myFENodeIdx = pv->myTriadIsAttached ? std::to_string(item->FENodeNo.getValue()) : "N/A";
 
       int dof, nDOFs = item->getNDOFs(true);
       pv->myTriadVals.resize(nDOFs);
@@ -604,7 +596,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
         pv->myFromPoint = item->getLocalFromPoint();
 
       if (item->getFromRef())
-	pv->myFromPointObjectText = item->getFromRef()->getLinkIDString(true);
+        pv->myFromPointObjectText = item->getFromRef()->getLinkIDString(true);
 
       if (pv->myToPointIsGlobal)
         pv->myToPoint = item->getGlobalToPoint();
@@ -612,7 +604,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
         pv->myToPoint = item->getLocalToPoint();
 
       if (item->getToRef())
-	pv->myToPointObjectText = item->getToRef()->getLinkIDString(true);
+        pv->myToPointObjectText = item->getToRef()->getLinkIDString(true);
 
       // Topology view:
 
@@ -653,11 +645,8 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       if (item->getValidFrictionType() > 0)
         {
-	  if (item->isOfType(FmBallJoint::getClassTypeID()) ||
-	      item->isOfType(FmFreeJoint::getClassTypeID()))
-	    pv->showFriction = 2;
-	  else
-	    pv->showFriction = 1;
+          pv->showFriction = (item->isOfType(FmBallJoint::getClassTypeID()) ||
+                              item->isOfType(FmFreeJoint::getClassTypeID())) ? 2 : 1;
           pv->myFrictionDof = item->getFrictionDof();
           int validFriction = item->getValidFrictionType(pv->myFrictionDof);
 
@@ -868,15 +857,11 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myLinkValues.modelFilePath = FmDB::getMechanismObject()->getAbsModelFilePath();
       pv->myLinkValues.useGenericPart = item->useGenericProperties.getValue();
       pv->myLinkValues.usingFEModelViz = item->useFEModelAsVisualization();
-      if (item->baseCadFileName.getValue().empty()) {
-	pv->myLinkValues.allowChangeViz = true;
-	pv->myLinkValues.vizFile = item->visDataFile.getValue();
-      }
-      else {
-	pv->myLinkValues.allowChangeViz = false;
-	pv->myLinkValues.vizFile = FFaFilePath::getRelativeFilename(pv->myLinkValues.modelFilePath,
-								    item->getBaseCadFile());
-      }
+      if ((pv->myLinkValues.allowChangeViz = item->baseCadFileName.getValue().empty()))
+        pv->myLinkValues.vizFile = item->visDataFile.getValue();
+      else
+        pv->myLinkValues.vizFile = FFaFilePath::getRelativeFilename(pv->myLinkValues.modelFilePath,
+                                                                    item->getBaseCadFile());
       pv->myLinkValues.genericPartNoCGTriad = item->condenseOutCoG.getValue();
       pv->myLinkValues.genericPartStiffType = (int)item->myGenericPartStiffType.getValue();
       pv->myLinkValues.genericPartKT        = item->kt.getValue();
@@ -886,11 +871,9 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myLinkValues.inertiaRef           = item->myInertiaRef.getValue();
       pv->myLinkValues.useCalculatedMass    = item->myCalculateMass.getValue();
       if (item->getLinkHandler())
-	pv->myLinkValues.canCalculateMass   = pv->myLinkValues.vizFile.empty() ? 'F' : 'B';
-      else if (!pv->myLinkValues.vizFile.empty())
-	pv->myLinkValues.canCalculateMass   = 'G';
+        pv->myLinkValues.canCalculateMass   = pv->myLinkValues.vizFile.empty() ? 'F' : 'B';
       else
-	pv->myLinkValues.canCalculateMass   =  false;
+        pv->myLinkValues.canCalculateMass   = pv->myLinkValues.vizFile.empty() ? '\0' : 'G';
 
       pv->myLinkValues.materialQuery = FapUAMaterialPropQuery::instance();
       pv->myLinkValues.selectedMaterial = item->material.getPointer();
@@ -1271,10 +1254,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showStrainRosetteData = true;
 
-      if (FpPM::isModelTouchable())
-        pv->myStrRosIsEditable = !FpRDBExtractorManager::instance()->hasResults(item);
-      else
-        pv->myStrRosIsEditable = false;
+      pv->myStrRosIsEditable = FpPM::isModelTouchable() && !FpRDBExtractorManager::instance()->hasResults(item);
 
       std::vector<int> nodes;
       nodes.push_back(item->node1.getValue());
@@ -2349,20 +2329,13 @@ void FapUAProperties::getDBJointVariables(FmJointBase* item,
       jv.mySpringDCVals.useAsDeflection = pm->getInitLengthOrDefl(jv.mySpringDCVals.initLengtOrDeflection);
       jv.mySpringDCVals.selectedLengthEngine = pm->getEngine();
       if (jv.myMotionType == FmHasDOFsBase::PRESCRIBED) {
-	jv.myMotionType = FuiJointDOF::PRESCRIBED_DISP + pm->getMotionType();
-	if (dof > 2)
-	  jv.mySpringDCVals.useAngularLabels = 1+pm->getMotionType();
-	else
-	  jv.mySpringDCVals.useAngularLabels = -pm->getMotionType();
-	jv.freqDomain = pm->freqDomain.getValue();
+        jv.myMotionType = FuiJointDOF::PRESCRIBED_DISP + pm->getMotionType();
+        jv.mySpringDCVals.useAngularLabels = dof > 2 ? 1+pm->getMotionType() : -pm->getMotionType();
+        jv.freqDomain = pm->freqDomain.getValue();
       }
     }
     jv.mySpringDCVals.engineQuery = FapUAEngineQuery::instance();
-
-    if (dof < 3)
-      jv.mySpringFSVals.functionQuery = &JvTransSpringQuery;
-    else
-      jv.mySpringFSVals.functionQuery = &JvRotSpringQuery;
+    jv.mySpringFSVals.functionQuery = dof < 3 ? &JvTransSpringQuery : &JvRotSpringQuery;
 
     if (spr) {
       jv.mySpringFSVals.constFunction       = spr->getInitStiff();
@@ -2381,10 +2354,7 @@ void FapUAProperties::getDBJointVariables(FmJointBase* item,
       jv.myDamperFCVals.isDefDamper = false;
     }
 
-    if (dof < 3)
-      jv.myDamperFCVals.functionQuery = &JvTransDamperQuery;
-    else
-      jv.myDamperFCVals.functionQuery = &JvRotDamperQuery;
+    jv.myDamperFCVals.functionQuery = dof < 3 ? &JvTransDamperQuery : &JvRotDamperQuery;
 
     if (dmp) {
       jv.myDamperFCVals.constFunction       = dmp->getInitDamp();
@@ -2987,12 +2957,8 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 
       item->spindelTriadOffset = pv->mySpindelTriadOffset;
       item->tireType = pv->mySelectedTireModelType;
-
-      // for now, switch API based on selected tire model type.
-      if (item->tireType.getValue() == "FTIRE")
-	item->tireAPI = "CTI";
-      else
-	item->tireAPI = "STI";
+      // Choose API based on the selected tire model type
+      item->tireAPI = item->tireType.getValue() == "FTIRE" ? "CTI" : "STI";
 
       item->tireDataFileName = pv->myTireDataFileName;
       item->tireDataFileRef = static_cast<FmFileReference*>(pv->mySelectedTireDataFileRef);
@@ -3484,7 +3450,7 @@ void FapUAProperties::setDBJointVariables(FmJointBase* item,
   FaVec3 angles;
   for (const FuiJointDOFValues& jdof : uiVars)
   {
-    if (dofToUpdate >= 0 && idof++ != dofToUpdate) continue;
+    if (dofToUpdate >= 0 && ++idof != dofToUpdate) continue;
     if (std::find(dofs.begin(),dofs.end(),jdof.myDofNo) == dofs.end()) continue;
 
     if (jdof.myDofNo >= 3)
