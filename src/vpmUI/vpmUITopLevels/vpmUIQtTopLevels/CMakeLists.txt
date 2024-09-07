@@ -104,7 +104,7 @@ target_link_libraries ( ${LIB_ID} ${DEPENDENCY_LIST} )
 
 # Install the dependent shared object libraries
 
-set ( QT_LIBS Qt3Support QtCore QtGui QtNetwork QtOpenGL QtSql QtXml )
+set ( QT_LIBS Qt3Support QtCore QtGui QtNetwork QtOpenGL QtSql QtSvg QtXml )
 foreach ( LIB ${QT_LIBS} )
   get_target_property ( LIB_PATH Qt4::${LIB} LOCATION )
   if ( WIN )
