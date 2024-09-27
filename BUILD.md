@@ -437,6 +437,10 @@ Proceed as follows:
   on the `cmake` command (see above). The binaries will then be installed
   in a subfolder named after the current version stored in the
   [cfg\VERSION](cfg/VERSION) file.
+  Notice that the end-user documentation also will be installed, by downloading
+  artifacts from the [fedem-docs](https://github.com/openfedem/fedem-docs) repository.
+  Remember to update the `DOC_VER` variable in the [CMakeLists.txt](CMakeLists.txt)
+  file if the documentation has been updated, before building this project.
 
 ## Build new FEDEM installation
 
@@ -444,10 +448,9 @@ Proceed as follows:
   you first need to build the `INSTALL` target of this project
   as described [above](#build-the-fedem-gui-application), as well as for
   the parallel projects [fedem-solvers](https://github.com/openfedem/fedem-solvers)
-  and [fedem-mdb](https://github.com/openfedem/fedem-mdb). Finally, you need to build
-  the end-user documentation in [fedem-docs](https://github.com/openfedem/fedem-docs).
+  and [fedem-mdb](https://github.com/openfedem/fedem-mdb).
 
-  Make sure that all four projects use the same installation destination,
+  Make sure that all three projects use the same installation destination,
   by setting the `CMAKE_INSTALL_PREFIX` variable to the same value for all
   when running the `cmake` configuration steps.
 

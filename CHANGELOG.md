@@ -8,6 +8,33 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.5] (2024-09-27)
+
+### :rocket: Added
+
+- The Channel field is updated to contain the column label for
+  poly-line-from-file functions, also if the file used is a two-colum file.
+  If the file have no headings, "n/a" is displayed in the Channel field.
+- The built GUI will now enable the Windpower features, if the installation
+  contains the AeroDyn binary and associated dynamis solver (not part of the package)
+- The Users Guide now contains chapters on Windpower and Marine modeling.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-foundation/issues/11 :
+  Previewing poly-line-from-file functions may cause crash or wrong results
+  if the definition domain is smaller than the evaluation domain.
+- Issue https://github.com/openfedem/fedem-gui/issues/24 :
+  Modelling prismatic/cylindric joints by selecting existing triads does not work properly.
+- Issue https://github.com/openfedem/fedem-gui/issues/23 :
+  Using a time interval for a graph plotting simulation results have some round-off errors.
+- Issue https://github.com/openfedem/fedem-gui/issues/20 :
+  Multi-select does not work when updating joint DOF properties.
+- Issue https://github.com/openfedem/fedem-gui/issues/17 :
+  The Fourier Analysis and Differntiate/Integrate toggles on curves do not work properly.
+- Issue https://github.com/openfedem/fedem-gui/issues/15 :
+  The Additional Solver Options field for the Dynamics Solver does not work always.
+
 ## [fedem-8.0.4] (2024-07-12)
 
 ### :bug: Fixed
@@ -89,3 +116,4 @@
 [fedem-8.0.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.1...fedem-8.0.2
 [fedem-8.0.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.2...fedem-8.0.3
 [fedem-8.0.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.3...fedem-8.0.4
+[fedem-8.0.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.4...fedem-8.0.5

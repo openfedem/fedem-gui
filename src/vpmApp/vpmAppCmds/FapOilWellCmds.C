@@ -121,7 +121,7 @@ void FapOilWellCmds::createPipeSurface(const std::string& fileName)
       tangent.setBySphCoords(FaVec3(1.0, RAD(90.0-myPoints[i-1].Azi), RAD(180.0-myPoints[i-1].Inc)));
       tangent2.setBySphCoords(FaVec3(1.0, RAD(90.0-myPoints[i].Azi), RAD(180.0-myPoints[i].Inc)));
       arcs.push_back(FFa3PArc::makeFromP1T1T2L(point, tangent, tangent2, myPoints[i].MD - myPoints[i-1].MD));
-      point = arcs.back().P[2];
+      point = arcs.back().back();
 #endif
     }
 
