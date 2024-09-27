@@ -636,17 +636,8 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
   {
     myFileRefQueryField->setSelectedRef(fv->selectedFileRef);
     myFileRefQueryField->setText(fv->fileName);
-
-    if (fv->isMultiChannel)
-    {
-      myChannelNameField->myField->setValue(fv->myChannelName);
-      myChannelBrowseButton->setSensitivity(IAmSensitive);
-    }
-    else
-    {
-      myChannelNameField->myField->setValue("Not set");
-      myChannelBrowseButton->setSensitivity(false);
-    }
+    myChannelNameField->myField->setValue(fv->myChannelName);
+    myChannelBrowseButton->setSensitivity(fv->isMultiChannel && IAmSensitive);
     myZeroAdjustToggle->setValue(fv->myZeroAdjust);
     myScaleFactorField->setValue(fv->myScaleFactor);
     myVerticalShiftField->setValue(fv->myVerticalShift);
