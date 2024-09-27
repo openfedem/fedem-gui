@@ -499,6 +499,15 @@ void FapUAFunctionProperties::setDBValues(FFuaUIValues* values)
       df->verticalShift.setValue(pv->myVerticalShift);
       df->zeroAdjust.setValue(pv->myZeroAdjust);
       df->randomSeed.setValue(pv->myJonswapRandomSeed);
+      if (!pv->myChannelName.empty() && pv->myChannelName != "Not set") {
+        if (e && e->getUserDescription().empty() &&
+            df->getFunctionUse() != FmMathFuncBase::DRIVE_FILE) {
+          e->setUserDescription(pv->myChannelName);
+          e->onChanged();
+        }
+        else if (!e && f->getUserDescription().empty())
+          f->setUserDescription(pv->myChannelName);
+      }
     }
 
     // External function
