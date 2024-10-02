@@ -54,14 +54,8 @@ void FapAddResProbeCmd::init()
   cmdItem->setSmallIcon(addResultsProbe_xpm);
   cmdItem->setText("Add results probe");
   cmdItem->setToolTip("Add a label showing the results at a specific position");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapAddResProbeCmd::addResProbe));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FuiModes::setMode(FuiModes::ADD_RESULTSPROBE_MODE); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapAddResProbeCmd::getSensitivity,bool&));
-}
-
-
-void FapAddResProbeCmd::addResProbe()
-{
-  FuiModes::setMode(FuiModes::ADD_RESULTSPROBE_MODE);
 }
 
 

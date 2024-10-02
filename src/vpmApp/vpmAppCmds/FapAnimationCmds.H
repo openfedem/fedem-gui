@@ -23,10 +23,11 @@ class FFrExtractor;
 
 class FapAnimationCmds : public FapCmdsBase
 {
+  static void init();
+
 public:
   static void show();
   static void hide();
-  static void showControls();
 
   static void animationPlay();
   static void animationPlayReverse();
@@ -70,7 +71,6 @@ public:
   static void onResultsToBeDeleted(FFrExtractor*);
 
 private:
-  static void init();
 
   // Vars to keep track of what's going on
 

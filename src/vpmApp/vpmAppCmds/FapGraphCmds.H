@@ -23,7 +23,7 @@ public:
   static std::vector<FmGraph*>    findSelectedGraphs(bool& graphsOnly);
   static std::vector<FmCurveSet*> findSelectedCurves(bool& curvesOnly);
 
-  static void editAxis(int axis, FmCurveSet* curve);
+  static void editAxis(int axis, FmCurveSet* curve = NULL);
 
   static void killAllGraphViews();
 
@@ -35,18 +35,10 @@ private:
   static void init();
 
   static void show();
-  static void showRDBSelector();
-  static void showRDBMEFatigue();
-  static void editXAxis();
-  static void editYAxis();
 
   static void repeatCurve(int fromID, int toID);
-  static void repeatCurveForAll() { repeatCurve(0,-1); }
-  static void repeatCurveForSome() { repeatCurve(0,0); }
   static void onRepeatCurveDone(int button);
   static void toggleAutoExport(bool enable);
-  static void enableAutoExport() { toggleAutoExport(true); }
-  static void disableAutoExport() { toggleAutoExport(false); }
 
   static void getShowSensitivity(bool& sensitivity);
   static void getEditXAxisSensitivity(bool& sensitivity);

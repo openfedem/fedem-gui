@@ -82,20 +82,20 @@ void FapFileCmds::init()
   cmdItem->setText("Save");
   cmdItem->setToolTip("Save");
   cmdItem->setAccelKey(FFuaKeyCode::CtrlAccel+FFuaKeyCode::S);
-  cmdItem->setActivatedCB(FFaDynCB0S(FapFileCmds::save));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapFileCmds::save(true); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelTouchable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_file_saveAs");
   cmdItem->setText("Save As...");
   cmdItem->setToolTip("Save As");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapFileCmds::saveAs));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapFileCmds::saveAs(); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapFileCmds::getChangeModelSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_file_exit");
   cmdItem->setText("Exit");
   cmdItem->setToolTip("Exit");
   cmdItem->setAccelKey(FFuaKeyCode::CtrlAccel+FFuaKeyCode::Q);
-  cmdItem->setActivatedCB(FFaDynCB0S(FapFileCmds::exit));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapFileCmds::exit(true,true); }));
 
   cmdItem = new FFuaCmdItem("cmdId_file_loadLink");
   cmdItem->setSmallIcon(getFELink_xpm);
@@ -115,7 +115,7 @@ void FapFileCmds::init()
   cmdItem = new FFuaCmdItem("cmdId_file_setLinkRepository");
   cmdItem->setText("Set FE model repository...");
   cmdItem->setToolTip("Set FE model repository");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapFileCmds::setExternalLinkRep));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapFileCmds::setModelLinkRep(false); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapFileCmds::getSetModelLinkRepSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_file_createPipeSurface");
@@ -317,7 +317,7 @@ public:
 };
 
 
-void FapFileCmds::saveAs()
+bool FapFileCmds::saveAs()
 {
   // Lambda function checking if reduced FE parts exist in current model.
   auto&& haveReducedParts = []()
@@ -362,9 +362,13 @@ void FapFileCmds::saveAs()
     atTime = aDialog->getUserFieldValue("Model configuration time:");
   delete aDialog;
 
-  if (!retFiles.empty())
-    if (FpPM::vpmModelSaveAs(retFiles.front(),saveRedParts,saveRes,atTime))
-      FpPM::unTouchModel();
+  if (retFiles.empty())
+    return false;
+  if (!FpPM::vpmModelSaveAs(retFiles.front(),saveRedParts,saveRes,atTime))
+    return false;
+
+  FpPM::unTouchModel();
+  return true;
 }
 //----------------------------------------------------------------------------
 
@@ -926,7 +930,7 @@ void FapFileCmds::setModelLinkRep(bool switchToInternal)
   FpModelRDBHandler::RDBOpen(mech->getResultStatusData(),mech,true);
 
   // Force a save here such that the model file is in sync with the disk
-  if (deleteOld) FapFileCmds::save();
+  if (deleteOld) FapFileCmds::save(true);
 }
 //----------------------------------------------------------------------------
 
