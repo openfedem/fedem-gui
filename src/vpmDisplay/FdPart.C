@@ -451,9 +451,9 @@ SbVec3f FdPart::findSnapPoint(const SbVec3f& pointOnObject,
     return this->FdLink::findSnapPoint(pointOnObject,objToWorld,detail,pPoint);
 
   SbVec3f nearestWorld;
-  NodesCIter node = linkHandler->findClosestNode(FdConverter::toFaVec3(pointOnObject));
-  if (node != linkHandler->nodesEnd())
-    objToWorld.multVecMatrix(FdConverter::toSbVec3f((*node)->getPos()),nearestWorld);
+  FFlNode* node = linkHandler->findClosestNode(FdConverter::toFaVec3(pointOnObject));
+  if (node)
+    objToWorld.multVecMatrix(FdConverter::toSbVec3f(node->getPos()),nearestWorld);
   else
     objToWorld.multVecMatrix(pointOnObject,nearestWorld);
 
@@ -468,11 +468,11 @@ bool FdPart::findNode(int& nodeID, FaVec3& worldNodePos, const SbVec3f& pickPoin
 
   FaMat34 partTrans = this->getActiveTransform();
   FaVec3  partPoint = partTrans.inverse()*FdConverter::toFaVec3(pickPoint);
-  NodesCIter nodeIt = linkHandler->findClosestNode(partPoint);
-  if (nodeIt == linkHandler->nodesEnd()) return false;
+  FFlNode* node = linkHandler->findClosestNode(partPoint);
+  if (!node) return false;
 
-  nodeID = (*nodeIt)->getID();
-  worldNodePos = partTrans * (*nodeIt)->getPos();
+  nodeID = node->getID();
+  worldNodePos = partTrans * node->getPos();
   return true;
 }
 
