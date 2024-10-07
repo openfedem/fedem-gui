@@ -501,7 +501,7 @@ void FapFileCmds::loadLink()
       continue;
     }
 
-    FmPart* part = new FmPart;
+    FmPart* part = new FmPart();
     part->setParentAssembly(parent);
     part->connect();
 
@@ -510,10 +510,10 @@ void FapFileCmds::loadLink()
       FFaMsg::list("===> Open visualization file: " + fName + "\n");
 
       if (useRelativePath)
-        part->visDataFile = FmDB::getMechanismObject()->getRelativePath(fName);
+        part->visDataFile.setValue(FmDB::getMechanismObject()->getRelativePath(fName));
 
       if (uc)
-        part->visDataFileUnitConverter = *uc;
+        part->visDataFileUnitConverter.setValue(*uc);
 
       part->useGenericProperties.setValue(true);
       part->myCalculateMass.setValue(FmPart::FROM_GEOMETRY);
@@ -545,7 +545,7 @@ void FapFileCmds::loadLink()
 
     if (useSpecificPartRepository)
     {
-      part->myRepository = FmDB::getMechanismObject()->getRelativePath(FFaFilePath::getPath(fName));
+      part->myRepository.setValue(FmDB::getMechanismObject()->getRelativePath(FFaFilePath::getPath(fName)));
       FFaMsg::list("  -> Using part-specific repository: " +
 		   part->myRepository.getValue() + "\n");
     }
@@ -635,28 +635,25 @@ void FapFileCmds::changeLink()
 
   const FFaUnitCalculator* uc = FFaUnitCalculatorProvider::instance()->getCalculator(converter);
 
-  Fui::noUserInputPlease();
   FFaMsg::list("===> Open FE data file: " + fName + "\n");
 
-  if (part->ramUsageLevel.getValue() != FmPart::FULL_FE)
-  {
+  if (part->ramUsageLevel.setValue(FmPart::FULL_FE))
     FFaMsg::list("  -> Changing RAM usage setting to full FE model.\n");
-    part->ramUsageLevel = FmPart::FULL_FE;
-  }
 
   part->readyForUpdate();
   part->setUserDescription(FFaFilePath::getBaseName(fName,true));
 
   // Actually import the part
+  Fui::noUserInputPlease();
   FFaMsg::pushStatus("Loading FE part");
   FFaMsg::setSubTask(FFaFilePath::getFileName(fName));
   bool ok = part->importPart(fName,uc,useRelativePath,autoGenTriads);
   FFaMsg::popStatus();
   FFaMsg::setSubTask("");
+  Fui::okToGetUserInput();
   if (!ok)
   {
     FFaMsg::list("===> Loading FE data failed.\n",true);
-    Fui::okToGetUserInput();
     return;
   }
 
@@ -672,10 +669,9 @@ void FapFileCmds::changeLink()
   else
     part->myRepository.setValue("");
 
+  Fui::noUserInputPlease();
   FmStrainRosette::syncStrainRosettes(part);
-
   drawPart(part,fName);
-
   Fui::okToGetUserInput();
 }
 //----------------------------------------------------------------------------
