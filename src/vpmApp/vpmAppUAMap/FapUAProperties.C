@@ -2814,22 +2814,26 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 
 	// Load and create visualization
 
-	Fui::noUserInputPlease();
 	if (isGenPart && !item->isCADLoaded())
 	{
+	  Fui::noUserInputPlease();
 	  FFaMsg::pushStatus("Loading CAD model");
 	  item->openCadData();
 	  FFaMsg::popStatus();
+	  Fui::okToGetUserInput();
 	}
 	else if (!isGenPart && !item->isFELoaded())
 	{
+	  Fui::noUserInputPlease();
 	  FFaMsg::pushStatus("Loading FE model");
 	  item->openFEData();
 	  FFaMsg::popStatus();
+	  Fui::okToGetUserInput();
 	}
 
 	item->updateTriadTopologyRefs(false,2); // Bugfix #195: No warning when no FE model yet
 
+	Fui::noUserInputPlease();
 	FFaMsg::pushStatus("Creating Visualization");
 	item->draw();
 	FFaMsg::popStatus();
@@ -3796,17 +3800,20 @@ void FapUAProperties::linkMeshCB(bool parabolic)
   FFaMsg::pushStatus("Generating FE mesh");
   bool meshed = part->createFEData(parabolic);
   FFaMsg::popStatus();
+  Fui::okToGetUserInput();
 
   if (meshed)
   {
     part->updateTriadTopologyRefs(true,2);
+
+    Fui::noUserInputPlease();
     FFaMsg::pushStatus("Creating Visualization");
     part->draw();
     FFaMsg::popStatus();
+    Fui::okToGetUserInput();
   }
 
   part->onChanged();
-  Fui::okToGetUserInput();
 }
 
 

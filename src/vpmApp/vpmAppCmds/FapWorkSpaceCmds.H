@@ -5,32 +5,20 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FAPWORKSPACECMDS_H
-#define FAPWORKSPACECMDS_H
+#ifndef FAP_WORK_SPACE_CMDS_H
+#define FAP_WORK_SPACE_CMDS_H
+
 #include "FapCmdsBase.H"
 #include "FFaLib/FFaPatterns/FFaInitialisation.H"
 
-class FapWorkSpaceCmds: public FapCmdsBase
+
+class FapWorkSpaceCmds : public FapCmdsBase
 {
-// Operations
-private:
   static void init();
 
-  static void cascade();
-  static void tile();
-  static void tabs();
-  static void subWins();
-  
-// Attributes
-private:
- friend class FFaInitialisation<FapWorkSpaceCmds>;
+  friend class FFaInitialisation<FapWorkSpaceCmds>;
 };
 
 static FFaInitialisation<FapWorkSpaceCmds> FapWorkSpaceCmds_Init;
-/////////////////////////////////////////////////////////////////////////////
 
 #endif
-
-
-
-

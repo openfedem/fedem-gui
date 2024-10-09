@@ -231,22 +231,21 @@ void FapDBCreateCmds::init()
   cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createAssembly));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
-  std::string cmdName("cmdId_dBCreate_UE0");
-  for (int i = 0; i < 10; i++, cmdName[17]++)
+  for (int i = 0; i < 10; i++)
   {
-    cmdItem = new FFuaCmdItem(cmdName.c_str());
+    cmdItem = new FFuaCmdItem("cmdId_dBCreate_UE" + std::to_string(i));
     cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
     switch (i) {
-    case 0: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE1)); break;
-    case 1: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE2)); break;
-    case 2: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE3)); break;
-    case 3: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE4)); break;
-    case 4: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE5)); break;
-    case 5: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE6)); break;
-    case 6: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE7)); break;
-    case 7: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE8)); break;
-    case 8: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createUE9)); break;
-    case 9: cmdItem->setActivatedCB(FFaDynCB0S(FapDBCreateCmds::createU10)); break;
+    case 0: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(0); })); break;
+    case 1: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(1); })); break;
+    case 2: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(2); })); break;
+    case 3: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(3); })); break;
+    case 4: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(4); })); break;
+    case 5: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(5); })); break;
+    case 6: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(6); })); break;
+    case 7: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(7); })); break;
+    case 8: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(8); })); break;
+    case 9: cmdItem->setActivatedCB(FFaDynCB0S([](){ FapDBCreateCmds::createUserElm(9); })); break;
     }
     // The text and tooltip with element names must be set later,
     // after the user-defined element plugin has been loaded
@@ -635,7 +634,6 @@ static int getSelectedTriads(std::vector<FmTriad*>& triads, FmBase*& parent)
   return triads.size();
 }
 //----------------------------------------------------------------------------
-
 
 void FapDBCreateCmds::createGenericPart()
 {

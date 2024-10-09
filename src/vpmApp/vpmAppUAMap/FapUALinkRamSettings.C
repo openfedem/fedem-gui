@@ -144,22 +144,23 @@ void FapUALinkRamSettings::changeRamUsageLevel(FmPart* part, const FmPart::RamLe
   if (part->ramUsageLevel.getValue() == level && part->getLinkHandler())
     return;
 
-  Fui::noUserInputPlease();
-
   if (level == FmPart::NOTHING)
     {
-      part->ramUsageLevel = level;
+      Fui::noUserInputPlease();
+      part->ramUsageLevel.setValue(level);
 #ifdef USE_INVENTOR
       ((FdPart*)(part->getFdPointer()))->removeVisualizationData();
 #endif
       part->updateCachedCheckSum();
       part->setLinkHandler(NULL);
       part->draw();
+      Fui::okToGetUserInput();
     }
 
   else if (level == FmPart::FULL_FE)
     {
-      part->ramUsageLevel = level;
+      Fui::noUserInputPlease();
+      part->ramUsageLevel.setValue(level);
 #ifdef USE_INVENTOR
       ((FdPart*)(part->getFdPointer()))->removeVisualizationData();
 #endif
@@ -167,10 +168,13 @@ void FapUALinkRamSettings::changeRamUsageLevel(FmPart* part, const FmPart::RamLe
       part->openFEData();
 
       if (!part->useGenericProperties.getValue()) {
+        Fui::okToGetUserInput();
         part->updateTriadTopologyRefs(true,2);
-	FmStrainRosette::syncStrainRosettes(part);
+        Fui::noUserInputPlease();
+        FmStrainRosette::syncStrainRosettes(part);
       }
       part->draw();
+      Fui::okToGetUserInput();
     }
 
   else
@@ -178,13 +182,15 @@ void FapUALinkRamSettings::changeRamUsageLevel(FmPart* part, const FmPart::RamLe
       if (part->ramUsageLevel.getValue() == FmPart::NOTHING ||
           part->ramUsageLevel.getValue() == FmPart::REDUCED_VIZ)
         {
-          part->ramUsageLevel = level;
+          Fui::noUserInputPlease();
+          part->ramUsageLevel.setValue(level);
 #ifdef USE_INVENTOR
           ((FdPart*)(part->getFdPointer()))->removeVisualizationData();
 #endif
           part->setLinkHandler(NULL);
           part->openFEData();
           part->draw();
+          Fui::okToGetUserInput();
         }
 
       if (level == FmPart::REDUCED_VIZ)
@@ -197,7 +203,6 @@ void FapUALinkRamSettings::changeRamUsageLevel(FmPart* part, const FmPart::RamLe
         }
     }
 
-  Fui::okToGetUserInput();
 }
 
 

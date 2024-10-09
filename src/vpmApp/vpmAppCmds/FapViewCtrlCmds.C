@@ -142,7 +142,9 @@ void FapViewCtrlCmds::init()
   cmdItem->setSmallIcon(isometricView_xpm);
   cmdItem->setText("Isometric");
   cmdItem->setToolTip("Isometric");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::isometricView));
+#ifdef USE_INVENTOR
+  cmdItem->setActivatedCB(FFaDynCB0S(FdDB::isometricView));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_XYpZpY");
@@ -205,56 +207,72 @@ void FapViewCtrlCmds::init()
   cmdItem->setSmallIcon(curvePlotZoomWindow_xpm);
   cmdItem->setText("Zoom Window");
   cmdItem->setToolTip("Zoom Window");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::zoomWindow));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->zoomWindow(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_zoomAllWindow");
   cmdItem->setSmallIcon(curvePlotZoomWindowAS_xpm);
   cmdItem->setText("Zoom Window With Autoscale");
   cmdItem->setToolTip("Zoom Window With Autoscale");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::zoomAllInWindow));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->zoomAllInWindow(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_zoomIn");
   cmdItem->setSmallIcon(zoomIn_xpm);
   cmdItem->setText("Zoom In");
   cmdItem->setToolTip("Zoom In");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::zoomIn));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->zoomIn(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_zoomOut");
   cmdItem->setSmallIcon(zoomOut_xpm);
   cmdItem->setText("Zoom Out");
   cmdItem->setToolTip("Zoom Out");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::zoomOut));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->zoomOut(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_shiftLeft");
   cmdItem->setSmallIcon(panLeft_xpm);
   cmdItem->setText("Pan Left");
   cmdItem->setToolTip("Pan Left");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::shiftLeft));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->shiftLeft(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_shiftRight");
   cmdItem->setSmallIcon(panRight_xpm);
   cmdItem->setText("Pan Right");
   cmdItem->setToolTip("Pan Right");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::shiftRight));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->shiftRight(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_shiftUp");
   cmdItem->setSmallIcon(panUp_xpm);
   cmdItem->setText("Pan Up");
   cmdItem->setToolTip("Pan Up");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::shiftUp));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->shiftUp(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_viewCtrl_shiftDown");
   cmdItem->setSmallIcon(panDown_xpm);
   cmdItem->setText("Pan Down");
   cmdItem->setToolTip("Pan Down");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapViewCtrlCmds::shiftDown));
+#ifdef FT_HAS_GRAPHVIEW
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapCmdsBase::getActiveGraphView()->shiftDown(); }));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isGraphViewActive,bool&));
 }
 //----------------------------------------------------------------------------
@@ -432,83 +450,10 @@ void FapViewCtrlCmds::getParallellViewToggle(bool& toggle)
 }
 //----------------------------------------------------------------------------
 
-void FapViewCtrlCmds::isometricView()
-{
-#ifdef USE_INVENTOR
-  FdDB::isometricView();
-#endif
-  FapUACommandHandler::updateAllUICommandsToggle();
-}
-//----------------------------------------------------------------------------
-
 void FapViewCtrlCmds::symbolSize(double newSize)
 {
   FmDB::getActiveViewSettings()->setSymbolScale(newSize);
   FapUAExistenceHandler* uav = FapUAExistenceHandler::getFirstOfType(FapUAViewSettings::getClassTypeID());
   if (uav) static_cast<FapUAViewSettings*>(uav)->updateUIValues();
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::zoomWindow()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->zoomWindow();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::zoomAllInWindow()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->zoomAllInWindow();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::zoomIn()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->zoomIn();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::zoomOut()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->zoomOut();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::shiftLeft()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->shiftLeft();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::shiftRight()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->shiftRight();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::shiftUp()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->shiftUp();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapViewCtrlCmds::shiftDown()
-{
-#ifdef FT_HAS_GRAPHVIEW
-  FapCmdsBase::getActiveGraphView()->shiftDown();
-#endif
 }
 //----------------------------------------------------------------------------

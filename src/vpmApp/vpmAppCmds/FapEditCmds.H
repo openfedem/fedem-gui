@@ -38,7 +38,6 @@ private:
   static void getMergePartsSensitivity(bool& isSensitive);
 
   static void splitBeam(int nseg);
-  static void splitBeam() { splitBeam(0); }
   static void getSplitBeamSensitivity(bool& isSensitive);
   static void onSplitBeamDone(int button);
 

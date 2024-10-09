@@ -65,14 +65,8 @@ void FapMoveToCenterCmds::init()
   cmdItem->setSmallIcon(MoveToCenter_xpm);
   cmdItem->setText("Move To Center");
   cmdItem->setToolTip("Move an object to the center of a 3 point circle");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapMoveToCenterCmds::moveToCenter));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapMoveToCenterCmds::getSensitivity,bool&));
-}
-
-
-void FapMoveToCenterCmds::moveToCenter()
-{
-  FuiModes::setMode(FuiModes::MOVE_TO_CENTER_MODE);
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FuiModes::setMode(FuiModes::MOVE_TO_CENTER_MODE); }));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 }
 
 
@@ -225,15 +219,6 @@ void FapMoveToCenterCmds::done()
       FuiModes::cancel();
       break;
     }
-}
-
-
-void FapMoveToCenterCmds::getSensitivity(bool& isSensitive)
-{
-  FapCmdsBase::isModelEditable(isSensitive);
-  if (!isSensitive) return;
-
-  FapCmdsBase::isModellerActive(isSensitive);
 }
 
 

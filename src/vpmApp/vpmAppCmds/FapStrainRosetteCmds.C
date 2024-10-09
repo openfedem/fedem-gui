@@ -70,14 +70,8 @@ void FapStrainRosetteCmds::init()
   cmdItem->setSmallIcon(makeStrainRosette_xpm);
   cmdItem->setText("Strain Rosette");
   cmdItem->setToolTip("Create a strain rosette on a FE model");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapStrainRosetteCmds::createStrainRosette));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapStrainRosetteCmds::getCreateSensitivity,bool&));
-}
-
-
-void FapStrainRosetteCmds::createStrainRosette()
-{
-  FuiModes::setMode(FuiModes::MAKESTRAINROSETTE_MODE);
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FuiModes::setMode(FuiModes::MAKESTRAINROSETTE_MODE); }));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerTouchable,bool&));
 }
 
 
@@ -245,15 +239,6 @@ void FapStrainRosetteCmds::done()
       FuiModes::cancel();
       break;
     }
-}
-
-
-void FapStrainRosetteCmds::getCreateSensitivity(bool& isSensitive)
-{
-  FapCmdsBase::isModelTouchable(isSensitive);
-  if (!isSensitive) return;
-
-  FapCmdsBase::isModellerActive(isSensitive);
 }
 
 

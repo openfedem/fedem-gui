@@ -8,7 +8,7 @@
 
 # FEDEM install scripts
 
-This folder contains some BAT-scripts for packing the Windows desktop edition
+This folder contains some BAT-scripts for packing the Windows desktop application
 of FEDEM into a zip-archive for external distribution.
 
 The installation process uses the SFTA tool which is downloaded from

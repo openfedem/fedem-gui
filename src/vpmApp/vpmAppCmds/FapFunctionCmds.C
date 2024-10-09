@@ -15,8 +15,18 @@
 #include "vpmDB/FmfSinusoidal.H"
 #include "vpmDB/FmSpringChar.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
-#include "vpmPM/FpPM.H"
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
+
+
+void createSpringChar(FmSpringChar::SpringCharUse useType);
+void createFunc(FmMathFuncBase::FuncUse useType, bool defaultSine = false);
+void convertFunc(FmMathFuncBase::FuncUse use);
+void convertToEngine(FmMathFuncBase::FuncUse use);
+
+#define LAMBDA_CREATE_SPRCHAR(USE) FFaDynCB0S([](){ createSpringChar(FmSpringChar::USE); })
+#define LAMBDA_CREATE_FUNCTION(USE) FFaDynCB0S([](){ createFunc(FmMathFuncBase::USE); })
+#define LAMBDA_CONVERT_FUNCTION(USE) FFaDynCB0S([](){ convertFunc(FmMathFuncBase::USE); })
+#define LAMBDA_CONVERT_ENGINE(USE) FFaDynCB0S([](){ convertToEngine(FmMathFuncBase::USE); })
 
 
 void FapFunctionCmds::init()
@@ -30,61 +40,61 @@ void FapFunctionCmds::init()
   i = new FFuaCmdItem("cmdId_function_SpringCharTrans");
   i->setText("Adv. Spring Characteristics, Translation");
   i->setSmallIcon(spring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createSpringCharTrans));
+  i->setActivatedCB(LAMBDA_CREATE_SPRCHAR(TRANSLATION));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_SpringCharRot");
   i->setText("Adv. Spring Characteristics, Rotation");
   i->setSmallIcon(spring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createSpringCharRot));
+  i->setActivatedCB(LAMBDA_CREATE_SPRCHAR(ROTATION));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_SprTransStiff");
   i->setText("Stiffness - Translation");
   i->setSmallIcon(K_Tspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createSprTransStiffFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(SPR_TRA_STIFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_SprTransForce");
   i->setText("Force - Translation");
   i->setSmallIcon(F_Tspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createSprTransForceFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(SPR_TRA_FORCE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_SprRotStiff");
   i->setText("Stiffness - Rotation");
   i->setSmallIcon(K_Rspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createSprRotStiffFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(SPR_ROT_STIFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_SprRotTorque");
   i->setText("Torque - Rotation");
   i->setSmallIcon(T_Rspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createSprRotTorqueFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(SPR_ROT_TORQUE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_DaTransCoeff");
   i->setText("Coefficient - Velocity");
   i->setSmallIcon(C_Tdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createDaTransCoeffFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(DA_TRA_COEFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_DaTransForce");
   i->setText("Force - Velocity");
   i->setSmallIcon(F_Tdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createDaTransForceFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(DA_TRA_FORCE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_DaRotCoeff");
   i->setText("Coefficient - Rotational Vel.");
   i->setSmallIcon(C_Rdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createDaRotCoeffFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(DA_ROT_COEFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_DaRotTorque");
   i->setText("Torque - Rotational Velocity");
   i->setSmallIcon(T_Rdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createDaRotTorqueFunc));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(DA_ROT_TORQUE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_GeneralFunction");
@@ -102,87 +112,88 @@ void FapFunctionCmds::init()
   i = new FFuaCmdItem("cmdId_function_RoadFunction");
   i->setText("Road elevation");
   i->setSmallIcon(createRoad_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createRoadFunction));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(ROAD_FUNCTION));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_WaveFunction");
   i->setText("Sea wave function");
   i->setSmallIcon(f_of_xt_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createWaveFunction));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(WAVE_FUNCTION));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_CurrFunction");
   i->setText("Sea current function");
   i->setSmallIcon(f_of_xt_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::createCurrFunction));
+  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(CURR_FUNCTION));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertSprTransStiff");
   i->setText("Stiffness - Translation");
   i->setSmallIcon(K_Tspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToSprTransStiffFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(SPR_TRA_STIFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertSprTransForce");
   i->setText("Force - Translation");
   i->setSmallIcon(F_Tspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToSprTransForceFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(SPR_TRA_FORCE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertSprRotStiff");
   i->setText("Stiffness - Rotation");
   i->setSmallIcon(K_Rspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToSprRotStiffFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(SPR_ROT_STIFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertSprRotTorque");
   i->setText("Torque - Rotation");
   i->setSmallIcon(T_Rspring_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToSprRotTorqueFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(SPR_ROT_TORQUE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertDaTransCoeff");
   i->setText("Coefficient - Velocity");
   i->setSmallIcon(C_Tdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToDaTransCoeffFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(DA_TRA_COEFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertDaTransForce");
   i->setText("Force - Velocity");
   i->setSmallIcon(F_Tdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToDaTransForceFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(DA_TRA_FORCE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertDaRotCoeff");
   i->setText("Coefficient - Rotational Velocity");
   i->setSmallIcon(C_Rdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToDaRotCoeffFunc));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(DA_ROT_COEFF));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertDaRotTorque");
   i->setText("Torque - Rotational Velocity");
   i->setSmallIcon(T_Rdamper_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToDaRotTorqueFunc));
-  i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
-
-  i = new FFuaCmdItem("cmdId_function_ConvertGeneralFunction");
-  i->setText("Function");
-  i->setSmallIcon(function_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToGeneralFunction));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(DA_ROT_TORQUE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertRoadFunction");
   i->setText("Road elevation");
   i->setSmallIcon(createRoad_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToRoadFunction));
+  i->setActivatedCB(LAMBDA_CONVERT_FUNCTION(ROAD_FUNCTION));
+  i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
+
+  i = new FFuaCmdItem("cmdId_function_ConvertGeneralFunction");
+  i->setText("Function");
+  i->setSmallIcon(function_xpm);
+  i->setActivatedCB(LAMBDA_CONVERT_ENGINE(GENERAL));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_ConvertDriveFile");
   i->setText("Time history input file");
   i->setSmallIcon(timeHistInputFile_xpm);
-  i->setActivatedCB(FFaDynCB0S(FapFunctionCmds::convertToDriveFile));
+  i->setActivatedCB(LAMBDA_CONVERT_ENGINE(DRIVE_FILE));
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 }
+
 
 static void createSpringChar(FmSpringChar::SpringCharUse useType)
 {
@@ -199,8 +210,7 @@ static void createSpringChar(FmSpringChar::SpringCharUse useType)
 }
 
 
-static void createFunc(FmMathFuncBase::FuncUse useType,
-		       bool defaultSine = false)
+static void createFunc(FmMathFuncBase::FuncUse useType, bool defaultSine)
 {
 #ifdef FAP_DEBUG
   std::cout <<"FapFunctionCmds::createFunc() "<< useType << std::endl;
@@ -217,79 +227,6 @@ static void createFunc(FmMathFuncBase::FuncUse useType,
   f->connect();
 
   FapEventManager::permTotalSelect(f);
-}
-
-
-void FapFunctionCmds::createSpringCharTrans()
-{
-  createSpringChar(FmSpringChar::TRANSLATION);
-}
-
-void FapFunctionCmds::createSpringCharRot()
-{
-  createSpringChar(FmSpringChar::ROTATION);
-}
-
-
-void FapFunctionCmds::createSprTransStiffFunc()
-{
-  createFunc(FmMathFuncBase::SPR_TRA_STIFF);
-}
-
-void FapFunctionCmds::createSprTransForceFunc()
-{
-  createFunc(FmMathFuncBase::SPR_TRA_FORCE);
-}
-
-void FapFunctionCmds::createSprRotStiffFunc()
-{
-  createFunc(FmMathFuncBase::SPR_ROT_STIFF);
-}
-
-void FapFunctionCmds::createSprRotTorqueFunc()
-{
-  createFunc(FmMathFuncBase::SPR_ROT_TORQUE);
-}
-
-void FapFunctionCmds::createDaTransCoeffFunc()
-{
-  createFunc(FmMathFuncBase::DA_TRA_COEFF);
-}
-
-void FapFunctionCmds::createDaTransForceFunc()
-{
-  createFunc(FmMathFuncBase::DA_TRA_FORCE);
-}
-
-void FapFunctionCmds::createDaRotCoeffFunc()
-{
-  createFunc(FmMathFuncBase::DA_ROT_COEFF);
-}
-
-void FapFunctionCmds::createDaRotTorqueFunc()
-{
-  createFunc(FmMathFuncBase::DA_ROT_TORQUE);
-}
-
-
-void FapFunctionCmds::createRoadFunction()
-{
-  FpPM::vpmSetUndoPoint("Road function");
-  createFunc(FmMathFuncBase::ROAD_FUNCTION);
-}
-
-
-void FapFunctionCmds::createWaveFunction()
-{
-  FpPM::vpmSetUndoPoint("Wave function");
-  createFunc(FmMathFuncBase::WAVE_FUNCTION,true);
-}
-
-
-void FapFunctionCmds::createCurrFunction()
-{
-  FpPM::vpmSetUndoPoint("Current function");
-  createFunc(FmMathFuncBase::CURR_FUNCTION);
 }
 
 
@@ -346,52 +283,6 @@ static void convertFunc(FmMathFuncBase::FuncUse use)
 }
 
 
-void FapFunctionCmds::convertToSprTransStiffFunc()
-{
-  convertFunc(FmMathFuncBase::SPR_TRA_STIFF);
-}
-
-void FapFunctionCmds::convertToSprTransForceFunc()
-{
-  convertFunc(FmMathFuncBase::SPR_TRA_FORCE);
-}
-
-void FapFunctionCmds::convertToSprRotStiffFunc()
-{
-  convertFunc(FmMathFuncBase::SPR_ROT_STIFF);
-}
-
-void FapFunctionCmds::convertToSprRotTorqueFunc()
-{
-  convertFunc(FmMathFuncBase::SPR_ROT_TORQUE);
-}
-
-void FapFunctionCmds::convertToDaTransCoeffFunc()
-{
-  convertFunc(FmMathFuncBase::DA_TRA_COEFF);
-}
-
-void FapFunctionCmds::convertToDaTransForceFunc()
-{
-  convertFunc(FmMathFuncBase::DA_TRA_FORCE);
-}
-
-void FapFunctionCmds::convertToDaRotCoeffFunc()
-{
-  convertFunc(FmMathFuncBase::DA_ROT_COEFF);
-}
-
-void FapFunctionCmds::convertToDaRotTorqueFunc()
-{
-  convertFunc(FmMathFuncBase::DA_ROT_TORQUE);
-}
-
-void FapFunctionCmds::convertToRoadFunction()
-{
-  convertFunc(FmMathFuncBase::ROAD_FUNCTION);
-}
-
-
 static void convertToEngine(FmMathFuncBase::FuncUse use)
 {
   std::vector<FmMathFuncBase*> selection;
@@ -407,18 +298,6 @@ static void convertToEngine(FmMathFuncBase::FuncUse use)
       e->setParentAssembly(f->getParentAssembly());
       e->connect();
     }
-}
-
-
-void FapFunctionCmds::convertToGeneralFunction()
-{
-  convertToEngine(FmMathFuncBase::GENERAL);
-}
-
-
-void FapFunctionCmds::convertToDriveFile()
-{
-  convertToEngine(FmMathFuncBase::DRIVE_FILE);
 }
 
 

@@ -4,12 +4,12 @@ REM SPDX-License-Identifier: Apache-2.0
 REM
 REM This file is part of FEDEM - https://openfedem.org
 
-REM Installs the Fedem desktop edition on Windows.
+REM Installs the FEDEM desktop application for Windows.
 SET PWD=%~dp0
 CD %PWD%\bin
 
 ECHO(
-ECHO Installing Fedem version %VERSION%
+ECHO Installing FEDEM version %VERSION%
 ECHO(
 SET INST_DIR=C:\Program Files\FEDEM\Fedem-%VERSION%
 SET /P _inst_dir="Installation folder [ %INST_DIR% ]: "

@@ -32,6 +32,8 @@ public:
   void setEditedObj(FmModelMemberBase* obj);
   FmModelMemberBase* getEditedObj() { return myEditedObj; }
 
+  static void cancelActiveUI();
+
   void updateUI();
   void editLinkCG(bool yep);
 
@@ -94,6 +96,8 @@ private:
 
   FapPermSelChangedReceiver<FuiPositionData> signalConnector;
   friend class FapPermSelChangedReceiver<FuiPositionData>;
+
+  static FuiPositionData* ourActiveUI;
 };
 
 #endif

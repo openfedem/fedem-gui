@@ -81,7 +81,7 @@ void FapAnimationCmds::init()
   cmdItem->setSmallIcon(animationControl_xpm);
   cmdItem->setText("Show Animation Controls...");
   cmdItem->setToolTip("Show Animation Controls");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapAnimationCmds::showControls));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ Fui::animationControlUI(); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapAnimationCmds::getHideSensitivity,bool&));
 }
 
@@ -89,12 +89,6 @@ void FapAnimationCmds::init()
 void FapAnimationCmds::show()
 {
   FapAnimationCmds::show(FapAnimationCmds::findSelectedAnimation(),false);
-}
-
-
-void FapAnimationCmds::showControls()
-{
-  Fui::animationControlUI();
 }
 
 

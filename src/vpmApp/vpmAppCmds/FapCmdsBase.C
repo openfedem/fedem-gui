@@ -138,6 +138,24 @@ void FapCmdsBase::isModellerOrGraphViewActive(bool& active)
 }
 
 
+void FapCmdsBase::isCtrlModellerEditable(bool& isEditable)
+{
+  isEditable = FapCmdsBase::getActiveCtrlModeller() ? FpPM::isModelEditable() : false;
+}
+
+
+void FapCmdsBase::isModellerEditable(bool& isEditable)
+{
+  isEditable = FapCmdsBase::getActiveModeller() ? FpPM::isModelEditable() : false;
+}
+
+
+void FapCmdsBase::isModellerTouchable(bool& isTouchable)
+{
+  isTouchable = FapCmdsBase::getActiveModeller() ? FpPM::isModelTouchable() : false;
+}
+
+
 void FapCmdsBase::isModelEditable(bool& isEditable)
 {
   isEditable = FpPM::isModelEditable();

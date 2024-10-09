@@ -46,6 +46,7 @@ FmTriad* FapCylinderSpiderCmds::ourSelectedTriad = NULL;
 void FapCylinderSpiderCmds::init()
 {
   FFuaCmdItem* cmdItem;
+
   cmdItem = new FFuaCmdItem("cmdId_createRBE2GeomSpider");
   cmdItem->setSmallIcon(spider_geom_rbe2_xpm);
   cmdItem->setText("By cylinder surface");
@@ -53,7 +54,7 @@ void FapCylinderSpiderCmds::init()
                       "The master node is placed in the center.\n"
                       "Nodes on the cylinder surface are selected as slaves.");
   cmdItem->setActivatedCB(FFaDynCB0S(FapCylinderSpiderCmds::createRBE2Spider));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCylinderSpiderCmds::getSensitivity,bool&));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_createRBE3GeomSpider");
   cmdItem->setSmallIcon(spider_geom_rbe3_xpm);
@@ -62,7 +63,7 @@ void FapCylinderSpiderCmds::init()
                       "The reference node is placed in the center.\n"
                       "Nodes on the cylinder surface are selected as masters.");
   cmdItem->setActivatedCB(FFaDynCB0S(FapCylinderSpiderCmds::createRBE3Spider));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCylinderSpiderCmds::getSensitivity,bool&));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 }
 
 
@@ -260,14 +261,6 @@ void FapCylinderSpiderCmds::done()
       FuiModes::cancel();
       break;
     }
-}
-
-
-void FapCylinderSpiderCmds::getSensitivity(bool& isSensitive)
-{
-  FapCmdsBase::isModelEditable(isSensitive);
-  if (isSensitive)
-    FapCmdsBase::isModellerActive(isSensitive);
 }
 
 

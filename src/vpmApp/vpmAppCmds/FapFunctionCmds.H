@@ -20,38 +20,8 @@ public:
 private:
   static void init();
 
-  static void createSpringCharTrans();
-  static void createSpringCharRot();
-
-  static void createSprTransStiffFunc();
-  static void createSprTransForceFunc();
-  static void createSprRotStiffFunc();
-  static void createSprRotTorqueFunc();
-
-  static void createDaTransCoeffFunc();
-  static void createDaTransForceFunc();
-  static void createDaRotCoeffFunc();
-  static void createDaRotTorqueFunc();
-
   static void createGeneralFunction();
   static void createDriveFile();
-  static void createRoadFunction();
-  static void createWaveFunction();
-  static void createCurrFunction();
-
-  static void convertToSprTransStiffFunc();
-  static void convertToSprTransForceFunc();
-  static void convertToSprRotStiffFunc();
-  static void convertToSprRotTorqueFunc();
-
-  static void convertToDaTransCoeffFunc();
-  static void convertToDaTransForceFunc();
-  static void convertToDaRotCoeffFunc();
-  static void convertToDaRotTorqueFunc();
-
-  static void convertToGeneralFunction();
-  static void convertToRoadFunction();
-  static void convertToDriveFile();
 
   friend class FFaInitialisation<FapFunctionCmds>;
 };

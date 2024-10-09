@@ -31,128 +31,136 @@
 #define MAX_PATH PATH_MAX
 #endif
 
+#define LAMBDA(func) FFaDynCB0S([](){ func; })
+#define LAMBDA_CTRL(func) FFaDynCB0S([](){ if (FapLicenseManager::hasCtrlLicense()) func; })
+
 //----------------------------------------------------------------------------
 
 void FapToolsCmds::init()
 {
-  FFuaCmdItem* cmdItem = 0;
+  FFuaCmdItem* cmdItem;
 
   cmdItem = new FFuaCmdItem("cmdId_mech_show");
   cmdItem->setSmallIcon(openMechModeller_xpm);
   cmdItem->setText("Show Modeler");
   cmdItem->setToolTip("Show Modeler");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::showModeler));
+  cmdItem->setActivatedCB(LAMBDA(Fui::modellerUI();FuiModes::cancel()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_ctrl_show");
   cmdItem->setSmallIcon(ctrlSystem_xpm);
   cmdItem->setText("Show Control Editor");
   cmdItem->setToolTip("Show Control Editor");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::showCtrlEditor));
+#ifdef USE_INVENTOR
+  cmdItem->setActivatedCB(LAMBDA_CTRL(FdCtrlDB::openCtrl()));
+#endif
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_ctrl_gridSnap");
   cmdItem->setSmallIcon(ctrlGrid_xpm);
   cmdItem->setText("Control Editor Grid/Snap...");
   cmdItem->setToolTip("Control Editor Grid/Snap");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::ctrlGridSnap));
+  cmdItem->setActivatedCB(LAMBDA_CTRL(Fui::ctrlGridSnapUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_preferences");
   cmdItem->setSmallIcon(additionalSolverOptions_xpm);
   cmdItem->setText("Additional Solver Options...");
   cmdItem->setToolTip("Additional Solver Options");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::preferences));
+  cmdItem->setActivatedCB(LAMBDA(Fui::preferencesUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_viewFilter");
   cmdItem->setSmallIcon(viewFilter_xpm);
   cmdItem->setText("General Appearance...");
   cmdItem->setToolTip("General Appearance");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::viewFilter));
+  cmdItem->setActivatedCB(LAMBDA(Fui::viewSettingsUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_objectBrowser");
   cmdItem->setSmallIcon(objectBrowser_xpm);
   cmdItem->setText("Object Browser...");
   cmdItem->setToolTip("Object Browser");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::objectBrowser));
+  cmdItem->setActivatedCB(LAMBDA(Fui::objectBrowserUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_outputList");
   cmdItem->setSmallIcon(infoList_xpm);
   cmdItem->setText("Show Output List");
   cmdItem->setToolTip("Show Output List");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::outputList));
+  cmdItem->setActivatedCB(LAMBDA(Fui::outputListUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_miniFileBrowser");
   cmdItem->setSmallIcon(browseRDB_xpm);
   cmdItem->setText("Result File Browser...");
   cmdItem->setToolTip("Result File Browser");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::resultFileBrowser));
+  cmdItem->setActivatedCB(LAMBDA(Fui::resultFileBrowserUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_linkRamSettings");
   cmdItem->setSmallIcon(linkRamSettings_xpm);
   cmdItem->setText("FE-Data Settings...");
   cmdItem->setToolTip("FE-Data settings");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::linkRamSettings));
+  cmdItem->setActivatedCB(LAMBDA(Fui::linkRamSettingsUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isProEdition,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_modelPreferences");
   cmdItem->setText("Model Preferences...");
   cmdItem->setToolTip("Model Preferences");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::modelPreferences));
+  cmdItem->setActivatedCB(LAMBDA(Fui::modelPreferencesUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_seaEnvironment");
   cmdItem->setSmallIcon(sea_xpm);
   cmdItem->setText("Sea Environment...");
   cmdItem->setToolTip("Sea Environment");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::seaEnvironment));
+  cmdItem->setActivatedCB(LAMBDA(Fui::seaEnvironmentUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_airEnvironment");
   cmdItem->setSmallIcon(windAirEnv_xpm);
   cmdItem->setText("Aerodynamic Setup...");
   cmdItem->setToolTip("Aerodynamic Setup");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::airEnvironment));
+  cmdItem->setActivatedCB(LAMBDA(Fui::airEnvironmentUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_airfoilDefinition");
   cmdItem->setSmallIcon(windAirFoil_xpm);
   cmdItem->setText("Browse Airfoils...");
   cmdItem->setToolTip("Browse Airfoils for Turbine Blades");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::airfoilDefinition));
+  cmdItem->setActivatedCB(LAMBDA(Fui::airfoilDefinitionUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_bladeDefinition");
   cmdItem->setSmallIcon(windBladeProp_xpm);
   cmdItem->setText("Blade Definition...");
   cmdItem->setToolTip("Blade definition for Turbine Assembly");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::bladeDefinition));
+  cmdItem->setActivatedCB(LAMBDA(Fui::bladeDefinitionUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_createTurbineAssembly");
   cmdItem->setSmallIcon(windTurbine_xpm);
   cmdItem->setText("Turbine Definition...");
   cmdItem->setToolTip("Turbine Definition");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::turbineAssembly));
+  cmdItem->setActivatedCB(LAMBDA(Fui::turbineAssemblyUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_createTurbineTower");
   cmdItem->setSmallIcon(windTower_xpm);
   cmdItem->setText("Tower Definition...");
   cmdItem->setToolTip("Turbine Tower Definition");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::turbineTower));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapToolsCmds::getTurbineTowerSensitivity,bool&));
+  cmdItem->setActivatedCB(LAMBDA(Fui::turbineTowerUI()));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S([](bool& isSensitive){
+        FmTurbine* turbine = FmDB::getTurbineObject();
+        isSensitive = (turbine && turbine->getTower());
+      },bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_createBeamstringPair");
   cmdItem->setSmallIcon(beamstringPairDef_xpm);
   cmdItem->setText("Beamstring Pair Definition...");
   cmdItem->setToolTip("Beamstring Pair Definition");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::beamstringPair));
+  cmdItem->setActivatedCB(LAMBDA(Fui::beamstringPairUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_setFileAssociations");
@@ -164,86 +172,82 @@ void FapToolsCmds::init()
   cmdItem = new FFuaCmdItem("cmdId_tools_plugins");
   cmdItem->setText("Plug-Ins...");
   cmdItem->setToolTip("Plug-Ins");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::plugins));
+  cmdItem->setActivatedCB(LAMBDA(Fui::pluginsUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_eventDefinition");
   cmdItem->setSmallIcon(eventDef_xpm);
   cmdItem->setText("Event Definitions...");
   cmdItem->setToolTip("Events");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::eventDefinition));
+  cmdItem->setActivatedCB(LAMBDA(Fui::eventDefinitionUI()));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_distance");
   cmdItem->setSmallIcon(measureDistance_xpm);
   cmdItem->setText("Measure distance...");
   cmdItem->setToolTip("Measure distance between two points");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::measureDistance));
+  cmdItem->setActivatedCB(LAMBDA(FuiModes::setMode(FuiModes::MEASURE_DISTANCE_MODE)));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_tools_angle");
   cmdItem->setSmallIcon(measureAngle_xpm);
   cmdItem->setText("Measure angle...");
   cmdItem->setToolTip("Measure angle between two points");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::measureAngle));
+  cmdItem->setActivatedCB(LAMBDA(FuiModes::setMode(FuiModes::MEASURE_ANGLE_MODE)));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   for (int i = 0; i < 40; i++)
   {
-    cmdItem = new FFuaCmdItem(FFaNumStr("cmdId_tools_addon%d",i));
+    cmdItem = new FFuaCmdItem("cmdId_tools_addon" + std::to_string(i));
     cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
     switch (i) {
-    case 0: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon0)); break;
-    case 1: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon1)); break;
-    case 2: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon2)); break;
-    case 3: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon3)); break;
-    case 4: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon4)); break;
-    case 5: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon5)); break;
-    case 6: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon6)); break;
-    case 7: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon7)); break;
-    case 8: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon8)); break;
-    case 9: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon9)); break;
-    case 10: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon10)); break;
-    case 11: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon11)); break;
-    case 12: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon12)); break;
-    case 13: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon13)); break;
-    case 14: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon14)); break;
-    case 15: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon15)); break;
-    case 16: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon16)); break;
-    case 17: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon17)); break;
-    case 18: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon18)); break;
-    case 19: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon19)); break;
-    case 20: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon20)); break;
-    case 21: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon21)); break;
-    case 22: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon22)); break;
-    case 23: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon23)); break;
-    case 24: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon24)); break;
-    case 25: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon25)); break;
-    case 26: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon26)); break;
-    case 27: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon27)); break;
-    case 28: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon28)); break;
-    case 29: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon29)); break;
-    case 30: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon30)); break;
-    case 31: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon31)); break;
-    case 32: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon32)); break;
-    case 33: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon33)); break;
-    case 34: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon34)); break;
-    case 35: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon35)); break;
-    case 36: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon36)); break;
-    case 37: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon37)); break;
-    case 38: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon38)); break;
-    case 39: cmdItem->setActivatedCB(FFaDynCB0S(FapToolsCmds::addon39)); break;
+    case  0: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 0))); break;
+    case  1: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 1))); break;
+    case  2: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 2))); break;
+    case  3: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 3))); break;
+    case  4: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 4))); break;
+    case  5: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 5))); break;
+    case  6: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 6))); break;
+    case  7: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 7))); break;
+    case  8: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 8))); break;
+    case  9: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch( 9))); break;
+    case 10: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(10))); break;
+    case 11: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(11))); break;
+    case 12: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(12))); break;
+    case 13: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(13))); break;
+    case 14: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(14))); break;
+    case 15: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(15))); break;
+    case 16: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(16))); break;
+    case 17: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(17))); break;
+    case 18: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(18))); break;
+    case 19: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(19))); break;
+    case 20: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(20))); break;
+    case 21: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(21))); break;
+    case 22: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(22))); break;
+    case 23: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(23))); break;
+    case 24: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(24))); break;
+    case 25: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(25))); break;
+    case 26: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(26))); break;
+    case 27: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(27))); break;
+    case 28: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(28))); break;
+    case 29: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(29))); break;
+    case 30: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(30))); break;
+    case 31: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(31))); break;
+    case 32: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(32))); break;
+    case 33: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(33))); break;
+    case 34: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(34))); break;
+    case 35: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(35))); break;
+    case 36: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(36))); break;
+    case 37: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(37))); break;
+    case 38: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(38))); break;
+    case 39: cmdItem->setActivatedCB(LAMBDA(FapToolsCmds::addonLaunch(39))); break;
     }
     // The text and tooltip with Addon names are set later, when the menu is activated
   }
 }
 //----------------------------------------------------------------------------
 
-#if defined(win32) || defined(win64)
 bool FapToolsCmds::getAddonExe(int index, char* pszExePath, char* pszExeName)
-#else
-bool FapToolsCmds::getAddonExe(int, char*, char*)
-#endif
 {
 #if defined(win32) || defined(win64)
   // Get module path
@@ -274,167 +278,36 @@ bool FapToolsCmds::getAddonExe(int, char*, char*)
   }
   while (::FindNextFile(hFind, &ffd) != 0);
   ::FindClose(hFind);
+#else
+  std::cerr <<"  ** FapToolsCmds::getAddonExe("<< index;
+  if (pszExePath) std::cerr <<",char*";
+  if (pszExeName) std::cerr <<",char*";
+  std::cerr <<"): No Linux support"<< std::endl;
 #endif
   return false;
 }
+
 
 void FapToolsCmds::addonLaunch(int index)
 {
 #if defined(win32) || defined(win64)
   char szExePath[MAX_PATH];
-  if (getAddonExe(index,szExePath))
+  if (FapToolsCmds::getAddonExe(index,szExePath))
   {
-    std::string cpid = " " + std::to_string(GetCurrentProcessId());
+    std::string cmd = std::string(szExePath) + " " + std::to_string(GetCurrentProcessId());
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     ZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
-    CreateProcess(NULL, (char*)(szExePath + cpid).c_str(),
+    CreateProcess(NULL, const_cast<char*>(cmd.c_str()),
                   NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
   }
 #else
   std::cerr <<"  ** FapToolsCmds::addonLaunch("<< index <<"): No Linux support"<< std::endl;
 #endif
 }
-//----------------------------------------------------------------------------
 
-void FapToolsCmds::showModeler()
-{
-  Fui::modellerUI();
-  FuiModes::cancel();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::showCtrlEditor()
-{
-#ifdef USE_INVENTOR
-  if (FapLicenseManager::hasCtrlLicense())
-    FdCtrlDB::openCtrl();
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::ctrlGridSnap()
-{
-  if (FapLicenseManager::hasCtrlLicense())
-    Fui::ctrlGridSnapUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::preferences()
-{
-  Fui::preferencesUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::viewFilter()
-{
-  Fui::viewSettingsUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::outputList()
-{
-  Fui::outputListUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::resultFileBrowser()
-{
-  Fui::resultFileBrowserUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::linkRamSettings()
-{
-  Fui::linkRamSettingsUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::modelPreferences()
-{
-  Fui::modelPreferencesUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::seaEnvironment()
-{
-  Fui::seaEnvironmentUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::airEnvironment()
-{
-  Fui::airEnvironmentUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::turbineAssembly()
-{
-  Fui::turbineAssemblyUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::turbineTower()
-{
-  Fui::turbineTowerUI();
-}
-
-void FapToolsCmds::getTurbineTowerSensitivity(bool& isSensitive)
-{
-  FmTurbine* turbine = FmDB::getTurbineObject();
-  isSensitive = (turbine && turbine->getTower());
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::beamstringPair()
-{
-  Fui::beamstringPairUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::objectBrowser()
-{
-  Fui::objectBrowserUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::airfoilDefinition()
-{
-  Fui::airfoilDefinitionUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::bladeDefinition()
-{
-  Fui::bladeDefinitionUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::plugins()
-{
-  Fui::pluginsUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::eventDefinition()
-{
-  Fui::eventDefinitionUI();
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::measureDistance()
-{
-  FuiModes::setMode(FuiModes::MEASURE_DISTANCE_MODE);
-}
-//----------------------------------------------------------------------------
-
-void FapToolsCmds::measureAngle()
-{
-  FuiModes::setMode(FuiModes::MEASURE_ANGLE_MODE);
-}
-//----------------------------------------------------------------------------
 
 #if defined(win32) || defined(win64)
 /*!

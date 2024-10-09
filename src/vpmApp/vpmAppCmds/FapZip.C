@@ -1,10 +1,15 @@
+// SPDX-FileCopyrightText: 2023 SAP SE
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+// This file is part of FEDEM - https://openfedem.org
+////////////////////////////////////////////////////////////////////////////////
 /*
  * This is an adaption of minizip.c of the Minizip project
  * http://www.winimage.com/zLibDll/minizip.html
  * Copyright (C) 1998-2010 Gilles Vollant
  *
  * Rewritten for Fedem usage 2022 by K. M. Okstad
- * Copyright (C) 2023 SAP SE
  */
 
 #include <vector>

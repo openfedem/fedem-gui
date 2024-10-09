@@ -49,16 +49,6 @@ private:
   static void createAssembly();
 
   static void createUserElm(int typeIdx);
-  static void createUE1() { createUserElm(0); }
-  static void createUE2() { createUserElm(1); }
-  static void createUE3() { createUserElm(2); }
-  static void createUE4() { createUserElm(3); }
-  static void createUE5() { createUserElm(4); }
-  static void createUE6() { createUserElm(5); }
-  static void createUE7() { createUserElm(6); }
-  static void createUE8() { createUserElm(7); }
-  static void createUE9() { createUserElm(8); }
-  static void createU10() { createUserElm(9); }
 
   static void createMooringLine();
 

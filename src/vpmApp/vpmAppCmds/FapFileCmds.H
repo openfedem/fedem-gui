@@ -30,19 +30,18 @@ private:
   static void importAssembly();
   static void importEvents();
 
+  static void open();
   static bool open(const std::string& fileName, bool loadParts);
   static void open(size_t recentFileIdx);
 
 public:
-  static void open();
-  static void save() { FapFileCmds::save(true); }
-  static void save(bool pruneEmptyDirs);
-  static void saveAs();
-  static void exit() { FapFileCmds::exit(true,true); }
-  static void exit(bool saveOnBatchExit, bool pruneEmptyDirs, int status = 0);
+  static void save(bool pruneEmptyDirs = true);
+  static bool saveAs();
+  static void exit(bool saveOnBatchExit = true,
+                   bool pruneEmptyDirs = true,
+                   int status = 0);
   static void loadLink();
   static void changeLink();
-  static void setExternalLinkRep() { FapFileCmds::setModelLinkRep(false); }
   static void setModelLinkRep(bool switchToInternal = false);
   static bool createEvents(const std::string& fileName);
 

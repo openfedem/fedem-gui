@@ -19,45 +19,33 @@
 
 void FapLinkVisualCmds::init()
 {
-  FFuaCmdItem* cmdItem ;
+  FFuaCmdItem* cmdItem;
 
   cmdItem = new FFuaCmdItem("cmdId_LinkSelection_hide");
   cmdItem->setSmallIcon(lineViewObj_xpm);
   cmdItem->setText("Hide Part Faces");
   cmdItem->setToolTip("Hide the element/geometry faces in the selected part/group");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapLinkVisualCmds::hideLinkSelection));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::setSelectionDetail(FFlVDetail::OFF); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapLinkVisualCmds::getElmFaceHideShowSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_LinkSelection_show");
   cmdItem->setSmallIcon(solidViewObj_xpm);
   cmdItem->setText("Show Part Faces");
   cmdItem->setToolTip("Show the element/geometry faces in the selected part/group");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapLinkVisualCmds::showLinkSelection));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::setSelectionDetail(FFlVDetail::ON); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapLinkVisualCmds::getElmFaceHideShowSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_SubassemblySelection_show");
   cmdItem->setText("Show Subassembly Parts");
   cmdItem->setToolTip("Show the parts in the selected subassembly");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapLinkVisualCmds::showSubassemblySelection));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::subassemblySelection(true); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_SubassemblySelection_hide");
   cmdItem->setText("Hide Subassembly Parts");
   cmdItem->setToolTip("Hides the parts in the selected subassembly");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapLinkVisualCmds::hideSubassemblySelection));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::subassemblySelection(false); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
-}
-
-
-void FapLinkVisualCmds::hideLinkSelection()
-{
-  FapLinkVisualCmds::setSelectionDetail(FFlVDetail::OFF);
-}
-
-
-void FapLinkVisualCmds::showLinkSelection()
-{
-  FapLinkVisualCmds::setSelectionDetail(FFlVDetail::ON);
 }
 
 
@@ -76,36 +64,23 @@ void FapLinkVisualCmds::setSelectionDetail(int detailType)
 }
 
 
-void FapLinkVisualCmds::showSubassemblySelection()
+void FapLinkVisualCmds::subassemblySelection(bool show)
 {
   std::vector<FmSubAssembly*> selection;
   FapCmdsBase::getSelected(selection);
 
+  bool changed = false;
   for (FmSubAssembly* subass : selection)
   {
     std::vector<FmLink*> parts;
     FmDB::getAllLinks(parts,subass);
     for (FmLink* link : parts)
-      if (link->setModelType(FmLink::SURFACE) ||
-          link->setMeshType(FmLink::REDUCED))
-        FpPM::touchModel();
+    {
+      if (link->setModelType(show ? FmLink::SURFACE : FmLink::OFF)) changed = true;
+      if (link->setMeshType(show ? FmLink::REDUCED : FmLink::OFF)) changed = true;
+    }
   }
-}
-
-void FapLinkVisualCmds::hideSubassemblySelection()
-{
-  std::vector<FmSubAssembly*> selection;
-  FapCmdsBase::getSelected(selection);
-
-  for (FmSubAssembly* subass : selection)
-  {
-    std::vector<FmLink*> parts;
-    FmDB::getAllLinks(parts, subass);
-    for (FmLink* link : parts)
-      if (link->setModelType(FmLink::OFF) ||
-          link->setMeshType(FmLink::OFF))
-        FpPM::touchModel();
-  }
+  if (changed) FpPM::touchModel();
 }
 
 

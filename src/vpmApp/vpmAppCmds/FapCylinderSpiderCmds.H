@@ -19,10 +19,7 @@ class SoEventCallback;
 
 class FapCylinderSpiderCmds : public FapCmdsBase
 {
-private:
   static void init();
-
-  static void getSensitivity(bool& isSensitive);
 
   static void createRBE2Spider();
   static void createRBE3Spider();

@@ -14,17 +14,12 @@
 
 class FapLinkVisualCmds : public FapCmdsBase
 {
-public:
-  static void hideLinkSelection();
-  static void showLinkSelection();
-  static void showSubassemblySelection();
-  static void hideSubassemblySelection();
-
-private:
-  static void getElmFaceHideShowSensitivity(bool& isSensitive);
-  static void setSelectionDetail(int detailType);
-
   static void init();
+
+  static void setSelectionDetail(int detailType);
+  static void subassemblySelection(bool show);
+
+  static void getElmFaceHideShowSensitivity(bool& isSensitive);
 
   friend class FFaInitialisation<FapLinkVisualCmds>;
 };

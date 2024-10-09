@@ -10,7 +10,6 @@
 
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "FFaLib/FFaDefinitions/FFaViewItem.H"
-#include "FFaLib/FFaString/FFaStringExt.H"
 
 #include "vpmUI/Icons/AllignCS_xpm.xpm"
 #include "vpmUI/Icons/AllignCSRotation_xpm.xpm"
@@ -52,15 +51,15 @@ void FapAllignCSCmds::init()
   cmdItem->setSmallIcon(AllignCS_xpm);
   cmdItem->setText("Align CS");
   cmdItem->setToolTip("Align object to a coordinate system");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapAllignCSCmds::allignCS));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapAllignCSCmds::getSensitivity,bool&));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FuiModes::setMode(FuiModes::ALLIGNCS_MODE); }));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_mech3DObj_allignRotations");
   cmdItem->setSmallIcon(AllignCSRotation_xpm);
   cmdItem->setText("Align rotations");
   cmdItem->setToolTip("Align orientation of an object to a coordinate system");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapAllignCSCmds::allignRotations));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapAllignCSCmds::getSensitivity,bool&));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FuiModes::setMode(FuiModes::ALLIGNROT_MODE); }));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 }
 //----------------------------------------------------------------------------
 
@@ -87,29 +86,20 @@ void FapAllignCSCmds::cancelMode()
 
 void FapAllignCSCmds::setState(int newState)
 {
-  switch (FapAllignCSCmds::myState)
-    {
-    case 0:
-      break;
-    case 1:
-      if (newState == 2)
-	FapAllignCSCmds::ourAllignCS.setIdentity();
-      break;
-    case 2:
-      if (newState == 0)
-        {
-          if (FuiModes::getMode() == FuiModes::ALLIGNCS_MODE)
-            FapAllignCSCmds::allignCS(FapAllignCSCmds::ourAllignCS);
-          if (FuiModes::getMode() == FuiModes::ALLIGNROT_MODE)
-            FapAllignCSCmds::allignRotations(FapAllignCSCmds::ourAllignCS);
+  if (FapAllignCSCmds::myState == 1 && newState == 2)
+    FapAllignCSCmds::ourAllignCS.setIdentity();
+  else if (FapAllignCSCmds::myState == 2 && newState == 0)
+  {
+    if (FuiModes::getMode() == FuiModes::ALLIGNCS_MODE)
+      FapAllignCSCmds::allignCS(FapAllignCSCmds::ourAllignCS);
+    else if (FuiModes::getMode() == FuiModes::ALLIGNROT_MODE)
+      FapAllignCSCmds::allignRotations(FapAllignCSCmds::ourAllignCS);
 
-          FapEventManager::permUnselectAll();
+    FapEventManager::permUnselectAll();
 #ifdef USE_INVENTOR
-          FdExtraGraphics::hideCS();
+    FdExtraGraphics::hideCS();
 #endif
-        }
-      break;
-    }
+  }
 
   FapAllignCSCmds::myState = newState;
 
@@ -166,15 +156,6 @@ void FapAllignCSCmds::allignCSDone()
       FuiModes::cancel();
       break;
     }
-}
-
-
-void FapAllignCSCmds::getSensitivity(bool& isSensitive)
-{
-  FapCmdsBase::isModelEditable(isSensitive);
-  if (!isSensitive) return;
-
-  FapCmdsBase::isModellerActive(isSensitive);
 }
 
 //----------------------------------------------------------------------------
@@ -249,13 +230,10 @@ void FapAllignCSCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
 	SbMatrix SbObjToWorldUnscaled;
 	SbObjToWorldUnscaled.setTransform(translation,rotation, SbVec3f());
 
-	FaMat34 objToWorld = FdConverter::toFaMat34(SbObjToWorld);
-	objToWorld[0].normalize();
-	objToWorld[1].normalize();
-	objToWorld[2].normalize();
-	FdExtraGraphics::showCS(objToWorld);
-
-	FapAllignCSCmds::ourAllignCS = objToWorld;
+        FapAllignCSCmds::ourAllignCS = FdConverter::toFaMat34(SbObjToWorld);
+        for (int i = 0; i < 3; i++)
+          FapAllignCSCmds::ourAllignCS[i].normalize();
+        FdExtraGraphics::showCS(FapAllignCSCmds::ourAllignCS);
 
 	FapAllignCSCmds::setState(2);
       }
@@ -273,12 +251,6 @@ void FapAllignCSCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
 #else
 void FapAllignCSCmds::eventCB(void*, SoEventCallback*) {}
 #endif
-
-
-void FapAllignCSCmds::allignCS()
-{
-  FuiModes::setMode(FuiModes::ALLIGNCS_MODE);
-}
 
 
 void FapAllignCSCmds::allignCS(const FaMat34& mx)
@@ -303,24 +275,14 @@ void FapAllignCSCmds::allignCS(const FaMat34& mx)
 	orgPos[3] = mx[3];
 	posBase->setGlobalCS(orgPos,true);
 	posBase->updateDisplayTopology();
-	unMovables += std::string("\t") + posBase->getUITypeName()
-	  + FFaNumStr(" [%d] ",posBase->getID())
-	  + posBase->getUserDescription() + " (Rotation locked) \n";
+        unMovables += "\n\t" + posBase->getIdString(true) + " (Rotation locked)";
       }
       else
-	unMovables += std::string("\t") + posBase->getUITypeName()
-	  + FFaNumStr(" [%d] ",posBase->getID())
-	  + posBase->getUserDescription() + "\n";
+        unMovables += "\n\t" + posBase->getIdString(true);
     }
 
   if (!unMovables.empty())
-    Fui::dismissDialog(("The following objects can not be moved:\n"+unMovables).c_str());
-}
-
-
-void FapAllignCSCmds::allignRotations()
-{
-  FuiModes::setMode(FuiModes::ALLIGNROT_MODE);
+    Fui::dismissDialog(("The following objects can not be moved:"+unMovables).c_str());
 }
 
 
@@ -342,11 +304,9 @@ void FapAllignCSCmds::allignRotations(const FaMat34& mx)
 	posBase->updateDisplayTopology();
       }
       else
-	unMovables += std::string("\t") + posBase->getUITypeName()
-	  + FFaNumStr(" [%d] ",posBase->getID())
-	  + posBase->getUserDescription() + "\n";
+        unMovables += "\n\t" + posBase->getIdString(true);
     }
 
   if (!unMovables.empty())
-    Fui::dismissDialog(("The following objects can not be rotated:\n"+unMovables).c_str());
+    Fui::dismissDialog(("The following objects can not be rotated:"+unMovables).c_str());
 }

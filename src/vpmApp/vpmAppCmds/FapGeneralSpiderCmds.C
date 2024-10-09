@@ -71,19 +71,20 @@ static SbVec2s ourMouseReleasePos;
 void FapGeneralSpiderCmds::init()
 {
   FFuaCmdItem* cmdItem;
+
   cmdItem = new FFuaCmdItem("cmdId_createRBE2GeneralSpider");
   cmdItem->setSmallIcon(spider_gen_rbe2_xpm);
   cmdItem->setText("By selecting nodes");
   cmdItem->setToolTip("Create a rigid connection element by selecting nodes");
   cmdItem->setActivatedCB(FFaDynCB0S(FapGeneralSpiderCmds::createRBE2Spider));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapGeneralSpiderCmds::getSensitivity,bool&));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_createRBE3GeneralSpider");
   cmdItem->setSmallIcon(spider_gen_rbe3_xpm);
   cmdItem->setText("By selecting nodes");
   cmdItem->setToolTip("Create a flexible connection element by selecting nodes");
   cmdItem->setActivatedCB(FFaDynCB0S(FapGeneralSpiderCmds::createRBE3Spider));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapGeneralSpiderCmds::getSensitivity,bool&));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 }
 
 
@@ -215,15 +216,6 @@ void FapGeneralSpiderCmds::done()
       FuiModes::cancel();
       break;
     }
-}
-
-
-void FapGeneralSpiderCmds::getSensitivity(bool& isSensitive)
-{
-  FapCmdsBase::isModelEditable(isSensitive);
-  if (!isSensitive) return;
-
-  FapCmdsBase::isModellerActive(isSensitive);
 }
 
 

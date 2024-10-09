@@ -17,23 +17,20 @@ class SoEventCallback;
 
 class FapMoveToCenterCmds : public FapCmdsBase
 {
- private:
+private:
   static void init();
 
-  static void getSensitivity(bool& isSensitive);
-
-  static void moveToCenter();
   static void moveToCenter(std::vector<FaVec3> circlePoints);
 
   static void setState(int newState);
   static void eventCB(void*, SoEventCallback* eventCallbackNode);
 
- public:
+public:
   static void enterMode();
   static void cancelMode();
   static void done();
 
- private:
+private:
   static std::vector<FaVec3> ourCirclePoints;
   static int ourNumSelectedToMove;
   static int ourState;

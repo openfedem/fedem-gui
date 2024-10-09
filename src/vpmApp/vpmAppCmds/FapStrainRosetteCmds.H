@@ -23,9 +23,6 @@ class FapStrainRosetteCmds : public FapCmdsBase
 private:
   static void init();
 
-  static void createStrainRosette();
-  static void getCreateSensitivity(bool& isSensitive);
-
   static void setState(int newState);
   static void eventCB(void*, SoEventCallback* eventCallbackNode);
 
