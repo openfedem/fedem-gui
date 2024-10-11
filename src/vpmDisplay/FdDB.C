@@ -1585,9 +1585,11 @@ void FdDB::appearanceEventCB(void*, SoEventCallback* eventCBnode)
     FdSelector::getSelectedObjects(selectedObjects);
 
     // Build array of interesting types
-    std::vector<int> types(3,FdLink::getClassTypeID());
-    types[1] = FdRefPlane::getClassTypeID();
-    types[2] = FdSeaState::getClassTypeID();
+    std::vector<int> types = {
+      FdLink::getClassTypeID(),
+      FdRefPlane::getClassTypeID(),
+      FdSeaState::getClassTypeID()
+    };
 
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
@@ -1624,27 +1626,33 @@ void FdDB::onePickCreateEventCB(void*, SoEventCallback* eventCBnode)
 
     // Build array of interesting or non-interesting types
     int mode = FuiModes::getMode();
-    bool typesIsInteresting = false;
+    bool typesIsInteresting = true;
     std::vector<int> types;
     switch (mode) {
     case FuiModes::MAKETRIAD_MODE:
-      typesIsInteresting = true;
-      types.resize(2,FdLink::getClassTypeID());
-      types[1] = FdRefPlane::getClassTypeID();
+      types = {
+        FdLink::getClassTypeID(),
+        FdRefPlane::getClassTypeID()
+      };
       break;
     case FuiModes::MAKEFORCE_MODE:
     case FuiModes::MAKETORQUE_MODE:
-      typesIsInteresting = true;
-      types.resize(3,FdLink::getClassTypeID());
-      types[1] = FdRefPlane::getClassTypeID();
-      types[2] = FdTriad::getClassTypeID();
+      types = {
+        FdLink::getClassTypeID(),
+        FdRefPlane::getClassTypeID(),
+        FdTriad::getClassTypeID()
+      };
       break;
     case FuiModes::MAKESTICKER_MODE:
       // Non-interesting types
-      types.resize(4,FdAxialSprDa::getClassTypeID());
-      types[1] = FdTire::getClassTypeID();
-      types[2] = FdHP::getClassTypeID();
-      types[3] = FdSensor::getClassTypeID();
+      types = {
+        FdAxialSprDa::getClassTypeID(),
+        FdTire::getClassTypeID(),
+        FdHP::getClassTypeID(),
+        FdSensor::getClassTypeID()
+      };
+    default:
+      typesIsInteresting = false;
     }
 
     long int  indexToInterestingPP    = -1;
@@ -1787,26 +1795,26 @@ void FdDB::twoPickCreateEventCB(void*, SoEventCallback* eventCBnode)
     SoHandleEventAction* evHaAction = eventCBnode->getAction();
 
     // Build array of interesting types
-    bool typesIsInteresting = false;
+    bool typesIsInteresting = true;
     std::vector<int> types;
-    if (mode == FuiModes::MAKESPRING_MODE || mode == FuiModes::MAKEDAMPER_MODE)
-    {
-      typesIsInteresting = true;
-      types.resize(4,FdLink::getClassTypeID());
-      types[1] = FdRefPlane::getClassTypeID();
-      types[2] = FdTriad::getClassTypeID();
-      types[3] = FdSimpleJoint::getClassTypeID();
-    }
-    else if (mode == FuiModes::MAKEFREEJOINTBETWEENTRIADS_MODE)
-    {
-      typesIsInteresting = true;
-      if (state == 4 || state == 5 || state == 6) //create slave
-        types.resize(1,FdTriad::getClassTypeID());
+    switch (mode) {
+    case FuiModes::MAKESPRING_MODE:
+    case FuiModes::MAKEDAMPER_MODE:
+      types = {
+	FdLink::getClassTypeID(),
+	FdRefPlane::getClassTypeID(),
+	FdTriad::getClassTypeID(),
+	FdSimpleJoint::getClassTypeID()
+      };
+      break;
+    case FuiModes::MAKEFREEJOINTBETWEENTRIADS_MODE:
+      if (state >= 4 && state <= 6) //create slave
+        types = { FdTriad::getClassTypeID() };
       else // create master
-      {
-        types.resize(2,FdTriad::getClassTypeID());
-        types[1] = FdRefPlane::getClassTypeID();
-      }
+        types = { FdTriad::getClassTypeID(), FdRefPlane::getClassTypeID() };
+      break;
+    default:
+      typesIsInteresting = false;
     }
 
     long int  indexToInterestingPP = -1;
@@ -2001,12 +2009,9 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
 
     SoHandleEventAction* evHaAction = eventCBnode->getAction();
 
-    // Build array of interesting types:
-    std::vector<int> types(1,FdTriad::getClassTypeID());
-
     long int  indexToInterestingPP = -1;
     FdObject* pickedObject = FdPickFilter::getCyceledInterestingPObj(&evHaAction->getPickedPointList(),
-                                                                     types,true, // Filter variables
+                                                                     {FdTriad::getClassTypeID()} ,true, // Filter variables
                                                                      indexToInterestingPP); // Variables returning values
 
     if (!pickedObject)
@@ -2043,6 +2048,7 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
       SbMatrix SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
       FaMat34  objToWorld   = FdConverter::toFaMat34(SbObjToWorld);
 
+      std::cout <<"You picked "<< pickedObject->getFmOwner()->getIdString(true) << std::endl;
       if (state >= 0 && state <= 2) // state is for first picked object
       {
         FapEventManager::permSelect(pickedObject->getFmOwner(), 0);
@@ -2184,9 +2190,9 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
             FmTriad* secondTriad = dynamic_cast<FmTriad*>(FdDB::secondPickedFmObject);
             if (firstTriad && secondTriad)
             {
-              FaVec3 a  = firstTriad->getTranslation();
-              FaVec3 ba = secondTriad->getTranslation() - a;
-              FaVec3 ca = selectedTriad->getTranslation() - a;
+              FaVec3 a  = firstTriad->getGlobalTranslation();
+              FaVec3 ba = secondTriad->getGlobalTranslation() - a;
+              FaVec3 ca = selectedTriad->getGlobalTranslation() - a;
 
               if ((ba^ca).length() > FmDB::getPositionTolerance())
                 FuiModes::setState(9);
@@ -2231,7 +2237,7 @@ void FdDB::makeCamJointEventCB(void*, SoEventCallback* eventCBnode)
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
                                                               selectedObjects, // This is to select objects behind the already selected one
-                                                              std::vector<int>(),false, // No variables filtering
+                                                              {},false, // No variables filtering
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
     if (pickedObject) // The user picked something
     {
@@ -2333,13 +2339,13 @@ void FdDB::createHPEventCB(void*, SoEventCallback* eventCBnode)
     bool typesIsInteresting = true;
     std::vector<int> types;
     if (mode == FuiModes::MAKEGEAR_MODE)
-      types.resize(1,FdRevJoint::getClassTypeID());
+      types = { FdRevJoint::getClassTypeID() };
     else if (mode == FuiModes::MAKERACKPIN_MODE)
     {
       if (state == 0 || state == 1)
-        types.resize(1,FdRevJoint::getClassTypeID());
+        types = { FdRevJoint::getClassTypeID() };
       else if (state == 2 || state == 3)
-        types.resize(1,FdPrismJoint::getClassTypeID());
+        types = { FdPrismJoint::getClassTypeID() };
     }
     else
       typesIsInteresting = false;
@@ -2401,13 +2407,13 @@ void FdDB::smartMoveEventCB(void*, SoEventCallback* eventCBnode)
     // Build pick filter
     std::vector<int> types;
     if (state == 0 || state == 1)
-    {
-      types.resize(5,FdRefPlane::getClassTypeID());
-      types[1] = FdTire::getClassTypeID();
-      types[2] = FdAxialSprDa::getClassTypeID();
-      types[3] = FdHP::getClassTypeID();
-      types[4] = FdSensor::getClassTypeID();
-    }
+      types = {
+	FdRefPlane::getClassTypeID(),
+	FdTire::getClassTypeID(),
+	FdAxialSprDa::getClassTypeID(),
+	FdHP::getClassTypeID(),
+	FdSensor::getClassTypeID()
+      };
 
     long int indexToInterestingPP = -1;
     FdObject* pickedObject = FdPickFilter::getCyceledInterestingPObj(&evHaAction->getPickedPointList(),
@@ -2528,12 +2534,14 @@ void FdDB::createSimpleSensorEventCB(void*, SoEventCallback* eventCBnode)
     FdSelector::getSelectedObjects(selectedObjects);
 
     // Build array of interesting types
-    std::vector<int> types(6,FdTriad::getClassTypeID());
-    types[1] = FdSimpleJoint::getClassTypeID();
-    types[2] = FdLinJoint::getClassTypeID();
-    types[3] = FdCamJoint::getClassTypeID();
-    types[4] = FdAxialSprDa::getClassTypeID();
-    types[5] = FdStrainRosette::getClassTypeID();
+    std::vector<int> types = {
+      FdTriad::getClassTypeID(),
+      FdSimpleJoint::getClassTypeID(),
+      FdLinJoint::getClassTypeID(),
+      FdCamJoint::getClassTypeID(),
+      FdAxialSprDa::getClassTypeID(),
+      FdStrainRosette::getClassTypeID()
+    };
 
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
@@ -2570,14 +2578,11 @@ void FdDB::createTireEventCB(void*, SoEventCallback* eventCBnode)
     std::vector<FdObject*> selectedObjects;
     FdSelector::getSelectedObjects(selectedObjects);
 
-    // Build array of interesting types
-    std::vector<int> types(1,FdRevJoint::getClassTypeID());
-
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&eventCBnode->getAction()->getPickedPointList(),
                                                               selectedObjects, // This is to select objects behind the already selected one
-                                                              types,true, // Filter variables
+                                                              {FdRevJoint::getClassTypeID()},true, // Filter variables
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
 
     if (pickedObject)
@@ -2613,14 +2618,11 @@ void FdDB::createRelativeSensorEventCB(void*, SoEventCallback* eventCBnode)
     std::vector<FdObject*> selectedObjects;
     FdSelector::getSelectedObjects(selectedObjects);
 
-    // Build array of interesting types
-    std::vector<int> types(1,FdTriad::getClassTypeID());
-
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
                                                               selectedObjects, // This is to select objects behind the already selected one
-                                                              types,true, // Filter variables
+                                                              {FdTriad::getClassTypeID()},true, // Filter variables
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
 
     if (!pickedObject)
@@ -2670,20 +2672,17 @@ void FdDB::attachEventCB(void*, SoEventCallback* eventCBnode)
     // Build array of interesting types
     std::vector<int> types;
     if (state == 0 || state == 1)
-    {
-      types.resize(7,FdTriad::getClassTypeID());
-      types[1] = FdSimpleJoint::getClassTypeID();
-      types[2] = FdLinJoint::getClassTypeID();
-      types[3] = FdLoad::getClassTypeID();
-      types[4] = FdAxialSprDa::getClassTypeID();
-      types[5] = FdCamJoint::getClassTypeID();
-      types[6] = FdPipeSurface::getClassTypeID();
-    }
+      types = {
+	FdTriad::getClassTypeID(),
+	FdSimpleJoint::getClassTypeID(),
+	FdLinJoint::getClassTypeID(),
+	FdLoad::getClassTypeID(),
+	FdAxialSprDa::getClassTypeID(),
+	FdCamJoint::getClassTypeID(),
+	FdPipeSurface::getClassTypeID()
+      };
     else if (state == 2 || state == 3)
-    {
-      types.resize(2,FdLink::getClassTypeID());
-      types[1] = FdRefPlane::getClassTypeID();
-    }
+      types = { FdLink::getClassTypeID(), FdRefPlane::getClassTypeID() };
 
     long int  indexToInterestingPP = -1;
     FdObject* pickedObject = FdPickFilter::getCyceledInterestingPObj(&evHaAction->getPickedPointList(),
@@ -2762,12 +2761,14 @@ void FdDB::detachEventCB(void*, SoEventCallback* eventCBnode)
     FdSelector::getSelectedObjects(selectedObjects);
 
     // Build array of interesting types
-    std::vector<int> types(6,FdTriad::getClassTypeID());
-    types[1] = FdSimpleJoint::getClassTypeID();
-    types[2] = FdLinJoint::getClassTypeID();
-    types[3] = FdLoad::getClassTypeID();
-    types[4] = FdAxialSprDa::getClassTypeID();
-    types[5] = FdCamJoint::getClassTypeID();
+    std::vector<int> types = {
+      FdTriad::getClassTypeID(),
+      FdSimpleJoint::getClassTypeID(),
+      FdLinJoint::getClassTypeID(),
+      FdLoad::getClassTypeID(),
+      FdAxialSprDa::getClassTypeID(),
+      FdCamJoint::getClassTypeID()
+    };
 
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
@@ -2839,13 +2840,14 @@ void FdDB::pickLoadPointEventCB(void*, SoEventCallback* eventCBnode)
 
     // Build array of interesting types
     std::vector<int> types;
-    if (FuiModes::getMode() == FuiModes::PICKLOADATTACKPOINT_MODE ||
-        FuiModes::getMode() == FuiModes::ADDMASTERINLINJOINT_MODE)
-      types.resize(1,FdLink::getClassTypeID());
-    else
-    {
-      types.resize(2,FdLink::getClassTypeID());
-      types[1] = FdRefPlane::getClassTypeID();
+    switch (FuiModes::getMode()) {
+    case FuiModes::PICKLOADATTACKPOINT_MODE:
+    case FuiModes::ADDMASTERINLINJOINT_MODE:
+      types = { FdLink::getClassTypeID() };
+      break;
+    default:
+      types = { FdLink::getClassTypeID(), FdRefPlane::getClassTypeID() };
+      break;
     }
 
     long int  indexToInterestingPP    = -1;
@@ -2899,7 +2901,7 @@ void FdDB::pickMeasurePointEventCB(void*, SoEventCallback* eventCBnode)
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
                                                               selectedObjects, // An array of FdObject*'s  that is selected
-                                                              std::vector<int>(),false, // No variables filtering
+                                                              {},false, // No variables filtering
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
 
     int newState = 0;
