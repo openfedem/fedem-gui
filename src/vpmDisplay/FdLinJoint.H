@@ -40,13 +40,6 @@ protected:
 
   virtual void showHighlight();
   virtual void hideHighlight();
-
-  int isNotBetween(const FaVec3& p, const FaVec3& p1,
-		   const FaVec3& p2, bool& isClosestToFirst);
-
-  bool stickerOnFirstMaster;
-  bool stickerOnLastMaster;
-  bool stickerOnSlave;
 };
 
 #endif
