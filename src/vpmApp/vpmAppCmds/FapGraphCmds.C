@@ -51,53 +51,53 @@ void FapGraphCmds::init()
   cmdItem = new FFuaCmdItem("cmdId_graph_editXAxis");
   cmdItem->setText("Edit X Axis...");
   cmdItem->setToolTip("Edit X Axis");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::editXAxis));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::editAxis(FmCurveSet::XAXIS); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapGraphCmds::getEditXAxisSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_editYAxis");
   cmdItem->setText("Edit Y Axis...");
   cmdItem->setToolTip("Edit Y Axis");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::editYAxis));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::editAxis(FmCurveSet::YAXIS); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapGraphCmds::getEditYAxisSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_showRDBSelector");
   cmdItem->setSmallIcon(showRDBselector_xpm);
   cmdItem->setText("Result selector...");
   cmdItem->setToolTip("Open result selector tool to drag results into graphs");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::showRDBSelector));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::editAxis(FmCurveSet::YAXIS); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelTouchable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_showRDBMEFatigue");
   cmdItem->setSmallIcon(eventDef_xpm);
   cmdItem->setText("Fatigue Summary...");
   cmdItem->setToolTip("Open multi-event fatigue summary tool");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::showRDBMEFatigue));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ Fui::rdbMEFatigueUI(true); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelTouchable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_repeatCurveForAll");
   cmdItem->setSmallIcon(replicateCurve_xpm);
   cmdItem->setText("Repeat curve for all objects");
   cmdItem->setToolTip("Replicate curve for all objects in model");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::repeatCurveForAll));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::repeatCurve(0,-1); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapGraphCmds::getRepeatCurveSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_repeatCurveForSome");
   cmdItem->setSmallIcon(replicateCurve_xpm);
   cmdItem->setText("Repeat curve for object range...");
   cmdItem->setToolTip("Replicate curve for all objects within specified range");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::repeatCurveForSome));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::repeatCurve(0,0); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapGraphCmds::getRepeatCurveSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_enableAutoExport");
   cmdItem->setText("Enable Autoexport of Curves");
   cmdItem->setToolTip("Enable autoexport for all curves in this graph group");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::enableAutoExport));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::toggleAutoExport(true); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelTouchable,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_graph_disableAutoExport");
   cmdItem->setText("Disable Autoexport of Curves");
   cmdItem->setToolTip("Disable autoexport for all curves in this graph group");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapGraphCmds::disableAutoExport));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapGraphCmds::toggleAutoExport(false); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelTouchable,bool&));
 }
 
@@ -180,46 +180,19 @@ void FapGraphCmds::getShowSensitivity(bool& sensitivity)
   editing by right clicking, the curve is found from the selection.
 */
 
-void FapGraphCmds::editXAxis()
-{
-  bool curvesOnly;
-  std::vector<FmCurveSet*> curves = FapGraphCmds::findSelectedCurves(curvesOnly);
-  if (curves.size() == 1)
-    FapGraphCmds::editAxis(FmCurveSet::XAXIS, curves.front());
-}
-
-//----------------------------------------------------------------------------
-
-void FapGraphCmds::editYAxis()
-{
-  bool curvesOnly;
-  std::vector<FmCurveSet*> curves = FapGraphCmds::findSelectedCurves(curvesOnly);
-  if (curves.size() == 1)
-    FapGraphCmds::editAxis(FmCurveSet::YAXIS, curves.front());
-}
-
-//----------------------------------------------------------------------------
-
 void FapGraphCmds::editAxis(int axis, FmCurveSet* curve)
 {
+  if (!curve)
+  {
+    bool curvesOnly;
+    std::vector<FmCurveSet*> curves = FapGraphCmds::findSelectedCurves(curvesOnly);
+    if (curves.size() == 1) curve = curves.front();
+  }
+
   Fui::rdbSelectorUI(true);
 
   FapUAExistenceHandler* uas = FapUAExistenceHandler::getFirstOfType(FapUARDBSelector::getClassTypeID());
   if (uas) static_cast<FapUARDBSelector*>(uas)->edit(curve,axis);
-}
-
-//----------------------------------------------------------------------------
-
-void FapGraphCmds::showRDBSelector()
-{
-  FapGraphCmds::editAxis(FmCurveSet::YAXIS,NULL);
-}
-
-//----------------------------------------------------------------------------
-
-void FapGraphCmds::showRDBMEFatigue()
-{
-  Fui::rdbMEFatigueUI(true);
 }
 
 //----------------------------------------------------------------------------

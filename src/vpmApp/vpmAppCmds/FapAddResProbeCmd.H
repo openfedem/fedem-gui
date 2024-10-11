@@ -21,7 +21,6 @@ typedef std::pair<FdFEModel*,void*> FapResProbeLabel;
 
 class FapAddResProbeCmd : public FapCmdsBase
 {
-private:
   static void init();
 
   static void getSensitivity(bool& isSensitive);
@@ -30,9 +29,6 @@ private:
   static void eventCB(void*, SoEventCallback* eventCallbackNode);
 
 public:
-  static void addResProbe();
-  static void clearProbes();
-
   static void enterMode();
   static void cancelMode();
   static void done();

@@ -105,7 +105,7 @@ void FapEditCmds::init()
   cmdItem->setSmallIcon(splitBeam_xpm);
   cmdItem->setText("Split Beam...");
   cmdItem->setToolTip("Split a beam into several beams");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapEditCmds::splitBeam));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapEditCmds::splitBeam(0); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapEditCmds::getSplitBeamSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_edit_orientCam");

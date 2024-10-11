@@ -46,7 +46,7 @@ set ( COMPONENT_FILE_LIST  FapAddResProbeCmd FapAllignCSCmds
                            FapGeneralSpiderCmds FapGraphCmds FapHelpCmds
                            FapLinkVisualCmds FapListViewCmds FapMainWinCmds
                            FapMech3DObjCmds FapMoveToCenterCmds
-                           FapOutputListCmds FapSelectionCmds FapSelectRefCSCmds
+                           FapOutputListCmds FapSelectionCmds
                            FapSolveCmds FapStrainCoatCmds FapStrainRosetteCmds
                            FapToolsCmds FapViewCtrlCmds FapWorkSpaceCmds
 )

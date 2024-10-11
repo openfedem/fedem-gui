@@ -5,48 +5,40 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FAPALLIGNCSCMDS_H
-#define FAPALLIGNCSCMDS_H
+#ifndef FAP_ALLIGN_CS_CMDS_H
+#define FAP_ALLIGN_CS_CMDS_H
+
 #include "FapCmdsBase.H"
 #include "FFaLib/FFaPatterns/FFaInitialisation.H"
+#include "FFaLib/FFaAlgebra/FFaMat34.H"
 
 class SoEventCallback;
-class FaMat34;
 
-class FapAllignCSCmds: public FapCmdsBase
+
+class FapAllignCSCmds : public FapCmdsBase
 {
- private:
   static void init();
-  
-  static void getSensitivity(bool & isSensitive);
-  
-  static void allignCS();
- public:
-  static void allignCS( const FaMat34 & mx);
- private:
-  static void allignRotations();
-  static void allignRotations( const FaMat34 & mx);
 
+public:
+  static void allignCS(const FaMat34& mx);
+  static void allignRotations(const FaMat34& mx);
+
+private:
   static void setState(int newState);
-  static void eventCB(void *,SoEventCallback *eventCallbackNode);
- 
- public:
+  static void eventCB(void*, SoEventCallback* eventCallbackNode);
+
+public:
   static void enterMode();
   static void cancelMode();
   static void allignCSDone();
- 
-// Attributes
-private:
-   static FaMat34 ourAllignCS;  
-   static int myState;
 
-   friend class FFaInitialisation<FapAllignCSCmds>;
+private:
+  static FaMat34 ourAllignCS;
+  static int myState;
+
+  friend class FFaInitialisation<FapAllignCSCmds>;
 };
 
 static FFaInitialisation<FapAllignCSCmds> FapAllignCSCmds_Init;
 
 #endif
-
-
-
-

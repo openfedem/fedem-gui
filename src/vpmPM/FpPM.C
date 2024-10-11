@@ -1634,6 +1634,14 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   std::string oldRDBPath = mech->getAbsModelRDBPath();
   std::string newRDBPath = FFaFilePath::getBaseName(name) +"_RDB";
 
+  // Check if a name without extension was given
+  std::string fmmName(name);
+  if (name.size() < 4 || name.substr(name.size()-4) != ".fmm")
+    if (FpFileSys::isFile(fmmName.append(".fmm")) && newRDBPath != oldRDBPath)
+      if (!FFaMsg::dialog("Model file \"" + fmmName + "\" already exists.\n"
+                          "Do you want to replace it?", FFaMsg::YES_NO))
+        return FapFileCmds::saveAs(); // Recursively invoke Save-As dialog
+
   // Check if there is an existing RDB with the same name at the new location
   if (newRDBPath != oldRDBPath && FpFileSys::isDirectory(newRDBPath))
     if (!FFaMsg::dialog("The results directory \"" + newRDBPath + "\" exists.\n"
@@ -1670,12 +1678,12 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
     ListUI <<"===> Switching to master Simulation event.\n";
 
   Fui::noUserInputPlease();
-  ListUI <<"===> Saving Fedem model in "<< name <<"\n";
+  ListUI <<"===> Saving Fedem model in "<< fmmName <<"\n";
 
   if (FpFileSys::isDirectory(newRDBPath))
   {
     ListUI <<"===> Results directory "<< newRDBPath
-	   <<" already exists, and will be deleted.\n";
+           <<" already exists, and will be deleted.\n";
     FpFileSys::removeDir(newRDBPath);
   }
 
@@ -1728,7 +1736,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   }
 
   // Update the mechanism to reflect path name changes
-  mech->syncPath(name);
+  mech->syncPath(fmmName);
 
   // Translate all relative path names according to new model file location
   const std::string& newModelP = mech->getAbsModelFilePath();
@@ -1774,7 +1782,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   // Finally save the model file
   FFaMsg::list("  -> Saving Model File ");
   bool isModelSaved = false;
-  std::ofstream s(name,std::ios::out);
+  std::ofstream s(fmmName,std::ios::out);
   if (s)
   {
     FmDB::updateModelVersionOnSave(false);
@@ -1803,12 +1811,12 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
 
   if (!isModelSaved)
     ListUI <<"===> WARNING: The model was not completely saved to the new location.\n"
-	   <<"     Review the messages above to find out what was actually saved.\n"
-	   <<"     Try to free some space on disk and save the model again.\n"
-	   <<"     If you exit Fedem now you will loose any unsaved data.\n\n";
+           <<"     Review the messages above to find out what was actually saved.\n"
+           <<"     Try to free some space on disk and save the model again.\n"
+           <<"     If you exit Fedem now you will loose any unsaved data.\n\n";
 
   // Move the file name to the top of the recent file list
-  FpPM::addRecent(name);
+  FpPM::addRecent(fmmName);
   Fui::updateUICommands();
 
   FapEventManager::permUnselectAll();

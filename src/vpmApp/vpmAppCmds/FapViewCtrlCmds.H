@@ -18,21 +18,10 @@ private:
   static void init();
 
   static void zoomAll();
+
   static void zoomTo();
   static void getZoomToSensitivity(bool& isSensitive);
 
-  //graph
-  static void zoomWindow();
-  static void zoomAllInWindow();
-  static void zoomIn();
-  static void zoomOut();
-
-  static void shiftLeft();
-  static void shiftRight();
-  static void shiftUp();
-  static void shiftDown();
-
-  //mech
   static void solidView(bool show);
   static void getSolidViewToggle(bool& toggle);
 
@@ -53,8 +42,6 @@ private:
 
   static void parallellView(bool show);
   static void getParallellViewToggle(bool& toggle);
-
-  static void isometricView();
 
   static void symbolSize(double newSize);
 

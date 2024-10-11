@@ -11,10 +11,6 @@ Files: src/Qwt/CHANGES-6.1 src/Qwt/COPYING src/Qwt/README.txt src/Qwt/src/*
 Copyright: 1997 Josef Wilgen, 2002 Uwe Rathman
 License: LGPL-2.1-or-later
 
-Files: cmake/Modules/FindQt4.cmake
-Copyright: 2000-2020 Kitware, Inc. and Contributors
-License: BSD-3-Clause
-
 Files: Install/SFTA.exe
 Copyright: 2021 Danysys
 License: MIT

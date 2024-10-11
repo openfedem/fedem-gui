@@ -13,6 +13,7 @@
 #include "vpmUI/vpmUITopLevels/FuiProperties.H"
 #include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
 #include "vpmUI/Fui.H"
+#include "vpmUI/FuiModes.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuOptionMenu.H"
 #include "FFuLib/FFuLabel.H"
@@ -30,12 +31,12 @@
 
 #include "vpmApp/vpmAppUAMap/FapUAQuery.H"
 #include "vpmApp/vpmAppUAMap/FapUAProperties.H"
-#include "vpmApp/vpmAppCmds/FapSelectRefCSCmds.H"
 #ifdef USE_INVENTOR
 #include "vpmDisplay/FdExtraGraphics.H"
 #endif
 #include "vpmPM/FpPM.H"
 
+FuiPositionData* FuiPositionData::ourActiveUI = NULL;
 
 typedef FFa3DLocation::PosType PosType;
 typedef FFa3DLocation::RotType RotType;
@@ -557,7 +558,9 @@ void FuiPositionData::prepareRefCSSelection()
   if (uap) uap->setIgnorePickNotify(true);
 
   FapEventManager::pushPermSelection();
-  FapSelectRefCSCmds::selectRefCS(this);
+  ourActiveUI = this;
+
+  FuiModes::setMode(FuiModes::SELECTREFCS_MODE);
 }
 
 
@@ -636,4 +639,12 @@ void FuiPositionData::onPoppedDown()
 #ifdef USE_INVENTOR
   FdExtraGraphics::hide3DLocation();
 #endif
+}
+
+
+void FuiPositionData::cancelActiveUI()
+{
+  if (ourActiveUI)
+    ourActiveUI->finishRefCSSelection();
+  ourActiveUI = NULL;
 }

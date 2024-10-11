@@ -12,10 +12,10 @@
 #include "vpmApp/vpmAppCmds/FapEditStrainRosetteNodesCmd.H"
 #include "vpmApp/vpmAppCmds/FapEditStrainRosetteDirCmd.H"
 #include "vpmApp/vpmAppCmds/FapCreateSensorCmd.H"
-#include "vpmApp/vpmAppCmds/FapSelectRefCSCmds.H"
 #include "vpmApp/vpmAppCmds/FapAddResProbeCmd.H"
 #include "vpmApp/vpmAppCmds/FapMoveToCenterCmds.H"
 #include "vpmApp/vpmAppUAMap/FapUAModeller.H"
+#include "vpmUI/vpmUIComponents/FuiPositionData.H"
 #include "vpmUI/FuiModes.H"
 #include "vpmUI/Fui.H"
 #ifdef USE_INVENTOR
@@ -61,7 +61,7 @@ void FuiModes::setMode(ModeType newMode)
       FapCreateSensorCmd::enterMode();
       break;
     case SELECTREFCS_MODE:
-      FapSelectRefCSCmds::enterMode();
+      Fui::tip("Select reference CS by picking in the 3D view or selecting from the Objects browser");
       break;
     case MAKEGENERALSPIDER_MODE:
       FapGeneralSpiderCmds::enterMode();
@@ -113,7 +113,7 @@ void FuiModes::cancel()
       FapCreateSensorCmd::cancelMode();
       break;
     case SELECTREFCS_MODE:
-      FapSelectRefCSCmds::cancelMode();
+      FuiPositionData::cancelActiveUI();
       break;
     case MAKEGENERALSPIDER_MODE:
       FapGeneralSpiderCmds::cancelMode();
@@ -384,10 +384,6 @@ void FuiModes::done()
         FuiModes::cancel();
       break;
 
-    case SELECTREFCS_MODE:
-      FapSelectRefCSCmds::done();
-      break;
-
     case MAKESTICKER_MODE:
     case MAKESIMPLESENSOR_MODE:
     case MAKETIRE_MODE:
@@ -401,6 +397,7 @@ void FuiModes::done()
         FuiModes::cancel();
       break;
 
+    case SELECTREFCS_MODE:
     case MEASURE_DISTANCE_MODE:
     case MEASURE_ANGLE_MODE:
       FuiModes::cancel();

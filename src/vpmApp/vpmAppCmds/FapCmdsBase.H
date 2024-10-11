@@ -39,6 +39,9 @@ protected:
   static void isGraphViewActive(bool& active);
   static void isModellerOrGraphViewActive(bool& active);
 
+  static void isCtrlModellerEditable(bool& isEditable);
+  static void isModellerEditable(bool& isEditable);
+  static void isModellerTouchable(bool& isTouchable);
   static void isModelEditable(bool& isEditable);
   static void isModelTouchable(bool& isTouchable);
 

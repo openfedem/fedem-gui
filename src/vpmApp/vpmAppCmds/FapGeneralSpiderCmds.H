@@ -26,8 +26,6 @@ class FapGeneralSpiderCmds : public FapCmdsBase
 {
   static void init();
 
-  static void getSensitivity(bool& isSensitive);
-
   static void createRBE2Spider();
   static void createRBE3Spider();
   static void createSpider(const std::vector<FdNode>& nodes);
