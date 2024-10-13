@@ -74,8 +74,8 @@ private:
   static void exportCGeo();
   static void exportDTSApp(FmModelExpOptions* options);
   static void exportDTSBatchApp(FmModelExpOptions* options);
-  static void exportDTSFMUApp(FmModelExpOptions* options);
-  static void exportDTSDigitalTwin();
+  static void exportFMUApp(FmModelExpOptions* options);
+  static void exportDigitalTwin();
   static void exportPipeWear();
 
   friend class FFaInitialisation<FapExportCmds>;

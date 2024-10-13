@@ -186,7 +186,7 @@ void FapExportCmds::init()
   cmdItem = new FFuaCmdItem("cmdId_export_dtsDigitalTwin");
   cmdItem->setText("Export Digital Twin...");
   cmdItem->setToolTip("Export current model to a zip'ed Digital Twin");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapExportCmds::exportDTSDigitalTwin));
+  cmdItem->setActivatedCB(FFaDynCB0S(FapExportCmds::exportDigitalTwin));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::alwaysSensitive,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_export_pipeStringWear");
@@ -1305,7 +1305,8 @@ void FapExportCmds::exportCGeo()
 //------------------------------------------------------------------------------
 
 /*!
-  Static helper to write the resource configuration file for a simulation app.
+  Static helper to write the resource configuration file
+  for an EPD Connected Products simulation app.
 */
 
 static bool write_res_config(const std::string& fName)
@@ -1333,7 +1334,8 @@ static bool write_res_config(const std::string& fName)
 
 
 /*!
-  Static helper to write the app.json file for a simulation app.
+  Static helper to write the app.json file
+  for an EPD Connected Products simulation app.
 */
 
 static bool write_app_json(const std::string& fName,
@@ -1551,10 +1553,53 @@ static std::string get_app_path (const std::string& fileName, const std::string&
   return appPath;
 }
 
+
+/*!
+  static helper removing all frs-output options.
+*/
+
+static void remove_all_frs_output (std::string& options,
+                                   std::map<FmIsPlottedBase*,BoolVec>& saveVars)
+{
+  if (!options.empty())
+  {
+    size_t ipos = options.find("-all");
+    while (ipos < options.size())
+    {
+      size_t ip = ipos;
+      while (ip > 0 && isspace(options[ip-1])) --ip;
+      options.erase(ip,options.find_first_of(' ',ipos));
+      ipos = options.find("-all");
+    }
+  }
+
+  if (options.empty())
+    options.assign("-allPrimaryVars-");
+  else if (options.find("-allPrimaryVars-") == std::string::npos)
+    options.insert(0,"-allPrimaryVars- ");
+
+  if (options.find("-noBeamForces") == std::string::npos)
+    if (FmDB::getObjectCount(FmBeam::getClassTypeID()) > 0)
+      options.append(" -noBeamForces");
+
+  // Switch off all output toggles
+  std::vector<FmModelMemberBase*> allObjs;
+  FmDB::getAllOfType(allObjs,FmIsPlottedBase::getClassTypeID());
+  for (FmModelMemberBase* obj : allObjs)
+  {
+    FmIsPlottedBase* plb = static_cast<FmIsPlottedBase*>(obj);
+    if (!plb->mySaveVar.getValue().empty())
+    {
+      saveVars[plb] = plb->mySaveVar.getValue();
+      plb->mySaveVar.setValue({});
+    }
+  }
+}
+
 //------------------------------------------------------------------------------
 
 /*!
-  Exports the model to zipped DTS app
+  Exports the model to a zipped DTS streaming app.
 */
 
 void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
@@ -1645,15 +1690,11 @@ void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
   std::string exff = analysis->externalFuncFileName.getValue();
   bool exffChanged = analysis->externalFuncFileName.setValue("");
 
+  // Switch off all frs-file output
   std::string& addOpts = analysis->solverAddOpts.getValue();
   std::string oldOpts(addOpts);
-  if (addOpts.empty())
-    addOpts = "-allPrimaryVars-";
-  else if (addOpts.find("-allPrimaryVars-") == std::string::npos)
-    addOpts += " -allPrimaryVars-";
-  if (addOpts.find("-noBeamForces") == std::string::npos)
-    if (FmDB::getObjectCount(FmBeam::getClassTypeID()) > 0)
-      addOpts += " -noBeamForces";
+  std::map<FmIsPlottedBase*,BoolVec> saveVars;
+  remove_all_frs_output(addOpts,saveVars);
 
   // Save model file with dependencies to app folder
   bool ok = FpPM::vpmModelExport(FFaFilePath::appendFileNameToPath(libPath, mech->getModelName(true)));
@@ -1665,7 +1706,11 @@ void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
   analysis->useExternalFuncFile.setValue(uexfChanged);
   if (exffChanged)
     analysis->externalFuncFileName.setValue(exff);
+
   if (addOpts != oldOpts) addOpts = oldOpts;
+
+  for (std::pair<FmIsPlottedBase* const,BoolVec>& plb : saveVars)
+    plb.first->mySaveVar.setValue(plb.second);
 
   // Create a zipped archive for the DTS app
   if (ok) make_zip(appPath);
@@ -1673,7 +1718,7 @@ void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
 
 
 /*!
-  Exports the model to zipped DTS Batch app
+  Exports the model to a zipped DTS batch app.
 */
 
 void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
@@ -1725,6 +1770,7 @@ void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
          <<"    \"surface_only\": "<< (surface_only ? "true" : "false") <<",\n"
          <<"    \"recovery\": "<< (stress_recovery && do_recover ? "true" : "false")
          <<"\n  }";
+  do_recover = stress_recovery && count > 0;
 
   os <<"],\n  \"visualization_parts\": [";
   count = 0;
@@ -1767,19 +1813,28 @@ void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
   std::string exff = analysis->externalFuncFileName.getValue();
   bool exffChanged = analysis->externalFuncFileName.setValue("");
 
+  // Switch off all frs-file output
   std::string& addOpts = analysis->solverAddOpts.getValue();
   std::string oldOpts(addOpts);
-  if (addOpts.empty())
-    addOpts = "-allPrimaryVars-";
-  else if (addOpts.find("-allPrimaryVars-") == std::string::npos)
-    addOpts += " -allPrimaryVars-";
-  if (addOpts.find("-noBeamForces") == std::string::npos)
-    if (FmDB::getObjectCount(FmBeam::getClassTypeID()) > 0)
-      addOpts += " -noBeamForces";
-  if (addOpts.find("-partDeformation") == std::string::npos)
-    addOpts += " -partDeformation=0";
-  if (addOpts.find("-partVMStress") == std::string::npos)
-    addOpts += " -partVMStress=2";
+  std::map<FmIsPlottedBase*,BoolVec> saveVars;
+  remove_all_frs_output(addOpts,saveVars);
+
+  if (do_recover)
+  {
+    // Switch off part deformation output
+    size_t ipos = addOpts.find("-partDeformation");
+    if (ipos == std::string::npos)
+      addOpts.append(" -partDeformation=0");
+    else
+      addOpts[ipos+17] = '0';
+
+    // Enable von Mises stress output through the state array
+    ipos = addOpts.find("-partVMStress");
+    if (ipos == std::string::npos)
+      addOpts.append(" -partVMStress=2");
+    else
+      addOpts[ipos+14] = '2';
+  }
 
   // Save model file with dependencies to app folder
   bool ok = FpPM::vpmModelExport(FFaFilePath::appendFileNameToPath(libPath, mech->getModelName(true)));
@@ -1791,7 +1846,11 @@ void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
   analysis->useExternalFuncFile.setValue(uexfChanged);
   if (exffChanged)
     analysis->externalFuncFileName.setValue(exff);
+
   if (addOpts != oldOpts) addOpts = oldOpts;
+
+  for (std::pair<FmIsPlottedBase* const,BoolVec>& plb : saveVars)
+    plb.first->mySaveVar.setValue(plb.second);
 
   // Create a zipped archive for the DTS app
   if (ok) make_zip(appPath);
@@ -1799,12 +1858,12 @@ void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
 
 
 /*!
-  Exports the model to FMU
+  Exports the model as an FMU simulation app.
 */
 
-void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
+void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
 {
-  std::string appPath = get_app_path(options->fmuFilename.getValue(), "exportDTSFMUApp");
+  std::string appPath = get_app_path(options->fmuFilename.getValue(), "exportFMUApp");
   if (appPath.empty()) return; // Invalid path
 
   std::string resourcesPath = FFaFilePath::appendFileNameToPath(appPath, "resources");
@@ -1826,14 +1885,20 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
   // Copy shared library. Windows
   if (!FpFileSys::copyFile(FFaFilePath::appendFileNameToPath(templPath, "fedem_fmu.dll"),
                            FFaFilePath::appendFileNameToPath(binariesPathWin, modelIdentifier + ".dll")))
-    std::cerr <<" *** FapExportCmds::exportDTSFMUApp(): Failed to copy "
+  {
+    std::cerr <<" *** FapExportCmds::exportFMUApp(): Failed to copy "
               << FFaFilePath::appendFileNameToPath(templPath, "fedem_fmu.dll") << std::endl;
+    perror("                                  ");
+  }
 
   // Copy shared library. Linux
   if (!FpFileSys::copyFile(FFaFilePath::appendFileNameToPath(templPath, "libfedem_fmu.so"),
                            FFaFilePath::appendFileNameToPath(binariesPathLin, modelIdentifier + ".so")))
-    std::cerr <<" *** FapExportCmds::exportDTSFMUApp(): Failed to copy "
+  {
+    std::cerr <<" *** FapExportCmds::exportFMUApp(): Failed to copy "
               << FFaFilePath::appendFileNameToPath(templPath, "libfedem_fmu.so") << std::endl;
+    perror("                                  ");
+  }
 
   // Collecting info on input and output functions. Vectors inputs and outputs will contain:
   // <name, description, ExternalFuncId/funcId> for each input and output
@@ -1850,7 +1915,8 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
       else for (char& c : name)
         if (!isalnum(c)) c = '_';
 
-      inputs.push_back(std::make_tuple(name, e->getItemDescr(), dynamic_cast<FmfExternalFunction*>(e->getFunction())->channel.getValue()));
+      FmfExternalFunction* xf = dynamic_cast<FmfExternalFunction*>(e->getFunction());
+      inputs.push_back(std::make_tuple(name, e->getItemDescr(), xf->channel.getValue()));
     }
     else if (e->myOutput.getValue())
     {
@@ -1864,55 +1930,61 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
     }
 
   // Write modelDescription.xml
-  std::ofstream os(FFaFilePath::appendFileNameToPath(appPath, "modelDescription.xml").c_str());
+  std::ofstream os(FFaFilePath::appendFileNameToPath(appPath,"modelDescription.xml"));
   if (!os) return;
 
+  char generateTime[64];
   time_t currentTime = time(NULL);
-  char* generateTime = ctime(&currentTime);
-  generateTime[strlen(generateTime)-1] = '\0'; // Remove trailing newline from ctime()
+  strftime(generateTime,64,"%FT%T",localtime(&currentTime));
   std::string id = FpPM::createUuid();
 
-  os <<"<?xml version=\"1.0\"?>\n";
-  os <<"<fmiModelDescription fmiVersion=\"2.0\" generationDateAndTime=\""<< generateTime <<"\"";
-  os << " generationTool=\"FEDEM FMU Generator\" guid=\"" << id << "\" modelName=\"" << modelIdentifier << "\">\n";
-  os << "\t<CoSimulation canGetAndSetFMUstate=\"false\" canHandleVariableCommunicationStepSize=\"false\" canInterpolateInputs=\"false\" modelIdentifier=\"" << modelIdentifier << "\" />\n";
-  os << "\t<LogCategories>\n";
-  os << "\t\t<Category name=\"logAll\"/>\n";
-  os << "\t</LogCategories>\n";
-  os << "\t<ModelVariables>\n";
+  os <<"<?xml version=\"1.0\"?>\n"
+     <<"<fmiModelDescription fmiVersion=\"2.0\" generationDateAndTime=\""<< generateTime
+     <<"\" generationTool=\"FEDEM FMU Exporter\" guid=\""<< id
+     <<"\" modelName=\""<< modelIdentifier
+     <<"\" description=\""<< mech->getUserDescription(64) <<"\">\n";
+
+  os <<"\t<CoSimulation canGetAndSetFMUstate=\"false\" canHandleVariableCommunicationStepSize=\"false\""
+     <<" canInterpolateInputs=\"false\" modelIdentifier=\""<< modelIdentifier <<"\"/>\n";
+  os <<"\t<LogCategories>\n"
+     <<"\t\t<Category name=\"logAll\"/>\n"
+     <<"\t</LogCategories>\n";
 
   int valRef = 0;
+  os <<"\t<ModelVariables>\n";
   for (const Indicator& input : inputs)
-    os << "\t\t<ScalarVariable causality=\"input\" description=\"" << std::get<1>(input)
-       << "\" name=\"" << std::get<0>(input)
-       << "\" valueReference=\"" << std::to_string(valRef++) << "\">\n"
-       << "\t\t\t<Real start=\"0.0\"/>\n"
-       << "\t\t</ScalarVariable>\n";
-
-  int outputStartCount = valRef;
+    os <<"\t\t<ScalarVariable causality=\"input\" description=\""<< std::get<1>(input)
+       <<"\" name=\""<< std::get<0>(input)
+       <<"\" valueReference=\""<< valRef++ <<"\">\n"
+       <<"\t\t\t<Real start=\"0.0\"/>\n"
+       <<"\t\t</ScalarVariable>\n";
   for (const Indicator& output : outputs)
-    os << "\t\t<ScalarVariable causality=\"output\" description=\"" << std::get<1>(output)
-       << "\" name=\"" << std::get<0>(output)
-       << "\" valueReference=\"" << std::to_string(valRef++) << "\">\n"
-       << "\t\t\t<Real/>\n"
-       << "\t\t</ScalarVariable>\n";
+    os <<"\t\t<ScalarVariable causality=\"output\" description=\""<< std::get<1>(output)
+       <<"\" name=\""<< std::get<0>(output)
+       <<"\" valueReference=\""<< valRef++ <<"\">\n"
+       <<"\t\t\t<Real/>\n"
+       <<"\t\t</ScalarVariable>\n";
+  os <<"\t</ModelVariables>\n";
 
-  os << "\t</ModelVariables>\n";
-  os << "\t<ModelStructure>\n";
-  os << "\t\t<Outputs>\n";
-  for (size_t i = 1; i <= outputs.size(); i++)
-    os << "\t\t\t<Unknown index=\"" << outputStartCount + i << "\"/>\n";
-  os << "\t\t</Outputs>\n";
-  os << "\t\t<InitialUnknowns>\n";
-  for (size_t i = 1; i <= outputs.size(); i++)
-    os << "\t\t\t<Unknown index=\"" << outputStartCount + i << "\"/>\n";
-  os << "\t\t</InitialUnknowns>\n";
-  os << "\t</ModelStructure>\n";
-  os << "</fmiModelDescription>\n";
+  os <<"\t<ModelStructure>\n";
+  valRef = inputs.size()+1;
+  os <<"\t\t<Outputs>\n";
+  for (const Indicator& output : outputs)
+    os <<"\t\t\t<Unknown index=\""<< valRef++ <<"\"/>\n";
+  os <<"\t\t</Outputs>\n";
+  valRef = inputs.size()+1;
+  os <<"\t\t<InitialUnknowns>\n";
+  for (const Indicator& output : outputs)
+    os <<"\t\t\t<Unknown index=\""<< valRef++ <<"\"/>\n";
+  os <<"\t\t</InitialUnknowns>\n";
+  os <<"\t</ModelStructure>\n";
+
+  os <<"</fmiModelDescription>\n";
   os.close();
 
-  // Write config.txt file. This file will be read at runtime by the FMU-dll/so to setup model-specific parameters and memory
-  std::ofstream os2(FFaFilePath::appendFileNameToPath(resourcesPath, "config.txt").c_str());
+  // Write the config.txt file.
+  // This file will be read at runtime by the FMU to set up model-specific parameters and memory.
+  std::ofstream os2(FFaFilePath::appendFileNameToPath(resourcesPath,"config.txt"));
   if (os2) {
     os2 << modelIdentifier << "\n" << id << "\n";
     os2 << inputs.size() + outputs.size() << "\n";
@@ -1926,23 +1998,16 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
 
   // Adjust some solver options
   FmAnalysis* analysis = FmDB::getActiveAnalysis();
+  bool freqChanged = analysis->solveEigenvalues.setValue(false);
+  bool aexpChanged = analysis->autoCurveExportSwitch.setValue(false);
   bool uexfChanged = analysis->useExternalFuncFile.setValue(false);
   std::string exff = analysis->externalFuncFileName.getValue();
   bool exffChanged = analysis->externalFuncFileName.setValue("");
 
   std::string& addOpts = analysis->solverAddOpts.getValue();
   std::string oldOpts(addOpts);
-  if (addOpts.empty())
-    addOpts = "-allPrimaryVars-";
-  else if (addOpts.find("-allPrimaryVars-") == std::string::npos)
-    addOpts += " -allPrimaryVars-";
-  if (addOpts.find("-noBeamForces") == std::string::npos)
-    if (FmDB::getObjectCount(FmBeam::getClassTypeID()) > 0)
-      addOpts += " -noBeamForces";
-  if (addOpts.find("-partDeformation") == std::string::npos)
-    addOpts += " -partDeformation=0";
-  if (addOpts.find("-partVMStress") == std::string::npos)
-    addOpts += " -partVMStress=2";
+  std::map<FmIsPlottedBase*,BoolVec> saveVars;
+  remove_all_frs_output(addOpts,saveVars);
 
   // Save model file with dependencies to model folder
   // and create solver input files for batch execution
@@ -1950,12 +2015,18 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
   bool ok = FpPM::vpmModelExport(newModel, analysis, "model");
 
   // Restore solver options
+  analysis->solveEigenvalues.setValue(freqChanged);
+  analysis->autoCurveExportSwitch.setValue(aexpChanged);
   analysis->useExternalFuncFile.setValue(uexfChanged);
   if (exffChanged)
     analysis->externalFuncFileName.setValue(exff);
+
   if (addOpts != oldOpts) addOpts = oldOpts;
 
-  // Create a zipped archive for the FMU app
+  for (std::pair<FmIsPlottedBase* const,BoolVec>& plb : saveVars)
+    plb.first->mySaveVar.setValue(plb.second);
+
+  // Create a zipped archive for the FMU
   if (ok) make_zip(appPath, true, "fmu");
 }
 
@@ -1965,7 +2036,7 @@ void FapExportCmds::exportDTSFMUApp(FmModelExpOptions* options)
   Launch dialog to export the model to zipped DTS apps
 */
 
-void FapExportCmds::exportDTSDigitalTwin()
+void FapExportCmds::exportDigitalTwin()
 {
   if (!FapLicenseManager::checkLicense("FA-SAP"))
     return;
@@ -1976,7 +2047,7 @@ void FapExportCmds::exportDTSDigitalTwin()
 //----------------------------------------------------------------------------
 
 /*!
-  Export DTS apps
+  Export simulation apps.
 */
 
 void FapExportCmds::exportApps()
@@ -1987,7 +2058,7 @@ void FapExportCmds::exportApps()
   FmModelExpOptions* options = FmDB::getModelExportOptions();
   if (options->streamAppExport.getValue()) exportDTSApp(options);
   if (options->batchAppExport.getValue()) exportDTSBatchApp(options);
-  if (options->fmuAppExport.getValue()) exportDTSFMUApp(options);
+  if (options->fmuAppExport.getValue()) exportFMUApp(options);
 }
 
 //----------------------------------------------------------------------------
