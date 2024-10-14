@@ -1368,8 +1368,7 @@ static bool write_app_json(const std::string& fName,
     for (char c : str)
       if (wasNewLine)
       {
-        size_t indent = c - '0';
-        os << std::string(indent,' ');
+        for (char d = '0'; d < c; d++) os << ' ';
         wasNewLine = false;
       }
       else
@@ -1487,7 +1486,7 @@ static bool make_zip (const std::string& folderPath, bool eraseIt = true,
   // Temporarily change working directory such that zip works
   // using relative path names
   char* oldwd = getcwd(NULL,128);
-  if (chdir(folderPath.c_str()))
+  if (chdir(folderPath.c_str()) < 0)
   {
     perror(folderPath.c_str());
     free(oldwd);
@@ -1506,7 +1505,7 @@ static bool make_zip (const std::string& folderPath, bool eraseIt = true,
   }
 
   // Clean up
-  if (chdir(oldwd))
+  if (oldwd && chdir(oldwd) < 0)
     perror(oldwd);
   if (ok && eraseIt)
     FmFileSys::removeDir(folderPath);
@@ -1532,7 +1531,7 @@ static std::string get_app_path (const std::string& fileName, const std::string&
   if (FpFileSys::verifyDirectory(FFaFilePath::checkName(appPath), false))
   {
     // Directory exists, make sure it is empty
-    std::vector<std::string> deadFiles;
+    Strings deadFiles;
     if (FmFileSys::getFiles(deadFiles, appPath, NULL, true))
     {
       std::cerr <<" *** FapExportCmds::"<< prg <<"(): Directory "<< appPath
@@ -1623,8 +1622,6 @@ void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
       std::string name = e->getTag();
       if (name.empty())
         name = "dt_input_" + std::to_string(inputs.size()+1);
-      else for (char& c : name)
-        if (!isalnum(c)) c = '_';
       inputs.push_back(name);
     }
     else if (e->myOutput.getValue())
@@ -1632,8 +1629,6 @@ void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
       std::string name = e->getTag();
       if (name.empty())
         name = "dt_output_" + std::to_string(outputs.size()+1);
-      else for (char& c : name)
-        if (!isalnum(c)) c = '_';
       outputs[name] = e->myThreshold.getValue();
     }
 
@@ -1741,8 +1736,6 @@ void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
       std::string name = e->getTag();
       if (name.empty())
         name = "dt_input_" + std::to_string(inputs.size()+1);
-      else for (char& c : name)
-        if (!isalnum(c)) c = '_';
       inputs.push_back(name);
     }
 
@@ -1912,8 +1905,6 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
       std::string name = e->getTag();
       if (name.empty())
         name = "dt_input_" + std::to_string(inputs.size() + 1);
-      else for (char& c : name)
-        if (!isalnum(c)) c = '_';
 
       FmfExternalFunction* xf = dynamic_cast<FmfExternalFunction*>(e->getFunction());
       inputs.push_back(std::make_tuple(name, e->getItemDescr(), xf->channel.getValue()));
@@ -1923,8 +1914,6 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
       std::string name = e->getTag();
       if (name.empty())
         name = "dt_output_" + std::to_string(outputs.size() + 1);
-      else for (char& c : name)
-        if (!isalnum(c)) c = '_';
 
       outputs.push_back(std::make_tuple(name, e->getItemDescr(), e->getID()));
     }
