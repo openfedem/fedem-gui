@@ -1492,7 +1492,7 @@ void FpPM::vpmGetUndoSensitivity(bool& isSensitive)
   \brief Static helper that copies an FE part to a new location.
 */
 
-static bool copyFEPart(FmPart* workPart, bool noReducedData,
+static bool copyFEPart(FmPart* workPart, int reducedData,
                        const std::string& oldDir, const std::string& newDir,
                        const std::string& oldPath, const std::string& newPath)
 {
@@ -1525,12 +1525,28 @@ static bool copyFEPart(FmPart* workPart, bool noReducedData,
       ListUI <<" (failed)\n";
   }
 
-  if (noReducedData)
+  if (!reducedData)
     return didSaveSomething;
 
   // Get files from the part RSD
   StringSet filesToCopy;
-  workPart->myRSD.getValue().getAllFileNames(filesToCopy);
+  if (reducedData == 1) // get everything
+    workPart->myRSD.getValue().getAllFileNames(filesToCopy);
+  else // only get files needed by the solver processes
+  {
+    workPart->myRSD.getValue().getAllFileNames(filesToCopy,"fmx");
+    if (reducedData > 2) // include sam-file needed for recovery
+      workPart->myRSD.getValue().getAllFileNames(filesToCopy,"fsm");
+    else // exclude displacement recovery matrices (B- and E)
+      for (StringSet::iterator it = filesToCopy.begin(); it != filesToCopy.end();)
+      {
+        if (it->at(it->size()-5) == 'B' || it->at(it->size()-5) == 'E')
+          it = filesToCopy.erase(it);
+        else
+          ++it;
+      }
+  }
+
   if (filesToCopy.empty())
   {
     if (didSaveSomething)
@@ -1547,8 +1563,11 @@ static bool copyFEPart(FmPart* workPart, bool noReducedData,
     {
       std::string oName = FFaFilePath::getRelativeFilename(newDir,fName);
       if (!FpFileSys::copyFile(FFaFilePath::makeItAbsolute(oName,oldDir),fName))
+      {
         std::cerr <<" *** Failed to copy "<< oName
                   <<"\n                 to "<< fName << std::endl;
+        perror("                  ");
+      }
       else if (++nFilesCopied == 1 && !didSaveSomething)
         ListUI <<"     ["<< workPart->getID() <<"]";
     }
@@ -1753,8 +1772,8 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
     if (++nSaved == 1)
       ListUI <<"  -> Saving FE parts:\n";
 
-    bool noRed = saveReducedPart.find(workPart) == saveReducedPart.end();
-    if (copyFEPart(workPart,noRed,oldPartDB,newPartDB,oldModelP,newModelP))
+    int red = saveReducedPart.find(workPart) != saveReducedPart.end();
+    if (copyFEPart(workPart,red,oldPartDB,newPartDB,oldModelP,newModelP))
     {
       ListUI <<"  ... Done\n";
       workPart->onChanged();
@@ -1933,9 +1952,12 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
     size_t iPart = 0;
     for (FmPart* part : allParts)
     {
-      bool noRed = saveReducedPart.find(part) == saveReducedPart.end();
+      int red = saveReducedPart.find(part) != saveReducedPart.end();
+      if (red && exportSolverInput)
+        // Only include those reduction files needed by the solvers
+        red = part->recoveryDuringSolve.getValue() > 0 ? 3 : 2;
       const std::string& oldDir = oldPartDB[iPart++];
-      if (copyFEPart(part,noRed,oldDir,newPartDB,oldModelP,newModelP))
+      if (copyFEPart(part,red,oldDir,newPartDB,oldModelP,newModelP))
         ListUI <<"  ... Done\n";
     }
   }

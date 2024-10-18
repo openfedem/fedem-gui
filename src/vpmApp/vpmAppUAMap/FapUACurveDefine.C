@@ -34,6 +34,7 @@
 
 #include "FFuLib/FFuProgressDialog.H"
 #include "FiDeviceFunctions/FiDeviceFunctionFactory.H"
+#include "FiDeviceFunctions/FiASCFile.H"
 
 
 Fmd_SOURCE_INIT(FAPUACURVEDEFINE, FapUACurveDefine, FapUAExistenceHandler);
@@ -215,11 +216,28 @@ void FapUACurveDefine::setDBValues(FFuaUIValues* values)
     if (i < ncc) this->dbcurve->setCurveComp(dynamic_cast<FmCurveSet*>(comp),i++);
 
   // --- From file ---
-  this->dbcurve->setFilePath(curveValues->filePath);
   const std::string& mPath = FmDB::getMechanismObject()->getAbsModelFilePath();
-  int fileType = FiDeviceFunctionFactory::identify(curveValues->filePath,mPath);
-  if (fileType == RPC_TH_FILE || fileType == ASC_MC_FILE)
+  bool newFile = this->dbcurve->setFilePath(curveValues->filePath);
+  switch (FiDeviceFunctionFactory::identify(curveValues->filePath,mPath)) {
+  case ASC_FILE:
+    if (newFile) {
+      std::vector<std::string> channels;
+      std::string fName(curveValues->filePath);
+      FFaFilePath::makeItAbsolute(fName,mPath);
+      FiASCFile reader(fName.c_str());
+      if (reader.open(FiDeviceFunctionBase::Read_Only))
+        if (reader.getChannelList(channels) && !channels.empty() && channels.front() != "1")
+          curveValues->channel = channels.front();
+    }
+  case RPC_TH_FILE:
+  case ASC_MC_FILE:
     this->dbcurve->setChannelName(curveValues->channel);
+  default:
+    break;
+  }
+  if (this->dbcurve->getUserDescription().empty())
+    if (!curveValues->channel.empty() && curveValues->channel != "Not set")
+      this->dbcurve->setUserDescription(curveValues->channel);
 
   // --- Internal function or preview curve ---
   if (!this->dbcurve->setFunctionRef(curveValues->functionRef))
@@ -384,10 +402,7 @@ void FapUACurveDefine::getDBValues(FFuaUIValues* values)
   curveValues->filePath = this->dbcurve->getFilePath();
   const std::string& mPath = FmDB::getMechanismObject()->getAbsModelFilePath();
   int fileType = FiDeviceFunctionFactory::identify(curveValues->filePath,mPath);
-  if (fileType == RPC_TH_FILE || fileType == ASC_MC_FILE)
-    curveValues->isMultiChannelFile = true;
-  else
-    curveValues->isMultiChannelFile = false;
+  curveValues->isMultiChannelFile = fileType == RPC_TH_FILE || fileType == ASC_MC_FILE;
   curveValues->channel = this->dbcurve->getChannelName();
   curveValues->modelFilePath = mPath + FFaFilePath::getPathSeparator();
 
@@ -486,8 +501,6 @@ void FapUACurveDefine::setAutoLegend(bool autoLegend)
 
 void FapUACurveDefine::getChannelList(const std::string& file)
 {
-  if (!this->dbcurve) return;
-
   std::string fName(file);
   FFaFilePath::makeItAbsolute(fName,FmDB::getMechanismObject()->getAbsModelFilePath());
 

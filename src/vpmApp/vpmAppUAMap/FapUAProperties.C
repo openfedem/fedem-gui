@@ -89,13 +89,13 @@
 #include "vpmPM/FpPM.H"
 #include "vpmPM/FpFileSys.H"
 #include "vpmPM/FpRDBExtractorManager.H"
-#include "FFaLib/FFaString/FFaStringExt.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 #include "FFaLib/FFaAlgebra/FFaMath.H"
 
 #include <algorithm>
+#include <cctype>
 
 
 Fmd_SOURCE_INIT(FAPUAPROPERTIES, FapUAProperties, FapUAExistenceHandler);
@@ -120,7 +120,7 @@ FapUAProperties::FapUAProperties(FuiProperties* uic)
 
   pv.myTopologyHighlightCB    = FFaDynCB2M(FapUAProperties, this, topologyHighlightCB, int, bool);
   pv.myTopologyActivatedCB    = FFaDynCB1M(FapUAProperties, this, topologyActivatedCB, int);
-  pv.myTopologyRightClickedCB = FFaDynCB2M(FapUAProperties, this, onTopViewRightClick, const std::vector<int>&, std::vector<FFuaCmdItem*>&);
+  pv.myTopologyRightClickedCB = FFaDynCB2M(FapUAProperties, this, onTopViewRightClick, const IntVec&, std::vector<FFuaCmdItem*>&);
 
   pv.myAxialDaForceValues.myFunctionQIFieldButtonCB  = FFaDynCB1M(FapUAProperties, this, onQIFieldButtonCB, FuiQueryInputFieldValues&);
   pv.myAxialDaForceValues.myEngineQIFieldButtonCB    = FFaDynCB1M(FapUAProperties, this, onQIFieldButtonCB, FuiQueryInputFieldValues&);
@@ -703,15 +703,15 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	  pv->showRotFormulation = true;
 	  pv->showTranSpringCpl  = true;
 	  pv->showRotSpringCpl   = true;
-	  const std::vector<std::string>& rotFormulationTypes = FmJointBase::getRotFormulationUINames();
+	  const Strings& rotFormulationTypes = FmJointBase::getRotFormulationUINames();
 	  pv->myRotFormulationTypes = rotFormulationTypes;
 	  pv->mySelectedRotFormulation = item->rotFormulation.getValue();
 
-	  const std::vector<std::string>& rotSequenceTypes = FmJointBase::getRotSequenceUINames();
+	  const Strings& rotSequenceTypes = FmJointBase::getRotSequenceUINames();
 	  pv->myRotSequenceTypes = rotSequenceTypes;
 	  pv->mySelectedRotSequence = item->rotSequence.getValue();
 
-	  const std::vector<std::string>& springCplTypes = FmJointBase::getSpringCplUINames();
+	  const Strings& springCplTypes = FmJointBase::getSpringCplUINames();
 	  pv->mySpringCplTypes = springCplTypes;
 	  pv->mySelectedRotSpringCpl = item->rotSpringCpl.getValue();
 	  pv->mySelectedTranSpringCpl = item->tranSpringCpl.getValue();
@@ -721,15 +721,15 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	  pv->showJointData = 2;
 	  pv->showRotFormulation = true;
 	  pv->showRotSpringCpl   = true;
-	  const std::vector<std::string>& rotFormulationTypes = FmJointBase::getRotFormulationUINames();
+	  const Strings& rotFormulationTypes = FmJointBase::getRotFormulationUINames();
 	  pv->myRotFormulationTypes = rotFormulationTypes;
 	  pv->mySelectedRotFormulation = item->rotFormulation.getValue();
 
-	  const std::vector<std::string>& rotSequenceTypes = FmJointBase::getRotSequenceUINames();
+	  const Strings& rotSequenceTypes = FmJointBase::getRotSequenceUINames();
 	  pv->myRotSequenceTypes = rotSequenceTypes;
 	  pv->mySelectedRotSequence = item->rotSequence.getValue();
 
-	  const std::vector<std::string>& springCplTypes = FmJointBase::getSpringCplUINames();
+	  const Strings& springCplTypes = FmJointBase::getSpringCplUINames();
 	  pv->mySpringCplTypes = springCplTypes;
 	  pv->mySelectedRotSpringCpl = item->rotSpringCpl.getValue();
 	  pv->mySelectedTranSpringCpl = item->tranSpringCpl.getValue();
@@ -748,7 +748,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       this->getDBJointVariables(item, pv->myJointVals);
 
       bool isSprDmp = false;
-      std::vector<int> dofs;
+      IntVec dofs;
       item->getDOFs(dofs);
       for (int dof : dofs)
         if (item->getStatusOfDOF(dof) >= FmHasDOFsBase::SPRING_CONSTRAINED)
@@ -1062,14 +1062,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->myTireDataFileRefQuery = FapUAFileRefQuery::instance();
       pv->myRoadQuery = &roadQuery;
-
-      std::vector<std::string> tireTypes;
-      tireTypes.push_back("MF-TYRE");
-      tireTypes.push_back("SWIFT");
-      tireTypes.push_back("FTIRE");
-      tireTypes.push_back("JD-TIRE");
-
-      pv->myTireTypes = tireTypes;
+      pv->myTireTypes = { "MF-TYRE", "SWIFT", "FTIRE", "JD-TIRE" };
       pv->mySpindelTriadOffset = item->spindelTriadOffset.getValue();
       pv->mySelectedTireModelType = item->tireType.getValue();
       pv->mySelectedRoad = item->road;
@@ -1256,7 +1249,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->myStrRosIsEditable = FpPM::isModelTouchable() && !FpRDBExtractorManager::instance()->hasResults(item);
 
-      std::vector<int> nodes;
+      IntVec nodes;
       nodes.push_back(item->node1.getValue());
       nodes.push_back(item->node2.getValue());
       if (item->numNodes.getValue() > 2)
@@ -1267,7 +1260,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myStrRosNodes = nodes;
       pv->myStrRosAngle = item->angle.getValue() * 180.0/M_PI;
 
-      const std::vector<std::string>& rosetteTypes = FmStrainRosette::getRosetteUINames();
+      const Strings& rosetteTypes = FmStrainRosette::getRosetteUINames();
 
       pv->myStrainRosetteTypes = rosetteTypes;
       pv->mySelectedRosetteType = rosetteTypes[item->rosetteType.getValue()];
@@ -2070,28 +2063,16 @@ void FapUAProperties::addTopologyItem(std::vector<FuiTopologyItem>& topology,
       ti.type = item->getUITypeName();
     else if (!item->isOfType(FmGenericDBObject::getClassTypeID()))
       ti.type += std::string(" ") + item->getUITypeName();
-    ti.id = FFaNumStr(item->getID());
+    ti.id = std::to_string(item->getID());
     ti.description = item->getUserDescription(128);
 
     // Since the user IDs are unique only within a sub-assembly,
     // we need to add the sub-assembly path to the item identification.
-    std::vector<int> assID;
+    IntVec assID;
     item->getAssemblyID(assID);
     // Write the path in bottom-up direction
-    std::vector<int>::reverse_iterator it = assID.rbegin();
-    for (; it != assID.rend(); ++it)
-      ti.id += FFaNumStr(",%d",*it);
-    /* Alternative syntax:
-    if (assID.size() == 1)
-      ti.id += FFaNumStr(" A(%d)",*it);
-    else if (!assID.empty())
-    {
-      ti.id += FFaNumStr(" A(%d",*it);
-      while (++it != assID.rend())
-	ti.id += FFaNumStr(",%d",*it);
-      ti.id += ")";
-    }
-    */
+    for (IntVec::reverse_iterator it = assID.rbegin(); it != assID.rend(); ++it)
+      ti.id += "," + std::to_string(*it);
   }
 
   myTopologyViewList.push_back(item);
@@ -2191,7 +2172,7 @@ void FapUAProperties::addJointDescendantTopology(std::vector<FuiTopologyItem>& t
 	this->addTopologyItem(topol,owner,level+1);
     }
 
-  std::vector<int> dofs;
+  IntVec dofs;
   item->getDOFs(dofs);
   const char* labels[] = {"Tx: ","Ty: ","Tz: ","Rx: ","Ry: ","Rz: "};
 
@@ -2260,14 +2241,14 @@ void FapUAProperties::getDBJointVariables(FmJointBase* item,
 
   uiVars.clear();
 
-  const std::vector<int>& allowableFuncTypes = FmFuncAdmin::getAllowableSprDmpFuncTypes();
+  const IntVec& allowableFuncTypes = FmFuncAdmin::getAllowableSprDmpFuncTypes();
 
   static FapUAQuery JvTransSpringQuery;
   static FapUAQuery JvRotSpringQuery;
   static FapUAQuery JvTransDamperQuery;
   static FapUAQuery JvRotDamperQuery;
 
-  std::vector<int> dofs;
+  IntVec dofs;
   item->getDOFs(dofs);
 
   JvTransSpringQuery.clear();
@@ -2414,15 +2395,25 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
       if ((changedDescr = fmItem->setUserDescription(pv->myDescription)))
         fmItem->onChanged(); // for updating the object list view
 
-    if (fmItem->setTag(pv->myTag))
+    // Replace all non-alphanumeric characters in the tag by "_"
+    std::string newTag(pv->myTag);
+    for (char& c : newTag)
+      if (!isalnum(c)) c = '_';
+
+    if (fmItem->setTag(newTag))
     {
+      if (newTag != pv->myTag)
+        FFaMsg::dialog("Only alphanumeric characters (and '_') are allowed in tags."
+                       "\nTherefore, the tag you specified is changed to \"" + newTag + "\".",
+                       FFaMsg::OK);
+
       // Assign same tag to the underlying Engine for Control In/Out elements
       FmEngine* engine = NULL;
       if (fmItem->isOfType(FmcInput::getClassTypeID()))
         engine = static_cast<FmcInput*>(fmItem)->getEngine();
       else if (fmItem->isOfType(FmcOutput::getClassTypeID()))
         engine = static_cast<FmcOutput*>(fmItem)->getEngine();
-      if (engine) engine->setTag(pv->myTag);
+      if (engine) engine->setTag(newTag);
     }
   }
 
@@ -3446,7 +3437,7 @@ void FapUAProperties::setDBJointVariables(FmJointBase* item,
 {
   if (!item) return;
 
-  std::vector<int> dofs;
+  IntVec dofs;
   item->getDOFs(dofs);
 
   int    idof = -1;
@@ -3651,7 +3642,7 @@ void FapUAProperties::topologyHighlightCB(int i, bool onOrOff)
 }
 
 
-void FapUAProperties::onTopViewRightClick(const std::vector<int>& selectedIDs, std::vector<FFuaCmdItem*>& cmds)
+void FapUAProperties::onTopViewRightClick(const IntVec& selectedIDs, std::vector<FFuaCmdItem*>& cmds)
 {
   int i = selectedIDs.empty() ? -1 : selectedIDs.front();
   if (i < 0 || (size_t)i >= myTopologyViewList.size()) return;
@@ -3824,7 +3815,7 @@ void FapUAProperties::linkChangeCB()
 }
 
 
-typedef std::map<std::string, std::vector<std::string> > FileFilter;
+using FileFilter = std::map<std::string,Strings>;
 
 static bool browseDataFile(std::string& fName, const std::string& type,
 			   const FileFilter& filter, bool allFilesFilter = false)
@@ -3859,7 +3850,7 @@ static bool browseDataFile(std::string& fName, const std::string& type,
 			 isRelativeNameWanted);
   aDialog->remember((type+"BrowseField").c_str());
 
-  std::vector<std::string> files = aDialog->execute();
+  Strings files = aDialog->execute();
   bool useRelativePath = aDialog->getUserToggleSet("relToggle");
   delete aDialog;
 
@@ -3998,7 +3989,7 @@ void FapUAProperties::dofStatusToggledCB(int dof, int stat)
   FmHasDOFsBase* item = dynamic_cast<FmHasDOFsBase*>(mySelectedFmItem);
   if (!item) return;
 
-  std::vector<int> dofs;
+  IntVec dofs;
   item->getDOFs(dofs);
   if (dof < 0 || (size_t)dof >= dofs.size()) return;
 

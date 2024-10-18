@@ -8,6 +8,27 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.6] (2024-10-18)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/28 :
+  Option to connect a triad with surface connector elements to
+  existing FE node when changing the FE part and then erase the connector.
+- Issue https://github.com/openfedem/fedem-gui/issues/27 :
+  Append `.fmm` extension to the file name in the Save As... dialog
+  if not explicitly specified.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/32 :
+  Wrong data format in exported FMU. Exclude reduction data which
+  is not used by FMU simulation to reduce the file size.
+  Ensure all frs-output options are switched off in the exported FMU.
+- Issue https://github.com/openfedem/fedem-gui/issues/30 :
+  Creating prismatic and cylindric joints on FE parts that are
+  translated and/or rotated after import does not work.
+
 ## [fedem-8.0.5] (2024-09-27)
 
 ### :rocket: Added
@@ -117,3 +138,4 @@
 [fedem-8.0.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.2...fedem-8.0.3
 [fedem-8.0.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.3...fedem-8.0.4
 [fedem-8.0.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.4...fedem-8.0.5
+[fedem-8.0.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.5...fedem-8.0.6
