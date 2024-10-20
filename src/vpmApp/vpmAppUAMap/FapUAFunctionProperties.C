@@ -1008,7 +1008,7 @@ void FapUAFunctionProperties::onFileBrowseActivated()
                                                  FFuFileDialog::FFU_OPEN_FILE,
                                                  true);
   aDialog->setTitle("Select function file");
-  aDialog->addFilter("ASCII File", std::vector<std::string>{ "asc", "txt" });
+  aDialog->addFilter("ASCII File", std::vector<std::string>{ "asc", "csv", "txt" });
   if (f->getFunctionUse() == FmMathFuncBase::GENERAL ||
       f->getFunctionUse() == FmMathFuncBase::DRIVE_FILE) {
     aDialog->addFilter("nCode DAC File", "dac");
