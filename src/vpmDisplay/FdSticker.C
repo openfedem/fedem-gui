@@ -91,8 +91,7 @@ bool FdSticker::updateFdCS()
 }  
 
 
-SbVec3f FdSticker::findSnapPoint(const SbVec3f&, const SbMatrix&,
-				 SoDetail*, SoPickedPoint*)
+FaVec3 FdSticker::findSnapPoint(const SbVec3f&, const SbMatrix&, SoDetail*, SoPickedPoint*)
 {
-  return FdConverter::toSbVec3f(((FmSticker*)itsFmOwner)->getPoint());
+  return ((FmSticker*)itsFmOwner)->getPoint();
 }

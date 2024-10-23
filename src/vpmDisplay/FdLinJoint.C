@@ -46,7 +46,7 @@ FdLinJoint::FdLinJoint(FmMMJointBase* pt) : FdObject()
 
   itsFmOwner = pt;
 
-  itsKit = new FdLinJointKit;
+  itsKit = new FdLinJointKit();
   itsKit->ref();
 
   // Set up back pointer
@@ -70,7 +70,8 @@ FdLinJoint::~FdLinJoint()
 
 SoNodeKitListPart* FdLinJoint::getListSw() const
 {
-  return SO_GET_PART(FdDB::getMechanismKit(),"linJointListSw",SoNodeKitListPart);
+  return SO_GET_PART(FdDB::getMechanismKit(),
+                     "linJointListSw",SoNodeKitListPart);
 }
 
 
@@ -80,34 +81,35 @@ bool FdLinJoint::updateFdTopology(bool updateChildrenDisplay)
 
   SoTransform* transLink;
   SoTransform* transLocal;
-  FdAppearanceKit* appearanceKit = NULL;
+  FdAppearanceKit* appearKit = NULL;
   FdBackPointer* backPt = NULL;
-
-  FdSprDaTransformKit* lineSymbol;
-  FdTransformKit* transformKit;
 
   // Set up slave part of the joint:
 
   FmTriad* triad = ((FmJointBase*)itsFmOwner)->getSlaveTriad();
   if (triad)
   {
-    transLink = SO_GET_PART(triad->getFdPointer()->getKit(),"firstTrans",SoTransform);
-    transLocal = SO_GET_PART(triad->getFdPointer()->getKit(),"secondTrans",SoTransform);
-    appearanceKit = SO_GET_PART(triad->getFdPointer()->getKit(),"appearance",FdAppearanceKit);
-    backPt = SO_GET_PART(triad->getFdPointer()->getKit(),"backPt",FdBackPointer);
+    transLink  = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "firstTrans", SoTransform);
+    transLocal = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "secondTrans", SoTransform);
+    appearKit  = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "appearance", FdAppearanceKit);
+    backPt     = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "backPt", FdBackPointer);
   }
   else
   {
     // Joints should always have a slave triad
     std::cerr <<"FdLinJoint::updateFdTopology:: No slave triad in "
               << itsFmOwner->getIdString(true) << std::endl;
-    transLink = new SoTransform;
-    transLocal = new SoTransform;
+    transLink  = new SoTransform();
+    transLocal = new SoTransform();
   }
 
   itsKit->setPart("slave.firstTrans",transLink);
   itsKit->setPart("slave.secondTrans",transLocal);
-  itsKit->setPart("slave.appearance",appearanceKit);
+  itsKit->setPart("slave.appearance",appearKit);
   itsKit->setPart("slave.backPt",backPt);
 
   // Set up master part of the joint:
@@ -115,24 +117,29 @@ bool FdLinJoint::updateFdTopology(bool updateChildrenDisplay)
   std::vector<FmTriad*> masters;
   ((FmMMJointBase*)itsFmOwner)->getMasterTriads(masters);
 
-  SoNodeKitListPart* masterList = SO_GET_PART(itsKit,"masterList",SoNodeKitListPart);
+  SoNodeKitListPart* masterList = SO_GET_PART(itsKit,
+                                              "masterList", SoNodeKitListPart);
   for (int c = masterList->getNumChildren()-1; c >= 0; c--)
     masterList->removeChild(c);
 
   int idx = 0;
   for (FmTriad* triad : masters)
   {
-    transLink = SO_GET_PART(triad->getFdPointer()->getKit(),"firstTrans",SoTransform);
-    transLocal = SO_GET_PART(triad->getFdPointer()->getKit(),"secondTrans",SoTransform);
-    appearanceKit = SO_GET_PART(triad->getFdPointer()->getKit(),"appearance",FdAppearanceKit);
-    backPt = SO_GET_PART(triad->getFdPointer()->getKit(),"backPt",FdBackPointer);
+    transLink  = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "firstTrans", SoTransform);
+    transLocal = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "secondTrans", SoTransform);
+    appearKit  = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "appearance", FdAppearanceKit);
+    backPt     = SO_GET_PART(triad->getFdPointer()->getKit(),
+                             "backPt", FdBackPointer);
 
     // Make transformkit and set it up:
 
-    transformKit = new FdTransformKit;
+    FdTransformKit* transformKit = new FdTransformKit();
     transformKit->setPart("firstTrans",transLink);
     transformKit->setPart("secondTrans",transLocal);
-    transformKit->setPart("appearance",appearanceKit);
+    transformKit->setPart("appearance",appearKit);
     transformKit->setPart("backPt",backPt);
 
     // Insert the transformKit in the master list:
@@ -142,24 +149,27 @@ bool FdLinJoint::updateFdTopology(bool updateChildrenDisplay)
 
   // Set up line symbol:
 
-  lineSymbol = SO_GET_PART(itsKit,"lineSymbol",FdSprDaTransformKit);
+  FdSprDaTransformKit* symbol = SO_GET_PART(itsKit,
+                                            "lineSymbol", FdSprDaTransformKit);
 
   // Connect first masters transformation to connection symbol
-  triad = ((FmMMJointBase*)itsFmOwner)->getFirstMaster();
-  if (triad)
+  if (!masters.empty())
   {
-    transLink = SO_GET_PART(triad->getFdPointer()->getKit(),"firstTrans",SoTransform);
-    transLocal = SO_GET_PART(triad->getFdPointer()->getKit(),"secondTrans",SoTransform);
-    lineSymbol->connectFirstSpace(transLink, transLocal);
+    transLink  = SO_GET_PART(masters.front()->getFdPointer()->getKit(),
+                             "firstTrans", SoTransform);
+    transLocal = SO_GET_PART(masters.front()->getFdPointer()->getKit(),
+                             "secondTrans", SoTransform);
+    symbol->connectFirstSpace(transLink, transLocal);
   }
 
   // Connect last masters transformation to connection symbol
-  triad = ((FmMMJointBase*)itsFmOwner)->getLastMaster();
-  if (triad)
+  if (masters.size() > 1)
   {
-    transLink = SO_GET_PART(triad->getFdPointer()->getKit(),"firstTrans",SoTransform);
-    transLocal = SO_GET_PART(triad->getFdPointer()->getKit(),"secondTrans",SoTransform);
-    lineSymbol->connectSecondSpace(transLink, transLocal);
+    transLink  = SO_GET_PART(masters.back()->getFdPointer()->getKit(),
+                             "firstTrans", SoTransform);
+    transLocal = SO_GET_PART(masters.back()->getFdPointer()->getKit(),
+                             "secondTrans", SoTransform);
+    symbol->connectSecondSpace(transLink, transLocal);
   }
 
   /* Recursive update of the display topology of the
@@ -524,24 +534,22 @@ void FdLinJoint::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
 }
 
 
-SbVec3f FdLinJoint::findSnapPoint(const SbVec3f& pointOnObject,
-				  const SbMatrix& objToWorld,
-				  SoDetail*, SoPickedPoint*)
+FaVec3 FdLinJoint::findSnapPoint(const SbVec3f& pointOnObject,
+                                 const SbMatrix& objToWorld,
+                                 SoDetail*, SoPickedPoint*)
 {
-  FaMat34 firstMx = (((FmMMJointBase*)itsFmOwner)->getFirstMaster())->getGlobalCS();
-  FaMat34 lastMx  = (((FmMMJointBase*)itsFmOwner)->getLastMaster())->getGlobalCS();
-  FaMat34 slaveMx = (((FmMMJointBase*)itsFmOwner)->getSlaveTriad())->getGlobalCS();
-
-  SbVec3f firstTrans = FdConverter::toSbVec3f(firstMx.translation());
-  SbVec3f lastTrans  = FdConverter::toSbVec3f(lastMx.translation());
-  SbVec3f slaveTrans = FdConverter::toSbVec3f(slaveMx.translation());
+  FaVec3 firstTrans = (((FmMMJointBase*)itsFmOwner)->getFirstMaster())->getGlobalTranslation();
+  FaVec3 lastTrans  = (((FmMMJointBase*)itsFmOwner)->getLastMaster())->getGlobalTranslation();
+  FaVec3 slaveTrans = (((FmMMJointBase*)itsFmOwner)->getSlaveTriad())->getGlobalTranslation();
 
   SbVec3f worldPoint;
-  objToWorld.multVecMatrix(pointOnObject,worldPoint); 
-  float pointTofirst = (firstTrans - worldPoint).length();
-  float pointTolast  = (lastTrans  - worldPoint).length();
-  float pointToslave = (slaveTrans - worldPoint).length();
- 
+  objToWorld.multVecMatrix(pointOnObject,worldPoint);
+  FaVec3 point = FdConverter::toFaVec3(worldPoint);
+
+  double pointTofirst = (firstTrans - point).sqrLength();
+  double pointTolast  = (lastTrans  - point).sqrLength();
+  double pointToslave = (slaveTrans - point).sqrLength();
+
   if (pointTofirst < pointToslave)
     return pointTofirst < pointTolast ? firstTrans : lastTrans;
   else

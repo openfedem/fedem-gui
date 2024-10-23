@@ -1709,7 +1709,7 @@ void FdDB::onePickCreateEventCB(void*, SoEventCallback* eventCBnode)
         if (makingForce && pickedObject->isOfType(FdTriad::getClassTypeID()))
           createPoint = static_cast<FmTriad*>(pickedObject->getFmOwner())->getGlobalTranslation();
         else
-          createPoint = FdConverter::toFaVec3(FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint));
+          createPoint = FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint);
 
         FdPickedPoints::setFirstPP(createPoint,objToWorld);
 
@@ -1886,7 +1886,7 @@ void FdDB::twoPickCreateEventCB(void*, SoEventCallback* eventCBnode)
         FdDB::firstObjectToCreateNear = pickedObject;
         if (FdDB::firstObjectToCreateNear)
         {
-          FaVec3 createPoint = FdConverter::toFaVec3(FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint));
+          FaVec3 createPoint = FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint);
           FdPickedPoints::setFirstPP(createPoint,objToWorld);
           if (pickDetail && pickDetail->isOfType(SoLineDetail::getClassTypeId()))
             FdDB::firstCreateDirection = FdDB::getLineDir(path, pickDetail, pickedObject, SbObjToWorld);
@@ -1941,7 +1941,7 @@ void FdDB::twoPickCreateEventCB(void*, SoEventCallback* eventCBnode)
         FdDB::secondObjectToCreateNear = pickedObject;
         if (FdDB::secondObjectToCreateNear)
         {
-          FaVec3 createPoint = FdConverter::toFaVec3(FdDB::secondObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint));
+          FaVec3 createPoint = FdDB::secondObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint);
           FdPickedPoints::setSecondPP(createPoint,objToWorld);
           if (pickDetail && pickDetail->isOfType(SoLineDetail::getClassTypeId()))
             FdDB::secondCreateDirection = FdDB::getLineDir(path, pickDetail, pickedObject, SbObjToWorld);
@@ -2062,7 +2062,7 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
         FdDB::firstObjectToCreateNear = pickedObject;
         if (FdDB::firstObjectToCreateNear)
         {
-          FaVec3 createPoint = FdConverter::toFaVec3(FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject, SbObjToWorld, pickDetail, interestingPickedPoint));
+          FaVec3 createPoint = FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint);
           FdPickedPoints::setFirstPP(createPoint,objToWorld);
           if (pickDetail && pickDetail->isOfType(SoLineDetail::getClassTypeId()))
             FdDB::firstCreateDirection = FdDB::getLineDir(path, pickDetail, pickedObject, SbObjToWorld);
@@ -2108,7 +2108,7 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
         FdDB::secondObjectToCreateNear = pickedObject;
         if (FdDB::secondObjectToCreateNear)
         {
-          FaVec3 createPoint = FdConverter::toFaVec3(FdDB::secondObjectToCreateNear->findSnapPoint(pointOnObject, SbObjToWorld, pickDetail, interestingPickedPoint));
+          FaVec3 createPoint = FdDB::secondObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint);
           FdPickedPoints::setSecondPP(createPoint,objToWorld);
           if (pickDetail && pickDetail->isOfType(SoLineDetail::getClassTypeId()))
             FdDB::secondCreateDirection = FdDB::getLineDir(path, pickDetail, pickedObject, SbObjToWorld);
@@ -2154,7 +2154,7 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
         FdDB::thirdObjectToCreateNear = pickedObject;
         if (FdDB::thirdObjectToCreateNear)
         {
-          FaVec3 createPoint = FdConverter::toFaVec3(FdDB::thirdObjectToCreateNear->findSnapPoint(pointOnObject, SbObjToWorld, pickDetail, interestingPickedPoint));
+          FaVec3 createPoint = FdDB::thirdObjectToCreateNear->findSnapPoint(pointOnObject,SbObjToWorld,pickDetail,interestingPickedPoint);
           FdPickedPoints::setThirdPP(createPoint,objToWorld);
           if (pickDetail && pickDetail->isOfType(SoLineDetail::getClassTypeId()))
             FdDB::thirdCreateDirection = FdDB::getLineDir(path, pickDetail, pickedObject, SbObjToWorld);
@@ -2274,7 +2274,7 @@ void FdDB::makeCamJointEventCB(void*, SoEventCallback* eventCBnode)
 
         // Get hit point on object in object space:
         SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
-        FaVec3  createPoint   = FdConverter::toFaVec3(FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+        FaVec3  createPoint   = FdDB::firstObjectToCreateNear->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint);
         FdPickedPoints::setFirstPP(createPoint,FdConverter::toFaMat34(objToWorld));
 
         if (pickDetail && pickDetail->isOfType(SoLineDetail::getClassTypeId()))
@@ -2459,7 +2459,7 @@ void FdDB::smartMoveEventCB(void*, SoEventCallback* eventCBnode)
 
         FdDB::objectToMove = pickedObject;
 
-        FaVec3 fromPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+        FaVec3 fromPoint = pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint);
         FdPickedPoints::setFirstPP(fromPoint,FdConverter::toFaMat34(objToWorld));
 
         smartMoveDOF = FdSelector::getDegOfFreedom();
@@ -2486,7 +2486,7 @@ void FdDB::smartMoveEventCB(void*, SoEventCallback* eventCBnode)
         FapEventManager::permAddSelect(pickedObject->getFmOwner());
         FdDB::objectToMoveTo = pickedObject;
 
-        FaVec3 toPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+        FaVec3 toPoint = pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint);
         FdPickedPoints::setSecondPP(toPoint,FdConverter::toFaMat34(objToWorld));
         FuiModes::setState(3);
       }
@@ -2876,7 +2876,7 @@ void FdDB::pickLoadPointEventCB(void*, SoEventCallback* eventCBnode)
 
       SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
       const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(NULL);
-      FaVec3 fromPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+      FaVec3 fromPoint = pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint);
       if (pickDetail)
         delete pickDetail;
 
@@ -2924,7 +2924,7 @@ void FdDB::pickMeasurePointEventCB(void*, SoEventCallback* eventCBnode)
 
       SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
       const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(NULL);
-      FaVec3 fromPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+      FaVec3 fromPoint = pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint);
       if (pickDetail)
         delete pickDetail;
 

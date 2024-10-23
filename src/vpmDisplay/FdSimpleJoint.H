@@ -21,16 +21,15 @@ public:
   FdSimpleJoint(FmSMJointBase* pt);
 
   virtual void hide();
-  virtual bool updateFdTopology(bool updateChildrenDisplay = true);
+  virtual bool updateFdTopology(bool updateChildrenDisplay);
   virtual bool updateFdDetails();
   virtual bool updateFdApperance();
   virtual bool updateFmOwner();
 
   virtual void smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof);
-  virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
-                                const SbMatrix& objToWorld,
-                                SoDetail* pickedDetail = NULL,
-                                SoPickedPoint* pPoint = NULL);
+  virtual FaVec3 findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail*, SoPickedPoint*);
   virtual int getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction);
 
 protected:

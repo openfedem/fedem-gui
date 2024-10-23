@@ -695,9 +695,9 @@ int FdTriad::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
 }
 
 
-SbVec3f FdTriad::findSnapPoint(const SbVec3f& pointOnObject,
-			       const SbMatrix& objToWorld,
-			       SoDetail*, SoPickedPoint*)
+FaVec3 FdTriad::findSnapPoint(const SbVec3f& pointOnObject,
+                              const SbMatrix& objToWorld,
+                              SoDetail*, SoPickedPoint*)
 {
   const float snapDistance = 0.4f;
 
@@ -723,9 +723,7 @@ SbVec3f FdTriad::findSnapPoint(const SbVec3f& pointOnObject,
     }
   }
 
-  SbVec3f nearestWorld;
-  objToWorld.multVecMatrix(nearest,nearestWorld);
-  return nearestWorld;
+  return this->FdObject::findSnapPoint(nearest,objToWorld);
 }
 
 

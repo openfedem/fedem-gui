@@ -459,8 +459,9 @@ int FdSimpleJoint::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
 }
 
 
-SbVec3f FdSimpleJoint::findSnapPoint(const SbVec3f& pointOnObject, const SbMatrix& objToWorld,
-				     SoDetail*, SoPickedPoint*)
+FaVec3 FdSimpleJoint::findSnapPoint(const SbVec3f& pointOnObject,
+                                    const SbMatrix& objToWorld,
+                                    SoDetail*, SoPickedPoint*)
 {
   SbVec3f nearest(0,0,0); // Default snap to center
 
@@ -485,9 +486,7 @@ SbVec3f FdSimpleJoint::findSnapPoint(const SbVec3f& pointOnObject, const SbMatri
 	  nearest[2] = copysignf(1.0f,pointDotZ);
       }
 
-  SbVec3f nearestWorld;
-  objToWorld.multVecMatrix(nearest,nearestWorld);
-  return nearestWorld;
+  return this->FdObject::findSnapPoint(nearest,objToWorld);
 }
 
 

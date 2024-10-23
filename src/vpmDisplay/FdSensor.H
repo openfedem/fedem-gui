@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FDSENSOR_H
-#define FDSENSOR_H
+#ifndef FD_SENSOR_H
+#define FD_SENSOR_H
 
 #include "vpmDisplay/FdBase.H"
 
@@ -20,14 +20,13 @@ class FdSensor : public FdObject
 public:
   FdSensor(FmSensorBase* pt);
 
-  virtual bool updateFdTopology(bool updateChildrenDisplay = true);
+  virtual bool updateFdTopology(bool updateChildrenDisplay);
   virtual bool updateFdDetails();
   virtual bool updateFdApperance();
 
-  virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail* pickDetail = 0,
-				SoPickedPoint* pPoint = 0);
+  virtual FaVec3 findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail* pickDetail, SoPickedPoint* pPoint);
 
 protected:
   virtual ~FdSensor();

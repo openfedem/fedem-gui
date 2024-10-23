@@ -25,18 +25,17 @@ class FdLink : public FdObject, public FdAnimatedBase
   Fmd_HEADER_INIT();
 
 public:
-  virtual bool updateFdAll(bool updateChildrenDisplay = true);
-  virtual bool updateFdTopology(bool updateChildrenDisplay = true);
+  virtual bool updateFdAll(bool updateChildrenDisplay);
+  virtual bool updateFdTopology(bool updateChildrenDisplay);
   virtual bool updateFdApperance();
   virtual bool updateFdCS();
 
   virtual void updateSimplifiedViz() = 0;
   virtual void updateElementVisibility();
 
-  virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail* pickDetail = 0,
-				SoPickedPoint* pPoint = 0);
+  virtual FaVec3 findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail* pickDetail, SoPickedPoint* pPoint);
 
   virtual void showCS(bool doShow);
   virtual void showCoGCS(bool doShow);

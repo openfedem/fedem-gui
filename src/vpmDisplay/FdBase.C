@@ -110,13 +110,13 @@ void FdObject::hideHighlight()
 }
 
 
-SbVec3f FdObject::findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail*, SoPickedPoint*)
+FaVec3 FdObject::findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail*, SoPickedPoint*)
 {
   SbVec3f nearestWorld;
   objToWorld.multVecMatrix(pointOnObject,nearestWorld);
-  return nearestWorld;
+  return FdConverter::toFaVec3(nearestWorld);
 }
 
 

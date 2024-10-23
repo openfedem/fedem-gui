@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FDSTICKER_H
-#define FDSTICKER_H
+#ifndef FD_STICKER_H
+#define FD_STICKER_H
 
 #include "vpmDisplay/FdBase.H"
 
@@ -20,15 +20,13 @@ class FdSticker : public FdObject
 public:
   FdSticker(FmSticker* pt);
 
-  virtual bool updateFdTopology(bool updateChildrenDisplay = true);
+  virtual bool updateFdTopology(bool updateChildrenDisplay);
   virtual bool updateFdDetails();
   virtual bool updateFdApperance();
   virtual bool updateFdCS();
 
-  virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail* pickDetail = 0,
-				SoPickedPoint* pPoint = 0);
+  virtual FaVec3 findSnapPoint(const SbVec3f&, const SbMatrix&,
+                               SoDetail*, SoPickedPoint*);
 
 protected:
   virtual ~FdSticker();
