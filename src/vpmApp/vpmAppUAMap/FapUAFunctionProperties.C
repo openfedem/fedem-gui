@@ -675,7 +675,7 @@ void FapUAFunctionProperties::getChannelListCB()
   FmfDeviceFunction* f = dynamic_cast<FmfDeviceFunction*>(this->getMyFunction());
   if (!f) return;
 
-  std::vector<std::string> channels;
+  Strings channels;
   if (!f->getChannelList(channels))
     FFaMsg::dialog("File: " + f->getActualDeviceName(true) +
 		   "\nCould not read channel list. Check file header.",
@@ -719,21 +719,28 @@ void FapUAFunctionProperties::pasteCB(const std::string& data)
 {
   if (data.empty()) return;
 
-  std::vector<std::string> words = { "" };
-  std::vector<double> numbers;
-  bool wasSpace = true;
+  // If the data contain no dots '.' at all, we assume that commas ','
+  // are used as decimal separators and not as column separators.
+  // If the data do contain '.' characters which then have to be the decimal
+  // separators, we also allow ',' as column separators.
+  bool allowCommaSep = data.find_first_of('.') < data.size();
+
+  Strings words = { "" };
+  bool wasNumber = false;
   for (const char& c : data)
-    if (!isspace(c))
+    if (!isspace(c) && !(allowCommaSep && c == ','))
     {
       words.back() += c;
-      wasSpace = false;
+      wasNumber = true;
     }
-    else if (!wasSpace)
+    else if (wasNumber)
     {
       words.push_back("");
-      wasSpace = true;
+      wasNumber = false;
     }
 
+  DoubleVec numbers;
+  numbers.reserve(words.size());
   for (std::string& word : words)
   {
     size_t kommaPos = 0;
@@ -745,7 +752,7 @@ void FapUAFunctionProperties::pasteCB(const std::string& data)
     }
 
     float x;
-    if (sscanf(word.c_str(), "%f",&x) == 1)
+    if (sscanf(word.c_str(),"%f",&x) == 1)
       numbers.push_back(x);
   }
 
@@ -1008,11 +1015,11 @@ void FapUAFunctionProperties::onFileBrowseActivated()
                                                  FFuFileDialog::FFU_OPEN_FILE,
                                                  true);
   aDialog->setTitle("Select function file");
-  aDialog->addFilter("ASCII File", std::vector<std::string>{ "asc", "csv", "txt" });
+  aDialog->addFilter("ASCII File", Strings{ "asc", "csv", "txt" });
   if (f->getFunctionUse() == FmMathFuncBase::GENERAL ||
       f->getFunctionUse() == FmMathFuncBase::DRIVE_FILE) {
     aDialog->addFilter("nCode DAC File", "dac");
-    aDialog->addFilter("MTS RPC Time History File", std::vector<std::string>{ "rsp", "drv", "tim" });
+    aDialog->addFilter("MTS RPC Time History File", Strings{ "rsp", "drv", "tim" });
   }
   aDialog->addAllFilesFilter(true);
 
@@ -1035,7 +1042,7 @@ void FapUAFunctionProperties::onFileBrowseActivated()
                          isRelativeNameWanted);
   aDialog->remember("FunctionBrowseField");
 
-  std::vector<std::string> retFile = aDialog->execute();
+  Strings retFile = aDialog->execute();
   if (!retFile.empty())
   {
     std::string& fileName = retFile.front();
