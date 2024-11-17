@@ -8,6 +8,28 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.7] (2024-11-17)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/7 :
+  Support MPC-records in Nastran bulk data files through conversion to
+  WAVGM elements with explicit coupling coefficients.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/39 :
+  Copy-pasting comma-separated data into the polyline function
+  property field does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/37 :
+  Copying multi-argument math expression functions does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/35 :
+  Using csv as ASCII file extension for Polyline-from-file functions
+  does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/34 :
+  FE part reduction goes into an infinite loop if two parts
+  share the same FE data file.
+
 ## [fedem-8.0.6] (2024-10-18)
 
 ### :rocket: Added
@@ -52,7 +74,7 @@
 - Issue https://github.com/openfedem/fedem-gui/issues/20 :
   Multi-select does not work when updating joint DOF properties.
 - Issue https://github.com/openfedem/fedem-gui/issues/17 :
-  The Fourier Analysis and Differntiate/Integrate toggles on curves do not work properly.
+  The Fourier Analysis and Differentiate/Integrate toggles on curves do not work properly.
 - Issue https://github.com/openfedem/fedem-gui/issues/15 :
   The Additional Solver Options field for the Dynamics Solver does not work always.
 
@@ -139,3 +161,4 @@
 [fedem-8.0.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.3...fedem-8.0.4
 [fedem-8.0.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.4...fedem-8.0.5
 [fedem-8.0.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.5...fedem-8.0.6
+[fedem-8.0.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.6...fedem-8.0.7

@@ -79,17 +79,21 @@ void FapUAGraphViewTLS::onPermSelectionChanged(const std::vector<FFaViewItem*>& 
   else if (dbgraph->hasCurve(dynamic_cast<FmCurveSet*>(totalSelection.front())))
     this->ui->popUp();
 }
+//----------------------------------------------------------------------------
 
-
-FapUAGraphViewTLS::SignalConnector::SignalConnector(FapUAGraphViewTLS* anOwner)
+FapUAGraphViewTLS::SignalConnector::SignalConnector(FapUAGraphViewTLS* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberDisconnected,FmModelMemberBase*));
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberChanged,FmModelMemberBase*));
+}
+//----------------------------------------------------------------------------
+
+FapUAGraphViewTLS::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
 //----------------------------------------------------------------------------

@@ -512,12 +512,17 @@ bool FapUAAnimationDefine::findResults(ResultMap& results,
 }
 //------------------------------------------------------------------------------
 
-FapUAAnimationDefine::SignalConnector::SignalConnector(FapUAAnimationDefine* anOwner)
+FapUAAnimationDefine::SignalConnector::SignalConnector(FapUAAnimationDefine* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
                           FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,
                           FFaSlot1M(SignalConnector,this,
 				    onModelExtrHeaderChanged,FFrExtractor*));
 }
+//------------------------------------------------------------------------------
+
+FapUAAnimationDefine::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
+}
+//------------------------------------------------------------------------------

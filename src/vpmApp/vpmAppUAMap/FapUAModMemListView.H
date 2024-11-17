@@ -41,8 +41,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector(FapUAModMemListView* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUAModMemListView* ua);
+    virtual ~SignalConnector();
 
   private:
     // Slots from db
@@ -57,7 +57,6 @@ private:
   };
 
   SignalConnector signalConnector;
-  friend class SignalConnector;
 };
 
 #endif

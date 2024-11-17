@@ -60,6 +60,10 @@ include ( FedemConfig )
 
 add_subdirectory ( src )
 
+option ( INSTALL_ARTIFACTS "Install externally built dependent artifacts" ON )
+mark_as_advanced ( INSTALL_ARTIFACTS )
+if ( INSTALL_ARTIFACTS )
+
 # Install some resource files
 
 file ( GLOB RESOURCES resources/*.* )
@@ -92,7 +96,7 @@ endif ( USE_WINDPOW )
 
 # Download and install the latest documentation
 
-set ( DOC_VER fedem-8.0.5 )
+set ( DOC_VER fedem-8.0.7 )
 set ( DOC_URL https://github.com/openfedem/fedem-docs/releases/download/${DOC_VER} )
 set ( DOC_DIR "${CMAKE_CURRENT_BINARY_DIR}/Doc" )
 set ( DOC_FILES Fedem.chm FedemUsersGuide.pdf FedemTheoryGuide.pdf )
@@ -127,3 +131,5 @@ if ( FTENV_VERBOSE )
   message ( STATUS "Installing ${FEDEM_FMUS} to ${BINARY_DIR}/Templates/cloudsim" )
 endif ( FTENV_VERBOSE )
 install ( FILES ${FEDEM_FMUS} DESTINATION "${BINARY_DIR}/Templates/cloudsim" )
+
+endif ( INSTALL_ARTIFACTS )

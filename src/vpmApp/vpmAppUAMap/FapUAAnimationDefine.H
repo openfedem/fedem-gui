@@ -57,8 +57,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector(FapUAAnimationDefine* anOwner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUAAnimationDefine* ua);
+    virtual ~SignalConnector();
 
   private:
     // slot from rdb extractor manager, to force a rebuild of the fringe value menus

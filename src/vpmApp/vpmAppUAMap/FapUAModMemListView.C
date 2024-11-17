@@ -59,10 +59,8 @@ void FapUAModMemListView::onPermTotSelectionChanged(const std::vector<FFaViewIte
 }
 //----------------------------------------------------------------------------
 
-FapUAModMemListView::SignalConnector::SignalConnector(FapUAModMemListView* anOwner)
+FapUAModMemListView::SignalConnector::SignalConnector(FapUAModMemListView* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CONNECTED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberConnected,FmModelMemberBase*));
@@ -72,5 +70,11 @@ FapUAModMemListView::SignalConnector::SignalConnector(FapUAModMemListView* anOwn
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,onModelMemberChanged,FmModelMemberBase*));
+}
+//----------------------------------------------------------------------------
+
+FapUAModMemListView::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
 //----------------------------------------------------------------------------

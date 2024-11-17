@@ -588,14 +588,19 @@ void FapUACurveDefine::onModelMemberChanged(FmModelMemberBase* item)
 
 //----------------------------------------------------------------------------
 
-FapUACurveDefine::SignalConnector::SignalConnector(FapUACurveDefine* anOwner)
+FapUACurveDefine::SignalConnector::SignalConnector(FapUACurveDefine* ua) : owner(ua)
 {
-  this->owner = anOwner;
-
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,
 			  FFaSlot1M(SignalConnector,this,
 				    onModelMemberChanged,FmModelMemberBase*));
+}
+
+//----------------------------------------------------------------------------
+
+FapUACurveDefine::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
 
 //----------------------------------------------------------------------------

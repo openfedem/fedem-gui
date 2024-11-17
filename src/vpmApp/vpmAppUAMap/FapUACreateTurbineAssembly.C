@@ -269,9 +269,8 @@ void FapUACreateTurbineAssembly::finishUI()
 }
 //------------------------------------------------------------------------------
 
-FapUACreateTurbineAssembly::SignalConnector::SignalConnector(FapUACreateTurbineAssembly* anOwner)
+FapUACreateTurbineAssembly::SignalConnector::SignalConnector(FapUACreateTurbineAssembly* ua) : owner(ua)
 {
-  owner = anOwner;
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CONNECTED,
 			  FFaSlot1M(SignalConnector,this,
@@ -280,6 +279,12 @@ FapUACreateTurbineAssembly::SignalConnector::SignalConnector(FapUACreateTurbineA
 			  FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
 			  FFaSlot1M(SignalConnector,this,
 				    onModelMemberDisconnected,FmModelMemberBase*));
+}
+//------------------------------------------------------------------------------
+
+FapUACreateTurbineAssembly::SignalConnector::~SignalConnector()
+{
+  FFaSwitchBoard::removeAllOwnerConnections(this);
 }
 //------------------------------------------------------------------------------
 

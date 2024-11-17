@@ -25,7 +25,7 @@ class FpProcessManager : public FFaSingelton<FpProcessManager>,
 {
 public:
   FpProcessManager();
-  ~FpProcessManager();
+  virtual ~FpProcessManager();
 
   enum Signals { STARTED, FINISHED, GROUP_STARTED, GROUP_FINISHED };
 
@@ -61,20 +61,22 @@ template <class T>
 class FpProcessGroupChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FpProcessGroupChangedReceiver() : myOwner(0) {}
   FpProcessGroupChangedReceiver(T* owner) : myOwner(owner)
   {
-    FFaSwitchBoard::connect( FpProcessManager::instance(),
-			     FpProcessManager::GROUP_STARTED,
-			     FFaSlot1M(FpProcessGroupChangedReceiver,this,onProcessGroupChanged,int) );
-    FFaSwitchBoard::connect( FpProcessManager::instance(),
-			     FpProcessManager::GROUP_FINISHED,
-			     FFaSlot1M(FpProcessGroupChangedReceiver,this,onProcessGroupChanged,int) );
+    FFaSwitchBoard::connect(FpProcessManager::instance(),
+                            FpProcessManager::GROUP_STARTED,
+                            FFaSlot1M(FpProcessGroupChangedReceiver,this,onChanged,int));
+    FFaSwitchBoard::connect(FpProcessManager::instance(),
+                            FpProcessManager::GROUP_FINISHED,
+                            FFaSlot1M(FpProcessGroupChangedReceiver,this,onChanged,int));
   }
-  virtual ~FpProcessGroupChangedReceiver() {}
+  virtual ~FpProcessGroupChangedReceiver()
+  {
+    FFaSwitchBoard::removeAllOwnerConnections(this);
+  }
 
 private:
-  void onProcessGroupChanged(int gpid) { myOwner->onProcessGroupChanged(gpid); }
+  void onChanged(int gpid) { myOwner->onProcessGroupChanged(gpid); }
 
   T* myOwner;
 };

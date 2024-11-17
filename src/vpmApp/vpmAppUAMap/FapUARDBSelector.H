@@ -76,8 +76,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector(FapUARDBSelector* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUARDBSelector* ua);
+    virtual ~SignalConnector();
 
   private:
     void onModelExtrDeleted(FFrExtractor* extr)
@@ -95,8 +95,7 @@ private:
   };
 
 private:
-  FapUARDBSelector::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 };
 
 #endif

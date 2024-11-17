@@ -36,7 +36,8 @@
 
 //----------------------------------------------------------------------------
 
-FpRDBExtractorManager::FpRDBExtractorManager() : lvFilter("Solver Filter")
+FpRDBExtractorManager::FpRDBExtractorManager()
+  : FFaSwitchBoardConnector("FpRDBExtractorManager"), lvFilter("Solver Filter")
 {
   modelExtr = posExtr = NULL;
 

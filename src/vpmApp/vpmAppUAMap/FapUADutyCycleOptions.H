@@ -56,9 +56,8 @@ private:
   class SignalConnector : public FFaSwitchBoardConnector
   {
   public:
-    SignalConnector() {this->owner = 0;}
-    SignalConnector(FapUADutyCycleOptions* owner);
-    virtual ~SignalConnector() {}
+    SignalConnector(FapUADutyCycleOptions* ua);
+    virtual ~SignalConnector();
 
   private:
     void onModelMemberChanged(FmModelMemberBase* item)
@@ -71,8 +70,7 @@ private:
     FapUADutyCycleOptions* owner;
   };
 
-  FapUADutyCycleOptions::SignalConnector signalConnector;
-  friend class SignalConnector;
+  SignalConnector signalConnector;
 };
 
 #endif
