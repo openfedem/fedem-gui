@@ -36,7 +36,8 @@ FuiQtScaleShiftWidget::FuiQtScaleShiftWidget(QWidget* parent, const char* name)
   superFrame->setGeometry(0,0,295,122);
   QVBoxLayout* superFrameLayout = new QVBoxLayout(superFrame);
   superFrameLayout->setAlignment(Qt::AlignTop);
-  superFrameLayout->setSpacing(2);
+  superFrameLayout->setSpacing(5);
+  superFrameLayout->setContentsMargins(5,5,5,5);
 
   QHBoxLayout* layout = new QHBoxLayout();
   layout->addWidget(new QLabel("Scale",superFrame));
@@ -53,6 +54,7 @@ FuiQtScaleShiftWidget::FuiQtScaleShiftWidget(QWidget* parent, const char* name)
   QVBoxLayout* shiftFrameLayout = new QVBoxLayout(shiftFrame);
   shiftFrameLayout->setAlignment(Qt::AlignTop);
   shiftFrameLayout->setSpacing(2);
+  shiftFrameLayout->setContentsMargins(5,2,5,4);
 
   FFuQtToggleButton* qBtn;
   zeroOutBtn = qBtn = new FFuQtToggleButton(shiftFrame);
