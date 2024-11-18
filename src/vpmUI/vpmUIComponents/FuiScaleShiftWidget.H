@@ -22,7 +22,6 @@ public:
   virtual ~FuiScaleShiftWidget() {}
 
   virtual void setFrameTitles(const char* main, const char* shift) = 0;
-  virtual void setSensitivity(bool isSensitive);
 
   void getValues(double& scale, bool& onOff, double& shift);
   void setValues(double  scale, bool  onOff, double  shift);
