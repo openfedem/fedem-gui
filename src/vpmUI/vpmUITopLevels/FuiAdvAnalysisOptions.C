@@ -88,7 +88,7 @@ void FuiAdvAnalysisOptions::initWidgets()
 
   this->labNotesImage->setPixMap(info_xpm);
   this->labNotesLabel->setLabel("<b>Notes</b>");
-  this->labNotesText->setLabel("Click \"Advanced\" for more settings.");
+  this->labNotesText->setLabel("Click \"Advanced\" for more settings");
 
   if (this->myBasicMode) {
     this->btnAdvanced->setLabel("Advanced");
@@ -278,7 +278,7 @@ void FuiAdvAnalysisOptions::initWidgets()
   this->labels[INTOPTIONS][MIN_MATRIX_UPDATE]->setLabel("Number of initial iterations with matrix updates");
   this->labels[INTOPTIONS][MAX_NO_MATRIX_UPDATE]->setLabel("Maximum sequential iterations with no matrix update");
   this->labels[INTOPTIONS][TOL_MATRIX_UPDATE]->setLabel("Convergence tolerance factor for matrix updates");
-  this->labels[INTOPTIONS][SHADOW_POS_ALG_LABEL]->setLabel("Default positioning algorithm for the co-rotated reference coordinate systems");
+  this->labels[INTOPTIONS][SHADOW_POS_ALG_LABEL]->setLabel("Default positioning algorithm for co-rotated reference coordinate systems");
 
   this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Max triangle (with unit offset, depreciated)");
   this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Max triangle (with scaled offset if needed)");
@@ -534,18 +534,18 @@ void FuiAdvAnalysisOptions::placeWidgets(int width, int height)
   if (myBasicMode)
     glbt += 106; // move tabStack down (beneath the header image)
   this->tabStack->setEdgeGeometry(glbl,glbr,glbt,glsep);
-  this->dialogButtons->setEdgeGeometry(0,250,glsep,height);
-  glsep += 2*border;
-  this->btnRunCloud->setEdgeGeometry(250,322,glsep,height-border);
-  this->btnHelp->setEdgeGeometry(330,glbr,glsep,height-border);
+  int glb5 = (glbr-glbl)/5;
+  this->dialogButtons->setEdgeGeometry(0,glbl+3*glb5,glsep,height);
+  this->btnRunCloud->setEdgeGeometry(3*glb5+border,4*glb5,glsep+2*border,height-border);
+  this->btnHelp->setEdgeGeometry(4*glb5+border,glbr,glsep+2*border,height-border);
 
-  int glNotes = 380;
+  glsep -= border;
+  int glNotes = glsep-glbt-35;
   this->labNotesImage->setEdgeGeometry(15,  31, glNotes, glNotes+16);
   this->labNotesLabel->setEdgeGeometry(35, 305, glNotes, glNotes+16);
   glNotes += 19;
   this->labNotesText->setEdgeGeometry( 15, 305, glNotes, glNotes+16);
-  glsep -= 3*border;
-  this->btnAdvanced->setEdgeGeometry( 325, 400, glsep-this->btnAdvanced->getHeightHint(), glsep);
+  this->btnAdvanced->setEdgeGeometry(4*glb5+border, glbr, glsep-this->btnAdvanced->getHeightHint(), glsep);
 
   // lock tls size to avoid hiding info in the tab
   this->setMinWidth(this->getWidthHint());
@@ -606,8 +606,8 @@ void FuiAdvAnalysisOptions::placeOptionWidgets(FuiAdvAnalysisOptionsSheet* w,
   if (iOpt == INTOPTIONS || iOpt == TIMEOPTIONS || iOpt == BASICOPTIONS) {
     glvlabel   += radioh;
     glvradio   += radioh;
-    glvtoggle  += radioh;
-    glvOptMenu += radioh;
+    glvtoggle  += iOpt == INTOPTIONS ? 2*border-glbl : radioh;
+    glvOptMenu += iOpt == INTOPTIONS ? border-glbl : radioh;
     optionMenuW = glbr - radioh - glvOptMenu;
     if (iOpt == INTOPTIONS)
       doublefieldw = 3*intfieldw/2;
@@ -665,6 +665,8 @@ void FuiAdvAnalysisOptions::placeOptionWidgets(FuiAdvAnalysisOptionsSheet* w,
 	pos = radioPos(radioCounter++) + radioh/5;
       else if (iOpt == INTOPTIONS && this->radioButtons[iOpt].find(ip.first) != this->radioButtons[iOpt].end())
 	pos = glvdouble - radioh/2 - li->second->getWidthHint();
+      else if (iOpt == INTOPTIONS && ip.first == SHADOW_POS_ALG_LABEL)
+	pos = border;
       li->second->setCenterYGeometry(pos,ip.second,li->second->getWidthHint()+radioh/2,labh);
     }
 
