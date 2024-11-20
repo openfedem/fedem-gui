@@ -66,7 +66,7 @@ if ( INSTALL_ARTIFACTS )
 
 # Install some resource files
 
-file ( GLOB RESOURCES resources/*.* )
+file ( GLOB RESOURCES resources/*.f* )
 if ( FTENV_VERBOSE )
   message ( STATUS "Installing ${RESOURCES} to ${CMAKE_INSTALL_PREFIX}" )
 endif ( FTENV_VERBOSE )
