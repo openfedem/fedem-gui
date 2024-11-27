@@ -69,7 +69,7 @@ FapUAResultListView::FapUAResultListView(FuiItemsListView* ui)
 //----------------------------------------------------------------------------
 
 FFaListViewItem* FapUAResultListView::getParent(FFaListViewItem* item,
-						const std::vector<int>& assID) const
+                                                const IntVec& assID) const
 {
 #ifdef LV_DEBUG
   reportItem(item,"FapUAResultListView::getParent: ");
@@ -131,7 +131,8 @@ void FapUAResultListView::getChildren(FFaListViewItem* parent,
   if (!parent)
   {
     // Top headers
-    for (const std::pair<int,FmRingStart*>& head : *FmDB::getHeadMap())
+    const std::map<int,FmRingStart*>& topHeadMap = *FmDB::getHeadMap();
+    for (const std::pair<const int,FmRingStart*>& head : topHeadMap)
       if (!head.second->getParent() && head.second->hasRingMembers())
       {
         if (head.second->getRingMemberType() == FmSubAssembly::getClassTypeID())
@@ -218,7 +219,8 @@ void FapUAResultListView::getChildren(FFaListViewItem* parent,
   else if (mmparent->isOfType(FmSubAssembly::getClassTypeID()))
   {
     // parent is a sub-assembly
-    for (const std::pair<int,FmRingStart*>& head : *static_cast<FmSubAssembly*>(mmparent)->getHeadMap())
+    const std::map<int,FmRingStart*>& subHeadMap = *static_cast<FmSubAssembly*>(mmparent)->getHeadMap();
+    for (const std::pair<const int,FmRingStart*>& head : subHeadMap)
       if (!head.second->getParent() && head.second->hasRingMembers())
       {
         if (head.second->getRingMemberType() == FmSubAssembly::getClassTypeID())
@@ -446,35 +448,41 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
     {
       FmRingStart* rs = dynamic_cast<FmRingStart*>(droppedOnItem);
       if (rs && rs->getRingMemberType() == FmGraph::getClassTypeID())
-	subass = rs->getParentAssembly();
+        subass = rs->getParentAssembly();
     }
   }
 
   // Dropping selected curves from this UI (moving them):
 
-  bool isCurvesDragged = false;
   if (graph)
-    for (FFaViewItem* item : this->getUISelectedItems())
+  {
+    bool isCurvesDragged = false;
+    std::vector<FFaViewItem*> items = this->getUISelectedItems();
+    for (FFaViewItem* item : items)
       if ((curve = dynamic_cast<FmCurveSet*>(item)))
       {
-	if (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
-	    graph->isBeamDiagram() == curve->getOwnerGraph()->isBeamDiagram())
-	{
-	  if (!isCopy)
-	    curve->moveTo(graph);
-	  else {
-	    FmCurveSet* newCurve = new FmCurveSet();
-	    newCurve->clone(curve,FmBase::DEEP_APPEND);
-	    newCurve->moveTo(graph);
-	    newCurve->reload();
-	    this->ensureItemVisible(curve);
-	  }
-	}
-	isCurvesDragged = true;
+        isCurvesDragged = true;
+        FmGraph* oGraph = curve->getOwnerGraph();
+        if ((oGraph != graph || !isCopy) &&
+            (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
+             graph->isBeamDiagram() == oGraph->isBeamDiagram()))
+        {
+          if (isCopy)
+          {
+            FmCurveSet* newCurve = new FmCurveSet();
+            newCurve->clone(curve,FmBase::DEEP_APPEND);
+            newCurve->moveTo(graph);
+            newCurve->reload();
+            this->ensureItemVisible(newCurve);
+          }
+          else
+            curve->moveTo(graph);
+        }
       }
 
-  if (isCurvesDragged)
-    return;
+    if (isCurvesDragged)
+      return;
+  }
 
   // Dropping a result description from the RDB Selector UI:
 
@@ -488,10 +496,11 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
   int axis = static_cast<FapUARDBSelector*>(rdbSel)->getCurrentAxis();
 
   curve = new FmCurveSet();
-  if (!graph) {
+  if (!graph)
+  {
     // Dropped on empty space or on subassembly
     graph = new FmGraph();
-    if (subass) graph->setParentAssembly(subass);
+    graph->setParentAssembly(subass);
     graph->connect();
   }
   graph->addCurveSet(curve);

@@ -17,14 +17,6 @@ FuiScaleShiftWidget::FuiScaleShiftWidget() : readingDBonly(false)
 }
 
 
-void FuiScaleShiftWidget::setSensitivity(bool isSensitive)
-{
-  scaleField->setSensitivity(isSensitive);
-  shiftField->setSensitivity(isSensitive);
-  zeroOutBtn->setSensitivity(isSensitive);
-}
-
-
 void FuiScaleShiftWidget::getValues(double& scale, bool& onOff, double& shift)
 {
   scale = scaleField->getDouble();

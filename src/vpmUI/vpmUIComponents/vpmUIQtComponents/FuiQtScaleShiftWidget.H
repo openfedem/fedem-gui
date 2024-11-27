@@ -30,11 +30,10 @@ class FuiQtScaleShiftWidget : public FFuQtMultUIComponent,
   Q_OBJECT
 
 public:
-  FuiQtScaleShiftWidget(QWidget* parent, const char* name = "FuiQtScaleShiftWidget");
+  FuiQtScaleShiftWidget(QWidget* parent, const char* name);
   virtual ~FuiQtScaleShiftWidget() {}
 
   virtual void setFrameTitles(const char* main, const char* shift);
-  virtual void setSensitivity(bool s) { this->FuiScaleShiftWidget::setSensitivity(s); }
 
 private slots:
   void btnToggled(bool);
