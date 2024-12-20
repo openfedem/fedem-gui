@@ -29,8 +29,6 @@ public:
 
   static void show(FmGraph* graph);
 
-  static void enableGraphDemoWarning(bool enable);
-
 private:
   static void init();
 

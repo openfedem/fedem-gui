@@ -241,7 +241,7 @@ public:
 					bool zeroAdjustX, double scaleY, double offsetY,
 					bool zeroAdjustY, bool doUpdate=true) = 0;
 
-  void enablePlotterDemoWarning(bool) {} // TODO remove
+  virtual void onCurveHighlightChanged() {}
 
   void setCurveHighlightChangedCB(const FFaDynCB0& aDynCB)
     {this->curveHighlightChangedCB = aDynCB;}
