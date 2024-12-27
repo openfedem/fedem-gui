@@ -43,7 +43,6 @@
 #include "vpmDB/FmTriad.H"
 #include "vpmDB/FmBeamProperty.H"
 #include "vpmDB/FmMaterialProperty.H"
-#include "vpmDB/FmUserDefinedElement.H"
 #include "vpmDB/FmElementGroupProxy.H"
 #include "vpmDB/FmRefPlane.H"
 #include "vpmDB/FmCreate.H"
@@ -646,30 +645,7 @@ void FapDBCreateCmds::createGenericPart()
   }
 
   FpPM::vpmSetUndoPoint("Generic part");
-
-  FmPart* genPart = new FmPart();
-  genPart->setParentAssembly(parent);
-  genPart->connect();
-  genPart->useGenericProperties.setValue(true);
-
-  // Connect the selected triads
-
-  FaVec3 cg;
-  for (FmTriad* triad : triads)
-  {
-    // Use connect instead of FmPart::attach since we now allow triads to be
-    // connected to more than one part (attach only allows single-connection)
-    triad->connect(genPart);
-    cg += triad->getGlobalTranslation();
-  }
-  cg /= triads.size();
-  // Must refer the CoG position to origin of parent assembly
-  FmAssemblyBase* pAss = dynamic_cast<FmAssemblyBase*>(parent);
-  genPart->setPositionCG(pAss ? pAss->toLocal(cg) : cg);
-
-  genPart->draw();
-
-  FapEventManager::permTotalSelect(genPart);
+  FapEventManager::permTotalSelect(Fedem::createPart(triads,parent));
 }
 //----------------------------------------------------------------------------
 
@@ -684,18 +660,7 @@ void FapDBCreateCmds::createBeams()
   }
 
   FpPM::vpmSetUndoPoint("Beams");
-
-  FmBeam* beam = NULL;
-  for (size_t i = 1; i < triads.size(); i++) {
-    beam = new FmBeam();
-    beam->setParentAssembly(parent);
-    beam->connect(triads[i-1],triads[i]);
-    beam->draw();
-    triads[i-1]->draw();
-  }
-  triads.back()->draw();
-
-  FapEventManager::permTotalSelect(beam);
+  FapEventManager::permTotalSelect(Fedem::createBeams(triads,parent));
 }
 //----------------------------------------------------------------------------
 
@@ -725,26 +690,8 @@ void FapDBCreateCmds::createUserElm(int typeIdx)
   }
 
   FpPM::vpmSetUndoPoint("Userdefined element");
-
-  FmUserDefinedElement* uelm = NULL;
-  for (size_t i = 0; i+nelnod-1 < triads.size(); i++) {
-    uelm = new FmUserDefinedElement();
-    uelm->setParentAssembly(parent);
-    uelm->connect();
-    uelm->init(eTypes[typeIdx],typeName,
-               std::vector<FmTriad*>(triads.begin()+i,
-                                     triads.begin()+i+nelnod));
-    uelm->draw();
-    triads[i]->draw();
-    if (nelnod > 2) break;
-  }
-  if (nelnod == 2)
-    triads.back()->draw();
-  else if (nelnod > 2)
-    for (int i = 1; i < nelnod; i++)
-      triads[i]->draw();
-
-  FapEventManager::permTotalSelect(uelm);
+  FapEventManager::permTotalSelect(Fedem::createUserElm(eTypes[typeIdx],typeName,
+                                                        triads,nelnod,parent));
 }
 //----------------------------------------------------------------------------
 
