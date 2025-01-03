@@ -9,7 +9,6 @@
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "FFuLib/FFuAuxClasses/FFuaIdentifiers.H"
 #include "vpmApp/FapEventManager.H"
-#include "vpmApp/FapLicenseManager.H"
 #include "vpmDB/FmGraph.H"
 #include "vpmDB/FmCurveSet.H"
 #include "vpmDB/FmSubAssembly.H"
@@ -131,8 +130,7 @@ void FapGraphCmds::show(FmGraph* graph)
     tls->getUI()->popUp();
   else {
     FapEventManager::setLoadingGraph(graph);
-    FuiGraphView* gv = Fui::newGraphViewUI(graph->getUserDescription().c_str());
-    gv->enablePlotterDemoWarning(FapLicenseManager::isDemoEdition());
+    Fui::newGraphViewUI(graph->getUserDescription().c_str());
   }
 #else
   // Dummy statement to avoid compiler warning
@@ -313,22 +311,6 @@ void FapGraphCmds::killAllGraphViews()
 
   for (FapUAExistenceHandler* tls : allTLS)
     ((FuiGraphViewTLS*)tls->getUI())->onClose();
-#endif
-}
-
-//----------------------------------------------------------------------------
-
-void FapGraphCmds::enableGraphDemoWarning(bool enable)
-{
-#ifdef FT_HAS_GRAPHVIEW
-  std::vector<FapUAExistenceHandler*> allTLS;
-  FapUAExistenceHandler::getAllOfType(FapUAGraphViewTLS::getClassTypeID(), allTLS);
-
-  for (FapUAExistenceHandler* tls : allTLS)
-    ((FuiGraphViewTLS*)tls->getUI())->getGraphViewComp()->enablePlotterDemoWarning(enable);
-#else
-  // Dummy statement to avoid compiler warning on unused variable
-  std::cout <<"  ** FapGraphCmds::enableGraphDemoWarning() "<< enable << std::endl;
 #endif
 }
 

@@ -1343,6 +1343,7 @@ bool FFuQt2DPlotter::savePlotterAsImage(const std::string& fName, const char* fo
 void FFuQt2DPlotter::fwdCurveHighlightChanged()
 {
   this->invokeCurveHighlightChangedCB();
+  this->onCurveHighlightChanged();
 }
 
 //----------------------------------------------------------------------------
