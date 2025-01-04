@@ -8,6 +8,25 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.8] (2025-01-04)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/44 :
+  `#MassScaleEngine <bid>` can now be used for Beams and FE parts,
+  in addition to for Triads as before.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/48 :
+  Selecting curve objects by clicking in the graph view does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/47 :
+  Auto-detection of triads along a prismatic/cylindric joints have tolerance issues.
+- Issue https://github.com/openfedem/fedem-gui/issues/45 :
+  Copy curves by dragging into a new Graph group does not work.
+- Minor adjustments of GUI fields in the Solver setup dialog box
+  and in the Scale and Shift tab of the Curve property editor panel.
+
 ## [fedem-8.0.7] (2024-11-17)
 
 ### :rocket: Added
@@ -162,3 +181,4 @@
 [fedem-8.0.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.4...fedem-8.0.5
 [fedem-8.0.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.5...fedem-8.0.6
 [fedem-8.0.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.6...fedem-8.0.7
+[fedem-8.0.8]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.7...fedem-8.0.8

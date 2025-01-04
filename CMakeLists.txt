@@ -96,7 +96,7 @@ endif ( USE_WINDPOW )
 
 # Download and install the latest documentation
 
-set ( DOC_VER fedem-8.0.7 )
+set ( DOC_VER fedem-8.0.8 )
 set ( DOC_URL https://github.com/openfedem/fedem-docs/releases/download/${DOC_VER} )
 set ( DOC_DIR "${CMAKE_CURRENT_BINARY_DIR}/Doc" )
 set ( DOC_FILES Fedem.chm FedemUsersGuide.pdf FedemTheoryGuide.pdf )
