@@ -175,16 +175,17 @@ void FapAllignCSCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
     int state = FapAllignCSCmds::myState;
     if (state == 0 || state == 1)
     {
-      // Build Array of Interesting or non-interesting types:
+      // Build array of interesting types:
+      std::vector<int> types = {
+        FdLink::getClassTypeID(),
+        FdTriad::getClassTypeID(),
+        FdSimpleJoint::getClassTypeID(),
+        FdRefPlane::getClassTypeID()
+      };
+
       long indexToInterestingPP = -1;
-      bool typesIsInteresting = true;
-      std::vector<int> types(4,FdLink::getClassTypeID());
-      types[1] = FdTriad::getClassTypeID();
-      types[2] = FdSimpleJoint::getClassTypeID();
-      types[3] = FdRefPlane::getClassTypeID();
       FdObject* pickedObject = FdPickFilter::getCyceledInterestingPObj(&(evHaAction->getPickedPointList()),
-								       types,typesIsInteresting,
-								       indexToInterestingPP);
+                                                                      types,true,indexToInterestingPP);
 
       // Filter triads in LinJoints, moving them would mess up too much yet
 
@@ -209,11 +210,8 @@ void FapAllignCSCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
     else
     {
       long indexToInterestingPP = -1;
-      bool typesIsInteresting = false;
-      std::vector<int> types;
       FdObject* pickedObject = FdPickFilter::getCyceledInterestingPObj(&(evHaAction->getPickedPointList()),
-								       types,typesIsInteresting,
-								       indexToInterestingPP);
+								       {},false,indexToInterestingPP);
       if (pickedObject)
       {
 	SoPickedPoint* interestingPickedPoint = evHaAction->getPickedPointList()[indexToInterestingPP];
@@ -223,14 +221,7 @@ void FapAllignCSCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
 	// Get Object to world transformation:
 
 	SoNode* tail = ((SoFullPath*)path)->getTail();
-	SbMatrix SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
-	SbRotation scaleOrient, rotation;
-	SbVec3f scale, translation;
-	SbObjToWorld.getTransform(translation, rotation, scale, scaleOrient);
-	SbMatrix SbObjToWorldUnscaled;
-	SbObjToWorldUnscaled.setTransform(translation,rotation, SbVec3f());
-
-        FapAllignCSCmds::ourAllignCS = FdConverter::toFaMat34(SbObjToWorld);
+        FapAllignCSCmds::ourAllignCS = FdConverter::toFaMat34(interestingPickedPoint->getObjectToWorld(tail));
         for (int i = 0; i < 3; i++)
           FapAllignCSCmds::ourAllignCS[i].normalize();
         FdExtraGraphics::showCS(FapAllignCSCmds::ourAllignCS);

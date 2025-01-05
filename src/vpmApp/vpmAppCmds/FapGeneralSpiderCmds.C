@@ -269,8 +269,8 @@ void FapGeneralSpiderCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
 
           // Get hit point on object in object space:
           SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
-          SbMatrix objToWorld = interestingPickedPoint->getObjectToWorld(tail);
-          FaVec3  createPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+          const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(tail);
+          FaVec3 createPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
 
           if (pickedObject->isOfType(FdTriad::getClassTypeID()))
           {

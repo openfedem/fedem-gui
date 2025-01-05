@@ -286,7 +286,7 @@ void FapMoveToCenterCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
       SoDetail* pickDetail = pDet ? pDet->copy() : NULL;
 
       SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
-      SbMatrix objToWorld = interestingPickedPoint->getObjectToWorld(tail);
+      const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(tail);
 
       if (FapEventManager::getNumPermSelected() > ourNumSelectedToMove)
         FapEventManager::permUnselectLast();
