@@ -104,8 +104,8 @@ public:
   // Get view params:
 
   bool     isOrthographicView();
-  SbMatrix getPosition();
   SbVec3f  getPos();
+  void     getOrient(SbMatrix& mx);
   double   getFocalDistance();
   double   getOHeightOrHAngle();
 
@@ -114,7 +114,7 @@ public:
 
   // User event CB :
   
-  void setQtEventCB(const FFaDynCB2<QEvent *, bool &> & aDynCB){ myQtEventCB = aDynCB;}
+  void setQtEventCB(const FFaDynCB2<QEvent*,bool&>& aDynCB) { myQtEventCB = aDynCB; }
 
   // Reimplementations for internal reasons :
 
@@ -204,22 +204,16 @@ public:
   float	 seekAnimTime;
   bool detailSeekFlag;
   static SoSFTime	*viewerRealTime;
-  static void seekAnimationSensorCB(void *p, SoSensor *);
 
   // Animation Methods :
   
-  static void	    animationSensorCB(void *v, SoSensor *s);
-  static void	    visibilityChangeCB(void *pt, SbBool visible);
-  void	          doSpinAnimation();
-
-  SbBool            isAnimating(){ return (animatingZrotFlag || animatingRotFlag); } 
-  void              stopAnimating();
+  void   doSpinAnimation();
+  void   stopAnimating();
+  SbBool isAnimating() const { return animatingZrotFlag || animatingRotFlag; }
 
   // User event CB :
 
-  FFaDynCB2< QEvent *, bool& > myQtEventCB;
-  
-  static SbVec2f calculateNearFarCB(void * data, const SbVec2f & nearfar);
+  FFaDynCB2<QEvent*,bool&> myQtEventCB;
 };
 
 #endif

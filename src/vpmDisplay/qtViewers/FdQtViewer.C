@@ -69,16 +69,56 @@ FdQtViewer::FdQtViewer(QWidget* parent, const char* name, SbBool, SoQtViewer::Ty
 
   // Init animation variables :
 
-  this->addVisibilityChangeCallback(visibilityChangeCB, this);
+  // called when the viewer becomes visible/hidden - when hidden, make sure to
+  // temporary stop ongoing animation (and restart as soon as we become visible)
+  this->addVisibilityChangeCallback([](void* p, SbBool visible)
+                                    {
+                                      FdQtViewer* me = (FdQtViewer*)p;
+                                      // only do this if we are/were spinning...
+                                      if (me->isAnimating())
+                                      {
+                                        if (visible) // reschedule timer sensor
+                                          me->animationSensor->schedule();
+                                        else // hidden, so unschedule the sensor
+                                          // but don't change the animatingFlag
+                                          // variable to let us know we need to
+                                          // turn it back on when visible....
+                                          me->animationSensor->unschedule();
+                                      }
+                                    }, this);
+
   this->animationEnabled = false;
   this->animatingZrotFlag = FALSE;
   this->animatingRotFlag = FALSE;
-  this->animationSensor = new SoTimerSensor(FdQtViewer::animationSensorCB, this);
-  this->animationSensor->setInterval(1.0/60.0); // animation frame rate
+
+  animationSensor = new SoTimerSensor([](void* p, SoSensor*)
+                                      {
+                                        ((FdQtViewer*)p)->doSpinAnimation();
+                                      }, this);
+  animationSensor->setInterval(1.0/60.0); // animation frame rate
 
   seekAnimTime = 2.0;
   detailSeekFlag = true;
-  seekAnimationSensor = new SoFieldSensor(FdQtViewer::seekAnimationSensorCB, this);
+  seekAnimationSensor = new SoFieldSensor([](void* p, SoSensor*)
+                                          {
+                                            FdQtViewer* me = (FdQtViewer*)p;
+                                            // get the time difference
+                                            SbTime time = viewerRealTime->getValue();
+                                            float sec = float((time - me->seekStartTime).getValue());
+                                            if (sec == 0.0f) sec = 1.0f/72.0f; // at least one frame (needed for first call)
+                                            float t = sec / me->seekAnimTime;
+                                            // check to make sure the values are correctly clipped
+                                            if (t > 0.9999f) t = 1.0f; // this is the last interval
+                                            // call subclasses to interpolate the animation
+                                            me->interpolateSeekAnimation(t);
+                                            if (t == 1.0f)
+                                            {
+                                              // stops seek since this was the last interval
+                                              if (me->isViewing()) me->setViewing(FALSE);
+                                              me->setSeekingMode(FALSE);
+                                            }
+                                          }, this);
+
   // Set (re)draw to back buffer, change do to Open Inventor 2.1.1 porting
 
   this->setDrawToFrontBufferEnable(FALSE);
@@ -98,7 +138,18 @@ FdQtViewer::FdQtViewer(QWidget* parent, const char* name, SbBool, SoQtViewer::Ty
 #ifndef NO_FFU
   this->setWidget(getGLWidget());
 #endif
-  this->setAutoClippingStrategy(VARIABLE_NEAR_PLANE, 0.6f, FdQtViewer::calculateNearFarCB, this);
+  this->setAutoClippingStrategy(VARIABLE_NEAR_PLANE, 0.6f,
+                                [](void* p, const SbVec2f& nearfar)
+                                {
+                                  SbVec2f retVal = nearfar;
+                                  FdQtViewer* me = (FdQtViewer*)p;
+                                  if (me && me->getCamera())
+                                  {
+                                    float dist = 0.25f * me->getCamera()->focalDistance.getValue();
+                                    if (retVal[0] > dist) retVal[0] = dist;
+                                  }
+                                  return retVal;
+                                }, this);
 }
 
 FdQtViewer::~FdQtViewer()
@@ -969,17 +1020,10 @@ FdQtViewer::isOrthographicView()
   return this->getCamera()->isOfType(SoOrthographicCamera::getClassTypeId());
 }
 
-SbMatrix
-FdQtViewer::getPosition()
+void
+FdQtViewer::getOrient(SbMatrix& mx)
 {
-  SbMatrix mx;
   this->getCamera()->orientation.getValue().getValue(mx);
-  SbVec3f t = this->getCamera()->position.getValue();
-  mx[3][0] = t[0];
-  mx[3][1] = t[1];
-  mx[3][2] = t[2];
-
-  return mx;
 }
 
 SbVec3f
@@ -1608,17 +1652,6 @@ FdQtViewer::defineCursors()
   createdCursors = TRUE;
 }
 
-////////////////////////////////
-//
-//   Spin Control methods:
-//
-///////////////////////////////////
-
-void
-FdQtViewer::animationSensorCB( void *v, SoSensor * )
-{
-  ( (FdQtViewer *) v )->doSpinAnimation();
-}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -1683,31 +1716,6 @@ FdQtViewer::stopAnimating()
 //
 /////////////////////////////
 
-// called when the viewer becomes visible/hidden - when hidden, make
-// sure to temporary stop any ongoing animation (and restart it as soon
-// as we become visible).
-//
-void
-FdQtViewer::visibilityChangeCB( void *pt, SbBool visible )
-{
-  FdQtViewer *p = (FdQtViewer *) pt;
-
-  // only do this if we are/were spinning....
-  if ( !p->isAnimating() )
-    return;
-
-  if ( visible )
-    {
-      // we now are visible again so reschedule the timer sensor
-      p->animationSensor->schedule();
-    }
-  else
-    // if hidden, unschedule the timer sensor, but don't change the
-    // animatingFlag var to let us know we need to turn it back on
-    // when we become visible....
-    p->animationSensor->unschedule();
-}
-
 void
 FdQtViewer::setSeekingMode( bool flag )
 {
@@ -1724,38 +1732,6 @@ FdQtViewer::setSeekingMode( bool flag )
     }
 
   seekModeFlag = flag;
-}
-
-void
-FdQtViewer::seekAnimationSensorCB( void *p, SoSensor * )
-//
-////////////////////////////////////////////////////////////////////////
-{
-  FdQtViewer *v = (FdQtViewer *) p;
-
-  // get the time difference
-  SbTime time = viewerRealTime->getValue();
-  float sec = float(( time - v->seekStartTime ).getValue());
-  if ( sec == 0.0 )
-    sec = 1.0f / 72.0f; // at least one frame (needed for first call)
-  float t = ( sec / v->seekAnimTime );
-
-  // check to make sure the values are correctly clipped
-  if ( t > 1.0 )
-    t = 1.0;
-  else if ( ( 1.0 - t ) < 0.0001 )
-    t = 1.0; // this will be the last one...
-
-  // call subclasses to interpolate the animation
-  v->interpolateSeekAnimation(t);
-
-  // stops seek if this was the last interval
-  if ( t == 1.0 )
-    {
-      if ( v->isViewing() )
-        v->setViewing(FALSE);
-      v->setSeekingMode(FALSE);
-    }
 }
 
 bool
@@ -1842,20 +1818,4 @@ FdQtViewer::seekToThisPoint( const SbVec2s &mouseLocation )
     }
 
   return true; // successfull
-}
-
-SbVec2f
-FdQtViewer::calculateNearFarCB( void * data, const SbVec2f & nearfar )
-{
-  FdQtViewer * me = (FdQtViewer*) data;
-
-  SbVec2f retVal = nearfar;
-  if ( me && me->getCamera() )
-    {
-      float focalDistance = me->getCamera()->focalDistance.getValue();
-      if ( nearfar[0] > focalDistance / 4 )
-        retVal[0] = focalDistance / 4;
-    }
-
-  return retVal;
 }

@@ -7,7 +7,8 @@
 
 #include "vpmDisplay/qtViewers/FdQtViewer.H"
 
-#include <Inventor/SbLinear.h>
+#include <Inventor/SbVec2f.h>
+#include <Inventor/SbVec3f.h>
 #include <Inventor/SoPickedPoint.h>
 #include <Inventor/actions/SoHandleEventAction.h>
 #include <Inventor/events/SoMouseButtonEvent.h>
@@ -159,9 +160,8 @@ void FdCtrlDB::closeCtrl()
 ctrlViewData FdCtrlDB::getView()
 {
   ctrlViewData cvData;
-  SbMatrix mx = FdCtrlDB::ctrlViewer->getPosition();
 
-  cvData.itsCameraTranslation = FaVec3(mx[3][0],mx[3][1],mx[3][2]);
+  cvData.itsCameraTranslation = FdConverter::toFaVec3(FdCtrlDB::ctrlViewer->getPos());
   cvData.itsFocalDistance = FdCtrlDB::ctrlViewer->getFocalDistance();
 
   cvData.itsGridSizeX = FdCtrlGrid::getGridSizeX();
@@ -274,9 +274,9 @@ SbVec3f FdCtrlDB::getNewVec(const SbVec2f& currPos, bool ignoreSnap)
 
   // This makes the translation independent of viewer paning,
   // but the viewer rotation angle must be zero
-  SbMatrix mx = FdCtrlDB::ctrlViewer->getPosition();
-  newVec[0] += mx[3][0];
-  newVec[1] += mx[3][1];
+  SbVec3f pos = FdCtrlDB::ctrlViewer->getPos();
+  newVec[0] += pos[0];
+  newVec[1] += pos[1];
   newVec[2] = 0.0f;
 
   if (!ignoreSnap)

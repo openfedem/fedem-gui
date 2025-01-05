@@ -458,7 +458,10 @@ cameraData FdDB::getView()
 {
   cameraData cd;
 
-  cd.itsCameraOrientation = FdConverter::toFaMat34(FdDB::viewer->getPosition());
+  SbMatrix mx;
+  FdDB::viewer->getOrient(mx);
+  mx.setTranslate(FdDB::viewer->getPos());
+  cd.itsCameraOrientation = FdConverter::toFaMat34(mx);
   cd.itsFocalDistance = FdDB::viewer->getFocalDistance();
   cd.itsHeight = FdDB::viewer->getOHeightOrHAngle();
   cd.itsIsOrthographicFlag = FdDB::viewer->isOrthographicView();
@@ -1235,8 +1238,8 @@ void FdDB::updateState(int newState)
             if (!newMaster)
             {
               FaVec3 norm = FdDB::firstCreateDirection;
-              FaMat34 camMx(FdConverter::toFaMat34(FdDB::viewer->getPosition()));
-              if (norm * (camMx.translation() - FdPickedPoints::getFirstPickedPoint()) < 0.0)
+              FaVec3 camX = FdConverter::toFaVec3(FdDB::viewer->getPos());
+              if (norm * (camX - FdPickedPoints::getFirstPickedPoint()) < 0.0)
                 norm = -norm;
 
               std::vector<FmTriad*> mTriads;
