@@ -1958,12 +1958,12 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
   os <<"\t<ModelStructure>\n";
   valRef = inputs.size()+1;
   os <<"\t\t<Outputs>\n";
-  for (const Indicator& output : outputs)
+  for (size_t i = 0; i < outputs.size(); i++)
     os <<"\t\t\t<Unknown index=\""<< valRef++ <<"\"/>\n";
   os <<"\t\t</Outputs>\n";
   valRef = inputs.size()+1;
   os <<"\t\t<InitialUnknowns>\n";
-  for (const Indicator& output : outputs)
+  for (size_t i = 0; i < outputs.size(); i++)
     os <<"\t\t\t<Unknown index=\""<< valRef++ <<"\"/>\n";
   os <<"\t\t</InitialUnknowns>\n";
   os <<"\t</ModelStructure>\n";
