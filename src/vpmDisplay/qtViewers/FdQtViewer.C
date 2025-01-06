@@ -104,14 +104,14 @@ FdQtViewer::FdQtViewer(QWidget* parent, const char* name, SbBool, SoQtViewer::Ty
                                             FdQtViewer* me = (FdQtViewer*)p;
                                             // get the time difference
                                             SbTime time = viewerRealTime->getValue();
-                                            float sec = float((time - me->seekStartTime).getValue());
-                                            if (sec == 0.0f) sec = 1.0f/72.0f; // at least one frame (needed for first call)
-                                            float t = sec / me->seekAnimTime;
+                                            double sec = (time - me->seekStartTime).getValue();
+                                            if (sec == 0.0) sec = 1.0/72.0; // at least one frame (needed for first call)
+                                            double t = sec / me->seekAnimTime;
                                             // check to make sure the values are correctly clipped
-                                            if (t > 0.9999f) t = 1.0f; // this is the last interval
+                                            if (t > 0.9999) t = 1.0; // this is the last interval
                                             // call subclasses to interpolate the animation
                                             me->interpolateSeekAnimation(t);
-                                            if (t == 1.0f)
+                                            if (t == 1.0)
                                             {
                                               // stops seek since this was the last interval
                                               if (me->isViewing()) me->setViewing(FALSE);
@@ -187,10 +187,20 @@ FdQtViewer::processEvent( QEvent *qevent )
 		QKeyEvent *keyEv = 0;
 		QMouseEvent *mouseEv = 0;
 
+    // Lambda function scaling the key-triggered rotation angle.
+    auto&& keyScale = [keyEv](double rotAngle)
+    {
+      rotAngle *= 0.01;
+      if (keyEv->modifiers() & Qt::ControlModifier) rotAngle *= 0.001;
+      if (keyEv->modifiers() & Qt::AltModifier)     rotAngle *= 0.001;
+      return rotAngle;
+    };
+
 		QPoint pointerPos = this->getGLWidget()->mapFromGlobal( QCursor::pos() );
 
 		SbVec2s windowSize = this->getGlxSize();
 		int Xrad, Yrad; // Used to test what rotation to apply: Rotate or Zrot
+		bool slowRot = false;
 
 		switch ( qevent->type() )
 		{
@@ -217,12 +227,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Up:
 				this->stopAnimating();
 
-				if (keyEv->modifiers() & Qt::ShiftModifier){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(this->myKeyRotationAngle * factor, 0);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
@@ -230,20 +236,16 @@ FdQtViewer::processEvent( QEvent *qevent )
 					this->panCamera();
 
 				}
-				else{
+				else
 					this->rotateCamera(this->myKeyRotationAngle, 0);
-				}
 				eventHandeled = true;
 				break;
 
 			case Qt::Key_Down:
 				this->stopAnimating();
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(-this->myKeyRotationAngle * factor, 0);
-				}
+
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(-keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
@@ -251,21 +253,16 @@ FdQtViewer::processEvent( QEvent *qevent )
 					this->panCamera();
 
 				}
-				else{
+				else
 					this->rotateCamera(-this->myKeyRotationAngle, 0);
-				}
 				eventHandeled = true;
 				break;
 
 			case Qt::Key_Left:
 				this->stopAnimating();
 
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(0, this->myKeyRotationAngle * factor);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(0, keyScale(myKeyRotationAngle));
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue( this->mousePosMoNot[0],
 						this->mousePosMoNot[1]
@@ -273,12 +270,10 @@ FdQtViewer::processEvent( QEvent *qevent )
 					this->mousePosMoNot[0] = this->mousePosMoNot[0] - 60;
 					this->panCamera();
 				}
-				else if ( keyEv -> modifiers() & Qt::AltModifier ){
-					this->ZrotCamera((float) ( -M_PI / 12.0 ));
-				}
-				else{
+				else if (keyEv->modifiers() & Qt::AltModifier)
+					this->ZrotCamera(-M_PI / 12.0);
+				else
 					this->rotateCamera(0, this->myKeyRotationAngle);
-				}
 
 				eventHandeled = true;
 				break;
@@ -286,24 +281,18 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Right:
 				this->stopAnimating();
 
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(0, -this->myKeyRotationAngle * factor);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(0, -keyScale(myKeyRotationAngle));
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
 					this->mousePosMoNot[0] = this->mousePosMoNot[0] + 60;
 					this->panCamera();
 				}
-				else if ( keyEv -> modifiers() & Qt::AltModifier ){
-					this->ZrotCamera( static_cast<float>( M_PI / 12.0 ) );
-				}
-				else{
+				else if (keyEv->modifiers() & Qt::AltModifier)
+					this->ZrotCamera( M_PI / 12.0);
+				else
 					this->rotateCamera(0, -this->myKeyRotationAngle);
-				}
 
 				eventHandeled = true;
 				break;
@@ -493,8 +482,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 				mouseEv = (QMouseEvent *) qevent;
 				this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 					this->mousePosMoNot[1]);
-				this->mousePosMoNot[0] = mouseEv->x();
-				this->mousePosMoNot[1] = windowSize[1] - mouseEv->y();
+				this->mousePosMoNot[0] = mouseEv->position().x();
+				this->mousePosMoNot[1] = windowSize[1] - mouseEv->position().y();
 
 			}
 
@@ -505,7 +494,10 @@ FdQtViewer::processEvent( QEvent *qevent )
 				//Uncomment this to stop panning when cursor exits 3d-window
 				/*
 				mouseEv = (QMouseEvent *) qevent;
-				if(this->getXPos() > mouseEv->pos().x() || (this->getXPos() + this->getWidth()) < mouseEv->pos().x() || this->getYPos() > mouseEv->pos().y() || (this->getYPos() + this->getHeight()) < mouseEv->pos().y() ){
+				if (this->getXPos() > mouseEv->position().x() ||
+				    this->getXPos() + this->getWidth() < mouseEv->position().x() ||
+				    this->getYPos() > mouseEv->position().y() ||
+				    this->getYPos() + this->getHeight() < mouseEv->position().y()) {
 				this->interactiveCountDec();
 				this->mode = BASE_MODE;
 				this->getGLWidget()->setCursor(this->baseCursor);
@@ -520,9 +512,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case MIDMOUSE_ROTATE_MODE:
 				this->lastMotionTime = SbTime::getTimeOfDay().getValue();
 				if (mouseEv)
-				  this->rotateCamera(mouseEv->modifiers() & Qt::ShiftModifier);
-				else
-				  this->rotateCamera(false);
+				  slowRot = mouseEv->modifiers() & Qt::ShiftModifier;
+				this->rotateCamera(slowRot);
 				eventHandeled = true;
 				break;
 			case DOLLY_MODE:
@@ -533,9 +524,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case MIDMOUSE_ZROT_MODE:
 				this->lastMotionTime = SbTime::getTimeOfDay().getValue();
 				if (mouseEv)
-				  this->ZrotCamera((bool)(mouseEv->modifiers() & Qt::ShiftModifier));
-				else
-				  this->ZrotCamera(false);
+				  slowRot = mouseEv->modifiers() & Qt::ShiftModifier;
+				this->ZrotCamera(slowRot);
 				eventHandeled = true;
 				break;
 			case READY_TO_MIDMOUSE_ROTATE:
@@ -588,8 +578,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 				mouseEv = (QMouseEvent *) qevent;
 				if ( mouseEv->button() == Qt::LeftButton )
 				{
-					this->mousePosBut1P[0] = mouseEv->x();
-					this->mousePosBut1P[1] = windowSize[1] - mouseEv->y();
+					this->mousePosBut1P[0] = mouseEv->position().x();
+					this->mousePosBut1P[1] = windowSize[1] - mouseEv->position().y();
 					this->seekToThisPoint(this->mousePosBut1P);
 					eventHandeled = true;
 				}
@@ -1468,17 +1458,8 @@ FdQtViewer::dollYCamera()
 void
 FdQtViewer::ZrotCamera(bool slow)
 {
-  // uses : camera, windowSize, mousePosMoNot, mousePosPrevMoNot
+  // uses : windowSize, mousePosMoNot, mousePosPrevMoNot
 
-  SoCamera* camera = this->getCamera();
-
-  if ( camera == NULL )
-    return;
-
-  float angle;
-  SbMatrix cameraRotMatrix;
-  SbVec3f cameraZAxis;
-  SbRotation cameraRotIncr;
   SbVec2s windowCenter = this->getGlxSize() / 2;
 
   SbVec2f centerToMPos(this->mousePosMoNot[0] - windowCenter[0],
@@ -1490,41 +1471,28 @@ FdQtViewer::ZrotCamera(bool slow)
   centerToMPos.normalize();
   centerToPrevMpos.normalize();
 
-  angle = ( centerToMPos[0] * centerToPrevMpos[1] - centerToMPos[1]
-      * centerToPrevMpos[0] );
+  double angle = (centerToMPos[0]*centerToPrevMpos[1] -
+                  centerToMPos[1]*centerToPrevMpos[0]);
   if (slow)
-    angle *= 0.01f;
+    angle *= 0.01;
 
-  cameraRotMatrix = this->myMultiplier->rot2.getValue();
-  cameraZAxis.setValue(cameraRotMatrix[2][0], cameraRotMatrix[2][1],
-      cameraRotMatrix[2][2]);
-
-  cameraRotIncr.setValue(cameraZAxis, angle);
-  this->myMultiplier->rot2 = this->myMultiplier->rot2.getValue()
-      * cameraRotIncr;
+  this->ZrotCamera(angle);
 }
 
 void
-FdQtViewer::ZrotCamera( float angle )
+FdQtViewer::ZrotCamera(double angle)
 {
-
   SbMatrix cameraRotMatrix;
-  SbVec3f cameraZAxis;
-  SbRotation cameraRotIncr;
 
-  cameraRotMatrix = this->myMultiplier->rot2.getValue();
-  cameraZAxis.setValue(cameraRotMatrix[2][0], cameraRotMatrix[2][1],
-      cameraRotMatrix[2][2]);
+  cameraRotMatrix = myMultiplier->rot2.getValue();
+  SbVec3f cameraZAxis(cameraRotMatrix[2]);
 
-  cameraRotIncr.setValue(cameraZAxis, angle);
-  this->myMultiplier->rot2 = this->myMultiplier->rot2.getValue()
-      * cameraRotIncr;
+  SbRotation cameraRotIncr(cameraZAxis,angle);
+  myMultiplier->rot2 = myMultiplier->rot2.getValue() * cameraRotIncr;
 }
 
-// SoQt port 
-// This was here before, but I can't see that it's called
 void
-FdQtViewer::interpolateSeekAnimation( float t )
+FdQtViewer::interpolateSeekAnimation(double t)
 {
 
   // check if camera new and old position/orientation have already
@@ -1591,39 +1559,31 @@ FdQtViewer::interpolateSeekAnimation( float t )
   // Rotate the camera according to the animation time
   // use and ease-in ease-out approach
 
-  float cos_t = 0.5 - ( 0.5 * (float) cos(t * M_PI) );
+  double cos_t = 0.5 - 0.5*cos(t*M_PI);
 
   // Set camera new rotation
 
   myMultiplier->rot2 = SbRotation::slerp(this->oldCamOrientation,
-      this->newCamOrientation, cos_t);
+                                         this->newCamOrientation, cos_t);
 }
 
 /*!
- Figure out and set the focal plane
-
- Uses : camera, getGlxSize, mousePosMoNot
- */
+  Figure out and set the focal plane
+*/
 
 void
 FdQtViewer::setFocalPlane()
 {
   SbMatrix cameraRotMatrix;
-  SbVec3f forward;
-  SbVec3f focalPoint;
-  SbVec2s windowSize;
-  SbLine line;
-  SbViewVolume cameraVolume;
 
   SoCamera* camera = this->getCamera();
 
   cameraRotMatrix = camera->orientation.getValue();
+  SbVec3f forward(cameraRotMatrix[2]);
+  forward *= -1.0f;
 
-  forward.setValue(-cameraRotMatrix[2][0], -cameraRotMatrix[2][1],
-      -cameraRotMatrix[2][2]);
-
-  focalPoint = camera->position.getValue() + forward
-      * camera->focalDistance.getValue();
+  SbVec3f focalPoint(camera->position.getValue());
+  focalPoint += forward * camera->focalDistance.getValue();
 
   focalplane = SbPlane(forward, focalPoint);
 }
