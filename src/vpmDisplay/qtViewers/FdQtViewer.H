@@ -67,7 +67,7 @@ public:
   void perspectiveView();
   void parallellView();
 
-  void anisotropicView(bool horz, float ratio = 5.0);
+  void anisotropicView(bool horz, float ratio = 5.0f);
 
   void isometricView();
   void frontView();
@@ -125,17 +125,10 @@ public:
   // SoQt port
   virtual void processEvent(QEvent* e);
 
-  //virtual bool processEvent(QEvent *e);
   void setMouseCursor(QCursor cur);
-
-  // Copied from fedem version SoQtViewer
-  //virtual void    interpolateSeekAnimation2(float t);
-  //virtual void    computeSeekFinalOrientation();
 
   void setSeekingMode(bool tf);
 
-  float	      seekDistance;
-  SbBool	    seekDistAsPercentage; // percentage/absolute flag
   SbBool	    computeSeekVariables;
   SbVec3f	    seekPoint, seekNormal;
   SbRotation  oldCamOrientation, newCamOrientation;
@@ -186,9 +179,9 @@ public:
   void rotateCamera(double xRot, double yRot);
   void dollYCamera();
   void ZrotCamera(bool slow);
-  void ZrotCamera(float angle);
+  void ZrotCamera(double angle);
 
-  void interpolateSeekAnimation(float t);
+  void interpolateSeekAnimation(double t);
   bool seekToThisPoint(const SbVec2s &mouseLocation);
   // Animation state Variables and conv. methods:
  
@@ -201,7 +194,7 @@ public:
   SoFieldSensor	*seekAnimationSensor;
   bool   seekModeFlag;
   SbTime seekStartTime;
-  float	 seekAnimTime;
+  double seekAnimTime;
   bool detailSeekFlag;
   static SoSFTime	*viewerRealTime;
 
