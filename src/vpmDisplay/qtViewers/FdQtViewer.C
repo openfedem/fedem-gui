@@ -187,6 +187,15 @@ FdQtViewer::processEvent( QEvent *qevent )
 		QKeyEvent *keyEv = 0;
 		QMouseEvent *mouseEv = 0;
 
+    // Lambda function scaling the key-triggered rotation angle.
+    auto&& keyScale = [keyEv](double rotAngle)
+    {
+      rotAngle *= 0.01;
+      if (keyEv->modifiers() & Qt::ControlModifier) rotAngle *= 0.001;
+      if (keyEv->modifiers() & Qt::AltModifier)     rotAngle *= 0.001;
+      return rotAngle;
+    };
+
 		QPoint pointerPos = this->getGLWidget()->mapFromGlobal( QCursor::pos() );
 
 		SbVec2s windowSize = this->getGlxSize();
@@ -217,12 +226,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Up:
 				this->stopAnimating();
 
-				if ( keyEv->state() & Qt::ShiftModifier){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(this->myKeyRotationAngle * factor, 0);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
@@ -238,12 +243,9 @@ FdQtViewer::processEvent( QEvent *qevent )
 
 			case Qt::Key_Down:
 				this->stopAnimating();
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(-this->myKeyRotationAngle * factor, 0);
-				}
+
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
@@ -260,12 +262,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Left:
 				this->stopAnimating();
 
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(0, this->myKeyRotationAngle * factor);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue( this->mousePosMoNot[0],
 						this->mousePosMoNot[1]
@@ -286,12 +284,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Right:
 				this->stopAnimating();
 
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(0, -this->myKeyRotationAngle * factor);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
