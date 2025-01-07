@@ -18,7 +18,6 @@
 #include "vpmDisplay/FdFEModelKit.H"
 #include "vpmDisplay/FdFEGroupPart.H"
 #include "FFlLib/FFlLinkHandler.H"
-#include "FFlLib/FFlFEParts/FFlNode.H"
 #include "FFlLib/FFlVisualization/FFlGroupPartCreator.H"
 #include "FFdCadModel/FdCadHandler.H"
 
@@ -451,9 +450,9 @@ SbVec3f FdPart::findSnapPoint(const SbVec3f& pointOnObject,
     return this->FdLink::findSnapPoint(pointOnObject,objToWorld,detail,pPoint);
 
   SbVec3f nearestWorld;
-  FFlNode* node = linkHandler->findClosestNode(FdConverter::toFaVec3(pointOnObject));
-  if (node)
-    objToWorld.multVecMatrix(FdConverter::toSbVec3f(node->getPos()),nearestWorld);
+  FaVec3 point = FdConverter::toFaVec3(pointOnObject);
+  if (linkHandler->findNode(point))
+    objToWorld.multVecMatrix(FdConverter::toSbVec3f(point),nearestWorld);
   else
     objToWorld.multVecMatrix(pointOnObject,nearestWorld);
 
@@ -467,13 +466,10 @@ bool FdPart::findNode(int& nodeID, FaVec3& worldNodePos, const SbVec3f& pickPoin
   if (!linkHandler) return false;
 
   FaMat34 partTrans = this->getActiveTransform();
-  FaVec3  partPoint = partTrans.inverse()*FdConverter::toFaVec3(pickPoint);
-  FFlNode* node = linkHandler->findClosestNode(partPoint);
-  if (!node) return false;
+  worldNodePos = FdConverter::toFaVec3(pickPoint);
+  nodeID = linkHandler->findNode(worldNodePos,&partTrans);
 
-  nodeID = node->getID();
-  worldNodePos = partTrans * node->getPos();
-  return true;
+  return nodeID > 0;
 }
 
 

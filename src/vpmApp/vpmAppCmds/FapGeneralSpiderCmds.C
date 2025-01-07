@@ -15,8 +15,6 @@
 #include "vpmDB/FmPart.H"
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "FFlLib/FFlLinkHandler.H"
-#include "FFlLib/FFlVertex.H"
-#include "FFlLib/FFlFEParts/FFlNode.H"
 #include "FFaLib/FFaGeometry/FFaPointSetGeometry.H"
 
 #ifdef USE_INVENTOR
@@ -457,8 +455,6 @@ bool FapGeneralSpiderCmds::windowSelectPrimitiveCB(void*,
   // Also initialize a vector to accumulate the selected vxes
 
   static SbViewVolume windowVolume;
-  static std::vector<bool> visitedVertexes;
-  static FaMat34 partCS;
 
   if (weMustInitWindowVolume)
     {
@@ -478,13 +474,6 @@ bool FapGeneralSpiderCmds::windowSelectPrimitiveCB(void*,
       float top    = mouseDown[1] > mouseUp[1] ? mouseDown[1] : mouseUp[1];
 
       windowVolume = vv.narrow(left, bottom, right, top);
-
-      std::vector<bool> empty;
-      visitedVertexes.swap(empty);
-      visitedVertexes.resize(ourSpiderPart->getLinkHandler()->getVertexCount(), false);
-
-      partCS = ourSpiderPart->getGlobalCS();
-      weMustInitWindowVolume = false;
     }
 
   // Do the actual search for node and add to preliminary selection.
@@ -517,17 +506,15 @@ bool FapGeneralSpiderCmds::windowSelectPrimitiveCB(void*,
     }
   }
 
-  for (int idx : indexes)
-    if (idx < (int)visitedVertexes.size() && !visitedVertexes[idx])
-    {
-      visitedVertexes[idx] = true;
-      FFlVertex* fflVx = static_cast<FFlVertex*>(ourSpiderPart->getLinkHandler()->getVertexes()[idx]);
-      if (fflVx && fflVx->getNode()) {
-        FaVec3 worldPos = partCS * (*fflVx);
-        if (windowVolume.intersect(FdConverter::toSbVec3f(worldPos)))
-          ourWindowedNodes[fflVx->getNode()->getID()] = worldPos;
-      }
-    }
+  auto&& Windower = [](const FaVec3& worldPos) -> bool
+  {
+    return windowVolume.intersect(FdConverter::toSbVec3f(worldPos));
+  };
+
+  ourSpiderPart->getLinkHandler()->findWindowedNodes(ourWindowedNodes,indexes,
+                                                     ourSpiderPart->getGlobalCS(),
+                                                     weMustInitWindowVolume,Windower);
+  weMustInitWindowVolume = false;
 
 #else
   if (v1 || v2) // Dummy statement to suppress compiler warning
