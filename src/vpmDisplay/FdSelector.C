@@ -27,10 +27,12 @@ static void selectMasterTriadsInJoint(FmJointBase* joint, bool deSelect = false)
   joint->getMasterTriads(mtriads);
   for (FmTriad* master : mtriads)
     if (FapEventManager::isPermSelected(master) == deSelect)
+    {
       if (deSelect)
         FapEventManager::permUnselect(master);
       else
         FapEventManager::permSelect(master);
+    }
 }
 
 

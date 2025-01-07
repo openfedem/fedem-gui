@@ -220,13 +220,14 @@ bool FdTriad::updateFdTopology(bool updateChildrenDisplay)
 
   // Set transform from DB
 
-  // Recursive update of the display topology of the
+  /* Recursive update of the display topology of the
   // enteties affected by this entety:
   //              Axial Spring/Damper
   //            /
   // Link->Triad->Joint->HP
   //            \
   //              Load
+  */
 
   if (updateChildrenDisplay)
     itsFmOwner->updateChildrenDisplayTopology();
@@ -467,13 +468,14 @@ void FdTriad::selectAnimationFrame(size_t frameNr)
 
   // Set transform from DB
 
-  // Recursive update of the display topology of the
+  /* Recursive update of the display topology of the
   // enteties affected by this entety:
   //              Axial Spring/Damper
   //            /
   // Link->Triad->Joint->HP
   //            \
   //              Load
+  */
 
   itsFmOwner->updateChildrenDisplayTopology();
 }

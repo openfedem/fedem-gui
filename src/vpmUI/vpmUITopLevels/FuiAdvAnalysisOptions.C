@@ -634,7 +634,7 @@ void FuiAdvAnalysisOptions::placeOptionWidgets(FuiAdvAnalysisOptionsSheet* w,
 
   // Place widgets
 
-  for (const std::pair<int,int>& ip : glh)
+  for (const std::pair<const int,int>& ip : glh)
   {
     RadioIter ri = this->radioButtons[iOpt].find(ip.first);
     if (ri != this->radioButtons[iOpt].end())
@@ -762,7 +762,7 @@ int FuiAdvAnalysisOptions::getOptionHeightHint(int iOpt)
   int maxh = 0;
   IntegerMap glh;
   this->getOptionHorGridlines(iOpt,0,glh);
-  for (const std::pair<int,int>& ip : glh)
+  for (const std::pair<const int,int>& ip : glh)
     if (ip.second > maxh)
       maxh = ip.second;
 

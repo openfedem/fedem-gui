@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <fstream>
-#include <functional>
 #include <algorithm>
 
 #include "vpmApp/vpmAppCmds/FapOilWellCmds.H"
@@ -162,13 +161,13 @@ struct PipeData
 {
   std::string description;
   std::string fileName;
-  int repeats;
-  double length;
-  double dStart;
-  double dEnd;
-  double time;
-  double dampingR;
-  double dampingA;
+  int repeats = 0;
+  double length = 0.0;
+  double dStart = 0.0;
+  double dEnd = 0.0;
+  double time = 0.0;
+  double dampingR = 0.0;
+  double dampingA = 0.0;
   std::vector<FmPair> additionalContactP;
 };
 
@@ -1074,7 +1073,7 @@ void FapOilWellCmds::createDrillString(const std::string& fileName)
 }
 
 
-struct MatFinder : public std::unary_function<FmMaterialProperty*,bool>
+struct MatFinder
 {
   double myRho, myE, myG;
   MatFinder(double Rho, double E, double G) : myRho(Rho), myE(E), myG(G) {}
@@ -1085,7 +1084,7 @@ struct MatFinder : public std::unary_function<FmMaterialProperty*,bool>
   }
 };
 
-struct PipeFinder : public std::unary_function<FmBeamProperty*,bool>
+struct PipeFinder
 {
   const FmMaterialProperty* myMat;
   double myDo, myDi, myDd, myDb, myCa, myCm, myCd;
@@ -1465,8 +1464,9 @@ void FapOilWellCmds::createRiser(const std::string& fileName)
 	FaParse::skipWhiteSpaceAndComments(is);
 	is >> L >> numElem;
       }
-      if (numElem > 0)
-	ListUI <<"\t"<< numElem <<" elements a "<< L/numElem <<" [m]\n";
+
+      double dL = numElem > 0 ? L/(double)numElem : 0.0;
+      ListUI <<"\t"<< numElem <<" elements a "<< dL <<" [m]\n";
 
       // Check if a visualization file is specified next
       std::string vizFile;
@@ -1493,12 +1493,12 @@ void FapOilWellCmds::createRiser(const std::string& fileName)
 	is.unget();
 
       bottom = triad->getGlobalTranslation();
-      FaVec3 top = bottom + dir*L;
       std::vector<FaVec3> pos;
+      pos.reserve(1+numElem);
       pos.push_back(bottom);
       for (int e = 1; e < numElem; e++)
-	pos.push_back((bottom*(numElem-e) + top*e)/(double)numElem);
-      pos.push_back(top);
+        pos.push_back(pos.back() + dir*dL);
+      pos.push_back(bottom + dir*L);
 
       // Create the beam elements and triads
       FmBeam* bea1 = beam;
@@ -2076,7 +2076,7 @@ bool FapOilWellCmds::degradeSoilSprings(double wantedTime)
 	     <<" s0 = "<< s0 <<"\n";
       spr->setInitStiff(s0);
     }
-    else
+    else if (spr)
       ListUI <<"  -> ERROR: Failed to read secant stiffness for "
 	     << spr->getIdString() <<"\n";
   }

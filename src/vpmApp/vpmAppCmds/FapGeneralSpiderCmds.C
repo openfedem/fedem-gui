@@ -269,8 +269,8 @@ void FapGeneralSpiderCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
 
           // Get hit point on object in object space:
           SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
-          SbMatrix objToWorld = interestingPickedPoint->getObjectToWorld(tail);
-          FaVec3  createPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+          const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(tail);
+          FaVec3 createPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
 
           if (pickedObject->isOfType(FdTriad::getClassTypeID()))
           {
@@ -546,7 +546,7 @@ void FapGeneralSpiderCmds::windowSelectionFinishedCB(void*, SoSelection*)
 #ifdef USE_INVENTOR
   // Insert the complete selection into the point selector.
   // Toggle or add as prescribed.
-  for (const std::pair<int,FaVec3>& node : ourWindowedNodes)
+  for (const std::pair<const int,FaVec3>& node : ourWindowedNodes)
     FdPickedPoints::selectNodeSet(node.first, node.second, ourSelectionType);
 
   ourWindowedNodes.clear();

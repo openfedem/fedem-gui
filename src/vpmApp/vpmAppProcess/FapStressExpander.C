@@ -13,12 +13,12 @@
 #include "vpmApp/vpmAppDisplay/FapVTFFile.H"
 #include "vpmApp/FapLicenseManager.H"
 
-#include "vpmDB/FmDB.H"
-#include "vpmDB/FmFileSys.H"
-#include "vpmDB/FmAnalysis.H"
-#include "vpmDB/FmMechanism.H"
 #include "vpmDB/FmPart.H"
 #include "vpmDB/FmElementGroupProxy.H"
+#include "vpmDB/FmMechanism.H"
+#include "vpmDB/FmAnalysis.H"
+#include "vpmDB/FmDB.H"
+#include "vpmDB/FmFileSys.H"
 
 #include "FFaLib/FFaCmdLineArg/FFaOptionFileCreator.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"

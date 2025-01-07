@@ -52,9 +52,9 @@ if ( VTFAPI_FOUND )
   include_directories ( ${VTF_INCLUDE} )
 endif ( VTFAPI_FOUND )
 
-if ( WIN AND Coin_library )
+if ( DEFINED ENV{COIN_ROOT} AND Coin_library )
   include_directories ( "$ENV{COIN_ROOT}/include" )
-endif ( WIN AND Coin_library )
+endif ( DEFINED ENV{COIN_ROOT} AND Coin_library )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${CPP_SOURCE_FILES} ${HEADER_FILES} )

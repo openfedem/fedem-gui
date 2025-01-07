@@ -458,7 +458,10 @@ cameraData FdDB::getView()
 {
   cameraData cd;
 
-  cd.itsCameraOrientation = FdConverter::toFaMat34(FdDB::viewer->getPosition());
+  SbMatrix mx;
+  FdDB::viewer->getOrient(mx);
+  mx.setTranslate(FdDB::viewer->getPos());
+  cd.itsCameraOrientation = FdConverter::toFaMat34(mx);
   cd.itsFocalDistance = FdDB::viewer->getFocalDistance();
   cd.itsHeight = FdDB::viewer->getOHeightOrHAngle();
   cd.itsIsOrthographicFlag = FdDB::viewer->isOrthographicView();
@@ -1235,8 +1238,8 @@ void FdDB::updateState(int newState)
             if (!newMaster)
             {
               FaVec3 norm = FdDB::firstCreateDirection;
-              FaMat34 camMx(FdConverter::toFaMat34(FdDB::viewer->getPosition()));
-              if (norm * (camMx.translation() - FdPickedPoints::getFirstPickedPoint()) < 0.0)
+              FaVec3 camX = FdConverter::toFaVec3(FdDB::viewer->getPos());
+              if (norm * (camX - FdPickedPoints::getFirstPickedPoint()) < 0.0)
                 norm = -norm;
 
               std::vector<FmTriad*> mTriads;
@@ -1687,8 +1690,8 @@ void FdDB::onePickCreateEventCB(void*, SoEventCallback* eventCBnode)
       SbVec3f worldPoint    = interestingPickedPoint->getPoint();
 
       // Get object to world transformation:
-      SbMatrix SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
-      FaMat34  objToWorld   = FdConverter::toFaMat34(SbObjToWorld);
+      const SbMatrix& SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
+      FaMat34 objToWorld = FdConverter::toFaMat34(SbObjToWorld);
 
       FdDB::firstObjectToCreateNear = pickedObject;
 
@@ -1866,8 +1869,8 @@ void FdDB::twoPickCreateEventCB(void*, SoEventCallback* eventCBnode)
       SbVec3f worldPoint    = interestingPickedPoint->getPoint();
 
       // Get object to world transformation:
-      SbMatrix SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
-      FaMat34  objToWorld   = FdConverter::toFaMat34(SbObjToWorld);
+      const SbMatrix& SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
+      FaMat34 objToWorld = FdConverter::toFaMat34(SbObjToWorld);
 
       if (mode == FuiModes::MAKEPRISMJOINT_MODE || mode == FuiModes::MAKECYLJOINT_MODE)
         path = NULL; // For multi-master joints, use line-direction only when picking on FE parts
@@ -2045,8 +2048,8 @@ void FdDB::threePickCreateEventCB(void*, SoEventCallback* eventCBnode)
       SbVec3f worldPoint    = interestingPickedPoint->getPoint();
 
       // Get object to world transformation:
-      SbMatrix SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
-      FaMat34  objToWorld   = FdConverter::toFaMat34(SbObjToWorld);
+      const SbMatrix& SbObjToWorld = interestingPickedPoint->getObjectToWorld(tail);
+      FaMat34 objToWorld = FdConverter::toFaMat34(SbObjToWorld);
 
       std::cout <<"You picked "<< pickedObject->getFmOwner()->getIdString(true) << std::endl;
       if (state >= 0 && state <= 2) // state is for first picked object
@@ -2263,7 +2266,7 @@ void FdDB::makeCamJointEventCB(void*, SoEventCallback* eventCBnode)
         SoDetail* pickDetail = pDet ? pDet->copy() : NULL;
 
         // Get object to world transformation:
-        SbMatrix objToWorld = interestingPickedPoint->getObjectToWorld(tail);
+        const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(tail);
 
         // Get hit point on object in object space:
         SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
@@ -2435,8 +2438,8 @@ void FdDB::smartMoveEventCB(void*, SoEventCallback* eventCBnode)
       const SoDetail* pDet = interestingPickedPoint->getDetail(tail);
       SoDetail* pickDetail = pDet ? pDet->copy() : NULL;
 
-      SbVec3f  pointOnObject = interestingPickedPoint->getObjectPoint();
-      SbMatrix objToWorld    = interestingPickedPoint->getObjectToWorld(tail);
+      SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
+      const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(tail);
 
       if (state == 0 || state == 1)
       {
@@ -2867,9 +2870,9 @@ void FdDB::pickLoadPointEventCB(void*, SoEventCallback* eventCBnode)
       const SoDetail* pDet = interestingPickedPoint->getDetail();
       SoDetail* pickDetail = pDet ? pDet->copy() : NULL;
 
-      SbVec3f  pointOnObject = interestingPickedPoint->getObjectPoint();
-      SbMatrix objToWorld    = interestingPickedPoint->getObjectToWorld(NULL);
-      FaVec3   fromPoint     = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+      SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
+      const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(NULL);
+      FaVec3 fromPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
       if (pickDetail)
         delete pickDetail;
 
@@ -2915,9 +2918,9 @@ void FdDB::pickMeasurePointEventCB(void*, SoEventCallback* eventCBnode)
       const SoDetail* pDet = interestingPickedPoint->getDetail();
       SoDetail* pickDetail = pDet ? pDet->copy() : NULL;
 
-      SbVec3f  pointOnObject = interestingPickedPoint->getObjectPoint();
-      SbMatrix objToWorld    = interestingPickedPoint->getObjectToWorld(NULL);
-      FaVec3   fromPoint     = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+      SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
+      const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(NULL);
+      FaVec3 fromPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
       if (pickDetail)
         delete pickDetail;
 

@@ -34,7 +34,7 @@ FuiViewSettings::FuiViewSettings() : myToggleButtonGroup(false), myColorEditButt
 
 FuiViewSettings::~FuiViewSettings()
 {
-  for (const std::pair<FFuColorDialog*,FFuFrame*>& color : myColorDialogMap)
+  for (const std::pair<FFuColorDialog* const,FFuFrame*>& color : myColorDialogMap)
     delete color.first;
 }
 
@@ -642,7 +642,7 @@ void FuiViewSettings::onPoppedUp()
 
 void FuiViewSettings::onPoppedDown()
 {
-  for (const std::pair<FFuColorDialog*,FFuFrame*>& color : myColorDialogMap)
+  for (const std::pair<FFuColorDialog* const,FFuFrame*>& color : myColorDialogMap)
     color.first->popDown();
 }
 

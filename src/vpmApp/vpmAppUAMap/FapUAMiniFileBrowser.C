@@ -538,7 +538,7 @@ void FapUAMiniFileBrowser::permSelectionChanged()
       ++nTriads[triad->getNDOFs()];
 
     if (!nTriads.empty()) str += "\n";
-    for (const std::pair<int,int>& n : nTriads)
+    for (const std::pair<const int,int>& n : nTriads)
       str += FFaNumStr("Number of %d-DOF Triads:",n.first) +
              FFaNumStr("%5d\n",n.second);
 
@@ -973,7 +973,7 @@ void FapUAMiniFileBrowser::buildRecovery()
 
   FileSpec  spec;
   StringSet subSet;
-  for (const std::pair<std::string,FmPart*>& p : parts)
+  for (const std::pair<const std::string,FmPart*>& p : parts)
   {
     // Create part header
     part = this->insertUIItem(recoveryHeader, part,
@@ -1416,7 +1416,7 @@ void FapUAMiniFileBrowser::deleteResultFiles()
     }
 
   int redFileCount = 0;
-  for (const std::pair<FmPart*,StringSet>& files : partFilesToDelete)
+  for (const std::pair<FmPart* const,StringSet>& files : partFilesToDelete)
     redFileCount += files.second.size();
 
   if (redFileCount > 0)
@@ -1433,7 +1433,7 @@ void FapUAMiniFileBrowser::deleteResultFiles()
 #endif
     if (Fui::yesNoDialog(warning.c_str()))
     {
-      for (const std::pair<FmPart*,StringSet>& files : partFilesToDelete)
+      for (const std::pair<FmPart* const,StringSet>& files : partFilesToDelete)
         FpModelRDBHandler::removeResultFiles(files.second,files.first);
       this->buildReduction();
       this->updateExpandedItems();
@@ -1533,7 +1533,7 @@ void FapUAMiniFileBrowser::deleteResultFiles()
 
   // Find the affected frs-files
   FmResultStatusData* rsd = FapSimEventHandler::getActiveRSD();
-  for (const std::pair<FmPart*,StringSet>& files : rdbGroupsToDelete)
+  for (const std::pair<FmPart* const,StringSet>& files : rdbGroupsToDelete)
     for (const std::string& file : files.second)
       FpModelRDBHandler::removeResults(file,rsd,files.first);
 
@@ -1783,7 +1783,7 @@ void FapUAMiniFileBrowser::onItemExpanded(int item, bool expanded)
 
 void FapUAMiniFileBrowser::updateExpandedItems()
 {
-  for (const std::pair<std::string,bool>& exp : expandedMap)
+  for (const std::pair<const std::string,bool>& exp : expandedMap)
     if (exp.second)
       for (const std::pair<const int,FileSpec>& file : fileMap)
 	if (this->getItemPath(file.first) == exp.first)

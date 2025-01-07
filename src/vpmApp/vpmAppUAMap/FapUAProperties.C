@@ -2638,7 +2638,7 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
         }
       }
 
-      if (selectedTab < 0 || selectedTab == 2+pv->myJointVals.size()) {
+      if (selectedTab < 0 || selectedTab == 2+(int)pv->myJointVals.size()) {
         if (item->isOfType(FmFreeJoint::getClassTypeID()))
         {
           item->rotFormulation = (FmJointBase::RotFormulationType)pv->mySelectedRotFormulation;

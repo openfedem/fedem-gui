@@ -293,7 +293,7 @@ void FapCylinderSpiderCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
         FdSelector::getSelectedObjects(selectedObjects);
         pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
                                                         selectedObjects, // This is to select objects behind the already selected one
-                                                        std::vector<int>(),false, // No variables filtering
+                                                        {},false, // No variables filtering
                                                         indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
         if (pickedObject)
         {
@@ -312,8 +312,8 @@ void FapCylinderSpiderCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
 
           // Get hit point on object in object space:
           SbVec3f pointOnObject = interestingPickedPoint->getObjectPoint();
-          SbMatrix objToWorld = interestingPickedPoint->getObjectToWorld(tail);
-          FaVec3  createPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail));
+          const SbMatrix& objToWorld = interestingPickedPoint->getObjectToWorld(tail);
+          FaVec3 createPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail));
 
           if (pickedObject->isOfType(FdTriad::getClassTypeID()))
           {

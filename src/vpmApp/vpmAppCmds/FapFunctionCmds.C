@@ -18,10 +18,12 @@
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 
 
+namespace {
 void createSpringChar(FmSpringChar::SpringCharUse useType);
 void createFunc(FmMathFuncBase::FuncUse useType, bool defaultSine = false);
 void convertFunc(FmMathFuncBase::FuncUse use);
 void convertToEngine(FmMathFuncBase::FuncUse use);
+}
 
 #define LAMBDA_CREATE_SPRCHAR(USE) FFaDynCB0S([](){ createSpringChar(FmSpringChar::USE); })
 #define LAMBDA_CREATE_FUNCTION(USE) FFaDynCB0S([](){ createFunc(FmMathFuncBase::USE); })
@@ -195,7 +197,9 @@ void FapFunctionCmds::init()
 }
 
 
-static void createSpringChar(FmSpringChar::SpringCharUse useType)
+namespace { // anonymous
+
+void createSpringChar(FmSpringChar::SpringCharUse useType)
 {
 #ifdef FAP_DEBUG
   std::cout <<"FapFunctionCmds::createSpringChar() "<< useType << std::endl;
@@ -210,7 +214,7 @@ static void createSpringChar(FmSpringChar::SpringCharUse useType)
 }
 
 
-static void createFunc(FmMathFuncBase::FuncUse useType, bool defaultSine)
+void createFunc(FmMathFuncBase::FuncUse useType, bool defaultSine)
 {
 #ifdef FAP_DEBUG
   std::cout <<"FapFunctionCmds::createFunc() "<< useType << std::endl;
@@ -228,6 +232,8 @@ static void createFunc(FmMathFuncBase::FuncUse useType, bool defaultSine)
 
   FapEventManager::permTotalSelect(f);
 }
+
+} // anonymous namespace
 
 
 void FapFunctionCmds::createDriveFile()
@@ -265,7 +271,9 @@ void FapFunctionCmds::createGeneralFunction()
 }
 
 
-static void convertFunc(FmMathFuncBase::FuncUse use)
+namespace { // anonymous
+
+void convertFunc(FmMathFuncBase::FuncUse use)
 {
   std::vector<FmMathFuncBase*> selection;
   FapCmdsBase::getSelected(selection);
@@ -283,7 +291,7 @@ static void convertFunc(FmMathFuncBase::FuncUse use)
 }
 
 
-static void convertToEngine(FmMathFuncBase::FuncUse use)
+void convertToEngine(FmMathFuncBase::FuncUse use)
 {
   std::vector<FmMathFuncBase*> selection;
   FapCmdsBase::getSelected(selection);
@@ -299,6 +307,8 @@ static void convertToEngine(FmMathFuncBase::FuncUse use)
       e->connect();
     }
 }
+
+} // anonymous namespace
 
 
 void FapFunctionCmds::getConvertFuncSensitivity(bool& generalSensitivity,
