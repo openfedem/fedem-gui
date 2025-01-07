@@ -14,7 +14,6 @@
 #include "vpmDB/FmSubAssembly.H"
 #include "vpmDB/FmElementGroupProxy.H"
 #include "vpmPM/FpPM.H"
-#include "FFlLib/FFlFEParts/FFlVDetail.H"
 
 
 void FapLinkVisualCmds::init()
@@ -25,14 +24,14 @@ void FapLinkVisualCmds::init()
   cmdItem->setSmallIcon(lineViewObj_xpm);
   cmdItem->setText("Hide Part Faces");
   cmdItem->setToolTip("Hide the element/geometry faces in the selected part/group");
-  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::setSelectionDetail(FFlVDetail::OFF); }));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::setSelectionDetail(0); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapLinkVisualCmds::getElmFaceHideShowSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_LinkSelection_show");
   cmdItem->setSmallIcon(solidViewObj_xpm);
   cmdItem->setText("Show Part Faces");
   cmdItem->setToolTip("Show the element/geometry faces in the selected part/group");
-  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::setSelectionDetail(FFlVDetail::ON); }));
+  cmdItem->setActivatedCB(FFaDynCB0S([](){ FapLinkVisualCmds::setSelectionDetail(1); }));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapLinkVisualCmds::getElmFaceHideShowSensitivity,bool&));
 
   cmdItem = new FFuaCmdItem("cmdId_SubassemblySelection_show");
