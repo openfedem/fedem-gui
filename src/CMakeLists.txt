@@ -53,6 +53,7 @@ endif ( "${USE_QWTLIB}" STREQUAL "External" )
 set ( USE_QT Qt4 )
 set ( USE_VISUALS TRUE )
 set ( USE_VERTEXOBJ TRUE )
+set ( USE_REFCOUNT TRUE )
 set ( USE_CONNECTORS TRUE )
 set ( USE_CMDLINEARG TRUE )
 set ( SUBFOLDER_LIST Admin FFaLib FFlLib FFrLib
