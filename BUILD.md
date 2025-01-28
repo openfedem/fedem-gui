@@ -9,10 +9,10 @@
 # FEDEM GUI Build
 
 Currently, we support building on Windows only,
-using Microsoft Visual Studio 2019 or later,
+using Microsoft Visual Studio 2022 or later,
 and with Intel&reg; Fortran Compilers for the Fortran modules.
 The build system is based on the [CMake](https://cmake.org/) tool,
-which is embedded in the Visual Studio 2019 installation.
+which is embedded in the Visual Studio 2022 installation.
 
 See [below](#build-fedem-gui-application-on-linux) for ongoing effort to
 build the GUI application on Linux.
@@ -30,7 +30,7 @@ and FEDEM only uses a small part of it. The following description therefore
 focuses on the necessary steps to build only what is needed for FEDEM usage.
 
 To build and install the components needed by FEDEM on Windows,
-proceed as follows. The description below assumes you're using version 6.5.0
+proceed as follows. The description below assumes you're using version 6.8.2
 for which the FEDEM build process has been tested, but it may also apply
 for later versions with minor modifications.
 
@@ -39,36 +39,31 @@ for later versions with minor modifications.
       cd ~/Fedem-src
       git clone git://code.qt.io/qt/qt5.git Qt6
 
-- Checkout the 6.5.0 branch:
+- Checkout the 6.8.2 branch:
 
       cd Qt6
-      git checkout 6.5.0
+      git checkout 6.8.2
 
 - FEDEM only requires the `qtbase` submodule of Qt,
   so to clone the corresponding branch for that:
 
       ./init-repository --branch --module-subset=qtbase
 
-- Comment out the freetype subdirectory from `qtbase/src/3rdparty/CMakeLists.txt`,
-  as this may not build and is not needed by FEDEM anyway, i.e.:
-
-      12c12
-      <     add_subdirectory(freetype)
-      ---
-      > #    add_subdirectory(freetype)
-
-- With Visual Studio 2019, configure the Qt build by executing the following
-  commands from a DOS shell (put this in a bat-file for the convenience):
+- With Visual Studio 2022 Community, configure the Qt build
+  by executing the following commands from a DOS shell
+  (put this in a bat-file for the convenience):
 
       @echo off
       title Qt6 configuration
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+      call "%VSINSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+      mkdir %USERPROFILE%\Qt6-build
       mkdir %USERPROFILE%\Qt6-build\qtbase
       cd %USERPROFILE%\Qt6-build\qtbase
       call %USERPROFILE%\Fedem-src\Qt6\qtbase\configure.bat ^
-      -top-level -release -prefix C:\Qt-6.5.0 ^
+      -top-level -release -prefix C:\Qt-6.8.2 ^
       -nomake examples -nomake tests ^
-      -no-dbus -no-ssl -no-openssl -no-harfbuzz -no-gif -no-libjpeg ^
+      -no-dbus -ssl -no-openssl -no-harfbuzz -no-gif -no-libjpeg ^
       -no-freetype -qt-zlib
       pause
 
@@ -77,6 +72,14 @@ for later versions with minor modifications.
       cd %USERPROFILE%\Qt6-build
       cmake --build . --parallel
       cmake --install .
+
+- Edit the file `C:\Qt-6.8.2\lib\cmake\Qt6Core\Qt6CoreMacros.cmake` to make it accept `.H`
+  as extensions for header files:
+
+      230c230
+      <         set(HEADER_REGEX "(h|hh|h\\+\\+|hm|hpp|hxx|in|txx|inl)$")
+      ---
+      >         set(HEADER_REGEX "(H|h|hh|h\\+\\+|hm|hpp|hxx|in|txx|inl)$")
 
 ### Coin
 
@@ -87,70 +90,60 @@ It consists of several github projects, of which four are used in FEDEM.
 To build and install the main component (Coin), proceed as follows:
 
 - Download the sources from [github](https://github.com/coin3d/coin).
-  We have been using
-  [Coin 4.0.0](https://github.com/coin3d/coin/releases/tag/Coin-4.0.0),
-  but recently two updates were released (4.0.1 and 4.0.2), so you may want
-  to try out the latest release instead.
-  Choose the file `coin-4.0.0-src.zip`
-  (or the equivalent `.tar.gz` file) if you go for the 4.0.0 version.
+  We have been using the release
+  [Coin 4.0.3](https://github.com/coin3d/coin/releases/tag/Coin-4.0.3).
+  Choose the file `coin-4.0.3-src.zip`.
 
 - Unzip the sources in arbitrary location,
-  e.g., `%USERPROFILE%\Fedem-src\Coin-4.0.0`.
+  e.g., `%USERPROFILE%\Fedem-src\Coin-4.0.3`.
 
 - Download the latest [boost](https://www.boost.org/) package.
   Currently, this is
-  [boost 1.83.0](https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/).
-  Choose the file `boost_1_83_0.zip` (or the equivalent `.tar.gz` file).
+  [boost 1.87.0](https://www.boost.org/users/history/version_1_87_0.html).
+  Choose the file `boost_1_87_0.zip`.
   The whole package contains more than 80000 files, but Coin uses only a small
   fraction of it. So to save time (and disk space), you may choose to extract
   only the necessary parts. Using the `unzip` tool in a bash shell, that is:
 
       cd ~/Fedem-src
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/*.hpp'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/assert/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/concept/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/container/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/config/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/core/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/detail/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/exception/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/iterator/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/lexical_cast/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/move/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/mpl/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/numeric/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/preprocessor/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/range/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/smart_ptr/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/type_traits/**'
-      unzip ~/Downloads/boost_1_83_0.zip 'boost_1_83_0/boost/utility/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/*.hpp'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/assert/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/concept/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/container/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/config/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/core/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/detail/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/exception/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/iterator/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/lexical_cast/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/move/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/mpl/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/numeric/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/preprocessor/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/range/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/smart_ptr/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/type_traits/**'
+      unzip ~/Downloads/boost_1_87_0.zip 'boost_1_87_0/boost/utility/**'
 
   This will extract less than 3000 files, which is sufficient for building Coin.
 
-- Comment out line 818 in the file `~/Fedem-src/Coin-4.0.0/CMakeLists.txt`
-  which adds the sub-directory `cpack.d` to the build, that is:
-
-      818c818
-      < add_subdirectory(cpack.d)
-      ---
-      > #add_subdirectory(cpack.d)
-
-- With Visual Studio 2019, configure the Coin build by executing the following
-  commands from a DOS shell (put this in a bat-file for the convenience):
+- With Visual Studio 2022 Community, configure the Coin build
+  by executing the following commands from a DOS shell
+  (put this in a bat-file for the convenience):
 
       @echo off
       title Coin configuration
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
-      "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
-      -G "Visual Studio 16 2019" ^
-      -S %USERPROFILE%\Fedem-src\Coin-4.0.0 ^
-      -B %USERPROFILE%\Coin-build\Coin ^
-      -DBOOST_ROOT=%USERPROFILE%\Fedem-src\boost_1_83.0 ^
-      -DCMAKE_INSTALL_PREFIX=C:\Coin-4 ^
-      -DCOIN_BUILD_TESTS=OFF
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+      "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
+      -G "Visual Studio 17 2022" ^
+      -S %USERPROFILE%\Fedem-src\Coin-4.0.3 ^
+      -B %USERPROFILE%\Coin-build\Coin4 ^
+      -DBOOST_ROOT=%USERPROFILE%\Fedem-src\boost_1_87.0 ^
+      -DCMAKE_INSTALL_PREFIX=C:\Coin-4.0.3 ^
+      -DCOIN_BUILD_TESTS=OFF -DHAVE_SOUND_OFF
       pause
 
-- Open the generated solution file `%USERPROFILE%\Coin-build\Coin\Coin.sln`
+- Open the generated solution file `%USERPROFILE%\Coin-build\Coin4\Coin.sln`
   in Visual Studio and build the `INSTALL` target for `Release` configuration.
 
 ### SoQt
@@ -161,24 +154,25 @@ and can therefore be built only *after* you have installed those two modules.
 To build and install SoQt, proceed as follows:
 
 - Download the sources from [github](https://github.com/coin3d/soqt).
-  Use the latest release [SoQt 1.6.2](https://github.com/coin3d/soqt/releases/tag/soqt-v1.6.2),
-  and choose the file `soqt-1.6.2-src.zip` (or the equivalent `.tar.gz` file).
+  Use the latest release [SoQt 1.6.3](https://github.com/coin3d/soqt/releases/tag/v1.6.3),
+  and choose the file `soqt-1.6.3-src.zip`.
 
 - Unzip the sources in arbitrary location,
-  e.g., `%USERPROFILE%\Fedem-src\SoQt-1.6.2`.
+  e.g., `%USERPROFILE%\Fedem-src\SoQt-1.6.3`.
 
-- With Visual Studio 2019, configure the SoQt build by executing the following
-  commands from a DOS shell (put this in a bat-file for the convenience):
+- With Visual Studio 2022 Community, configure the SoQt build
+  by executing the following commands from a DOS shell
+  (put this in a bat-file for the convenience):
 
       @echo off
       title SoQt configuration
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
-      "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
-      -G "Visual Studio 16 2019" ^
-      -S %USERPROFILE%\Fedem-src\SoQt ^
-      -B %USERPROFILE%\Coin-build\SoQt ^
-      -DCMAKE_INSTALL_PREFIX=C:\Coin-4 ^
-      -DCMAKE_PREFIX_PATH=C:\Qt-6.5.0 ^
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+      "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
+      -G "Visual Studio 17 2022" ^
+      -S %USERPROFILE%\Fedem-src\SoQt-1.6.3 ^
+      -B %USERPROFILE%\Coin-build\SoQt1 ^
+      -DCMAKE_INSTALL_PREFIX=C:\Coin-4.0.3 ^
+      -DCMAKE_PREFIX_PATH=C:\Qt-6.8.2 ^
       -DSOQT_BUILD_TESTS=OFF
       pause
 
@@ -196,23 +190,22 @@ To do this proceeed as follows:
       cd ~/Fedem-src
       git clone git@github.com:coin3d/smallchange.git SmallChange
 
-- With Visual Studio 2019, configure the SmallChange build
+- With Visual Studio 2022 Community, configure the SmallChange build
   by executing the following commands from a DOS shell
   (put this in a bat-file for the convenience):
 
       @echo off
       title SmallChange configuration
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
-      "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
-      -G "Visual Studio 16 2019" ^
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+      "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
+      -G "Visual Studio 17 2022" ^
       -S %USERPROFILE%\Fedem-src\SmallChange ^
-      -B %USERPROFILE%\Coin-build\SmallChange ^
-      -DCMAKE_INSTALL_PREFIX=C:\Coin-4 ^
-      -DCMAKE_PREFIX_PATH=C:\Qt-6.5.0
+      -B %USERPROFILE%\Coin-build\SmallChange1 ^
+      -DCMAKE_INSTALL_PREFIX=C:\Coin-4.0.3 ^
+      -DCMAKE_PREFIX_PATH=C:\Qt-6.8.2
       pause
 
-- Open the generated solution file
-  `%USERPROFILE%\Coin-build\SoQt\SmallChange.sln`
+- Open the generated solution file `%USERPROFILE%\Coin-build\SoQt\SmallChange.sln`
   in Visual Studio and build the `INSTALL` target for `Release` configuration.
 
 ### Simage
@@ -223,22 +216,23 @@ those features are not important, you may skip the following installation steps:
 - Download the sources from [github](https://github.com/coin3d/simage).
   Use the latest release
   [Simage 1.8.3](https://github.com/coin3d/simage/releases/tag/v1.8.3),
-  and choose the file `simage-1.8.3-src.zip` (or the equivalent `.tar.gz` file).
+  and choose the file `simage-1.8.3-src.zip`.
 
 - Unzip the sources in arbitrary location,
   e.g., `%USERPROFILE%\Fedem-src\Simage-1.8.3`.
 
-- With Visual Studio 2019, configure the Simage build by executing the following
-  commands from a DOS shell (put this in a bat-file for the convenience):
+- With Visual Studio 2022 Community, configure the Simage build
+  by executing the following commands from a DOS shell
+  (put this in a bat-file for the convenience):
 
       @echo off
       title Simage configuration
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
-      "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
-      -G "Visual Studio 16 2019" ^
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+      "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
+      -G "Visual Studio 17 2022" ^
       -S %USERPROFILE%\Fedem-src\Simage-1.8.3 ^
-      -B %USERPROFILE%\Coin-build\Simage ^
-      -DCMAKE_INSTALL_PREFIX=C:\Coin-4 ^
+      -B %USERPROFILE%\Coin-build\Simage1 ^
+      -DCMAKE_INSTALL_PREFIX=C:\Coin-4.0.3 ^
       -DSIMAGE_LIBSNDFILE_SUPPORT=OFF ^
       -DSIMAGE_OGGVORBIS_SUPPORT=OFF ^
       -DSIMAGE_BUILD_EXAMPLES=OFF ^
@@ -250,7 +244,7 @@ those features are not important, you may skip the following installation steps:
 
 - Move the `simage.h` header file into right place:
 
-      cd C:\Coin-4.0.0\include
+      cd C:\Coin-4.0.3\include
       mkdir Simage
       move simage.h Simage
 
@@ -303,14 +297,15 @@ don't need this feature, you can skip the following installation procedure:
   This will configure for building the `zip` library based on the `minizip`
   sources, in addition to the `zlib` library itself, when `cmake` is executed.
 
-- With Visual Studio 2019, configure the zlib build by executing the following
-  commands from a DOS shell (put this in a bat-file for the convenience):
+- With Visual Studio 2022 Community, configure the zlib build
+  by executing the following commands from a DOS shell
+  (put this in a bat-file for the convenience):
 
       @echo off
       title zlib configuration
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
-      "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
-      -G "Visual Studio 16 2019" ^
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+      "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
+      -G "Visual Studio 17 2022" ^
       -S %USERPROFILE%\Fedem-src\zlib-1.2.13 ^
       -B %USERPROFILE%\zlib-build ^
       -DCMAKE_INSTALL_PREFIX=C:\Zlib
@@ -330,18 +325,19 @@ Proceed as follows:
 
       cd ~/Fedem-src
       git clone --recurse-submodules git@github.com:openfedem/fedem-gui.git
+      git checkout qt6-port
 
-- Configure for build in Visual Studio 2019 using `CMake`,
+- Configure for build in Visual Studio 2022 using `CMake`,
   e.g., execute the following bat script:
 
       @echo off
       title Fedem GUI configuration
-      call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64 vs2019
-      set COIN_ROOT=C:\Coin-4
-      set QT_ROOT=C:\Qt-6.5.0
+      call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64 vs2022
+      set COIN_ROOT=C:\Coin-4.0.3
+      set QT_ROOT=C:\Qt-6.8.2
       set /p VERSION=<%USERPROFILE%\Fedem-src\fedem-gui\cfg\VERSION
-      "%VS2019INSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
-      -G "Visual Studio 16 2019" ^
+      "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
+      -G "Visual Studio 17 2022" ^
       -S %USERPROFILE%\Fedem-src\fedem-gui ^
       -B %USERPROFILE%\Fedem-build\fedemGUI ^
       -DCMAKE_INSTALL_PREFIX=%USERPROFILE%\Fedem-install\%VERSION% ^
@@ -352,7 +348,7 @@ Proceed as follows:
   If you don't have the Intel&reg; Fortran Compilers installed,
   you have to replace the call statement above by
 
-      call "%VS2019INSTALLDIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+      call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 
   and remove the option `-DUSE_FORTRAN=ON`.
   It will then configure without Fortran support.
