@@ -102,6 +102,10 @@
 #include <QtOpenGL>
 #include <QWidget>
 
+#ifdef win32
+#include <windows.h>
+#endif
+
 #include <Inventor/Qt/SoQt.h>
 
 #include <Inventor/SoDB.h>
