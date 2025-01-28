@@ -33,7 +33,7 @@ for overall information on the FEDEM project.
 The FEDEM GUI project relies on the following third-party modules,
 which are not included in this repository:
 
-* [Qt 5.15](https://download.qt.io/archive/qt/5.15/) -
+* [Qt 6.8](https://download.qt.io/archive/qt/6.8/) -
   Cross-platform graphical user interface framework
 * [Coin 4.0](https://github.com/coin3d/coin) -
   OpenGL-based 3D graphics library
