@@ -8,11 +8,14 @@
 
 # FEDEM GUI Build
 
-Currently, we support building on Windows only,
+Currently, we support building on Windows
 using Microsoft Visual Studio 2022 or later,
 and with Intel&reg; Fortran Compilers for the Fortran modules.
 The build system is based on the [CMake](https://cmake.org/) tool,
 which is embedded in the Visual Studio 2022 installation.
+
+The GUI application can now also be built on Linux, using the description
+shown [below](#build-fedem-gui-application-on-linux).
 
 ## Build of external 3rd-party modules
 
@@ -27,19 +30,19 @@ and FEDEM only uses a small part of it. The following description therefore
 focuses on the necessary steps to build only what is needed for FEDEM usage.
 
 To build and install the components needed by FEDEM on Windows,
-proceed as follows. The description below assumes you're using version 5.15.16
+proceed as follows. The description below assumes you're using version 6.8.2
 for which the FEDEM build process has been tested, but it may also apply
 for later versions with minor modifications.
 
 - Clone the top-level Qt module from the git repository:
 
       cd ~/Fedem-src
-      git clone git://code.qt.io/qt/qt5.git Qt5
+      git clone git://code.qt.io/qt/qt5.git Qt6
 
-- Checkout the 5.15 branch:
+- Checkout the 6.8.2 branch:
 
-      cd Qt5
-      git checkout 5.15
+      cd Qt6
+      git checkout 6.8.2
 
 - FEDEM only requires the `qtbase` submodule of Qt,
   so to clone the corresponding branch for that:
@@ -51,15 +54,15 @@ for later versions with minor modifications.
   (put this in a bat-file for the convenience):
 
       @echo off
-      title Qt5 configuration
+      title Qt6 configuration
       call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
       mkdir %USERPROFILE%\Qt-build
       mkdir %USERPROFILE%\Qt-build\qtbase
       cd %USERPROFILE%\Qt-build\qtbase
-      call %USERPROFILE%\Fedem-src\Qt5\qtbase\configure.bat ^
-      -top-level -release -prefix C:\Qt-5.15.16 ^
+      call %USERPROFILE%\Fedem-src\Qt6\qtbase\configure.bat ^
+      -top-level -release -prefix C:\Qt-6.8.2 ^
       -nomake examples -nomake tests ^
-      -no-dbus -no-ssl -no-openssl -no-harfbuzz -no-gif -no-libjpeg ^
+      -no-dbus -ssl -no-openssl -no-harfbuzz -no-gif -no-libjpeg ^
       -no-freetype -qt-zlib
       pause
 
@@ -68,6 +71,14 @@ for later versions with minor modifications.
       cd %USERPROFILE%\Qt-build
       cmake --build . --parallel
       cmake --install .
+
+- Edit the file `C:\Qt-6.8.2\lib\cmake\Qt6Core\Qt6CoreMacros.cmake` to make it accept `.H`
+  as extensions for header files:
+
+      230c230
+      <         set(HEADER_REGEX "(h|hh|h\\+\\+|hm|hpp|hxx|in|txx|inl)$")
+      ---
+      >         set(HEADER_REGEX "(H|h|hh|h\\+\\+|hm|hpp|hxx|in|txx|inl)$")
 
 ### Coin
 
@@ -160,7 +171,7 @@ To build and install SoQt, proceed as follows:
       -S %USERPROFILE%\Fedem-src\SoQt-1.6.3 ^
       -B %USERPROFILE%\Coin-build\SoQt1 ^
       -DCMAKE_INSTALL_PREFIX=C:\Coin-4.0.3 ^
-      -DCMAKE_PREFIX_PATH=C:\Qt-5.15.16 ^
+      -DCMAKE_PREFIX_PATH=C:\Qt-6.8.2 ^
       -DSOQT_BUILD_TESTS=OFF
       pause
 
@@ -169,7 +180,7 @@ To build and install SoQt, proceed as follows:
 
 ### SmallChange
 
-The lastest release on github is not compatible with Qt 5.
+The lastest release on github is not compatible with Qt 6.
 Therefore, we need to build this package from HEAD of the master branch.
 To do this proceeed as follows:
 
@@ -190,7 +201,7 @@ To do this proceeed as follows:
       -S %USERPROFILE%\Fedem-src\SmallChange ^
       -B %USERPROFILE%\Coin-build\SmallChange1 ^
       -DCMAKE_INSTALL_PREFIX=C:\Coin-4.0.3 ^
-      -DCMAKE_PREFIX_PATH=C:\Qt-5.15.16
+      -DCMAKE_PREFIX_PATH=C:\Qt-6.8.2
       pause
 
 - Open the generated solution file `%USERPROFILE%\Coin-build\SoQt\SmallChange.sln`
@@ -390,13 +401,14 @@ Proceed as follows:
       title Fedem GUI configuration
       call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat" intel64 vs2022
       set COIN_ROOT=C:\Coin-4.0.3
-      set QT_ROOT=C:\Qt-5.15.16
+      set QT_ROOT=C:\Qt-6.8.2
       set /p VERSION=<%USERPROFILE%\Fedem-src\fedem-gui\cfg\VERSION
       "%VSINSTALLDIR%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" ^
       -G "Visual Studio 17 2022" ^
       -S %USERPROFILE%\Fedem-src\fedem-gui ^
       -B %USERPROFILE%\Fedem-build\fedemGUI ^
       -DCMAKE_INSTALL_PREFIX=%USERPROFILE%\Fedem-install\%VERSION% ^
+      -DCMAKE_PREFIX_PATH=%QT_ROOT% ^
       -DUSE_FORTRAN=ON
       pause
 
@@ -453,3 +465,72 @@ Proceed as follows:
       11 SET VERSION=8.0.0
       12 REM All binaries are assumed to have been built and placed in folder %INST_DIR%.
       13 SET INST_DIR=%USERPROFILE%\Fedem-install\3.0.1\bin
+
+## Build FEDEM GUI application on Linux
+
+It is possible to configure and build the GUI application on Linux as well.
+The following configuration steps have been used so far:
+
+- System: Ubuntu 22.04 with gcc 11.4
+
+- Qt packages: Install Qt 6.2 and dependencies using the package manager
+
+      sudo apt install libqt6core6 libqt6gui6 libqt6widgets6 libqt6opengl6
+      sudo apt install libvulkan-dev libxkbcommon-dev
+
+- Coin3D: Download the latest release from github. The binary package
+  [coin-4.0.2-Ubuntu2204-gcc11-x64](https://github.com/coin3d/coin/releases/download/v4.0.2/coin-4.0.2-Ubuntu2204-gcc11-x64.tar.gz)
+  can be used, unless you want to compile from the sources
+  [coin-4.0.2-src](https://github.com/coin3d/coin/releases/download/v4.0.2/coin-4.0.2-src.tar.gz).
+  Extract the binary package in arbitrary location, e.g., under `/usr/local/Coin3D`
+
+- SoQt: Download the latest version from github.
+  No binary package built with Qt 6 for Ubuntu is available, so here you need to build from the sources
+  [soqt-1.6.2-src](https://github.com/coin3d/soqt/releases/download/v1.6.2/soqt-1.6.2-src.tar.gz):
+
+      tar zxfv ~/Downloads/soqt-1.6.2-src.tar.gz
+      mkdir soqt/Release
+      cd soqt/Release
+      cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/Coin3D -DSOQT_BUILD_TESTS=OFF
+      make
+      sudo make install
+
+  The `CMAKE_INSTALL_PREFIX` variable has to point to the location where you chose to extract the Coin package.
+
+- Smallchange: The lastest release on github is not compatible with Qt 6.
+  Therefore, we need to build this package from HEAD of the master branch:
+
+      git clone git@github.com:coin3d/smallchange.git
+      mkdir smallchange/Release
+      cd smallchange/Release
+      cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/Coin3D
+      make
+      sudo make install
+
+- Qwt (optional): Obtain the sources of this module following the first two steps
+  described [above](#qwt) for the Windows build.
+  Then configure, build and install the Qwt package through the commands:
+
+      cd Qwt
+      qmake6 qwt.pro
+      make
+      sudo make install
+
+  This will install Qwt in the default location, which is `/usr/local/qwt-6.3.0-dev/`.
+  You may use any other location by editing the `QWT_INSTALL_PREFIX` variable in the `qwtconfig.pri` file,
+  before running the `qmake6` command.
+  In that case, remember to also modify [FindQwt.cmake](cmake/Modules/FindQwt.cmake) before proceeding.
+
+- Configure and build FEDEM GUI from the qt6-port branch:
+
+      git clone -b qt6-port git@github.com:openfedem/fedem-gui.git
+      mkdir fedem-gui/Release fedem-gui/Debug
+      cd fedem-gui/Release
+      COIN_ROOT=/usr/local/Coin3D cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_QWTLIB=External
+      make
+      cd ../Debug
+      COIN_ROOT=/usr/local/Coin3D cmake .. -DCMAKE_BUILD_TYPE=Debug -DUSE_QWTLIB=External
+      make
+
+  The option `-DUSE_QWTLIB=External` can be omitted if you didn't install the Qwt library
+  and chose to build FEDEM without the curve plotting capabilities.
