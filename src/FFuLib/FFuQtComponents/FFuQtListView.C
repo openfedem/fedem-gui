@@ -7,6 +7,7 @@
 
 #include <QHeaderView>
 #include <QMouseEvent>
+#include <QStyleFactory>
 
 #include "FFuLib/FFuQtComponents/FFuQtListViewItem.H"
 #include "FFuLib/FFuQtComponents/FFuQtPopUpMenu.H"
@@ -23,6 +24,7 @@ FFuQtListView::FFuQtListView(QWidget* parent, int nColumns, const char* name)
   this->setSglSelectionMode(true);
   this->setListSorting(-1,true); // disable sorting
   this->setAllListColumnsShowSelection(true);
+  this->setStyle(QStyleFactory::create("windows")); // enable connector lines
 
   this->popUpMenu = new FFuQtPopUpMenu(this);
 
@@ -69,9 +71,9 @@ void FFuQtListView::fwdDoubleClicked(QTreeWidgetItem* item, int)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::setListSorting(int column, bool ascending)
+void FFuQtListView::setListSorting(int column, bool ascnd)
 {
-  this->sortByColumn(column, ascending ? Qt::AscendingOrder : Qt::DescendingOrder);
+  this->sortByColumn(column, ascnd ? Qt::AscendingOrder : Qt::DescendingOrder);
 }
 //----------------------------------------------------------------------------
 
@@ -138,7 +140,8 @@ void FFuQtListView::resizeListColumnsToContents()
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::permSelectListItem(FFuListViewItem* item, bool select, bool notify)
+void FFuQtListView::permSelectListItem(FFuListViewItem* item,
+                                       bool select, bool notify)
 {
   QTreeWidgetItem* qitem = dynamic_cast<QTreeWidgetItem*>(item);
   if (!qitem) return;
@@ -165,7 +168,8 @@ void FFuQtListView::clearListSelection(bool notify)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtListView::openListItem(FFuListViewItem* item, bool open, bool notify)
+void FFuQtListView::openListItem(FFuListViewItem* item,
+                                 bool open, bool notify)
 {
   QTreeWidgetItem* qitem = dynamic_cast<QTreeWidgetItem*>(item);
   if (!qitem) return;
@@ -206,7 +210,9 @@ void FFuQtListView::ensureListItemVisible(FFuListViewItem* item,bool notify)
 FFuListViewItem* FFuQtListView::getSelectedListItemSglMode()
 {
   QList<QTreeWidgetItem*> selected = this->selectedItems();
-  return selected.isEmpty() ? NULL : dynamic_cast<FFuListViewItem*>(selected.front());
+  if (selected.isEmpty()) return NULL;
+
+  return dynamic_cast<FFuListViewItem*>(selected.front());
 }
 //----------------------------------------------------------------------------
 
@@ -229,19 +235,24 @@ bool FFuQtListView::isSglSelectionMode() const
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuQtListView::createListItem(FFuListViewItem* parent,FFuListViewItem* after,
-					       FFuListViewItem* original,const char* label)
+FFuListViewItem* FFuQtListView::createListItem(FFuListViewItem* parent,
+                                               FFuListViewItem* after,
+                                               FFuListViewItem* original,
+                                               const char* label)
 {
   FFuQtListViewItem* lvi = NULL;
 
   if (!parent)
+  {
     if (original)
       lvi = new FFuQtListViewItem(this,(FFuQtListViewItem*)(after),
 				  (FFuQtListViewItem*)(original));
     else
       lvi = new FFuQtListViewItem(this,(FFuQtListViewItem*)(after),
 				  label);
+  }
   else
+  {
     if (original)
       lvi = new FFuQtListViewItem((FFuQtListViewItem*)(parent),
 				  (FFuQtListViewItem*)(after),
@@ -249,8 +260,9 @@ FFuListViewItem* FFuQtListView::createListItem(FFuListViewItem* parent,FFuListVi
     else
       lvi = new FFuQtListViewItem((FFuQtListViewItem*)(parent),
 				  (FFuQtListViewItem*)(after),label);
+  }
 
-  if (lvi){
+  if (lvi) {
     this->lviMap[lvi->getItemId()] = lvi;
     //lvi->setItemDragable(true);
     //lvi->setItemDropable(true);
