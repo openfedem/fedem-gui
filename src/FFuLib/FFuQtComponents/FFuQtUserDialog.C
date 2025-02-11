@@ -7,6 +7,7 @@
 
 #include <QPixmap>
 #include <QCloseEvent>
+#include <Qlabel>
 
 #include "FFuLib/Icons/infoDialog.xpm"
 #include "FFuLib/Icons/errorDialog.xpm"
@@ -71,6 +72,9 @@ FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
     pixmap = FFuaQtPixmapCache::getPixmap(SAPlogo_xpm,128);
 
   this->setIconPixmap(pixmap);
+
+  if (dialogType >= FFuDialog::FT_LOGO)
+    this->findChild<QLabel*>("qt_msgbox_label")->setFixedWidth(400);
 
   if (!this->iAmModal){
     this->setAttribute (Qt::WA_DeleteOnClose, true);

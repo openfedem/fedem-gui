@@ -5,12 +5,12 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef  _FDANIMATIONINFO_
-#define  _FDANIMATIONINFO_
+#ifndef FD_ANIMATION_INFO_H
+#define FD_ANIMATION_INFO_H
 
 ///////////////////
 //
-//        This node was made by 
+//        This node was made by
 //  Morten from Norsk Simulator Senter
 //           26.Feb.1997
 //
@@ -22,7 +22,9 @@
 #include <Inventor/fields/SoSFEnum.h>
 #include <Inventor/fields/SoSFColor.h>
 #include <Inventor/fields/SoSFFloat.h>
-#include <Inventor/elements/SoGLCacheContextElement.h> 
+
+class SoGLDisplayList;
+
 
 #ifdef win32
 #include <SoWinLeaveScope.h>
@@ -34,11 +36,11 @@ class FdAnimationInfo : public SoNode
 
 public:
   FdAnimationInfo();
+
   static void init();
 
-  // Dummy overloading of write() to avoid any output to file.
-
-  virtual void write(SoWriteAction *writeAction);
+  // Dummy overloading of write() to avoid any output to file
+  virtual void write(SoWriteAction*) {}
 
   // Turn indicators on off (individually or as a group).
 
@@ -62,28 +64,22 @@ public:
   // Panel values.
 
   SoSFFloat time;
-  SoSFEnum step;
+  SoSFEnum  step;
   SoSFFloat progress;
-  
 
 protected:
   virtual ~FdAnimationInfo();
 
-  virtual void GLRender(SoGLRenderAction *action);
-  virtual SbBool affectsState() const;
+  virtual void GLRender(SoGLRenderAction* action);
+  virtual SbBool affectsState() const { return FALSE; }
 
 private:
-  void buildFontList(SoState * state, int & fieldWidth, int & fieldHeight); 
-
-  SoGLDisplayList * fontlist; 
-  int fontlistcontext; 
+  SoGLDisplayList* fontlist;
+  int fontlistcontext;
   int fieldWidth, fieldHeight;
 };
-
 
 #ifdef win32
 #include <SoWinEnterScope.h>
 #endif
-
-
 #endif
