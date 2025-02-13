@@ -12,7 +12,6 @@
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 #include <vector>
-#include <string>
 #include <map>
 
 class FFuListViewItem;
@@ -89,8 +88,6 @@ public:
   
   virtual void setSglSelectionMode(bool single) = 0;
   virtual bool isSglSelectionMode() const = 0;
-
-  void setEnsureVisibleOnExpansion(bool vis) {this->ensureVisOnExpansion = vis;}
   
 
   // BASIC LIST FUNCTION
@@ -115,18 +112,18 @@ public:
   // Current item is the one with keyboard focus, selected item is the highlighted.
   // Current item differentiates the items under multiselection mode.
   
-  std::vector<FFuListViewItem*> getSelectedListItems(); 
-  virtual FFuListViewItem* getSelectedListItemSglMode() = 0; 
-  virtual FFuListViewItem* getCurrentListItem()=0; 
-  virtual FFuListViewItem* getFirstChildItem() = 0; 
-  FFuListViewItem* getListItemBefore(FFuListViewItem* itemsParent,int itemsListPosition); 
+  std::vector<FFuListViewItem*> getSelectedListItems() const;
+  virtual FFuListViewItem* getSelectedListItemSglMode() const = 0;
+  virtual FFuListViewItem* getCurrentListItem() const = 0;
+  virtual FFuListViewItem* getFirstChildItem() const = 0;
+  FFuListViewItem* getListItemBefore(FFuListViewItem* itemsParent, int itemsListPosition) const;
   std::vector<FFuListViewItem*> getListChildren(FFuListViewItem* parent);//ordered in lv order 
   //all levels below parent, if parent = 0 all lv
-  std::vector<FFuListViewItem*> getAllListChildren(FFuListViewItem* parent);//ordered in lv order 
+  std::vector<FFuListViewItem*> getAllListChildren(FFuListViewItem* parent) const;//ordered in lv order
 
-  FFuListViewItem* getListItem(int itemId);
+  FFuListViewItem* getListItem(int itemId) const;
 
-  std::vector<FFuListViewItem*> arePresent(const std::vector<FFuListViewItem*>& in);
+  std::vector<FFuListViewItem*> arePresent(const std::vector<FFuListViewItem*>& in) const;
 
   // LIST MANIPULATION
  
@@ -153,7 +150,7 @@ public:
 				FFuListViewItem* moveToAfter=0);
   
   // POPUP MENU 
-  FFuPopUpMenu* getPopUpMenu() {return this->popUpMenu;}
+  FFuPopUpMenu* getPopUpMenu() const { return this->popUpMenu; }
 
 protected:
   //slots
@@ -214,15 +211,12 @@ protected:
 
   void executePopUp(FFuListViewItem* listItem);
 
-// Attributes
 protected:
   // Component "shadow" members
   FFuPopUpMenu* popUpMenu; 
 
   FFuListViewItem* tmpSelected;
   std::vector<FFuListViewItem*> permSelectedDuringTmpSelection;
-
-  bool ensureVisOnExpansion;
 
   std::map<int,FFuListViewItem*> lviMap;
 

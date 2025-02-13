@@ -61,9 +61,11 @@ public:
   virtual void setSglSelectionMode(bool single);
   virtual bool isSglSelectionMode() const;
 
-  virtual FFuListViewItem* getSelectedListItemSglMode();
-  virtual FFuListViewItem* getCurrentListItem();
-  virtual FFuListViewItem* getFirstChildItem();
+  virtual const char* getName() const;
+
+  virtual FFuListViewItem* getSelectedListItemSglMode() const;
+  virtual FFuListViewItem* getCurrentListItem() const;
+  virtual FFuListViewItem* getFirstChildItem() const;
 
   virtual FFuListViewItem* createListItem(FFuListViewItem* parent=0,
 					  FFuListViewItem* after=0,

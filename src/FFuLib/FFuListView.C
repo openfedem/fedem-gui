@@ -5,8 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include "FFuLib/FFuListView.H"
 #include "FFuLib/FFuListViewItem.H"
 #include "FFuLib/FFuPopUpMenu.H"
@@ -18,7 +16,6 @@ FFuListView::FFuListView()
 {
   this->popUpMenu = NULL;
   this->tmpSelected = NULL;
-  this->ensureVisOnExpansion = true;
 }
 //----------------------------------------------------------------------------
 
@@ -27,18 +24,24 @@ void FFuListView::permTotSelectListItems(const std::vector<FFuListViewItem*>& to
   this->clearListSelection(notify);
   
   if (this->isSglSelectionMode() && totalSel.size() > 1)
-    std::cerr <<"WARNING - FFuListView::permTotSelectListItems: You are trying to select "
-              << totalSel.size() <<" items in single-selection mode"<< std::endl;
+  {
+    // This may happen happen if multiple items are selected in a list view
+    // allowing for it, also are present in another view which only allow
+    // single selection. In that case, select only the first item.
+    this->permSelectListItem(totalSel.front(),true,notify);
+  }
+  else
+  {
+    if (this->tmpSelected)
+      this->permSelectedDuringTmpSelection = totalSel;
 
-  if (this->tmpSelected)
-    this->permSelectedDuringTmpSelection = totalSel;
-
-  for (FFuListViewItem* item : totalSel)
-    this->permSelectListItem(item,true,notify);
+    for (FFuListViewItem* item : totalSel)
+      this->permSelectListItem(item,true,notify);
+  }
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::getSelectedListItems()
+std::vector<FFuListViewItem*> FFuListView::getSelectedListItems() const
 {
   std::vector<FFuListViewItem*> items;
   for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
@@ -49,7 +52,8 @@ std::vector<FFuListViewItem*> FFuListView::getSelectedListItems()
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuListView::getListItemBefore(FFuListViewItem* itemsParent,int itemsListPosition)
+FFuListViewItem* FFuListView::getListItemBefore(FFuListViewItem* itemsParent,
+                                                int itemsListPosition) const
 {
   if (itemsListPosition < 1) return NULL;
     
@@ -92,7 +96,7 @@ std::vector<FFuListViewItem*> FFuListView::getListChildren(FFuListViewItem* pare
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::getAllListChildren(FFuListViewItem* parent)
+std::vector<FFuListViewItem*> FFuListView::getAllListChildren(FFuListViewItem* parent) const
 {
   std::vector<FFuListViewItem*> items;
 
@@ -121,7 +125,7 @@ std::vector<FFuListViewItem*> FFuListView::getAllListChildren(FFuListViewItem* p
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuListView::getListItem(int itemId)
+FFuListViewItem* FFuListView::getListItem(int itemId) const
 {
   if (itemId < 0) return NULL;
 
@@ -130,7 +134,7 @@ FFuListViewItem* FFuListView::getListItem(int itemId)
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::arePresent(const std::vector<FFuListViewItem*>& in)
+std::vector<FFuListViewItem*> FFuListView::arePresent(const std::vector<FFuListViewItem*>& in) const
 {
   std::vector<FFuListViewItem*> present;
 
@@ -250,10 +254,6 @@ void FFuListView::onMenuItemSelected(const std::vector<FFuListViewItem*>& listIt
 
 void FFuListView::onListItemOpened(FFuListViewItem* listItem,bool open)
 {
-  if (this->ensureVisOnExpansion && open) {
-    //her kommer kode naar qt klarer dette bedre
-  }
-  
   this->listItemOpenedEvent(listItem,open); 
   this->invokeItemExpandedCB(listItem,open); 
 }

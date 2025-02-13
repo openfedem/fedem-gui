@@ -284,7 +284,6 @@ void FuiMiniFileBrowser::initWidgets()
   listView->setListColumns({"File","Size","Last modified"});
   listView->setListColumnWidth(2, 100);
   listView->setListRootIsDecorated(true);
-  listView->setEnsureVisibleOnExpansion(true);
   listView->setSglSelectionMode(false);
   listView->setHeaderClickEnabled(-1, false);
   listView->setAllListColumnsShowSelection(true);

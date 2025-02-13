@@ -197,7 +197,7 @@ void FFuQtListView::ensureListItemVisible(FFuListViewItem* item, bool notify)
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuQtListView::getSelectedListItemSglMode()
+FFuListViewItem* FFuQtListView::getSelectedListItemSglMode() const
 {
   QList<QTreeWidgetItem*> selected = this->selectedItems();
   if (selected.isEmpty()) return NULL;
@@ -206,13 +206,13 @@ FFuListViewItem* FFuQtListView::getSelectedListItemSglMode()
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuQtListView::getCurrentListItem()
+FFuListViewItem* FFuQtListView::getCurrentListItem() const
 {
   return dynamic_cast<FFuListViewItem*>(this->currentItem());
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuQtListView::getFirstChildItem()
+FFuListViewItem* FFuQtListView::getFirstChildItem() const
 {
   return dynamic_cast<FFuListViewItem*>(this->topLevelItem(0));
 }
@@ -221,6 +221,14 @@ FFuListViewItem* FFuQtListView::getFirstChildItem()
 bool FFuQtListView::isSglSelectionMode() const
 {
   return this->selectionMode() == SingleSelection;
+}
+//----------------------------------------------------------------------------
+
+const char* FFuQtListView::getName() const
+{
+  static std::string name;
+  name = this->objectName().toStdString();
+  return name.c_str();
 }
 //----------------------------------------------------------------------------
 
