@@ -80,7 +80,7 @@ protected:
   virtual void getChildren(FFaListViewItem* parent,
                            std::vector<FFaListViewItem*>& children) const;
 
-  virtual std::vector<std::string> getItemText(FFaListViewItem* item);
+  virtual std::string getItemText(FFaListViewItem* item);
 
 private:
   typedef std::vector<PropertyItem>         PropertyVec;

@@ -25,12 +25,12 @@ protected:
 				     const std::vector<int>& assID) const;
   virtual void getChildren(FFaListViewItem* parent,
 			   std::vector<FFaListViewItem*>& children) const;
-  virtual std::vector<std::string> getItemText(FFaListViewItem* item);
+  virtual std::string getItemText(FFaListViewItem* item);
 
-private:
   // Reimplementations from FapUACommandHandler
   virtual FFuaUICommands* getCommands();
 
+private:
   FFuaCmdHeaderItem createHeader;
   FFuaCmdHeaderItem createSpringFunctionHeader;
   FFuaCmdHeaderItem createDamperFunctionHeader;

@@ -292,18 +292,18 @@ bool FapUAResultListView::verifyItem(FFaListViewItem* item)
 }
 //----------------------------------------------------------------------------
 
-Strings FapUAResultListView::getItemText(FFaListViewItem* item)
+std::string FapUAResultListView::getItemText(FFaListViewItem* item)
 {
   if (dynamic_cast<FmRingStart*>(item))
-    return Strings(1,item->getItemName());
+    return item->getItemName();
 
 #ifndef LV_DEBUG
   if (dynamic_cast<FmResultBase*>(item))
     // Try leave out the user ID to clean up the result list view a bit...
-    return Strings(1,item->getItemDescr());
+    return item->getItemDescr();
 #endif
 
-  return Strings(1,FFaNumStr("[%d] ",item->getItemID()) + item->getItemDescr());
+  return FFaNumStr("[%d] ",item->getItemID()) + item->getItemDescr();
 }
 //----------------------------------------------------------------------------
 

@@ -19,14 +19,14 @@ class FFaListViewItem;
 /*!
   The class has an automatic connection with DB which enables it to maintain
   the view under changes in DB as connect/disconnect and description change.
-  Before this, the system should be initiated by calling updateUIValues.
+  Before this, the system should be initiated by calling updateUIValues().
 
   Listview positioning principle: If one item is subject to positioning,
   then all siblings are too.
 
   If you want to control item positions in the listview, you must set the
   items positionInListView variable (> -1) before the item gets in touch
-  with this class (e.g., in getChildren, etc.)
+  with this class (e.g., in getChildren(), etc.)
 
   \author Dag R Christensen
 */
@@ -53,7 +53,7 @@ public:
 
   void ensureItemVisible(FFaViewItem* item);
 
-  FFaListViewItem* getUIParent(FFaListViewItem* item);
+  FFaListViewItem* getUIParent(FFaListViewItem* item) const;
 
   void sortByID();
   void sortByName();
@@ -63,8 +63,8 @@ protected:
   // Functionality
   void createUITopLevelItems(FFaListViewItem* parent);
   void createUIItem(FFaListViewItem* item,
-		    FFaListViewItem* parent = 0,
-		    FFaListViewItem* after = 0);
+		    FFaListViewItem* parent,
+		    FFaListViewItem* after);
   virtual void deleteUIItem(FFaViewItem* item);
 
   virtual void dropItems(int, bool, void*) {}
@@ -73,22 +73,21 @@ protected:
 
   void updateItemPositionsInDB(int uiparent);
 
-  static void reportItem(FFaViewItem* item, const char* prefix = 0);
+  static void reportItem(FFaViewItem* item, const char* prefix = NULL);
 
 private:
   // For callback purpose only
   void tmpSelectItem(int item);
   void expandItem(int item, bool open);
 
+protected:
   // from FapUAItemsViewHandler
   // You should always start your view session by updateUIValues
   // since it initialises the session
-protected:
   virtual void updateSession();
   void updateTopLevelItem();
 
   // from FapUAExistenceHandler
-private:
   // These methods should be re-impl if you want this class to work as expected
 
   // listview settings
@@ -97,7 +96,6 @@ private:
   virtual bool getShowHeader() { return false; }
   virtual bool getHeaderClickEnabling() { return false; }
 
-protected:
   // listview hierarchy
   virtual bool isHeaderOkAsLeaf(FFaListViewItem*) const { return false; }
 
@@ -110,7 +108,7 @@ protected:
   // Those who are asking for their parents have been verified. Its only purpose
   // is to tell supposed parents for onListViewItemConnected items, etc.
   virtual FFaListViewItem* getParent(FFaListViewItem*,
-				     const std::vector<int>&) const { return 0; }
+				     const std::vector<int>&) const { return NULL; }
 
   // The objects you let thru here will also be verified,
   // so you can give any FFaListViewItem object,
@@ -118,12 +116,11 @@ protected:
   virtual void getChildren(FFaListViewItem* parent,
 			   std::vector<FFaListViewItem*>& children) const = 0;
 
-private:
   // listview item settings
   virtual bool getItemSelectAble(FFaViewItem*) { return true; }
   virtual bool getItemExpanded(FFaListViewItem* item);
 
-  virtual std::vector<std::string> getItemText(FFaListViewItem* item);
+  virtual std::string getItemText(FFaListViewItem* item);
   virtual bool getItemTextBold(FFaListViewItem*) { return false; }
   virtual bool getItemTextItalic(FFaListViewItem*) { return false; }
   virtual const char** getItemPixmap(FFaListViewItem* item);
@@ -132,6 +129,7 @@ private:
   virtual bool getItemThreeStepToggleAble(FFaListViewItem*) { return false; }
   virtual int getItemToggleValue(FFaListViewItem*) { return 0; }
 
+private:
   void getVerifiedChildren(FFaListViewItem* parent,
 			   std::vector<FFaListViewItem*>& items);
 
@@ -146,10 +144,11 @@ private:
   void sortItems(std::vector<FFaListViewItem*>& items) const;
 
   int createSingleUIItem(FFaListViewItem* item,
-			 FFaListViewItem* parent,
-		         FFaListViewItem* after);
+                         FFaListViewItem* parent,
+                         FFaListViewItem* after);
 
-  FFaListViewItem* getItemBefore(FFaListViewItem* item, int itemsUIParent) const;
+  FFaListViewItem* getItemBefore(FFaListViewItem* item,
+                                 int itemsUIParent) const;
 
   void updateLeavesOnlySelectable();
 

@@ -106,25 +106,18 @@ void FapUARDBListView::getChildren(FFaListViewItem* parent,
 }
 //----------------------------------------------------------------------------
 
-std::vector<std::string> FapUARDBListView::getItemText(FFaListViewItem* item)
+std::string FapUARDBListView::getItemText(FFaListViewItem* item)
 {
-  std::vector<std::string> text;
+  FFrEntryBase* ffr = static_cast<FFrEntryBase*>(item);
+  if (!ffr->isOG()) return ffr->getDescription();
 
-  FFrEntryBase* ffr = (FFrEntryBase*)item;
-
-  if (ffr->isOG()) {
-    std::string name = ffr->getType();
-    if (ffr->hasUserID())
-      name += FFaNumStr("[%d]",ffr->getUserID());
-    else if (ffr->hasBaseID())
-      name += FFaNumStr("{%d}",ffr->getBaseID());
-    name += " " + ffr->getDescription();
-    text.push_back(name);
-  }
-  else
-    text.push_back(ffr->getDescription());
-
-  return text;
+  std::string name = ffr->getType();
+  if (ffr->hasUserID())
+    name += FFaNumStr("[%d]",ffr->getUserID());
+  else if (ffr->hasBaseID())
+    name += FFaNumStr("{%d}",ffr->getBaseID());
+  name += " " + ffr->getDescription();
+  return name;
 }
 //----------------------------------------------------------------------------
 

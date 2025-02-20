@@ -126,7 +126,8 @@ bool FapUACSListView::importCS(FFaViewItem* csItem, FFaViewItem* matItem)
     bp->ShrCentre.setValue(std::make_pair((*bcs)[8],(*bcs)[9]));
 
   bp->crossSectionType.setValue(FmBeamProperty::GENERIC);
-  bp->setUserDescription(bcs->getItemName() + std::string(", ") + mat->getItemName());
+  bp->setUserDescription(bcs->getItemName() + std::string(", ") +
+                         mat->getItemName());
   bp->onChanged();
 
   ListUI <<"  -> Imported "<< bp->getIdString(true) <<"\n";
@@ -140,17 +141,18 @@ bool FapUACSListView::singleSelectionMode() const
 }
 //----------------------------------------------------------------------------
 
-std::vector<std::string> FapUACSListView::getItemText(FFaListViewItem* item)
+std::string FapUACSListView::getItemText(FFaListViewItem* item)
 {
-  return { item->getItemDescr() };
+  return item->getItemDescr();
 }
 //----------------------------------------------------------------------------
 
 void FapUACSListView::getChildren(FFaListViewItem* parent,
-				   std::vector<FFaListViewItem*>& children) const
+                                  std::vector<FFaListViewItem*>& children) const
 {
   children.clear();
-  PropertyMap::const_iterator pit = myDataBase.find(parent ? parent->getItemName() : "root");
+  const char* parentName = parent ? parent->getItemName() : "root";
+  PropertyMap::const_iterator pit = myDataBase.find(parentName);
   if (pit == myDataBase.end()) return;
 
   children.reserve(pit->second.size());
@@ -159,7 +161,8 @@ void FapUACSListView::getChildren(FFaListViewItem* parent,
 }
 //----------------------------------------------------------------------------
 
-FapUACSListView::PropertyItem::PropertyItem(const std::string& name, int id, size_t n)
+FapUACSListView::PropertyItem::PropertyItem(const std::string& name,
+                                            int id, size_t n)
 {
   myName = name;
   myID = id;

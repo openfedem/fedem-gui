@@ -28,21 +28,21 @@ protected:
   // Reimplementations from FapUAItemsListView
   virtual bool verifyItem(FFaListViewItem* item);
   virtual FFaListViewItem* getParent(FFaListViewItem* item,
-				     const std::vector<int>&) const;
+                                     const std::vector<int>& assID) const;
   virtual void getChildren(FFaListViewItem* parent,
-			   std::vector<FFaListViewItem*>& children) const;
+                           std::vector<FFaListViewItem*>& children) const;
 
-  virtual std::vector<std::string> getItemText(FFaListViewItem* item);
+  virtual std::string getItemText(FFaListViewItem* item);
   virtual const char** getItemPixmap(FFaListViewItem* item);
 
   virtual bool isHeaderOkAsLeaf(FFaListViewItem* item) const;
   virtual bool getItemTextBold(FFaListViewItem* item);
   virtual void dropItems(int droppedOnItemIdx, bool isCopy, void*);
 
-private:
   // Reimplementations from FapUACommandHandler
   virtual FFuaUICommands* getCommands();
 
+private:
   FmRingStart* funcPreviews;
   FmRingStart* beamDiagrams;
 
