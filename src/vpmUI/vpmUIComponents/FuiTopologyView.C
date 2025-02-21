@@ -87,9 +87,8 @@ void FuiTopologyView::setTree(const std::vector<FuiTopologyItem> &topology)
         parent = parent->getParentItem();
       }
 
-    newItem = myView->createListItem(parent,after);
+    newItem = myView->createListItem(top.type.c_str(),parent,after);
     newItem->setItemId(id++);
-    newItem->setItemText(0,top.type.c_str());
     newItem->setItemText(1,top.id.c_str());
     newItem->setItemText(2,top.description.c_str());
     myView->openListItem(newItem,true);

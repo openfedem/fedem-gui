@@ -232,32 +232,19 @@ const char* FFuQtListView::getName() const
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuQtListView::createListItem(FFuListViewItem* parent,FFuListViewItem* after,
-					       FFuListViewItem* original,const char* label)
+FFuListViewItem* FFuQtListView::createListItem(const char* label,
+                                               FFuListViewItem* parent,
+                                               FFuListViewItem* after)
 {
-  FFuQtListViewItem* lvi = NULL;
-
+  FFuQtListViewItem* lvi;
   if (!parent)
-    if (original)
-      lvi = new FFuQtListViewItem(this,(FFuQtListViewItem*)(after),
-				  (FFuQtListViewItem*)(original));
-    else
-      lvi = new FFuQtListViewItem(this,(FFuQtListViewItem*)(after),
-				  label);
+    lvi = new FFuQtListViewItem(this,
+                                static_cast<FFuQtListViewItem*>(after), label);
   else
-    if (original)
-      lvi = new FFuQtListViewItem((FFuQtListViewItem*)(parent),
-				  (FFuQtListViewItem*)(after),
-				  (FFuQtListViewItem*)(original));
-    else
-      lvi = new FFuQtListViewItem((FFuQtListViewItem*)(parent),
-				  (FFuQtListViewItem*)(after),label);
+    lvi = new FFuQtListViewItem(static_cast<FFuQtListViewItem*>(parent),
+                                static_cast<FFuQtListViewItem*>(after), label);
 
-  if (lvi){
-    this->lviMap[lvi->getItemId()] = lvi;
-    //lvi->setItemDragable(true);
-    //lvi->setItemDropable(true);
-  }
+  this->lviMap[lvi->getItemId()] = lvi;
   return lvi;
 }
 //----------------------------------------------------------------------------

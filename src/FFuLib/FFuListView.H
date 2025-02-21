@@ -127,27 +127,13 @@ public:
 
   // LIST MANIPULATION
  
-  // The item gets default text in col 0 when created.
-  // If parent=0, the item is created at top level in the list view
-  // If after=0 the item is inserted first in parents list
-
-  virtual FFuListViewItem* createListItem(FFuListViewItem* parent=0,FFuListViewItem* after=0,
-					  FFuListViewItem* original=0,const char* label="item") = 0;
-  
+  // The item gets default text in column 0 when created.
+  // If parent is null, the item is created at top level in the list view
+  // If after is null the item is inserted first in parents list
+  virtual FFuListViewItem* createListItem(const char* label = NULL,
+                                          FFuListViewItem* parent = NULL,
+                                          FFuListViewItem* after = NULL) = 0;
   void deleteListItem(FFuListViewItem* item);
-
-  // Copies item and all children to desired position
-  // Return 0 if irregularities
-  FFuListViewItem* copyListItem(FFuListViewItem* itemToCopy,FFuListViewItem* copyToParent=0,
-				FFuListViewItem* copyToAfter=0,bool copyIndices=false);
-  
-  // Moves item and all children to desired position
-  // This method actually creates new items and therefore returns the new (parent) item's pointer, 
-  // but inherits the original's indices.  
-  // DO NEVER USE THE ITEM'S OLD POINTER AFTER A MOVEMENT.
-  // Return 0 if irregularities, autom unselect and unexpand
-  FFuListViewItem* moveListItem(FFuListViewItem* itemToMove,FFuListViewItem* moveToParent=0,
-				FFuListViewItem* moveToAfter=0);
   
   // POPUP MENU 
   FFuPopUpMenu* getPopUpMenu() const { return this->popUpMenu; }

@@ -67,10 +67,9 @@ public:
   virtual FFuListViewItem* getCurrentListItem() const;
   virtual FFuListViewItem* getFirstChildItem() const;
 
-  virtual FFuListViewItem* createListItem(FFuListViewItem* parent=0,
-					  FFuListViewItem* after=0,
-					  FFuListViewItem* original=0,
-					  const char* label="item");
+  virtual FFuListViewItem* createListItem(const char* label,
+                                          FFuListViewItem* parent,
+                                          FFuListViewItem* after);
 
 private:
   // FFuComponentBase Re-impl

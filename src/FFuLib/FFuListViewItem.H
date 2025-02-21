@@ -32,13 +32,6 @@ public:
   int  getItemId() const { return itemId; }
   void setItemId(int id) { itemId = id; }
 
-protected:
-  // Copy text/toggle etc, but not ID (this item is unique)
-  void copyData(FFuListViewItem* original);
-  virtual void copyPixmaps(FFuListViewItem* original)=0;
-  virtual void copyTexts(FFuListViewItem* original)=0;
-
-public:
   // Basic item functions
   virtual void        setItemText(int col, const char* text) = 0;
   virtual std::string getItemText(int col) const = 0;

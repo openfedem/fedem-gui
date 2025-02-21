@@ -16,9 +16,9 @@ bool FuiItemsListView::mouseSelected = false;
 int FuiItemsListView::createItem(int parent, int after,
                                  const std::string& label)
 {
-  return this->createListItem(this->getListItem(parent),
-                              this->getListItem(after),
-                              NULL,label.c_str())->getItemId();
+  return this->createListItem(label.c_str(),
+                              this->getListItem(parent),
+                              this->getListItem(after))->getItemId();
 }
 //----------------------------------------------------------------------------
 

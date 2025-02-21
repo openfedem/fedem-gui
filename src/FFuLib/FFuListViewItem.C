@@ -20,18 +20,6 @@ FFuListViewItem::FFuListViewItem()
 }
 //----------------------------------------------------------------------------
 
-void FFuListViewItem::copyData(FFuListViewItem* original)
-{
-  this->copyPixmaps(original);
-  this->copyTexts(original);
-
-  if (original->toggleAble) {
-    this->setItemToggleAble(original->toggleAble);
-    this->setToggleValue(original->toggle);
-  }
-}
-//----------------------------------------------------------------------------
-
 FFuListViewItem* FFuListViewItem::getPreviousSiblingItem() const
 {
   FFuListViewItem* item = this->getParentItem();

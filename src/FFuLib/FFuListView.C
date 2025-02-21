@@ -167,69 +167,6 @@ void FFuListView::deleteListItem(FFuListViewItem* item)
 }
 //----------------------------------------------------------------------------
 
-FFuListViewItem* FFuListView::copyListItem(FFuListViewItem* itemToCopy,FFuListViewItem* copyToParent,
-					   FFuListViewItem* copyToAfter,bool copyIndices)
-{
-  FFuListViewItem *item, *newTopItem, *newItem, *newParent, *newAfter;
-
-  newItem = this->createListItem(copyToParent,copyToAfter,itemToCopy);
-  // copy index
-  if (copyIndices)
-    newItem->setItemId(itemToCopy->getItemId());
-
-  newTopItem = newItem;
-  newParent = newItem;
-  newAfter = NULL;
-  
-  //traversing the tree
-  item = itemToCopy->getFirstChildItem();
-  while (item) {
-    // creating new item
-    newItem = this->createListItem(newParent,newAfter,item);
-    // copy index
-    if (copyIndices)
-      newItem->setItemId(item->getItemId());
-
-    if (item->getFirstChildItem()) {
-      newParent = newItem;
-      newAfter = NULL;
-      item = item->getFirstChildItem();
-    }
-    else if (item->getNextSiblingItem()) {
-      newAfter = newItem;
-      item = item->getNextSiblingItem();
-    }
-    else { 
-      //rewind upwards till we find a sibling or we are itemToCopy
-      do {
-	item = item->getParentItem();
-	newItem = newItem->getParentItem();
-      } while (item && item != itemToCopy && !item->getNextSiblingItem());
-      if (item == itemToCopy)
-        break; // we are itemToCopy
-      else if (item) {
-	//first sibling on the way up
-	newParent = newItem->getParentItem();
-	newAfter = newItem;
-	item = item->getNextSiblingItem();
-      }
-    }
-  }
-  return newTopItem;
-}
-//----------------------------------------------------------------------------
-
-FFuListViewItem* FFuListView::moveListItem(FFuListViewItem* itemToMove,FFuListViewItem* moveToParent,
-					   FFuListViewItem* moveToAfter)
-{
-  FFuListViewItem* newTopItem = this->copyListItem(itemToMove,moveToParent,moveToAfter,true);
-  if (!newTopItem) return NULL;
-
-  this->deleteListItem(itemToMove);
-  return newTopItem;
-}
-//----------------------------------------------------------------------------
-
 void FFuListView::onPermSelectionChanged()
 { 
   this->permSelectionChangedEvent();

@@ -158,10 +158,10 @@ void FuiObjectBrowser::onSearchButtonClicked()
   FFuListViewItem* gSubass = NULL;
   if (pszSearch.empty() || FFaUpperCaseString(pszSearch) == "(ALL)") {
     pszSearch.clear();
-    gTriads = searchView->createListItem(0,0,0,"Triads");
-    gParts = searchView->createListItem(0,0,0,"Parts");
-    gResults = searchView->createListItem(0,0,0,"Results");
-    gSubass = searchView->createListItem(0,0,0,"High-level");
+    gTriads  = searchView->createListItem("Triads");
+    gParts   = searchView->createListItem("Parts");
+    gResults = searchView->createListItem("Results");
+    gSubass  = searchView->createListItem("High-level");
   }
 
   // Get all
@@ -177,15 +177,15 @@ void FuiObjectBrowser::onSearchButtonClicked()
 
     // Create list view item
     if ((*it)->isOfType(FmTriad::getClassTypeID()))
-      newItem = searchView->createListItem(gTriads,0);
+      newItem = searchView->createListItem(NULL,gTriads);
     else if ((*it)->isOfType(FmLink::getClassTypeID()))
-      newItem = searchView->createListItem(gParts,0);
+      newItem = searchView->createListItem(NULL,gParts);
     else if ((*it)->isOfType(FmResultBase::getClassTypeID()))
-      newItem = searchView->createListItem(gResults,0);
+      newItem = searchView->createListItem(NULL,gResults);
     else if ((*it)->isOfType(FmSubAssembly::getClassTypeID()))
-      newItem = searchView->createListItem(gSubass,0);
+      newItem = searchView->createListItem(NULL,gSubass);
     else
-      newItem = searchView->createListItem(0,0);
+      newItem = searchView->createListItem();
 
     newItem->setItemText(0,FFaNumStr("%5d",(*it)->getBaseID()).c_str());
     newItem->setItemText(1,(*it)->getIdString().c_str());
@@ -236,7 +236,7 @@ void FuiObjectBrowser::setUIValues(const FFuaUIValues* values)
   searchField->setValue(obj->getUserDescription());
 
   // List view
-  FFuListViewItem* newItem = searchView->createListItem(0,0);
+  FFuListViewItem* newItem = searchView->createListItem();
   newItem->setItemText(0,FFaNumStr("%5d",obj->getBaseID()).c_str());
   newItem->setItemText(1,obj->getIdString().c_str());
   newItem->setItemText(2,obj->getUserDescription().c_str());

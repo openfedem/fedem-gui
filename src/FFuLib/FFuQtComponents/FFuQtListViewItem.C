@@ -17,65 +17,30 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-FFuQtListViewItem::FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* after,const char* label)
+FFuQtListViewItem::FFuQtListViewItem(FFuQtListView* parent,
+                                     FFuQtListViewItem* after,
+                                     const char* label)
   : QTreeWidgetItem(parent,after)
 {
-  this->setItemText(0,label);
+  if (label)
+    this->setText(0,label);
 }
 //----------------------------------------------------------------------------
 
-FFuQtListViewItem::FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* after,
-				     FFuQtListViewItem* original)
+FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,
+                                     FFuQtListViewItem* after,
+                                     const char* label)
   : QTreeWidgetItem(parent,after)
 {
-  this->copyData(original);
-}
-//----------------------------------------------------------------------------
-
-FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,const char* label)
-  : QTreeWidgetItem(parent,after)
-{
-  this->setItemText(0,label);
-}
-//----------------------------------------------------------------------------
-
-FFuQtListViewItem::FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,
-				     FFuQtListViewItem* original)
-  : QTreeWidgetItem(parent,after)
-{
-  this->copyData(original);
-}
-//----------------------------------------------------------------------------
-
-void FFuQtListViewItem::copyPixmaps(FFuListViewItem* original)
-{
-  QTreeWidgetItem* item = dynamic_cast<QTreeWidgetItem*>(original);
-  if (!item) return;
-
-  for (int col = 0; col < this->columnCount(); col++)
-  {
-    QIcon ic = item->icon(col);
-    if (!ic.isNull()) this->setIcon(col,ic);
-  }
-}
-//----------------------------------------------------------------------------
-
-void FFuQtListViewItem::copyTexts(FFuListViewItem* original)
-{
-  QTreeWidgetItem* item = dynamic_cast<QTreeWidgetItem*>(original);
-  if (!item) return;
-
-  for (int col = 0; col < item->columnCount(); col++)
-  {
-    this->setText(col,item->text(col));
-    this->setFont(col,item->font(col));
-  }
+  if (label)
+    this->setText(0,label);
 }
 //----------------------------------------------------------------------------
 
 void FFuQtListViewItem::setItemText(int col, const char* text)
 {
-  this->setText(col,text);
+  if (text)
+    this->setText(col,text);
 }
 //----------------------------------------------------------------------------
 

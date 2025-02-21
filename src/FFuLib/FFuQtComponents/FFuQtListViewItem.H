@@ -17,16 +17,13 @@ class FFuQtListView;
 class FFuQtListViewItem : public QTreeWidgetItem, public FFuListViewItem
 {
 public:
-  // If parent=0, the item is created at top level in the list view
-  // If after=0 the item is inserted first in parents list
-  FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* after,const char* label);
-  FFuQtListViewItem(FFuQtListView* parent,FFuQtListViewItem* after,FFuQtListViewItem* original);
-  FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,const char* label);
-  FFuQtListViewItem(FFuQtListViewItem* parent,FFuQtListViewItem* after,FFuQtListViewItem* original);
+  FFuQtListViewItem(FFuQtListView* parent,
+                    FFuQtListViewItem* after,
+                    const char* label);
+  FFuQtListViewItem(FFuQtListViewItem* parent,
+                    FFuQtListViewItem* after,
+                    const char* label);
   virtual ~FFuQtListViewItem() {}
-
-  virtual void copyPixmaps(FFuListViewItem* original);
-  virtual void copyTexts(FFuListViewItem* original);
 
   virtual void        setItemText(int col, const char* text);
   virtual std::string getItemText(int col) const;

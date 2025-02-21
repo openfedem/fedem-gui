@@ -69,9 +69,9 @@ int FuiMiniFileBrowser::createItem(int parent, int after, const std::string& lab
 				   const std::string& size, const std::string& modified,
 				   const char** icon)
 {
-  FFuListViewItem* item = listView->createListItem(listView->getListItem(parent),
-						   listView->getListItem(after),
-						   0, label.c_str());
+  FFuListViewItem* item = listView->createListItem(label.c_str(),
+                                                   listView->getListItem(parent),
+                                                   listView->getListItem(after));
   if (!item) return -1;
 
   item->setItemText(SIZE_COL, size.c_str());
