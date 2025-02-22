@@ -36,6 +36,9 @@ FFuQtListView::FFuQtListView(QWidget* parent, int nColumns, const char* name)
                    this, SLOT(fwdReturnPressed(QTreeWidgetItem*,int)));
   QObject::connect(this, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
                    this, SLOT(fwdDoubleClicked(QTreeWidgetItem*,int)));
+
+  QObject::connect(this->header(), SIGNAL(sectionClicked(int)),
+                   this, SLOT(fwdHeaderClicked(int)));
 }
 //----------------------------------------------------------------------------
 
@@ -59,13 +62,19 @@ void FFuQtListView::fwdCollapsed(QTreeWidgetItem* item)
 
 void FFuQtListView::fwdReturnPressed(QTreeWidgetItem* item, int)
 {
-  this->invokeReturnPressedCB(dynamic_cast<FFuListViewItem*>(item));
+  returnPressedCB.invoke(dynamic_cast<FFuListViewItem*>(item));
 }
 //----------------------------------------------------------------------------
 
 void FFuQtListView::fwdDoubleClicked(QTreeWidgetItem* item, int)
 {
-  this->invokeDoubleClickedCB(dynamic_cast<FFuListViewItem*>(item));
+  doubleClickedCB.invoke(dynamic_cast<FFuListViewItem*>(item));
+}
+//----------------------------------------------------------------------------
+
+void FFuQtListView::fwdHeaderClicked(int col)
+{
+  headerClickedCB.invoke(col);
 }
 //----------------------------------------------------------------------------
 
@@ -355,11 +364,11 @@ void FFuQtListView::mousePressEvent(QMouseEvent* e)
       }
     }
 
-    this->invokeLeftMouseBPressedCB(item);
+    lMouseBPressedCB.invoke(item);
   }
   else if (e->button() & Qt::RightButton)
   {
-    this->invokeRightMouseBPressedCB(item);
+    rMouseBPressedCB.invoke(item);
     this->executePopUp(item);
   }
 
@@ -370,7 +379,7 @@ void FFuQtListView::mousePressEvent(QMouseEvent* e)
 void FFuQtListView::mouseReleaseEvent(QMouseEvent* e)
 {
   if (e->button() & Qt::LeftButton)
-    this->invokeLeftMouseBReleaseCB();
+    lMouseBReleaseCB.invoke();
 
   this->QTreeWidget::mouseReleaseEvent(e);
 }

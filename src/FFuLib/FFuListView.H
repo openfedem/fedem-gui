@@ -18,9 +18,13 @@ class FFuListViewItem;
 class FFuPopUpMenu;
 class FFuaCmdItem;
 
+using FFuListViewItems = std::vector<FFuListViewItem*>; //!< Convenience alias
+
 
 /*!
-  The list view items are given an unique id (>-1) when created.
+  \brief Base class for various list views in FEDEM.
+
+  \details The list view items are given an unique id (>-1) when created.
   This id is meant to serve as an identifier for external bookkeeping.
   Never bookkeep the item pointers as they may change during manipulation.
   Nevertheless, most manipulation methods are based on pointers since that
@@ -29,7 +33,7 @@ class FFuaCmdItem;
   The notification philosophy is to notify only under direct user-interaction
   You can override this for some cases by setting the notify argument to true
 
-  The listview disables sorting as default.
+  The list view disables sorting as default.
   Single selection mode is default.
 
   Known bugs: Headerclick disabling doesn't work for frenetic clicking.
@@ -50,8 +54,7 @@ public:
     {this->permSelectionChangedCB = aDynCB;}
   void setTmpSelectionChangedCB(const FFaDynCB1<FFuListViewItem*>& aDynCB)
     {this->tmpSelectionChangedCB = aDynCB;}
-  void setMenuItemSelectedCB(const FFaDynCB2<const std::vector<FFuListViewItem*>&,
-			     FFuaCmdItem*>& aDynCB) 
+  void setMenuItemSelectedCB(const FFaDynCB2<const FFuListViewItems&,FFuaCmdItem*>& aDynCB)
     {this->menuItemSelectedCB = aDynCB;}
   void setItemExpandedCB(const FFaDynCB2<FFuListViewItem*,bool>& aDynCB)
     {this->itemExpandedCB = aDynCB;} 
@@ -69,6 +72,8 @@ public:
   //FFuListViewItem* is selected when this cb is emitted
   void setRightMouseBPressCB(const FFaDynCB1<FFuListViewItem*>& aDynCB)
     {this->rMouseBPressedCB = aDynCB;}
+  void setHeaderClickedCB(const FFaDynCB1<int>& aDynCB)
+    {this->headerClickedCB = aDynCB;}
  
   // LIST SETTINGS
   
@@ -102,7 +107,7 @@ public:
   // The notify setting is loyal to FFuComponentBase::blockNotification
   // In single sel mode this method touches other items selection, in other modes it does not.
   virtual void permSelectListItem(FFuListViewItem* item,bool select=true,bool notify=false)=0; 
-  void permTotSelectListItems(const std::vector<FFuListViewItem*>& totalSel, bool notify=false);
+  void permTotSelectListItems(const FFuListViewItems& totalSel, bool notify=false);
   void tmpSelectListItem(FFuListViewItem* item,bool notify=false); 
   virtual void clearListSelection(bool notify=false)=0; 
   virtual void openListItem(FFuListViewItem* item,bool open,bool notify=false)=0;
@@ -112,18 +117,18 @@ public:
   // Current item is the one with keyboard focus, selected item is the highlighted.
   // Current item differentiates the items under multiselection mode.
   
-  std::vector<FFuListViewItem*> getSelectedListItems() const;
+  FFuListViewItems getSelectedListItems() const;
   virtual FFuListViewItem* getSelectedListItemSglMode() const = 0;
   virtual FFuListViewItem* getCurrentListItem() const = 0;
   virtual FFuListViewItem* getFirstChildItem() const = 0;
   FFuListViewItem* getListItemBefore(FFuListViewItem* itemsParent, int itemsListPosition) const;
-  std::vector<FFuListViewItem*> getListChildren(FFuListViewItem* parent);//ordered in lv order 
+  FFuListViewItems getListChildren(FFuListViewItem* parent); //ordered in lv order
   //all levels below parent, if parent = 0 all lv
-  std::vector<FFuListViewItem*> getAllListChildren(FFuListViewItem* parent) const;//ordered in lv order
+  FFuListViewItems getAllListChildren(FFuListViewItem* parent) const; //ordered in lv order
 
   FFuListViewItem* getListItem(int itemId) const;
 
-  std::vector<FFuListViewItem*> arePresent(const std::vector<FFuListViewItem*>& in) const;
+  FFuListViewItems arePresent(const FFuListViewItems& in) const;
 
   // LIST MANIPULATION
  
@@ -140,26 +145,23 @@ public:
 
 protected:
   //slots
-  void onPermSelectionChanged();		
+  void onPermSelectionChanged();
   void onTmpSelectionChanged(FFuListViewItem* listItem);
-  void onMenuItemSelected(const std::vector<FFuListViewItem*>& listItems,
-			  FFuaCmdItem* menuItem);		
-  void onListItemOpened(FFuListViewItem* listItem,bool open);
+  void onMenuItemSelected(const FFuListViewItems& items, FFuaCmdItem* mItem);
+  void onListItemOpened(FFuListViewItem* listItem, bool open);
 public:
-  void onListItemToggled(FFuListViewItem* listItem,int toggle);
+  void onListItemToggled(FFuListViewItem* listItem, int toggle);
 
 protected:  
   //RE-IMPLs
   //These can be reimpl in subclass
-  virtual void permSelectionChangedEvent() {}		
+  virtual void permSelectionChangedEvent() {}
   virtual void tmpSelectionChangedEvent(FFuListViewItem*) {}
-  virtual void menuItemSelectedEvent(const std::vector<FFuListViewItem*>&, FFuaCmdItem*) {}
+  virtual void menuItemSelectedEvent(const FFuListViewItems&, FFuaCmdItem*) {}
   virtual void listItemOpenedEvent(FFuListViewItem*,bool) {}
   virtual void listItemToggledEvent(FFuListViewItem*,int) {}
   virtual void rightMousePressed(FFuListViewItem*) {}
 
-protected:  
-  
   // These methodes are called every time a lv pops up/down, also
   // from an iconified position
   virtual void onPoppedUp() {}
@@ -170,44 +172,18 @@ protected:
   virtual void onPoppedUpFromMem() {}
   // called when a ui is on its way to the memory (hide)
   virtual void onPoppedDownToMem() {}
-  
-
-protected:
-  void invokePermSelectionChangedCB() 
-    {this->permSelectionChangedCB.invoke();}
-  void invokeTmpSelectionChangedCB(FFuListViewItem* listItem) 
-    {this->tmpSelectionChangedCB.invoke(listItem);}
-  void invokeMenuItemSelectedCB(const std::vector<FFuListViewItem*>& listItems,
-				FFuaCmdItem* menuItem)
-    {this->menuItemSelectedCB.invoke(listItems,menuItem);}
-  void invokeItemExpandedCB(FFuListViewItem* item,bool open)
-    {this->itemExpandedCB.invoke(item,open);}
-  void invokeItemToggledCB(FFuListViewItem* item,int toggle)
-    {this->itemToggledCB.invoke(item,toggle);}
-  void invokeDoubleClickedCB(FFuListViewItem* listItem) 
-    {this->doubleClickedCB.invoke(listItem);}
-  void invokeReturnPressedCB(FFuListViewItem* listItem)
-    {this->returnPressedCB.invoke(listItem);}
-  void invokeLeftMouseBPressedCB(FFuListViewItem* listItem)
-    {this->lMouseBPressedCB.invoke(listItem);}
-  void invokeLeftMouseBReleaseCB()
-    {this->lMouseBReleaseCB.invoke();}
-  void invokeRightMouseBPressedCB(FFuListViewItem* listItem)
-    {this->rMouseBPressedCB.invoke(listItem);}
 
   void executePopUp(FFuListViewItem* listItem);
 
 protected:
   // Component "shadow" members
-  FFuPopUpMenu* popUpMenu; 
-
+  FFuPopUpMenu*    popUpMenu;
   FFuListViewItem* tmpSelected;
-  std::vector<FFuListViewItem*> permSelectedDuringTmpSelection;
+  FFuListViewItems permSelectedDuringTmpSelection;
 
   std::map<int,FFuListViewItem*> lviMap;
 
-private:
-  // Internal CB objects :
+  // Internal call-back objects :
   FFaDynCB0                   permSelectionChangedCB;
   FFaDynCB1<FFuListViewItem*> tmpSelectionChangedCB;
   FFaDynCB2<FFuListViewItem*,bool> itemExpandedCB;
@@ -217,9 +193,9 @@ private:
   FFaDynCB1<FFuListViewItem*> lMouseBPressedCB;
   FFaDynCB0                   lMouseBReleaseCB;
   FFaDynCB1<FFuListViewItem*> rMouseBPressedCB;
+  FFaDynCB1<int>              headerClickedCB;
 
-  FFaDynCB2<const std::vector<FFuListViewItem*>&,FFuaCmdItem*> menuItemSelectedCB;
+  FFaDynCB2<const FFuListViewItems&,FFuaCmdItem*> menuItemSelectedCB;
 };
-/////////////////////////////////////////////////////////////////////////////
 
 #endif

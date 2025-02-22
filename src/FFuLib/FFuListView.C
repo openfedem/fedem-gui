@@ -19,7 +19,7 @@ FFuListView::FFuListView()
 }
 //----------------------------------------------------------------------------
 
-void FFuListView::permTotSelectListItems(const std::vector<FFuListViewItem*>& totalSel, bool notify)
+void FFuListView::permTotSelectListItems(const FFuListViewItems& totalSel, bool notify)
 {
   this->clearListSelection(notify);
   
@@ -41,9 +41,9 @@ void FFuListView::permTotSelectListItems(const std::vector<FFuListViewItem*>& to
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::getSelectedListItems() const
+FFuListViewItems FFuListView::getSelectedListItems() const
 {
-  std::vector<FFuListViewItem*> items;
+  FFuListViewItems items;
   for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
     if (lvi.second->isItemSelected())
       items.push_back(lvi.second);
@@ -77,9 +77,9 @@ FFuListViewItem* FFuListView::getListItemBefore(FFuListViewItem* itemsParent,
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::getListChildren(FFuListViewItem* parent)
+FFuListViewItems FFuListView::getListChildren(FFuListViewItem* parent)
 {
-  std::vector<FFuListViewItem*> items;
+  FFuListViewItems items;
   FFuListViewItem* item;
 
   if (parent)
@@ -96,9 +96,9 @@ std::vector<FFuListViewItem*> FFuListView::getListChildren(FFuListViewItem* pare
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::getAllListChildren(FFuListViewItem* parent) const
+FFuListViewItems FFuListView::getAllListChildren(FFuListViewItem* parent) const
 {
-  std::vector<FFuListViewItem*> items;
+  FFuListViewItems items;
 
   if (!parent)
     for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
@@ -134,9 +134,9 @@ FFuListViewItem* FFuListView::getListItem(int itemId) const
 }
 //----------------------------------------------------------------------------
 
-std::vector<FFuListViewItem*> FFuListView::arePresent(const std::vector<FFuListViewItem*>& in) const
+FFuListViewItems FFuListView::arePresent(const FFuListViewItems& in) const
 {
-  std::vector<FFuListViewItem*> present;
+  FFuListViewItems present;
 
   for (FFuListViewItem* item : in)
     for (const std::pair<const int,FFuListViewItem*>& lvi : this->lviMap)
@@ -170,43 +170,43 @@ void FFuListView::deleteListItem(FFuListViewItem* item)
 void FFuListView::onPermSelectionChanged()
 { 
   this->permSelectionChangedEvent();
-  this->invokePermSelectionChangedCB();
+  this->permSelectionChangedCB.invoke();
 }
 //----------------------------------------------------------------------------
 
 void FFuListView::onTmpSelectionChanged(FFuListViewItem* listItem)
 { 
   this->tmpSelectionChangedEvent(listItem);
-  this->invokeTmpSelectionChangedCB(listItem);
+  this->tmpSelectionChangedCB.invoke(listItem);
 }
 //----------------------------------------------------------------------------
 
-void FFuListView::onMenuItemSelected(const std::vector<FFuListViewItem*>& listItems,
+void FFuListView::onMenuItemSelected(const FFuListViewItems& listItems,
 				     FFuaCmdItem* menuItem)
 {
   this->menuItemSelectedEvent(listItems,menuItem);
-  this->invokeMenuItemSelectedCB(listItems,menuItem);
+  this->menuItemSelectedCB.invoke(listItems,menuItem);
 }
 //----------------------------------------------------------------------------
 
 void FFuListView::onListItemOpened(FFuListViewItem* listItem,bool open)
 {
-  this->listItemOpenedEvent(listItem,open); 
-  this->invokeItemExpandedCB(listItem,open); 
+  this->listItemOpenedEvent(listItem,open);
+  this->itemExpandedCB.invoke(listItem,open);
 }
 //----------------------------------------------------------------------------
 
 void FFuListView::onListItemToggled(FFuListViewItem* listItem,int toggle)
 {
   this->listItemToggledEvent(listItem,toggle);
-  this->invokeItemToggledCB(listItem,toggle); 
+  this->itemToggledCB.invoke(listItem,toggle);
 }
 //----------------------------------------------------------------------------
 
 void FFuListView::executePopUp(FFuListViewItem* rMBItem)
 {
   FFuaCmdItem* id = NULL;
-  std::vector<FFuListViewItem*> realSelected = this->getSelectedListItems();
+  FFuListViewItems realSelected = this->getSelectedListItems();
   if (rMBItem) {
     if (rMBItem->isItemSelected()) {
       this->rightMousePressed(rMBItem);
@@ -226,7 +226,7 @@ void FFuListView::executePopUp(FFuListViewItem* rMBItem)
     if (!this->popUpMenu->isMenuEmpty())
       id = this->popUpMenu->executeAtCursorPos();
     if (id && !this->menuItemSelectedCB.empty())
-      this->onMenuItemSelected(std::vector<FFuListViewItem*>(),id);
+      this->onMenuItemSelected({},id);
   }
 }
 //----------------------------------------------------------------------------
@@ -236,7 +236,7 @@ void FFuListView::tmpSelectListItem(FFuListViewItem* item, bool)
   if (!item || item == this->tmpSelected)
     return;
 
-  std::vector<FFuListViewItem*> realSelected = this->getSelectedListItems();
+  FFuListViewItems realSelected = this->getSelectedListItems();
 
   this->onTmpSelectionChanged(item);
   this->permTotSelectListItems({item});

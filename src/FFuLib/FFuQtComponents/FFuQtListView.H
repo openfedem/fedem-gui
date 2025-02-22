@@ -39,6 +39,7 @@ protected slots:
   void fwdCollapsed(QTreeWidgetItem* item);
   void fwdReturnPressed(QTreeWidgetItem* item, int);
   void fwdDoubleClicked(QTreeWidgetItem* item, int);
+  void fwdHeaderClicked(int);
 
 public:
   virtual void setListSorting(int column, bool ascending);
