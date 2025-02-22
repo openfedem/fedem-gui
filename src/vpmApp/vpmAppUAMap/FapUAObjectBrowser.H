@@ -9,14 +9,13 @@
 #define FAP_UA_OBJECT_BROWSER_H
 
 #include "vpmApp/vpmAppUAMap/vpmAppUAMapHandlers/FapUAExistenceHandler.H"
-#include "vpmApp/vpmAppUAMap/vpmAppUAMapHandlers/FapUADataHandler.H"
 #include "vpmApp/FapEventManager.H"
 #include "vpmDB/FmModelMemberConnector.H"
 
 class FuiObjectBrowser;
 
 
-class FapUAObjectBrowser : public FapUAExistenceHandler, public FapUADataHandler
+class FapUAObjectBrowser : public FapUAExistenceHandler
 {
   Fmd_HEADER_INIT();
 
@@ -24,21 +23,14 @@ public:
   FapUAObjectBrowser(FuiObjectBrowser* ui);
   virtual ~FapUAObjectBrowser() {}
 
-protected:
-  // from datahandler
-  virtual FFuaUIValues* createValuesObject();
-  virtual void getDBValues(FFuaUIValues* values);
-
 private:
   void onPermSelectionChanged(const std::vector<FFaViewItem*>& totalSelection,
 			      const std::vector<FFaViewItem*>&,
 			      const std::vector<FFaViewItem*>&);
   void onModelMemberChanged(FmModelMemberBase* changedObj);
 
-  FuiObjectBrowser*  myUI;
-  FmModelMemberBase* mySelectedFmItem;
+  FuiObjectBrowser* myUI;
 
-  // Signal Receivers
   FapPermSelChangedReceiver<FapUAObjectBrowser> permSignalConnector;
   FmModelMemberChangedReceiver<FapUAObjectBrowser> modelMemberChangedConnector;
 

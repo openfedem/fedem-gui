@@ -10,19 +10,18 @@
 
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
-#include "FFuLib/FFuBase/FFuUADataHandler.H"
 
 class FFuLabel;
 class FFuIOField;
 class FFuPushButton;
 class FFuListView;
+class FFuListViewItem;
 class FFuMemo;
 class FmModelMemberBase;
 
 
 class FuiObjectBrowser : virtual public FFuTopLevelShell,
-			 public FFuUAExistenceHandler,
-			 public FFuUADataHandler
+			 public FFuUAExistenceHandler
 {
   Fmd_HEADER_INIT();
 
@@ -46,11 +45,18 @@ private:
   void onSearchButtonClicked();
   void onSearchFieldChanged(char*) { this->onSearchButtonClicked(); }
   void onHelpButtonClicked();
-  void onSearchViewSelectionChanged();
+  void onSelectionChanged();
+  void onHeaderClicked(int col);
+  void addListViewItem(FmModelMemberBase* obj, FFuListViewItem* parent = NULL);
 
 public:
-  virtual FFuaUIValues* createValuesObject();
-  virtual void setUIValues(const FFuaUIValues* values);
+  void update(FmModelMemberBase* newObj, bool updateCurrent = false);
+
+private:
+  int lastSorted;
+  bool sortOrder;
+
+  FmModelMemberBase* myObj;
 
 protected:
   FFuLabel*           headerImage1;
@@ -66,16 +72,5 @@ protected:
   FFuLabel*           sepLabel;
   FFuPushButton*      copyDataButton;
 };
-////////////////////////////////////////////////////////////////////////////////
-
-class FuaObjectBrowserValues : public FFuaUIValues
-{
-public:
-  FuaObjectBrowserValues() { obj = NULL; }
-  virtual ~FuaObjectBrowserValues() {}
-
-  FmModelMemberBase* obj;
-};
-////////////////////////////////////////////////////////////////////////////////
 
 #endif
