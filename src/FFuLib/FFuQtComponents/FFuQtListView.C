@@ -24,6 +24,11 @@ FFuQtListView::FFuQtListView(QWidget* parent, int nColumns, const char* name)
   this->setListSorting(-1,true); // disable sorting
   this->setAllListColumnsShowSelection(true);
 
+  // Somehow this is neeeded to set the proper font size
+  QFont f = this->font();
+  f.setPointSize(f.pointSize());
+  this->setFont(f);
+
   this->popUpMenu = new FFuQtPopUpMenu(this);
 
   QObject::connect(this, SIGNAL(itemSelectionChanged()),
