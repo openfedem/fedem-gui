@@ -27,11 +27,93 @@
 #include "FFaLib/FFaString/FFaStringExt.H"
 #include "FFpLib/FFpFatigue/FFpSNCurveLib.H"
 
+#include <array>
+#include <map>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 
+namespace // Curve symbol/color manipulations
+{
+  using IconsMap = std::map<int,const char**>;
+  std::map<std::string,IconsMap> curveSymbols;
+  std::multimap<std::string,int> colorSymbols;
+
+  const char** getCurvePixMap(const std::array<float,3>& color, int symb)
+  {
+    // Initalize the curve symbol library
+    static std::vector<const char**> curveSymbolLibrary = {
+      symbol_Line_xpm,
+      symbol_Plus_xpm,
+      symbol_Cross_xpm,
+      symbol_Circle_xpm,
+      symbol_Diamond_xpm,
+      symbol_Rectangle_xpm,
+      symbol_UpTriangle_xpm,
+      symbol_DownTriangle_xpm,
+      symbol_LeftTriangle_xpm,
+      symbol_RightTriangle_xpm
+    };
+
+    // Convert color value into a hexidesimal code
+    std::string hexColor;
+    char hexValue[5];
+    for (float c : color)
+    {
+      int b = static_cast<int>(c*255.0f);
+      sprintf(hexValue,"%x",b); // int to hex
+      if (b < 16) hexColor.append("0");
+      hexColor.append(hexValue);
+    }
+
+    // Check if this color exists
+    std::map<std::string,IconsMap>::iterator cIt = curveSymbols.find(hexColor);
+    std::multimap<std::string,int>::iterator xIt = colorSymbols.find(hexColor);
+    if (cIt == curveSymbols.end())
+      cIt = curveSymbols.insert({ hexColor, IconsMap() }).first; // New symbol
+    else if (xIt != colorSymbols.end())
+      for (; xIt != colorSymbols.upper_bound(hexColor); ++xIt)
+        if (xIt->second == symb) // does a symbol for this color exist?
+        {
+          // Return pixmap if already existing
+          IconsMap::const_iterator iit = cIt->second.find(symb);
+          return iit == cIt->second.end() ? NULL : iit->second;
+        }
+
+    if (symb < 0 || symb >= static_cast<int>(curveSymbolLibrary.size()))
+      return NULL; // symbol index out of range
+
+    colorSymbols.insert({ hexColor, symb });
+
+    // Create a new color and symbol icon
+    const char** oldPixmap = curveSymbolLibrary[symb];
+
+    // Find number of arrays in xpm-file
+    std::string head(oldPixmap[0]);
+    int i = head.find(" ");
+    int j = head.find(" ",i+1) + 1;
+    int n = 1 + atoi(head.substr(0,i).c_str()) + atoi(head.substr(j,1).c_str());
+
+    char** newPixmap = new char*[n];
+    for (j = 0; j < n; j++)
+    {
+      int length = strlen(oldPixmap[j]) + 1;
+      char* temp = new char[length];
+      strcpy(temp,oldPixmap[j]);
+
+      if (*oldPixmap[j] == '$')
+        for (int o = 0; o < length; o++)
+          if (temp[o] == '#')
+            strcpy(&temp[o+1],hexColor.c_str());
+
+      newPixmap[j] = temp;
+    }
+
+    return cIt->second[symb] = (const char**)newPixmap;
+  }
+}
 //----------------------------------------------------------------------------
 
 FapUAResultListView::FapUAResultListView(FuiItemsListView* ui)
@@ -50,21 +132,6 @@ FapUAResultListView::FapUAResultListView(FuiItemsListView* ui)
   funcPreviews = NULL;
 #endif
   beamDiagrams = new FmRingStart("Beam diagrams", graph_xpm);
-
-  if (!ourCurveSymbolLib.empty()) return;
-
-  // Initalize the curve symbol library
-  ourCurveSymbolLib.reserve(10);
-  ourCurveSymbolLib.push_back(symbol_Line_xpm);
-  ourCurveSymbolLib.push_back(symbol_Plus_xpm);
-  ourCurveSymbolLib.push_back(symbol_Cross_xpm);
-  ourCurveSymbolLib.push_back(symbol_Circle_xpm);
-  ourCurveSymbolLib.push_back(symbol_Diamond_xpm);
-  ourCurveSymbolLib.push_back(symbol_Rectangle_xpm);
-  ourCurveSymbolLib.push_back(symbol_UpTriangle_xpm);
-  ourCurveSymbolLib.push_back(symbol_DownTriangle_xpm);
-  ourCurveSymbolLib.push_back(symbol_LeftTriangle_xpm);
-  ourCurveSymbolLib.push_back(symbol_RightTriangle_xpm);
 }
 //----------------------------------------------------------------------------
 
@@ -323,7 +390,8 @@ const char** FapUAResultListView::getItemPixmap(FFaListViewItem* item)
   if (!mmb)
     return (const char**)NULL;
   else if (mmb->isOfType(FmGraph::getClassTypeID()))
-    this->ui->setItemDropable(this->getMapItem(mmb),!static_cast<FmGraph*>(mmb)->isBeamDiagram());
+    this->ui->setItemDropable(this->getMapItem(mmb),
+                              !static_cast<FmGraph*>(mmb)->isBeamDiagram());
   else if (mmb->isOfType(FmCurveSet::getClassTypeID()))
   {
     this->ui->setItemDragable(this->getMapItem(mmb),true);
@@ -435,7 +503,7 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
 {
   FFaViewItem* droppedOnItem = this->getMapItem(droppedOnItemIdx);
 
-  // Get Graph or Subassembly as dropped on Item
+  // Get Graph or Subassembly (graph group) as dropped on item
 
   FmBase* subass = NULL;
   FmCurveSet* curve = NULL;
@@ -463,9 +531,8 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
       {
         isCurvesDragged = true;
         FmGraph* oGraph = curve->getOwnerGraph();
-        if ((oGraph != graph || !isCopy) &&
-            (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
-             graph->isBeamDiagram() == oGraph->isBeamDiagram()))
+        if (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
+            graph->isBeamDiagram() == oGraph->isBeamDiagram())
         {
           if (isCopy)
           {
@@ -475,7 +542,7 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
             newCurve->reload();
             this->ensureItemVisible(newCurve);
           }
-          else
+          else if (graph != oGraph)
             curve->moveTo(graph);
         }
       }
@@ -489,11 +556,11 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
   if (graph && graph->isBeamDiagram()) return;
 
   // There should only be one
-  FapUAExistenceHandler* rdbSel = FapUAExistenceHandler::getFirstOfType(FapUARDBSelector::getClassTypeID());
+  FapUARDBSelector* rdbSel = getUAInstance(FapUARDBSelector);
   if (!rdbSel || !rdbSel->isUIPoppedUp()) return;
 
-  FFaResultDescription result = static_cast<FapUARDBSelector*>(rdbSel)->getSelectedResultDescr();
-  int axis = static_cast<FapUARDBSelector*>(rdbSel)->getCurrentAxis();
+  FFaResultDescription result = rdbSel->getSelectedResultDescr();
+  int axis = rdbSel->getCurrentAxis();
 
   curve = new FmCurveSet();
   if (!graph)
@@ -510,78 +577,4 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
   curve->onDataChanged();
 
   this->ensureItemVisible(curve);
-}
-
-
-std::vector<const char**>      FapUAResultListView::ourCurveSymbolLib;
-std::multimap<std::string,int> FapUAResultListView::ourColorSymbol;
-std::map<std::string,IconsMap> FapUAResultListView::ourCurveSymbols;
-
-
-const char** createNewPixMap(const std::string& color, const char** oldPixMap)
-{
-  std::string head(oldPixMap[0]);
-
-  // Find number of arrays in xpm-file
-  int i = head.find(" ");
-  int j = head.find(" ",i+1) + 1;
-  int n = 1 + atoi(head.substr(0,i).c_str()) + atoi(head.substr(j,1).c_str());
-
-  char** newPixMap = new char*[n];
-  for (j = 0; j < n; j++)
-  {
-    int length = strlen(oldPixMap[j]) + 1;
-    char* temp = new char[length];
-    strcpy(temp,oldPixMap[j]);
-
-    if (*oldPixMap[j] == '$')
-      for (int o = 0; o < length; o++)
-        if (temp[o] == '#')
-          strcpy(&temp[o+1],color.c_str());
-
-    newPixMap[j] = temp;
-  }
-
-  return (const char**)(newPixMap);
-}
-
-
-const char** FapUAResultListView::getCurvePixMap(const std::array<float,3>& color, int symb)
-{
-  // Convert the color value into a hexidesimal code
-  std::string hexColor;
-  char hexValue[5];
-  for (float c : color)
-  {
-    int b = (int)(c*255.0f);
-    sprintf(hexValue,"%x",b); // int to hex
-    if (b < 16) hexColor.append("0");
-    hexColor.append(hexValue);
-  }
-
-  // Check if this color exists
-  std::map<std::string,IconsMap>::iterator it = ourCurveSymbols.find(hexColor);
-  std::multimap<std::string,int>::iterator cIt = ourColorSymbol.find(hexColor);
-  if (it != ourCurveSymbols.end() && cIt != ourColorSymbol.end())
-    for (; cIt != ourColorSymbol.upper_bound(hexColor); ++cIt)
-      if (cIt->second == symb) // does a symbol for this color exist?
-      {
-        // Return pixmap if already existing
-        IconsMap::const_iterator iit = it->second.find(symb);
-        return iit == it->second.end() ? NULL : iit->second;
-      }
-
-  if (symb < 0 || symb >= (int)ourCurveSymbolLib.size())
-    return NULL; // symbol index out of range
-
-  // Create color and symbol icon
-  const char** newPixmap = createNewPixMap(hexColor,ourCurveSymbolLib[symb]);
-
-  ourColorSymbol.insert(std::make_pair(hexColor,symb));
-  if (it == ourCurveSymbols.end())
-    ourCurveSymbols[hexColor][symb] = newPixmap;
-  else
-    it->second[symb] = newPixmap;
-
-  return newPixmap;
 }

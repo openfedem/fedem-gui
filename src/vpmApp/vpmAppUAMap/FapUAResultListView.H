@@ -8,14 +8,9 @@
 #ifndef FAP_UA_RESULT_LISTVIEW_H
 #define FAP_UA_RESULT_LISTVIEW_H
 
-#include "FapUAModMemListView.H"
-
-#include <map>
-#include <array>
+#include "vpmApp/vpmAppUAMap/FapUAModMemListView.H"
 
 class FmRingStart;
-
-typedef std::map<int,const char**> IconsMap;
 
 
 class FapUAResultListView : public FapUAModMemListView
@@ -48,13 +43,6 @@ private:
 
   FFuaCmdHeaderItem importItemHeader;
   FFuaCmdHeaderItem exportItemHeader;
-
-  // Curve symbol/color manipulations
-  static std::vector<const char**>      ourCurveSymbolLib;
-  static std::multimap<std::string,int> ourColorSymbol;
-  static std::map<std::string,IconsMap> ourCurveSymbols;
-
-  static const char** getCurvePixMap(const std::array<float,3>&, int symb);
 };
 
 #endif
