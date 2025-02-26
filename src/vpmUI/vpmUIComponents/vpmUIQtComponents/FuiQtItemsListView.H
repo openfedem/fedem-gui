@@ -12,6 +12,7 @@
 #include "vpmUI/vpmUIComponents/FuiItemsListView.H"
 
 class QEvent;
+class QDragEnterEvent;
 class QDropEvent;
 
 
@@ -27,6 +28,7 @@ private:
   virtual void setVisible(bool visible);
 
 protected:
+  virtual void dragEnterEvent(QDragEnterEvent* e);
   virtual void dropEvent(QDropEvent* e);
 };
 

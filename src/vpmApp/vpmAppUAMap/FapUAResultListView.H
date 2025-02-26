@@ -19,6 +19,11 @@ public:
   FapUAResultListView(FuiItemsListView* ui);
   virtual ~FapUAResultListView() {}
 
+private:
+  // Callbacks for dragging and dropping on UI-item
+  void startDrag(bool& accepted);
+  void dropItems(int droppedOnItemIdx, int& dropAction);
+
 protected:
   // Reimplementations from FapUAItemsListView
   virtual bool verifyItem(FFaListViewItem* item);
@@ -32,7 +37,6 @@ protected:
 
   virtual bool isHeaderOkAsLeaf(FFaListViewItem* item) const;
   virtual bool getItemTextBold(FFaListViewItem* item);
-  virtual void dropItems(int droppedOnItemIdx, bool isCopy, void*);
 
   // Reimplementations from FapUACommandHandler
   virtual FFuaUICommands* getCommands();

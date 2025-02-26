@@ -60,6 +60,26 @@ void FuiQtItemsListView::dropEvent(QDropEvent* e)
 {
   QTreeWidgetItem* qtDropItem = this->itemAt(e->pos());
   FFuQtListViewItem* dropItem = dynamic_cast<FFuQtListViewItem*>(qtDropItem);
-  this->droppedCB.invoke(dropItem ? dropItem->getItemId() : -1,
-                         e->dropAction() & Qt::CopyAction, e);
+  int dropAction = e->dropAction() & Qt::CopyAction;
+  droppedCB.invoke(dropItem ? dropItem->getItemId() : -1, dropAction);
+  if (dropAction < 0) // ignore illegal drop event
+  {
+    // The ignore() call seems insufficient in this case - the action will still
+    // be performed resulting in an invalid tree view and a crash. However,
+    // adding the setDropAction() call seems to resolve the matter, as suggested
+    // in the post https://forum.qt.io/topic/27876/handle-rejected-dropevent/2
+    e->setDropAction(Qt::IgnoreAction);
+    e->ignore();
+  }
+}
+//----------------------------------------------------------------------------
+
+void FuiQtItemsListView::dragEnterEvent(QDragEnterEvent* e)
+{
+  bool accepted = true;
+  startDragCB.invoke(accepted);
+  if (accepted)
+    this->FFuQtListView::dragEnterEvent(e);
+  else
+    e->ignore(); // ignore illegal drag event
 }

@@ -125,6 +125,11 @@ FapUAResultListView::FapUAResultListView(FuiItemsListView* ui)
   this->importItemHeader.setText("Import");
   this->exportItemHeader.setText("Export");
 
+  this->ui->setStartDragCB(FFaDynCB1M(FapUAResultListView,this,
+                                      startDrag,bool&));
+  this->ui->setDroppedCB(FFaDynCB2M(FapUAResultListView,this,
+                                    dropItems,int,int&));
+
   // Header items
 #ifdef FT_HAS_PREVIEW
   funcPreviews = new FmRingStart("Function previews", graph_xpm);
@@ -499,7 +504,19 @@ bool FapUAResultListView::isHeaderOkAsLeaf(FFaListViewItem* item) const
 }
 //----------------------------------------------------------------------------
 
-void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
+void FapUAResultListView::startDrag(bool& accepted)
+{
+  // We only allow to drag curve objects from this UI
+  accepted = true;
+  std::vector<FFaViewItem*> items = this->getUISelectedItems();
+  for (size_t i = 0; i < items.size() && accepted; i++)
+    if (!dynamic_cast<FmCurveSet*>(items[i]))
+      accepted = false;
+}
+
+//----------------------------------------------------------------------------
+
+void FapUAResultListView::dropItems(int droppedOnItemIdx, int& dropAction)
 {
   FFaViewItem* droppedOnItem = this->getMapItem(droppedOnItemIdx);
 
@@ -520,16 +537,15 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
     }
   }
 
-  // Dropping selected curves from this UI (moving them):
-
   if (graph)
   {
-    bool isCurvesDragged = false;
+    // Dropping selected curves from this UI (moving or copying them):
+
+    bool isCopy = dropAction > 0;
     std::vector<FFaViewItem*> items = this->getUISelectedItems();
-    for (FFaViewItem* item : items)
-      if ((curve = dynamic_cast<FmCurveSet*>(item)))
+    for (size_t i = 0; i < items.size() && dropAction >= 0; i++)
+      if ((curve = dynamic_cast<FmCurveSet*>(items[i])))
       {
-        isCurvesDragged = true;
         FmGraph* oGraph = curve->getOwnerGraph();
         if (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
             graph->isBeamDiagram() == oGraph->isBeamDiagram())
@@ -544,10 +560,16 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, bool isCopy, void*)
           }
           else if (graph != oGraph)
             curve->moveTo(graph);
+          else // Illegal move - onto same graph
+            dropAction = -1;
         }
+        else // Illegal copy or move - result curve onto different graph type
+          dropAction = -2;
       }
+      else if (!isCopy)
+        dropAction = -3; // Only curves can be moved
 
-    if (isCurvesDragged)
+    if (!items.empty())
       return;
   }
 

@@ -32,7 +32,8 @@ public:
   void setTmpSelectItemCB(const FFaDynCB1<int>& cb) { tmpSelectItemCB = cb; }
   void setExpandItemCB(const FFaDynCB2<int,bool>& cb) { expandItemCB = cb; }
   void setToggleItemCB(const FFaDynCB2<int,int>& cb) { toggleItemCB = cb; }
-  void setDroppedCB(const FFaDynCB3<int,bool,void*>& cb) { droppedCB = cb; }
+  void setStartDragCB(const FFaDynCB1<bool&>& cb) { startDragCB = cb; }
+  void setDroppedCB(const FFaDynCB2<int,int&>& cb) { droppedCB = cb; }
 
   int createItem(int parent, int after, const std::string& label);
 
@@ -112,10 +113,11 @@ public:
   static bool mouseSelected;
 
 protected:
-  FFaDynCB1<int>            tmpSelectItemCB;
-  FFaDynCB2<int,bool>       expandItemCB;
-  FFaDynCB2<int,int>        toggleItemCB;
-  FFaDynCB3<int,bool,void*> droppedCB;
+  FFaDynCB1<int>      tmpSelectItemCB;
+  FFaDynCB2<int,bool> expandItemCB;
+  FFaDynCB2<int,int>  toggleItemCB;
+  FFaDynCB1<bool&>    startDragCB;
+  FFaDynCB2<int,int&> droppedCB;
 };
 
 /////////////////////////////////////////////////////////////////////////////

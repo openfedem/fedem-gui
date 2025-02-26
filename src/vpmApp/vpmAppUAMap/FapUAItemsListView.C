@@ -43,8 +43,6 @@ FapUAItemsListView::FapUAItemsListView(FuiItemsListView* uic)
 					  tmpSelectItem,int));
   this->ui->setExpandItemCB(FFaDynCB2M(FapUAItemsListView,this,
 				       expandItem,int,bool));
-  this->ui->setDroppedCB(FFaDynCB3M(FapUAItemsListView,this,
-				    dropItems,int,bool,void*));
 }
 //----------------------------------------------------------------------------
 

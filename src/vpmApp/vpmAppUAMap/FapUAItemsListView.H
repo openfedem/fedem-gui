@@ -67,8 +67,6 @@ protected:
 		    FFaListViewItem* after);
   virtual void deleteUIItem(FFaViewItem* item);
 
-  virtual void dropItems(int, bool, void*) {}
-
   virtual void tmpSelectionChangedEvent();
 
   void updateItemPositionsInDB(int uiparent);
