@@ -21,6 +21,9 @@ public:
 
 protected:
   virtual void onCopyDataButtonClicked();
+
+private:
+  virtual void setSensitivity(bool) {} // this dialog should always be sensitive
 };
 
 #endif

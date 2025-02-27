@@ -12,24 +12,24 @@
 #include "vpmUI/vpmUIComponents/FuiItemsListView.H"
 
 class QEvent;
+class QDragEnterEvent;
 class QDropEvent;
 
-class FuiQtItemsListView : public FFuQtListView,
-			   virtual public FuiItemsListView
+
+class FuiQtItemsListView : public FFuQtListView, virtual public FuiItemsListView
 {
   Q_OBJECT
 
-public:
-  FuiQtItemsListView(QWidget* parent = NULL,
-		     const char* name="FuiQtItemsListView");
-  virtual ~FuiQtItemsListView() {}
+protected:
+  FuiQtItemsListView(QWidget* parent, const char* name);
 
 private:
   virtual bool event(QEvent* e);
   virtual void setVisible(bool visible);
 
-private slots:
-  void onDropped(QDropEvent* e);
+protected:
+  virtual void dragEnterEvent(QDragEnterEvent* e);
+  virtual void dropEvent(QDropEvent* e);
 };
 
 #endif

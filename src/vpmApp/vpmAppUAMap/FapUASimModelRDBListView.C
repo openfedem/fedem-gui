@@ -71,7 +71,7 @@ void FapUASimModelRDBListView::updateSession()
   double usedTime = (stop-start)/((double)CLOCKS_PER_SEC);
   std::cout << this->ui->getName()
 	    <<" - FapUASimModelRDBListView::updateSession() used time: "<< usedTime
-	    <<" nItems:"<< this->ui->getAllChildren(-1).size() << std::endl;
+	    <<" nItems:"<< this->ui->getAllChildren(-1,true).size() << std::endl;
 #endif
 }
 //----------------------------------------------------------------------------
@@ -179,14 +179,14 @@ void FapUASimModelRDBListView::getChildren(FFaListViewItem* parent,
 }
 //----------------------------------------------------------------------------
 
-std::vector<std::string> FapUASimModelRDBListView::getItemText(FFaListViewItem* item)
+std::string FapUASimModelRDBListView::getItemText(FFaListViewItem* item)
 {
   if (dynamic_cast<FFrEntryBase*>(item))
     return FapUARDBListView::getItemText(item);
   else if (dynamic_cast<FmModelMemberBase*>(item))
     return FapUASimModelListView::getItemText(item);
-  else
-    return std::vector<std::string>();
+
+  return "";
 }
 //----------------------------------------------------------------------------
 

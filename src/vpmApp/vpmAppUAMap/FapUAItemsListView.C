@@ -43,8 +43,6 @@ FapUAItemsListView::FapUAItemsListView(FuiItemsListView* uic)
 					  tmpSelectItem,int));
   this->ui->setExpandItemCB(FFaDynCB2M(FapUAItemsListView,this,
 				       expandItem,int,bool));
-  this->ui->setDroppedCB(FFaDynCB3M(FapUAItemsListView,this,
-				    dropItems,int,bool,void*));
 }
 //----------------------------------------------------------------------------
 
@@ -61,7 +59,7 @@ void FapUAItemsListView::setTopLevelItem(FFaListViewItem* item, bool includeMe)
 }
 //----------------------------------------------------------------------------
 
-FFaListViewItem* FapUAItemsListView::getUIParent(FFaListViewItem* item)
+FFaListViewItem* FapUAItemsListView::getUIParent(FFaListViewItem* item) const
 {
 #ifdef LV_DEBUG
   reportItem(item,"FapUAItemsListView::getUIParent: ");
@@ -127,7 +125,8 @@ void FapUAItemsListView::sortByID()
 
 void FapUAItemsListView::ensureSelectedVisible()
 {
-  for (FFuListViewItem* item : ui->getSelectedListItems())
+  std::vector<FFuListViewItem*> selected = ui->getSelectedListItems();
+  for (FFuListViewItem* item : selected)
     ui->ensureListItemVisible(item,false);
 }
 //----------------------------------------------------------------------------
@@ -141,7 +140,7 @@ void FapUAItemsListView::deleteUIItem(FFaViewItem* item)
   int uiitem = this->getMapItem(item);
   if (uiitem < 0) return;
 
-  std::vector<int> children = this->ui->getAllChildren(uiitem);
+  std::vector<int> children = this->ui->getChildren(uiitem,true);
 
   this->ui->deleteItem(uiitem);
   this->eraseMapItem(uiitem);
@@ -159,8 +158,10 @@ void FapUAItemsListView::ensureItemVisible(FFaViewItem* item)
 
 void FapUAItemsListView::updateItemPositionsInDB(int uiparent)
 {
+  std::vector<int> children = this->ui->getChildren(uiparent);
+
   int pos = 0;
-  for (int child : this->ui->getChildren(uiparent))
+  for (int child : children)
     this->getMapLVItem(child)->setPositionInListView(this->ui->getName(),pos++);
 }
 //----------------------------------------------------------------------------
@@ -192,9 +193,9 @@ bool FapUAItemsListView::getItemExpanded(FFaListViewItem* item)
 }
 //----------------------------------------------------------------------------
 
-std::vector<std::string> FapUAItemsListView::getItemText(FFaListViewItem* item)
+std::string FapUAItemsListView::getItemText(FFaListViewItem* item)
 {
-  return { item->getItemName()+FFaNumStr(" %d",item->getItemID()) };
+  return item->getItemName() + FFaNumStr(" %d",item->getItemID());
 }
 //----------------------------------------------------------------------------
 
@@ -241,7 +242,7 @@ void FapUAItemsListView::updateTopLevelItem()
   if (this->topLevelItem) {
     if (this->topLevelItemIncludeMyself) {
       if (this->verifyItem(this->topLevelItem))
-	this->createUIItem(this->topLevelItem);
+        this->createUIItem(this->topLevelItem,NULL,NULL);
     }
     else
       this->createUITopLevelItems(this->topLevelItem);
@@ -308,15 +309,11 @@ int FapUAItemsListView::createSingleUIItem(FFaListViewItem* item,
 
   if (this->getMapItem(item) > -1) return -1;
 
-  int uiitem = -1;
-  std::vector<std::string> texts = this->getItemText(item);
-  if (texts.size() == 1)
-    uiitem = this->ui->createItem(this->getMapItem(parent),
-				  this->getMapItem(after),texts.front().c_str());
-  else if (texts.size() > 1) {
-    uiitem = this->ui->createItem(this->getMapItem(parent),this->getMapItem(after));
-    this->ui->setItemText(uiitem,texts);
-  }
+  int uiitem = this->ui->createItem(this->getMapItem(parent),
+                                    this->getMapItem(after),
+                                    this->getItemText(item));
+  if (uiitem < 0) return uiitem;
+
   this->putMapItem(uiitem,item);
 
   //settings
@@ -345,7 +342,8 @@ int FapUAItemsListView::createSingleUIItem(FFaListViewItem* item,
   }
 
 #ifdef LV_DEBUG
-  std::cout <<"FapUAItemsListView::createSingleUIItem: Created item "<< uiitem << std::endl;
+  std::cout <<"FapUAItemsListView::createSingleUIItem: Created item "
+            << uiitem <<" for "<< this->getItemText(item) << std::endl;
 #endif
 
   return uiitem;
@@ -522,7 +520,8 @@ void FapUAItemsListView::onListViewItemChanged(FFaListViewItem* item)
   this->createUIItem(item, parent, after);
 
   // Handle selection, since this will now be removed
-  for (FFaViewItem* permSel : FapEventManager::getPermSelection())
+  std::vector<FFaViewItem*> selection = FapEventManager::getPermSelection();
+  for (FFaViewItem* permSel : selection)
     this->ui->permSelectItem(this->getMapItem(permSel));
 }
 //----------------------------------------------------------------------------

@@ -5,14 +5,15 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <Qt3Support/Q3DragObject>
+#include <QDrag>
 
-#include "FuiQtItemsListViews.H"
+#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtItemsListViews.H"
 
 
 FuiQtSimModelListView::FuiQtSimModelListView(QWidget* parent, const char* name)
   : FuiQtItemsListView(parent,name)
 {
+  this->setSglSelectionMode(false);
   this->initWidgets();
 }
 
@@ -21,14 +22,10 @@ FuiQtSimModelListView::FuiQtSimModelListView(QWidget* parent, const char* name)
 FuiQtResultListView::FuiQtResultListView(QWidget* parent, const char* name)
   : FuiQtItemsListView(parent,name)
 {
-  this->initWidgets();
+  this->setDragEnabled(true);
   this->setAcceptDrops(true);
   this->viewport()->setAcceptDrops(true);
-}
-
-Q3DragObject* FuiQtResultListView::dragObject()
-{
-  return new Q3TextDrag(this,"Hei");
+  this->initWidgets();
 }
 
 //----------------------------------------------------------------------------
@@ -39,22 +36,25 @@ FuiQtRDBListView::FuiQtRDBListView(QWidget* parent, const char* name)
   this->initWidgets();
 }
 
-Q3DragObject* FuiQtRDBListView::dragObject()
-{
-  return new Q3TextDrag(this,"Hei");
-}
-
 //----------------------------------------------------------------------------
 
 FuiQtSimModelRDBListView::FuiQtSimModelRDBListView(QWidget* parent, const char* name)
   : FuiQtItemsListView(parent,name)
 {
+  this->setDragEnabled(true);
   this->initWidgets();
 }
 
-Q3DragObject* FuiQtSimModelRDBListView::dragObject()
+//----------------------------------------------------------------------------
+// This solution was proposed by ChatGPT when asked "How to disable the
+// Qt::MoveAction when dragging an item from one QTreeView to another".
+// Without this, the list item dragged from the SimModelRDBListView will be
+// deleted, which it is not designed for, causing the application to crash.
+void FuiQtSimModelRDBListView::startDrag(Qt::DropActions)
 {
-  return new Q3TextDrag(this,"Hei");
+  QDrag* drag = new QDrag(this);
+  drag->setMimeData(this->model()->mimeData(this->selectedIndexes()));
+  drag->exec(Qt::CopyAction); // Only allow copying, not moving
 }
 
 //----------------------------------------------------------------------------

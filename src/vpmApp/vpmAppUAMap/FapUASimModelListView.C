@@ -233,24 +233,24 @@ void FapUASimModelListView::getChildren(FFaListViewItem* parent,
 }
 //----------------------------------------------------------------------------
 
-std::vector<std::string> FapUASimModelListView::getItemText(FFaListViewItem* item)
+std::string FapUASimModelListView::getItemText(FFaListViewItem* item)
 {
   if (dynamic_cast<FmRingStart*>(item))
-    return std::vector<std::string>(1,item->getItemName());
+    return item->getItemName();
 
 #ifndef LV_DEBUG
   if (dynamic_cast<FmAssemblyBase*>(item) && !dynamic_cast<FmStructAssembly*>(item))
     // Try leave out the user ID for positioned assembly objects
     // (they are normally very few and of different sub-classes
     // which is sufficient for proper identification)
-    return std::vector<std::string>(1,item->getItemDescr());
+    return item->getItemDescr();
 #endif
 
   FFaNumStr txt("[%d]",item->getItemID());
   if (debugMode)
     txt += FFaNumStr("{%d}",item->getItemBaseID());
   txt += " " + item->getItemDescr();
-  return std::vector<std::string>(1,txt);
+  return txt;
 }
 //----------------------------------------------------------------------------
 

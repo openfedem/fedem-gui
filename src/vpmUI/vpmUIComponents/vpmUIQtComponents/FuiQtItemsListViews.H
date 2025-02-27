@@ -28,7 +28,6 @@ class FuiQtSimModelListView : public FuiQtItemsListView,
 {
 public:
   FuiQtSimModelListView(QWidget* parent, const char* name = "SimModel");
-  virtual ~FuiQtSimModelListView() {}
 };
 
 
@@ -37,10 +36,6 @@ class FuiQtResultListView : public FuiQtItemsListView,
 {
 public:
   FuiQtResultListView(QWidget* parent, const char* name = "Result");
-  virtual ~FuiQtResultListView() {}
-
-protected:
-  virtual Q3DragObject* dragObject();
 };
 
 
@@ -49,10 +44,6 @@ class FuiQtRDBListView : public FuiQtItemsListView,
 {
 public:
   FuiQtRDBListView(QWidget* parent, const char* name = "RDB");
-  virtual ~FuiQtRDBListView() {}
-
-protected:
-  virtual Q3DragObject* dragObject();
 };
 
 
@@ -61,10 +52,9 @@ class FuiQtSimModelRDBListView : public FuiQtItemsListView,
 {
 public:
   FuiQtSimModelRDBListView(QWidget* parent, const char* name = "SimModelRDB");
-  virtual ~FuiQtSimModelRDBListView() {}
-
 protected:
-  virtual Q3DragObject* dragObject();
+  // Need to override this method in order to disable the Move drop action
+  void startDrag(Qt::DropActions) override;
 };
 
 
@@ -73,7 +63,6 @@ class FuiQtCrossSectionListView : public FuiQtItemsListView,
 {
 public:
   FuiQtCrossSectionListView(QWidget* parent, const char* name = "CrossSection");
-  virtual ~FuiQtCrossSectionListView() {}
 };
 
 
@@ -82,7 +71,6 @@ class FuiQtMaterialListView : public FuiQtItemsListView,
 {
 public:
   FuiQtMaterialListView(QWidget* parent, const char* name = "Material");
-  virtual ~FuiQtMaterialListView() {}
 };
 
 #endif

@@ -20,7 +20,8 @@ class FFuaCmdItem;
 
 
 class FuiItemsListView : virtual public FFuListView,
-                         public FFuUAExistenceHandler, public FFuUAItemsViewHandler,
+                         public FFuUAExistenceHandler,
+                         public FFuUAItemsViewHandler,
                          public FFuUACommandHandler
 {
 public:
@@ -31,16 +32,17 @@ public:
   void setTmpSelectItemCB(const FFaDynCB1<int>& cb) { tmpSelectItemCB = cb; }
   void setExpandItemCB(const FFaDynCB2<int,bool>& cb) { expandItemCB = cb; }
   void setToggleItemCB(const FFaDynCB2<int,int>& cb) { toggleItemCB = cb; }
-  void setDroppedCB(const FFaDynCB3<int,bool,void*>& cb) { droppedCB = cb; }
+  void setStartDragCB(const FFaDynCB1<bool&>& cb) { startDragCB = cb; }
+  void setDroppedCB(const FFaDynCB2<int,int&>& cb) { droppedCB = cb; }
 
-  int createItem(int parent, int after, const char* label="label");
+  int createItem(int parent, int after, const std::string& label);
 
   // item settings
   void setItemSelectAble(int item, bool able);
   void expandItem(int item, bool expand);// no notify
   void ensureItemVisible(int item);//expands, notify
 
-  void setItemText(int item, const std::vector<std::string>& texts);
+  void setItemText(int item, const std::string& texts);
   void setItemTextBold(int item, bool bold);
   void setItemTextItalic(int item, bool italic);
   void setItemImage(int item, const char** pixmap);
@@ -48,22 +50,20 @@ public:
   void setItemToggleAble(int item, bool able);
   void setItemThreeStepToggleAble(int item, bool able);
   void setItemToggleValue(int item, int value);// no notify
-  int  getItemToggleValue(int item);// no notify
+  int  getItemToggleValue(int item) const;// no notify
 
   void setItemDropable(int item, bool yesOrNo);
   void setItemDragable(int item, bool yesOrNo);
 
   // item relations
-  int  getItemPosition(int item);
-  int  getItemBefore(int itemsParent, int itemsListPosition);
+  int getItemPosition(int item) const;
+  int getItemBefore(int itemsParent, int itemsListPosition);
   // -1 if not found
-  int  getParent(int item);
+  int getParent(int item) const;
   // if parent = -1, top level children
   std::vector<int> getChildren(int parent, bool all = false);
-  // all levels below parent, if parent = -1 all lv
-  std::vector<int> getAllChildren(int parent) { return this->getChildren(parent,true); }
-  int  getNSiblings(int item);
-  int  getNChildren(int item);
+  int getNSiblings(int item) const;
+  int getNChildren(int item) const;
 
   // listview settings
   void setDecoratedRoot(bool decorated);
@@ -113,10 +113,11 @@ public:
   static bool mouseSelected;
 
 protected:
-  FFaDynCB1<int>            tmpSelectItemCB;
-  FFaDynCB2<int,bool>       expandItemCB;
-  FFaDynCB2<int,int>        toggleItemCB;
-  FFaDynCB3<int,bool,void*> droppedCB;
+  FFaDynCB1<int>      tmpSelectItemCB;
+  FFaDynCB2<int,bool> expandItemCB;
+  FFaDynCB2<int,int>  toggleItemCB;
+  FFaDynCB1<bool&>    startDragCB;
+  FFaDynCB2<int,int&> droppedCB;
 };
 
 /////////////////////////////////////////////////////////////////////////////

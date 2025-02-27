@@ -13,9 +13,12 @@
 bool FuiItemsListView::mouseSelected = false;
 
 
-int FuiItemsListView::createItem(int parent, int after, const char* label)
+int FuiItemsListView::createItem(int parent, int after,
+                                 const std::string& label)
 {
-  return this->createListItem(this->getListItem(parent),this->getListItem(after),NULL,label)->getItemId();
+  return this->createListItem(label.c_str(),
+                              this->getListItem(parent),
+                              this->getListItem(after))->getItemId();
 }
 //----------------------------------------------------------------------------
 
@@ -49,23 +52,21 @@ void FuiItemsListView::setItemSelectAble(int item, bool able)
 }
 //----------------------------------------------------------------------------
 
-void FuiItemsListView::setItemText(int item, const std::vector<std::string>& texts)
+void FuiItemsListView::setItemText(int item, const std::string& text)
 {
-  FFuListViewItem* ffuitem = this->getListItem(item);
-  for (size_t i = 0; i < texts.size(); i++)
-    ffuitem->setItemText(i,texts[i].c_str());
+  this->getListItem(item)->setItemText(0,text.c_str());
 }
 //----------------------------------------------------------------------------
 
 void FuiItemsListView::setItemTextBold(int item, bool bold)
 {
-  this->getListItem(item)->setItemTextBold(bold);
+  this->getListItem(item)->setItemTextBold(0,bold);
 }
 //----------------------------------------------------------------------------
 
 void FuiItemsListView::setItemTextItalic(int item, bool italic)
 {
-  this->getListItem(item)->setItemTextItalic(italic);
+  this->getListItem(item)->setItemTextItalic(0,italic);
 }
 //----------------------------------------------------------------------------
 
@@ -93,7 +94,7 @@ void FuiItemsListView::setItemToggleValue(int item, int value)
 }
 //----------------------------------------------------------------------------
 
-int FuiItemsListView::getItemToggleValue(int item)
+int FuiItemsListView::getItemToggleValue(int item) const
 {
   return this->getListItem(item)->getToggleValue();
 }
@@ -111,7 +112,7 @@ void FuiItemsListView::setItemDragable(int item, bool yesOrNo)
 }
 //----------------------------------------------------------------------------
 
-int FuiItemsListView::getItemPosition(int item)
+int FuiItemsListView::getItemPosition(int item) const
 {
   return this->getListItem(item)->getItemPosition();
 }
@@ -125,7 +126,7 @@ int FuiItemsListView::getItemBefore(int itemsParent, int itemsListPosition)
 }
 //----------------------------------------------------------------------------
 
-int FuiItemsListView::getParent(int item)
+int FuiItemsListView::getParent(int item) const
 {
   FFuListViewItem* parent = this->getListItem(item)->getParentItem();
   return parent ? parent->getItemId() : -1;
@@ -149,13 +150,13 @@ std::vector<int> FuiItemsListView::getChildren(int parent, bool all)
 }
 //----------------------------------------------------------------------------
 
-int FuiItemsListView::getNSiblings(int item)
+int FuiItemsListView::getNSiblings(int item) const
 {
   return this->getListItem(item)->getNSiblings();
 }
 //----------------------------------------------------------------------------
 
-int FuiItemsListView::getNChildren(int item)
+int FuiItemsListView::getNChildren(int item) const
 {
   return this->getListItem(item)->getNChildren();
 }

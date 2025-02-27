@@ -498,9 +498,8 @@ void FapEditCmds::selectTempSelectionAll()
   FFuListViewItem* firstItem = listView->getFirstChildItem();
   if (!firstItem) return;
 
-  char* pszIds = firstItem->getItemText(1);
-  bool firstItemHasIds = pszIds != NULL ? (strlen(pszIds) > 0) : false;
-  std::vector<FFuListViewItem*> items = listView->getListChildren(firstItemHasIds ? NULL : firstItem);
+  if (!firstItem->getItemText(1).empty()) firstItem = NULL;
+  std::vector<FFuListViewItem*> items = listView->getListChildren(firstItem);
 
   // All possible object type prefices in the Topology view.
   // See also FapUAProperties::getDBValues().
@@ -516,13 +515,12 @@ void FapEditCmds::selectTempSelectionAll()
   std::vector<FFaViewItem*> itemsToSel;
   for (FFuListViewItem* item : items)
   {
-    char* pszType = item->getItemText(0);
-    char* pszIds = item->getItemText(1);
-    if (pszType == NULL || pszIds == NULL)
-      continue;
+    std::string strType = item->getItemText(0);
+    if (strType.empty()) continue;
+    std::string strUIds = item->getItemText(1);
+    if (strUIds.empty()) continue;
 
     // Remove possible object type prefix
-    std::string strType = pszType;
     for (const char* pfx : pfxs)
       if (strType.find(pfx) == 0)
       {
@@ -531,6 +529,7 @@ void FapEditCmds::selectTempSelectionAll()
       }
 
     // Get id of item
+    const char* pszIds = strUIds.c_str();
     // The first number is the id of the element
     int id = atol(pszIds);
     // The other numbers are the ids of the parent assemblies

@@ -36,10 +36,9 @@ protected:
   virtual void getChildren(FFaListViewItem* parent,
 			   std::vector<FFaListViewItem*>& children) const;
 
-  virtual std::vector<std::string> getItemText(FFaListViewItem* item);
+  virtual std::string getItemText(FFaListViewItem* item);
   virtual const char** getItemPixmap(FFaListViewItem* item);
 
-private:
   // Reimplementations from FapUACommandHandler
   virtual FFuaUICommands* getCommands();
 

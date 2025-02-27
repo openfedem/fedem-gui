@@ -12,7 +12,8 @@
 
 #include "vpmDB/FmDB.H"
 #include "vpmDB/FmTriad.H"
-#include "vpmDB/FmLink.H"
+#include "vpmDB/FmBeam.H"
+#include "vpmDB/FmPart.H"
 #include "vpmDB/FmResultBase.H"
 #include "vpmDB/FmSubAssembly.H"
 
@@ -32,6 +33,10 @@ Fmd_SOURCE_INIT(FUI_OBJECTBROWSER,FuiObjectBrowser,FFuTopLevelShell);
 FuiObjectBrowser::FuiObjectBrowser()
 {
   Fmd_CONSTRUCTOR_INIT(FuiObjectBrowser);
+
+  myObj = NULL;
+  lastSorted = -1;
+  sortOrder = false;
 }
 //----------------------------------------------------------------------------
 
@@ -43,12 +48,14 @@ void FuiObjectBrowser::initWidgets()
   this->searchLabel->setLabel("Search and browse objects:");
 
   this->searchField->setValue("(All)");
-  this->searchField->setToolTip("Type a search expression here. See Help for more information.");
+  this->searchField->setToolTip("Type a search expression here.\n"
+                                "See Help for more information.");
   this->searchField->setAcceptedCB(FFaDynCB1M(FuiObjectBrowser,this,
-					      onSearchFieldChanged,char*));
+                                              onSearchFieldChanged,char*));
 
   this->searchButton->setLabel("Search");
-  this->searchButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,onSearchButtonClicked));
+  this->searchButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,
+                                               onSearchButtonClicked));
   this->searchButton->setToolTip("Click to perform search");
 
   this->searchView->clearList();
@@ -56,10 +63,11 @@ void FuiObjectBrowser::initWidgets()
   this->searchView->setListRootIsDecorated(true);
   this->searchView->setAllListColumnsShowSelection(true);
   this->searchView->setHeaderClickEnabled(-1,true);
-  this->searchView->setHeaderOff(true);
-  this->searchView->setListSorting(0,true); // enable sorting
+  this->searchView->setHeaderOff(false);
+  this->searchView->setHeaderClickedCB(FFaDynCB1M(FuiObjectBrowser,this,
+                                                  onHeaderClicked,int));
   this->searchView->setPermSelectionChangedCB(FFaDynCB0M(FuiObjectBrowser,this,
-					      onSearchViewSelectionChanged));
+                                                         onSelectionChanged));
 
   this->outputLabel->setLabel("Object details:");
 
@@ -70,14 +78,16 @@ void FuiObjectBrowser::initWidgets()
   this->closeButton->setActivateCB(FFaDynCB0M(FFuComponentBase,this,popDown));
 
   this->helpButton->setLabel("Help");
-  this->helpButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,onHelpButtonClicked));
+  this->helpButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,
+                                             onHelpButtonClicked));
 
   FFuaPalette pal;
   pal.setStdBackground(211,211,211);
   this->sepLabel->setColors(pal);
 
   this->copyDataButton->setLabel("Copy data");
-  this->copyDataButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,onCopyDataButtonClicked));
+  this->copyDataButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,
+                                                 onCopyDataButtonClicked));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
@@ -137,7 +147,6 @@ void FuiObjectBrowser::placeWidgets(int width, int height)
 void FuiObjectBrowser::onPoppedUp()
 {
   this->placeWidgets(this->getWidth(),this->getHeight());
-  this->updateUIValues();
 }
 //----------------------------------------------------------------------------
 
@@ -145,23 +154,28 @@ void FuiObjectBrowser::onSearchButtonClicked()
 {
   // Clear
   searchView->clearList();
-  searchView->setHeaderOff(false); // show header
 
   // Get search field
   std::string pszSearch = searchField->getValue();
 
   // Groups
-  FFuListViewItem* newItem = NULL;
   FFuListViewItem* gTriads = NULL;
+  FFuListViewItem* gBeams = NULL;
   FFuListViewItem* gParts = NULL;
   FFuListViewItem* gResults = NULL;
   FFuListViewItem* gSubass = NULL;
   if (pszSearch.empty() || FFaUpperCaseString(pszSearch) == "(ALL)") {
     pszSearch.clear();
-    gTriads = searchView->createListItem(0,0,0,"Triads");
-    gParts = searchView->createListItem(0,0,0,"Parts");
-    gResults = searchView->createListItem(0,0,0,"Results");
-    gSubass = searchView->createListItem(0,0,0,"High-level");
+    if (FmDB::hasObjectsOfType(FmTriad::getClassTypeID()))
+      gTriads  = searchView->createListItem("Triads");
+    if (FmDB::hasObjectsOfType(FmPart::getClassTypeID()))
+      gParts   = searchView->createListItem("Parts");
+    if (FmDB::hasObjectsOfType(FmBeam::getClassTypeID()))
+      gBeams   = searchView->createListItem("Beams");
+    if (FmDB::hasObjectsOfType(FmResultBase::getClassTypeID()))
+      gResults = searchView->createListItem("Results");
+    if (FmDB::hasObjectsOfType(FmSubAssembly::getClassTypeID()))
+      gSubass  = searchView->createListItem("High-level");
   }
 
   // Get all
@@ -176,33 +190,40 @@ void FuiObjectBrowser::onSearchButtonClicked()
         continue; // doesn't match
 
     // Create list view item
+    FFuListViewItem* parentItem = NULL;
     if ((*it)->isOfType(FmTriad::getClassTypeID()))
-      newItem = searchView->createListItem(gTriads,0);
+      parentItem = gTriads;
+    else if ((*it)->isOfType(FmBeam::getClassTypeID()))
+      parentItem = gBeams;
+    else if ((*it)->isOfType(FmPart::getClassTypeID()))
+      parentItem = gParts;
     else if ((*it)->isOfType(FmLink::getClassTypeID()))
-      newItem = searchView->createListItem(gParts,0);
+    {
+      if (!gParts && pszSearch.empty())
+        gParts = searchView->createListItem("Parts");
+      parentItem = gParts;
+    }
     else if ((*it)->isOfType(FmResultBase::getClassTypeID()))
-      newItem = searchView->createListItem(gResults,0);
+      parentItem = gResults;
     else if ((*it)->isOfType(FmSubAssembly::getClassTypeID()))
-      newItem = searchView->createListItem(gSubass,0);
-    else
-      newItem = searchView->createListItem(0,0);
+      parentItem = gSubass;
 
-    newItem->setItemText(0,FFaNumStr("%5d",(*it)->getBaseID()).c_str());
-    newItem->setItemText(1,(*it)->getIdString().c_str());
-    newItem->setItemText(2,(*it)->getUserDescription().c_str());
-    searchView->openListItem(newItem,true);
+    this->addListViewItem(*it,parentItem);
   }
+
+  lastSorted = -1;
+  sortOrder = false;
 }
 //----------------------------------------------------------------------------
 
-void FuiObjectBrowser::onSearchViewSelectionChanged()
+void FuiObjectBrowser::onSelectionChanged()
 {
   this->outputMemo->clearText();
 
   std::vector<FFuListViewItem*> lvItems = searchView->getSelectedListItems();
-  if (lvItems.empty()) return;
+  if (lvItems.empty() || lvItems.front()->getNColumns() < 2) return;
 
-  int nBaseId = atol(lvItems.front()->getItemText(0));
+  int nBaseId = std::stoi(lvItems.front()->getItemText(0));
   FmSimulationModelBase* obj = dynamic_cast<FmSimulationModelBase*>(FmDB::findObject(nBaseId));
   if (obj) outputMemo->setAllText(obj->getObjectInfo().c_str());
 }
@@ -214,35 +235,52 @@ void FuiObjectBrowser::onHelpButtonClicked()
 }
 //----------------------------------------------------------------------------
 
-FFuaUIValues* FuiObjectBrowser::createValuesObject()
+void FuiObjectBrowser::onHeaderClicked(int col)
 {
-  return new FuaObjectBrowserValues();
+  // Toggle the sort order if clicking the same column twice,
+  // otherwise sort in Ascending order (sortOrder=true).
+  if (col == lastSorted)
+    sortOrder = !sortOrder;
+  else
+  {
+    sortOrder = true;
+    lastSorted = col;
+  }
+  this->searchView->setListSorting(col,sortOrder);
 }
 //----------------------------------------------------------------------------
 
-void FuiObjectBrowser::setUIValues(const FFuaUIValues* values)
+void FuiObjectBrowser::update(FmModelMemberBase* newObj, bool updateCurrent)
 {
+  if (newObj != myObj && updateCurrent)
+    return;
+
   // Clear fields
   this->searchField->setValue("(All)");
   this->searchView->clearList();
-  this->searchView->setHeaderOff(false); // show header
   this->outputMemo->clearText();
 
-  // Get selected item
-  FmModelMemberBase* obj = static_cast<const FuaObjectBrowserValues*>(values)->obj;
-  if (!obj) return;
+  myObj = newObj;
+  if (!myObj) return;
 
   // Search field
-  searchField->setValue(obj->getUserDescription());
+  searchField->setValue(myObj->getUserDescription());
 
   // List view
-  FFuListViewItem* newItem = searchView->createListItem(0,0);
+  this->addListViewItem(myObj);
+
+  // Memo field
+  FmSimulationModelBase* simobj = dynamic_cast<FmSimulationModelBase*>(myObj);
+  if (simobj) outputMemo->setAllText(simobj->getObjectInfo().c_str());
+}
+//----------------------------------------------------------------------------
+
+void FuiObjectBrowser::addListViewItem(FmModelMemberBase* obj,
+                                       FFuListViewItem* parent)
+{
+  FFuListViewItem* newItem = searchView->createListItem(NULL,parent);
   newItem->setItemText(0,FFaNumStr("%5d",obj->getBaseID()).c_str());
   newItem->setItemText(1,obj->getIdString().c_str());
   newItem->setItemText(2,obj->getUserDescription().c_str());
   searchView->openListItem(newItem,true);
-
-  // Memo field
-  FmSimulationModelBase* simobj = dynamic_cast<FmSimulationModelBase*>(obj);
-  if (simobj) outputMemo->setAllText(simobj->getObjectInfo().c_str());
 }

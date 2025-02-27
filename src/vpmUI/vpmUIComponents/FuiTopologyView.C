@@ -75,28 +75,28 @@ void FuiTopologyView::setTree(const std::vector<FuiTopologyItem> &topology)
   FFuListViewItem* newItem = NULL;
 
   myView->clearList();
-  myView->setListColumnWidth(0,15);
 
-  int depth = 0, id = 0;
+  int newDepth = 0, id = 0;
   for (const FuiTopologyItem& top : topology)
   {
     parent = after = newItem;
-    for (int deptDiff = depth-top.depth; deptDiff >= 0; deptDiff--)
+    for (int depth = newDepth; depth >= top.depth; depth--)
       if (parent)
       {
         after  = parent;
         parent = parent->getParentItem();
       }
 
-    newItem = myView->createListItem(parent,after);
+    newItem = myView->createListItem(top.type.c_str(),parent,after);
     newItem->setItemId(id++);
-    newItem->setItemText(0,top.type.c_str());
     newItem->setItemText(1,top.id.c_str());
     newItem->setItemText(2,top.description.c_str());
     myView->openListItem(newItem,true);
 
-    depth = newItem->getDepth();
+    newDepth = newItem->getDepth();
   }
+
+  myView->resizeListColumnsToContents();
 }
 
 FuiTopologyView* FuiTopologyView::getTopologyView()

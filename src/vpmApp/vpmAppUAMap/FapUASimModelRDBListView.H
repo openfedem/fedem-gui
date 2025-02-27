@@ -18,13 +18,13 @@ public:
   FapUASimModelRDBListView(FuiItemsListView* ui);
   virtual ~FapUASimModelRDBListView() {}
 
-private:
+protected:
   // Reimplementations from FapUAItemsListView
   virtual bool verifyItem(FFaListViewItem* item);
   virtual void getChildren(FFaListViewItem* parent,
 			   std::vector<FFaListViewItem*>& children) const;
 
-  virtual std::vector<std::string> getItemText(FFaListViewItem* item);
+  virtual std::string getItemText(FFaListViewItem* item);
   virtual const char** getItemPixmap(FFaListViewItem* item);
 
   // Reimplementations from FapUACommandHandler
