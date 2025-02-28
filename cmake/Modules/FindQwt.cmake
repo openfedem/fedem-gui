@@ -9,7 +9,7 @@ unset ( Qwt_LIBRARY CACHE )
 
 find_path ( Qwt_INCLUDE
             NAMES qwt.h
-            PATHS /usr/local/qwt-6.3.0-dev/include
+            PATHS /usr/local/qwt-6.3.0-dev/include C:/Qwt-6.3.0-dev/include
           )
 
 if ( Qwt_INCLUDE )
@@ -17,7 +17,7 @@ if ( Qwt_INCLUDE )
 
   find_library ( Qwt_LIBRARY
                  NAMES qwt
-                 PATHS /usr/local/qwt-6.3.0-dev/lib
+                 PATHS /usr/local/qwt-6.3.0-dev/lib C:/Qwt-6.3.0-dev/lib
                )
 
 endif ( Qwt_INCLUDE )
