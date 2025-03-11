@@ -39,16 +39,130 @@
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
 
-enum {
-  START,
-  ANY_SELECTED,
-  TRIAD_SELECTED,
-  TRIAD1_ACCEPTED,
-  TRIAD2_SELECTED,
-  CREATING
-};
+namespace
+{
+  enum CmdState {
+    START,
+    ANY_SELECTED,
+    TRIAD_SELECTED,
+    TRIAD1_ACCEPTED,
+    TRIAD2_SELECTED,
+    CREATING
+  };
 
-int FapCreateSensorCmd::myState = START;
+  CmdState ourState = START;
+
+  void createSimpleSensor()
+  {
+    FFaViewItem* item = FapEventManager::getFirstPermSelectedObject();
+    FmIsMeasuredBase* obj = dynamic_cast<FmIsMeasuredBase*>(item);
+    if (!obj) return;
+
+    FmSensorBase* sens = obj->getSimpleSensor(true);
+
+    // If we are dealing with a control output object, we have to bypass
+    // its sensor and use a sensor on the auto-created engine associated with it
+    if (obj->isOfType(FmcOutput::getClassTypeID()))
+    {
+      FmEngine* engine = static_cast<FmcOutput*>(obj)->getEngine();
+      if (engine) sens = engine->getSimpleSensor(true);
+    }
+
+    ListUI <<"Creating "<< sens->getUserDescription() <<"\n";
+    FapCreateSensorCmd::instance()->setSensor(sens);
+  }
+
+  void createRelativeSensor()
+  {
+    FFaViewItem* item = FapEventManager::getFirstPermSelectedObject();
+    FmTriad* t1 = dynamic_cast<FmTriad*>(item);
+    FapEventManager::popPermSelection();
+    item = FapEventManager::getFirstPermSelectedObject();
+    FmTriad* t2 = dynamic_cast<FmTriad*>(item);
+    if (!t1 || !t2 || t1 == t2)
+    {
+      ListUI <<"ERROR: Relative sensors should be used on different objects.\n";
+      return;
+    }
+
+    FmSensorBase* sens = t1->getRelativeSensor(t2,true);
+    ListUI <<"Creating "<< sens->getUserDescription() <<"\n";
+    FapCreateSensorCmd::instance()->setSensor(sens);
+  }
+
+  void setState(CmdState newState)
+  {
+    switch ((ourState = newState))
+      {
+      case START:
+        Fui::tip("Select argument from the 3D view or the objects browser");
+        break;
+      case TRIAD_SELECTED:
+        Fui::tip("Accept argument by pressing Done, or select a different object");
+        break;
+      case TRIAD1_ACCEPTED:
+        Fui::tip("Accept Triad as argument by pressing Done, or select Triad 2 to create a relative sensor");
+        break;
+      case ANY_SELECTED:
+        Fui::tip("Accept argument by pressing Done, or select a different object");
+        break;
+      case TRIAD2_SELECTED:
+        Fui::tip("Accept by pressing Done, or select a different Triad");
+        break;
+      case CREATING:
+        Fui::tip("Creating Sensor ...");
+        break;
+      }
+  }
+
+#ifdef USE_INVENTOR
+  void eventCB(void*, SoEventCallback* eventCallbackNode)
+  {
+    const SoEvent* event = eventCallbackNode->getEvent();
+    if (!event || !event->isOfType(SoMouseButtonEvent::getClassTypeId())) return;
+
+    if (SoMouseButtonEvent::isButtonPressEvent(event,SoMouseButtonEvent::BUTTON1))
+    {
+      SoHandleEventAction* evHaAction = eventCallbackNode->getAction();
+
+      std::vector<FdObject*> selectedObjects;
+      FdSelector::getSelectedObjects(selectedObjects);
+
+      // Build array of interesting types
+      std::vector<int> types = {
+        FdTriad::getClassTypeID(),
+        FdSimpleJoint::getClassTypeID(),
+        FdLinJoint::getClassTypeID(),
+        FdCamJoint::getClassTypeID(),
+        FdAxialSprDa::getClassTypeID(),
+        FdStrainRosette::getClassTypeID()
+      };
+
+      long int  indexToInterestingPP    = -1;
+      bool      wasASelectedObjInPPList = false;
+      FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
+                                                                selectedObjects, // This is to select objects behind the already selected one
+                                                                types,true, // Filter variables
+                                                                indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
+      if (pickedObject)
+        FapEventManager::permTotalSelect(pickedObject->getFmOwner());
+      else
+        FapEventManager::permUnselectAll();
+    }
+    else if (!SoMouseButtonEvent::isButtonReleaseEvent(event,SoMouseButtonEvent::BUTTON1))
+      return;
+
+    eventCallbackNode->setHandled();
+  }
+#endif
+}
+
+
+void FapCreateSensorCmd::setSensor(FmSensorBase* sens)
+{
+  if (myEngine)
+    myEngine->setSensor(sens,myArg);
+}
 
 
 void FapCreateSensorCmd::onPermSelectionChanged(const std::vector<FFaViewItem*>& totalSelection,
@@ -59,36 +173,40 @@ void FapCreateSensorCmd::onPermSelectionChanged(const std::vector<FFaViewItem*>&
     return;
 
   FmEngine* e;
-  switch (FapCreateSensorCmd::myState)
+  switch (ourState)
     {
     case START:
     case ANY_SELECTED:
     case TRIAD_SELECTED:
       if (totalSelection.empty())
-        FapCreateSensorCmd::setState(START);
-      else if (dynamic_cast<FmTriad*>(totalSelection[0]))
-        FapCreateSensorCmd::setState(TRIAD_SELECTED);
-      else if (((e = dynamic_cast<FmEngine*> (totalSelection[0])) && e != myEngine) ||
-               dynamic_cast<FmJointBase*>    (totalSelection[0]) ||
-               dynamic_cast<FmAxialSpring*>  (totalSelection[0]) ||
-               dynamic_cast<FmAxialDamper*>  (totalSelection[0]) ||
-               dynamic_cast<FmStrainRosette*>(totalSelection[0]) ||
-               dynamic_cast<FmcOutput*>      (totalSelection[0]))
-        FapCreateSensorCmd::setState(ANY_SELECTED);
+        setState(START);
+      else if (dynamic_cast<FmTriad*>(totalSelection.front()))
+        setState(TRIAD_SELECTED);
+      else if (((e = dynamic_cast<FmEngine*> (totalSelection.front())) && e != myEngine) ||
+               dynamic_cast<FmJointBase*>    (totalSelection.front()) ||
+               dynamic_cast<FmAxialSpring*>  (totalSelection.front()) ||
+               dynamic_cast<FmAxialDamper*>  (totalSelection.front()) ||
+               dynamic_cast<FmStrainRosette*>(totalSelection.front()) ||
+               dynamic_cast<FmcOutput*>      (totalSelection.front()))
+        setState(ANY_SELECTED);
       else
-        FapCreateSensorCmd::setState(START);
+        setState(START);
       break;
 
     case TRIAD1_ACCEPTED:
       if (!totalSelection.empty() && dynamic_cast<FmTriad*>(totalSelection[0]))
-        FapCreateSensorCmd::setState(TRIAD2_SELECTED);
+        setState(TRIAD2_SELECTED);
       break;
 
     case TRIAD2_SELECTED:
       if (totalSelection.size() > 1 && dynamic_cast<FmTriad*>(totalSelection[1]))
-        FapCreateSensorCmd::setState(TRIAD2_SELECTED);
+        setState(TRIAD2_SELECTED);
       else
-        FapCreateSensorCmd::setState(TRIAD1_ACCEPTED);
+        setState(TRIAD1_ACCEPTED);
+      break;
+
+    default:
+      break;
     }
 }
 
@@ -112,167 +230,53 @@ void FapCreateSensorCmd::enterMode()
 {
   FapEventManager::pushPermSelection();
 #ifdef USE_INVENTOR
-  FdEvent::addEventCB(FapCreateSensorCmd::eventCB);
+  FdEvent::addEventCB(eventCB);
 #endif
-  FapCreateSensorCmd::setState(START); // To get the tip set right
+  setState(START); // To get the tip set right
 }
 
 
 void FapCreateSensorCmd::cancelMode()
 {
 #ifdef USE_INVENTOR
-  FdEvent::removeEventCB(FapCreateSensorCmd::eventCB);
+  FdEvent::removeEventCB(eventCB);
 #endif
   if (FapEventManager::hasStackedSelections())
     FapEventManager::popPermSelection();
 
-  FapCreateSensorCmd::myState = START;
-}
-
-
-void FapCreateSensorCmd::setState(int newState)
-{
-  FapCreateSensorCmd::myState = newState;
-
-  switch (FapCreateSensorCmd::myState)
-    {
-    case START:
-      Fui::tip("Select argument from the 3D view or the objects browser");
-      break;
-    case TRIAD_SELECTED:
-      Fui::tip("Accept argument by pressing Done, or select a different object");
-      break;
-    case TRIAD1_ACCEPTED:
-      Fui::tip("Accept Triad as argument by pressing Done, or select Triad 2 to create a relative sensor");
-      break;
-    case ANY_SELECTED:
-      Fui::tip("Accept argument by pressing Done, or select a different object");
-      break;
-    case TRIAD2_SELECTED:
-      Fui::tip("Accept by pressing Done, or select a different Triad");
-      break;
-    case CREATING:
-      Fui::tip("Creating Sensor ...");
-      break;
-    }
+  ourState = START;
 }
 
 
 void FapCreateSensorCmd::done()
 {
-  switch (FapCreateSensorCmd::myState)
+  switch (ourState)
     {
     case START:
       FuiModes::cancel();
       break;
     case ANY_SELECTED:
-      FapCreateSensorCmd::createSensor(dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getFirstPermSelectedObject()));
+      createSimpleSensor();
       FapEventManager::permUnselectAll();
       FuiModes::cancel();
       break;
     case TRIAD_SELECTED:
       FapEventManager::pushPermSelection();
-      FapCreateSensorCmd::setState(TRIAD1_ACCEPTED);
+      setState(TRIAD1_ACCEPTED);
       break;
     case TRIAD1_ACCEPTED:
       FapEventManager::popPermSelection();
-      FapCreateSensorCmd::createSensor(dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getFirstPermSelectedObject()));
+      createSimpleSensor();
       FapEventManager::permUnselectAll();
       FuiModes::cancel();
       break;
     case TRIAD2_SELECTED:
-      {
-        FmTriad* t1 = dynamic_cast<FmTriad*>(FapEventManager::getFirstPermSelectedObject());
-        FapEventManager::popPermSelection();
-        FmTriad* t2 = dynamic_cast<FmTriad*>(FapEventManager::getFirstPermSelectedObject());
-        FapCreateSensorCmd::createSensor(t1,t2);
-        FapEventManager::permUnselectAll();
-        FuiModes::cancel();
-      }
+      createRelativeSensor();
+      FapEventManager::permUnselectAll();
+      FuiModes::cancel();
       break;
     default:
       FuiModes::cancel();
       break;
     }
-}
-
-
-#ifdef USE_INVENTOR
-void FapCreateSensorCmd::eventCB(void*, SoEventCallback* eventCallbackNode)
-{
-  const SoEvent* event = eventCallbackNode->getEvent();
-  if (!event) return;
-  if (!event->isOfType(SoMouseButtonEvent::getClassTypeId())) return;
-
-  if (SoMouseButtonEvent::isButtonPressEvent(event,SoMouseButtonEvent::BUTTON1))
-  {
-    SoHandleEventAction* evHaAction = eventCallbackNode->getAction();
-
-    std::vector<FdObject*> selectedObjects;
-    FdSelector::getSelectedObjects(selectedObjects);
-
-    // Build array of interesting types
-    std::vector<int> types(6,FdTriad::getClassTypeID());
-    types[1] = FdSimpleJoint::getClassTypeID();
-    types[2] = FdLinJoint::getClassTypeID();
-    types[3] = FdCamJoint::getClassTypeID();
-    types[4] = FdAxialSprDa::getClassTypeID();
-    types[5] = FdStrainRosette::getClassTypeID();
-
-    long int  indexToInterestingPP    = -1;
-    bool      wasASelectedObjInPPList = false;
-    FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
-							      selectedObjects, // This is to select objects behind the already selected one
-							      types,true, // Filter variables
-							      indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
-    if (pickedObject)
-      FapEventManager::permTotalSelect(pickedObject->getFmOwner());
-    else
-      FapEventManager::permUnselectAll();
-  }
-  else if (!SoMouseButtonEvent::isButtonReleaseEvent(event,SoMouseButtonEvent::BUTTON1))
-    return;
-
-  eventCallbackNode->setHandled();
-}
-#else
-void FapCreateSensorCmd::eventCB(void*, SoEventCallback*) {}
-#endif
-
-
-void FapCreateSensorCmd::createSensor(FmIsMeasuredBase* obj)
-{
-  if (!obj) return;
-
-  FmSensorBase* sens = obj->getSimpleSensor(true);
-
-  // If we are dealing with a control output object, we have to bypass
-  // its sensor and use a sensor on the auto-created engine associated with it
-  if (obj->isOfType(FmcOutput::getClassTypeID()))
-  {
-    FmEngine* engine = static_cast<FmcOutput*>(obj)->getEngine();
-    if (engine) sens = engine->getSimpleSensor(true);
-  }
-
-  ListUI <<"Creating "<< sens->getUserDescription() <<"\n";
-
-  if (FapCreateSensorCmd::instance()->myEngine)
-    FapCreateSensorCmd::instance()->myEngine->setSensor(sens,FapCreateSensorCmd::instance()->myArg);
-}
-
-
-void FapCreateSensorCmd::createSensor(FmTriad* t1, FmTriad* t2)
-{
-  if (!t1 || !t2 || t1 == t2)
-  {
-    ListUI <<"ERROR: Relative sensors should be used on different objects.\n";
-    ListUI <<"       Could not create relative sensor.\n";
-    return;
-  }
-
-  FmSensorBase* sens = t1->getRelativeSensor(t2,true);
-  ListUI <<"Creating "<< sens->getUserDescription() <<"\n";
-
-  if (FapCreateSensorCmd::instance()->myEngine)
-    FapCreateSensorCmd::instance()->myEngine->setSensor(sens,FapCreateSensorCmd::instance()->myArg);
 }
