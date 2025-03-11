@@ -92,8 +92,8 @@ private:
     SignalConnector();
     virtual ~SignalConnector() {}
   };
+
   static SignalConnector signalConnector;
-  friend class SignalConnector;
 
   // Initializer
 

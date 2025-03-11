@@ -706,7 +706,8 @@ void FapUAGraphView::resetAnimation()
 
 //------------------------------------------------------------------------------
 
-FapUAGraphView::SignalConnector::SignalConnector(FapUAGraphView* ua) : owner(ua)
+FapUAGraphView::SignalConnector::SignalConnector(FapUAGraphView* ua)
+  : FFaSwitchBoardConnector("FapUAGraphView"), owner(ua)
 {
   // DB signals
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
