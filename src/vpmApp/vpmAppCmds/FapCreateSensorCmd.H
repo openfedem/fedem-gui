@@ -8,23 +8,25 @@
 #ifndef FAP_CREATE_SENSOR_CMD_H
 #define FAP_CREATE_SENSOR_CMD_H
 
+#include "vpmApp/vpmAppCmds/FapCmdsBase.H"
 #include "vpmApp/FapEventManager.H"
 #include "FFaLib/FFaPatterns/FFaSingelton.H"
-#include "FapCmdsBase.H"
 
-class FmIsMeasuredBase;
+class FmSensorBase;
 class FmEngine;
-class FmTriad;
 class FFaViewItem;
-class SoEventCallback;
+
 
 class FapCreateSensorCmd : public FapCmdsBase,
 			   public FFaSingelton<FapCreateSensorCmd>
 {
 public:
-  FapCreateSensorCmd() : permSignalConnector(this) { myEngine = 0; myArg = 0; }
+  FapCreateSensorCmd() : permSignalConnector(this) { myEngine = NULL; myArg = 0; }
+
+  const char* getTypeIDName() const { return "FapCreateSensorCmd"; }
 
   void createSensor(unsigned int iArg = 0);
+  void setSensor(FmSensorBase* sens);
 
   static void enterMode();
   static void cancelMode();
@@ -35,15 +37,8 @@ private:
 			      const std::vector<FFaViewItem*>& selectedSinceLast,
 			      const std::vector<FFaViewItem*>& unselectedSinceLast);
 
-  static void createSensor(FmIsMeasuredBase* obj);
-  static void createSensor(FmTriad* t1, FmTriad* t2);
-
-  static void setState(int newState);
-  static void eventCB(void*, SoEventCallback* eventCallbackNode);
-
   FmEngine* myEngine;
   unsigned int myArg;
-  static int myState;
 
   FapPermSelChangedReceiver<FapCreateSensorCmd> permSignalConnector;
   friend class FapPermSelChangedReceiver<FapCreateSensorCmd>;
