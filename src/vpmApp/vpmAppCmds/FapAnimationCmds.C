@@ -643,7 +643,7 @@ void FapAnimationCmds::onResultsToBeDeleted(FFrExtractor*)
 }
 
 
-FapAnimationCmds::SignalConnector::SignalConnector()
+FapAnimationCmds::SignalConnector::SignalConnector() : FFaSwitchBoardConnector("FapAnimationCmds")
 {
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CONNECTED,

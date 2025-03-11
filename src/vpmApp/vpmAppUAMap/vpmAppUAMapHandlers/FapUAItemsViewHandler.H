@@ -32,6 +32,8 @@ public:
   FapUAItemsViewHandler(FFuUAItemsViewHandler* ui);
   virtual ~FapUAItemsViewHandler() {}
 
+  const char* getTypeIDName() const { return "FapUAItemsViewHandler"; }
+
   // Functionality
   void setHasApplIndependentSelection(bool h) { hasApplIndependentSelection = h; }
   void setEnsureItemVisibleOnPermSelection(bool v) { ensureItemVisibleOnPermSelection = v; }

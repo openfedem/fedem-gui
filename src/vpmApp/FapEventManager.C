@@ -16,7 +16,7 @@
 #include "vpmDB/FmIsRenderedBase.H"
 
 
-FapEventManager::SignalConnector FapEventManager::signalConnector;
+FFaSwitchBoardConnector FapEventManager::signalConnector("FapEventManager");
 std::list<FapEventManager::FFaViewItems>* FapEventManager::permSelectedItems = NULL;
 FFaViewItem* FapEventManager::tmpSelectedItem = NULL;
 FFuMDIWindow* FapEventManager::activeWindow = NULL;
@@ -31,6 +31,10 @@ void FapEventManager::init()
 {
   FapEventManager::permSelectedItems = new std::list<FFaViewItems>();
   FapEventManager::permSelectedItems->push_back(FFaViewItems());
+
+  FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
+                          FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
+                          FFaSlot1S(FapEventManager,onModelMemberDisconnected,FmModelMemberBase*));
 }
 //----------------------------------------------------------------------------
 
@@ -583,12 +587,4 @@ void FapEventManager::highlightRendered(FFaViewItem* item, bool onOff)
   FmIsRenderedBase* rItem = dynamic_cast<FmIsRenderedBase*>(item);
   if (rItem)
     rItem->highlight(onOff);
-}
-//----------------------------------------------------------------------------
-
-FapEventManager::SignalConnector::SignalConnector() : FFaSwitchBoardConnector("FapEventManager")
-{
-  FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
-                          FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
-                          FFaSlot1S(FapEventManager,onModelMemberDisconnected,FmModelMemberBase*));
 }

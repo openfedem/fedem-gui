@@ -81,7 +81,8 @@ void FapUAGraphViewTLS::onPermSelectionChanged(const std::vector<FFaViewItem*>& 
 }
 //----------------------------------------------------------------------------
 
-FapUAGraphViewTLS::SignalConnector::SignalConnector(FapUAGraphViewTLS* ua) : owner(ua)
+FapUAGraphViewTLS::SignalConnector::SignalConnector(FapUAGraphViewTLS* ua)
+  : FFaSwitchBoardConnector("FapUAGraphViewTLS"), owner(ua)
 {
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
