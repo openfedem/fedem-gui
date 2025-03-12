@@ -17,8 +17,95 @@
 #include "qwt_picker_machine.h"
 #include "qwt_scale_widget.h"
 #include "qwt_plot_panner.h"
+#include "qwt_series_data.h"
 
 #include "FFuLib/FFuQtComponents/FFuQt2DPlotter.H"
+
+
+namespace
+{
+  class CurveDataSeries : public QwtSeriesData<QPointF>
+  {
+    const std::vector<double>& x_data;
+    const std::vector<double>& y_data;
+
+    double xMax, xMin;
+    double yMax, yMin;
+
+    double xScale, yScale;
+    double xShift, yShift;
+
+    bool zeroAdjustX, zeroAdjustY;
+
+  public:
+    CurveDataSeries(const std::vector<double>& x,
+                    const std::vector<double>& y)
+      : x_data(x), y_data(y)
+    {
+      if (x.empty())
+        xMax = xMin = 0.0;
+      else
+        xMax = xMin = x.front();
+
+      if (y.empty())
+        yMax = yMin = 0.0;
+      else
+        yMax = yMin = y.front();
+
+      for (double value : x)
+        if (value > xMax)
+          xMax = value;
+        else if (value < xMin)
+          xMin = value;
+
+      for (double value : y)
+        if (value > yMax)
+          yMax = value;
+        else if (value < yMin)
+          yMin = value;
+
+      xScale = yScale = 1.0;
+      xShift = yShift = 0.0;
+
+      zeroAdjustX = zeroAdjustY = false;
+    }
+
+    void setScaleAndOffset(double scaleX, double scaleY,
+                           double offsetX, double offsetY,
+                           bool adjustX, bool adjustY)
+    {
+      xScale = scaleX;
+      yScale = scaleY;
+      xShift = offsetX;
+      yShift = offsetY;
+      zeroAdjustX = adjustX;
+      zeroAdjustY = adjustY;
+    }
+
+    virtual size_t size() const { return x_data.size(); }
+
+    virtual QPointF sample(size_t i) const
+    {
+      double adjX = zeroAdjustX && x_data.size() > 1 ? x_data.front() : 0.0;
+      double adjY = zeroAdjustY && y_data.size() > 1 ? y_data.front() : 0.0;
+
+      return QPointF((x_data.at(i) - adjX)*xScale + xShift,
+                     (y_data.at(i) - adjY)*yScale + yShift);
+    }
+
+    virtual QRectF boundingRect() const
+    {
+      double adjX = zeroAdjustX && x_data.size() > 1 ? x_data.front() : 0.0;
+      double adjY = zeroAdjustY && y_data.size() > 1 ? y_data.front() : 0.0;
+      double left = ((xScale > 0.0 ? xMin : xMax) - adjX)*xScale + xShift;
+      double top  = ((yScale > 0.0 ? yMax : yMin) - adjY)*yScale + yShift;
+
+      return QRectF(left, top,
+                    (xMax-xMin)*fabs(xScale),
+                    (yMax-yMin)*fabs(yScale));
+    }
+  };
+}
 
 //----------------------------------------------------------------------------
 
@@ -28,15 +115,16 @@ FFuQt2DPlotter::FFuQt2DPlotter(QWidget* parent, const char* name)
   this->setWidget(this);
   this->setContentsMargins(10, 10, 10, 10);
 
-  ((QFrame*)this->canvas())->setLineWidth(1);
-  ((QFrame*)this->canvas())->setMidLineWidth(2);
-  ((QFrame*)this->canvas())->setFrameShadow(QFrame::Plain);
-  ((QFrame*)this->canvas())->setFrameShape(QFrame::Box);
+  QFrame* canvas = (QFrame*)this->canvas();
+  canvas->setLineWidth(1);
+  canvas->setMidLineWidth(2);
+  canvas->setFrameShadow(QFrame::Plain);
+  canvas->setFrameShape(QFrame::Box);
 
-  QObject::connect(this,SIGNAL(curveHighlightChanged()),
-		   this,SLOT(fwdCurveHighlightChanged()));
-  QObject::connect(this,SIGNAL(graphSelected()),
-		   this,SLOT(fwdGraphSelected()));
+  QObject::connect(this, SIGNAL(curveHighlightChanged()),
+                   this, SLOT(fwdCurveHighlightChanged()));
+  QObject::connect(this, SIGNAL(graphSelected()),
+                   this, SLOT(fwdGraphSelected()));
 
   // Initialize map for storing curveId to QwtPlotCurve connections
   QwtCurves.clear();
@@ -58,16 +146,16 @@ FFuQt2DPlotter::FFuQt2DPlotter(QWidget* parent, const char* name)
   panner->setMouseButton(Qt::RightButton);
 
   QObject::connect(picker, SIGNAL(selected(const QPointF&)),
-		   this, SLOT(onCurvePicked(const QPointF&)));
+                   this, SLOT(onCurvePicked(const QPointF&)));
 
   QObject::connect(appendPicker, SIGNAL(selected(const QPointF&)),
-		   this, SLOT(onCurvePicked(const QPointF&)));
+                   this, SLOT(onCurvePicked(const QPointF&)));
 
   QObject::connect(zoomer, SIGNAL(zoomed(const QRectF&)),
-		   this, SLOT(zoomComplete()));
+                   this, SLOT(zoomComplete()));
 
-  QObject::connect(panner, SIGNAL(panned(int, int)),
-		   this, SLOT(panComplete(int, int)));
+  QObject::connect(panner, SIGNAL(panned(int,int)),
+                   this, SLOT(panComplete(int,int)));
 
   this->canvas()->setCursor(Qt::ArrowCursor);
 
@@ -75,7 +163,7 @@ FFuQt2DPlotter::FFuQt2DPlotter(QWidget* parent, const char* name)
   {
     this->axisScaleDraw(axis)->enableComponent(QwtAbstractScaleDraw::Backbone, false);
     this->axisWidget(axis)->setMargin(0);
-    this->axisWidget(axis)->setFont(QFont("Helvetica", 7));
+    this->axisWidget(axis)->setFont({ "Helvetica", 7 });
   }
 
   plotGrid = NULL;
@@ -87,10 +175,10 @@ FFuQt2DPlotter::FFuQt2DPlotter(QWidget* parent, const char* name)
 //----------------------------------------------------------------------------
 
 void
-FFuQt2DPlotter::setPlotterTitle( const std::string& title, int fontSize )
+FFuQt2DPlotter::setPlotterTitle(const std::string& title, int fontSize)
 {
-  QwtText titleText(QString(title.c_str()));
-  titleText.setFont(QFont("Helvetica", fontSize, QFont::Bold));
+  QwtText titleText(title.c_str());
+  titleText.setFont({ "Helvetica", fontSize, QFont::Bold });
   this->setTitle(titleText);
 
   this->updateLayout();
@@ -200,16 +288,15 @@ bool
 FFuQt2DPlotter::setPlotterAxisTitle( int axis, const std::string& title, int fontSize )
 {
   QwtText titleText(title.c_str());
-
-  titleText.setFont(QFont("Helvetica", fontSize, QFont::Bold));
+  titleText.setFont({ "Helvetica", fontSize, QFont::Bold });
 
   if (axis == X_AXIS){
     this->setAxisTitle(xBottom, titleText);
-    this->axisWidget(xBottom)->setFont(QFont("Helvetica", fontSize));
+    this->axisWidget(xBottom)->setFont({ "Helvetica", fontSize });
   }
   else if (axis == Y_AXIS){
     this->setAxisTitle(yLeft, titleText);
-    this->axisWidget(yLeft)->setFont(QFont("Helvetica", fontSize));
+    this->axisWidget(yLeft)->setFont({ "Helvetica", fontSize });
   }
   else
     return false;
@@ -241,8 +328,8 @@ double FFuQt2DPlotter::getPlotterXAxisMax()
   bool first = true;
   for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
-    CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
-    double currValue = data->boundingRect().x() + data->boundingRect().width();
+    QRectF boundRect = curve.second->data()->boundingRect();
+    double currValue = boundRect.x() + boundRect.width();
     if (first)
     {
       max = currValue;
@@ -262,8 +349,7 @@ double FFuQt2DPlotter::getPlotterXAxisMin()
   bool first = true;
   for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
-    CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
-    double currValue = data->boundingRect().x();
+    double currValue = curve.second->data()->boundingRect().x();
     if (first)
     {
       min = currValue;
@@ -283,8 +369,7 @@ double FFuQt2DPlotter::getPlotterYAxisMax()
   bool first = true;
   for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
-    CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
-    double currValue = data->boundingRect().y();
+    double currValue = curve.second->data()->boundingRect().y();
     if (first)
     {
       max = currValue;
@@ -304,8 +389,8 @@ double FFuQt2DPlotter::getPlotterYAxisMin()
   bool first = true;
   for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
   {
-    CurveDataSeries* data = (CurveDataSeries*)curve.second->data();
-    double currValue = data->boundingRect().y() - data->boundingRect().height();
+    QRectF boundRect = curve.second->data()->boundingRect();
+    double currValue = boundRect.y() - boundRect.height();
     if (first)
     {
       min = currValue;
@@ -328,27 +413,30 @@ FFuQt2DPlotter::loadNewPlotterCurve(std::vector<double>* const x_data,
     double scaleX, double offsetX, bool zeroAdjustX, double scaleY,
     double offsetY, bool zeroAdjustY )
 {
-	this->setCanvasBackground(QColor(Qt::white));
+  this->setCanvasBackground(QColor(Qt::white));
 
-	QwtPlotCurve* newCurve =  new QwtPlotCurve( QString(legend.c_str()));
-	newCurve->setAxes(xBottom, yLeft);
-	CurveDataSeries* dataSeries = new CurveDataSeries(x_data, y_data);
+  // Find largest curve index already in use
+  int curveId = 0;
+  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
+    if (curveId < curve.first)
+      curveId = curve.first;
 
-	newCurve->setSamples(dataSeries);
-	newCurve->attach(this);
-	int curveId = GetNewQwtCurveId();
-	QwtCurves.insert(std::pair<int, QwtPlotCurve*>(curveId, newCurve));
+  QwtPlotCurve* newCurve = new QwtPlotCurve(legend.c_str());
+  QwtCurves[++curveId] = newCurve;
 
+  newCurve->setAxes(xBottom,yLeft);
+  newCurve->setSamples(new CurveDataSeries(*x_data,*y_data));
+  newCurve->attach(this);
 
-	this->setPlotterCurveStyle(curveId, style, width, color, false);
-	this->setPlotterCurveSymbol(curveId, symbol, symbolsize, numSymbols);
-	this->setPlotterScaleAndOffset(curveId, scaleX, offsetX, zeroAdjustX, scaleY, offsetY, zeroAdjustY,false);
+  this->setPlotterCurveStyle(curveId, style, width, color, false);
+  this->setPlotterCurveSymbol(curveId, symbol, symbolsize, numSymbols);
+  this->setPlotterScaleAndOffset(curveId, scaleX, offsetX, zeroAdjustX,
+                                 scaleY, offsetY, zeroAdjustY, false);
 
+  if (autoScaleOnLoadCurve)
+    this->autoScalePlotter();
 
-	if (autoScaleOnLoadCurve)
-		this->autoScalePlotter();
-
-	return curveId;
+  return curveId;
 }
 
 //----------------------------------------------------------------------------
@@ -359,28 +447,23 @@ bool FFuQt2DPlotter::loadPlotterCurveData(int curveid,
     int numSymbols, const std::string& legend, double scaleX, double offsetX,
     bool zeroAdjustX, double scaleY, double offsetY, bool zeroAdjustY)
 {
-	QwtPlotCurve* activeCurve = GetCurveFromID(curveid);
-	if (activeCurve != NULL)
-	{
-		activeCurve->setTitle(QString(legend.c_str()));
-		CurveDataSeries* dataSeries = new CurveDataSeries(x, y);
-		activeCurve->setSamples(dataSeries);
+  QwtPlotCurve* activeCurve = this->GetCurveFromID(curveid);
+  if (!activeCurve) return false;
 
-		this->setPlotterCurveStyle(curveid, style, width, color, false);
-		this->setPlotterCurveSymbol(curveid, symbol, symbolsize, numSymbols);
+  activeCurve->setTitle(legend.c_str());
+  activeCurve->setSamples(new CurveDataSeries(*x,*y));
 
-		this->setPlotterScaleAndOffset(curveid, scaleX, offsetX, zeroAdjustX, scaleY,
-			offsetY, zeroAdjustY, false);
+  this->setPlotterCurveStyle(curveid, style, width, color, false);
+  this->setPlotterCurveSymbol(curveid, symbol, symbolsize, numSymbols);
+  this->setPlotterScaleAndOffset(curveid, scaleX, offsetX, zeroAdjustX,
+                                 scaleY, offsetY, zeroAdjustY, false);
 
-		if (autoScaleOnLoadCurve)
-			this->autoScalePlotter();
-		else
-			this->replotAllPlotterCurves();
+  if (autoScaleOnLoadCurve)
+    this->autoScalePlotter();
+  else
+    this->replotAllPlotterCurves();
 
-		return true;
-	}
-
-	return false;
+  return true;
 }
 
 //----------------------------------------------------------------------------
@@ -390,24 +473,19 @@ FFuQt2DPlotter::setPlotterScaleAndOffset( int curveid, double scaleX,
     double offsetX, bool zeroAdjustX, double scaleY, double offsetY,
     bool zeroAdjustY, bool doUpdate )
 {
-	QwtPlotCurve* activeCurve = GetCurveFromID(curveid);
-	if (activeCurve != NULL)
-	{
-		((CurveDataSeries*)activeCurve->data())->xScale = scaleX;
-		((CurveDataSeries*)activeCurve->data())->yScale = scaleY;
-		((CurveDataSeries*)activeCurve->data())->xShift = offsetX;
-		((CurveDataSeries*)activeCurve->data())->yShift = offsetY;
-		((CurveDataSeries*)activeCurve->data())->zeroAdjustX = zeroAdjustX;
-		((CurveDataSeries*)activeCurve->data())->zeroAdjustY = zeroAdjustY;
-	}
+  QwtPlotCurve* curve = this->GetCurveFromID(curveid);
+  if (!curve) return;
 
-	if (doUpdate)
-	{
-		if (autoScaleOnLoadCurve)
-			this->autoScalePlotter();
-		else
-			this->replotAllPlotterCurves();
-	}
+  ((CurveDataSeries*)curve->data())->setScaleAndOffset(scaleX,scaleY,
+                                                       offsetX,offsetY,
+                                                       zeroAdjustX,zeroAdjustY);
+  if (doUpdate)
+  {
+    if (autoScaleOnLoadCurve)
+      this->autoScalePlotter();
+    else
+      this->replotAllPlotterCurves();
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -893,30 +971,34 @@ int
 FFuQt2DPlotter::insertPlotterLineMarker( const std::string& label, int axis,
     double pos )
 {
-	QwtPlotMarker* newMarker = new QwtPlotMarker(QString(label.c_str()));
+  // Find largest marker index already in use
+  int markerId = 0;
+  for (const std::pair<const int,QwtPlotMarker*>& marker : QwtMarkers)
+    if (markerId < marker.first)
+      markerId = marker.first;
 
-	newMarker->setLinePen(QColor(0,0,180));
+  QwtPlotMarker* newMarker = new QwtPlotMarker(label.c_str());
+  QwtMarkers[++markerId] = newMarker;
 
-	int markerid = GetNewQwtMarkerId();
+  newMarker->setLinePen(QColor(0,0,180));
 
-	QwtMarkers[markerid] = newMarker;
+  if (axis == X_AXIS)
+  {
+    newMarker->setLineStyle(QwtPlotMarker::VLine);
+    newMarker->setValue(pos, 0);
+  }
+  else
+  {
+    newMarker->setLineStyle(QwtPlotMarker::HLine);
+    newMarker->setValue(0, pos);
+  }
 
-	if (axis == X_AXIS)
-	{
-		newMarker->setLineStyle(QwtPlotMarker::VLine);
-		newMarker->setValue(pos, 0);
-	}
-	else
-	{
-		newMarker->setLineStyle(QwtPlotMarker::HLine);
-		newMarker->setValue(0, pos);
-	}
+  newMarker->attach(this);
 
-	newMarker->attach(this);
-	replotAllPlotterCurves();
-	return markerid;
+  this->replotAllPlotterCurves();
+
+  return markerId;
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -1380,28 +1462,6 @@ void FFuQt2DPlotter::panComplete(int, int)
 }
 
 //----------------------------------------------------------------------------
-int FFuQt2DPlotter::GetNewQwtCurveId()
-{
-  // Find biggest curve-index already in use. Return the next
-  int biggestIndex = 0;
-  for (const std::pair<const int,QwtPlotCurve*>& curve : QwtCurves)
-    if (curve.first > biggestIndex)
-      biggestIndex = curve.first;
-
-  return ++biggestIndex;
-}
-
-int FFuQt2DPlotter::GetNewQwtMarkerId()
-{
-  // Find biggest marker-index already in use. Return the next
-  int biggestIndex = 0;
-  for (const std::pair<const int,QwtPlotMarker*>& marker : QwtMarkers)
-    if (marker.first > biggestIndex)
-      biggestIndex = marker.first;
-
-  return ++biggestIndex;
-}
-
 QwtPlotCurve* FFuQt2DPlotter::GetCurveFromID(int curveID)
 {
   std::map<int,QwtPlotCurve*>::const_iterator it = QwtCurves.find(curveID);
@@ -1442,8 +1502,7 @@ void FFuQt2DPlotter::onCurvePicked(const QPointF& point)
 		return;
 	}
 
-   QwtPlotCurve* c = GetCurveFromID(curveid);
-	if (!c) return;
+  if (!this->GetCurveFromID(curveid)) return;
 
 	bool changed = false;
 	bool highlighted = isPlotterCurvehighlighted(curveid);
@@ -1530,60 +1589,4 @@ long FFuQt2DPlotter::closestCurveFaster(double xpos, double ypos, double distX, 
 		}
 	}
 	return curveid;
-}
-
-
-CurveDataSeries::CurveDataSeries(std::vector<double>* const xdata,
-				 std::vector<double>* const ydata)
-  : QwtSeriesData(), x_data(xdata), y_data(ydata)
-{
-  xScale = yScale = 1.0;
-  xShift = yShift = 0.0;
-
-  xMax = xMin = yMax = yMin = 0.0;
-
-  zeroAdjustX = zeroAdjustY = false;
-
-  if (x_data->size() > 0)
-    xMax = xMin = x_data->front();
-
-  if (y_data->size() > 0)
-    yMax = yMin = y_data->front();
-
-  for (double x : *x_data)
-    if (x > xMax)
-      xMax = x;
-    else if (x < xMin)
-      xMin = x;
-
-  for (double y : *y_data)
-    if (y > yMax)
-      yMax = y;
-    else if (y < yMin)
-      yMin = y;
-}
-
-QPointF CurveDataSeries::sample(size_t i) const
-{
-  double adjustX = zeroAdjustX && x_data->size() > 1 ? x_data->front() : 0.0;
-  double adjustY = zeroAdjustY && y_data->size() > 1 ? y_data->front() : 0.0;
-
-  return QPointF((x_data->at(i) - adjustX)*xScale + xShift,
-                 (y_data->at(i) - adjustY)*yScale + yShift);
-}
-
-QRectF CurveDataSeries::boundingRect() const
-{
-  double adjustX = zeroAdjustX && x_data->size() > 1 ? x_data->front() : 0.0;
-  double adjustY = zeroAdjustY && y_data->size() > 1 ? y_data->front() : 0.0;
-
-  double left = ((xScale > 0.0 ? xMin : xMax) - adjustX)*xScale + xShift;
-  double top  = ((yScale > 0.0 ? yMax : yMin) - adjustY)*yScale + yShift;
-
-  return QRectF(left, top, (xMax-xMin)*fabs(xScale), (yMax-yMin)*fabs(yScale));
-}
-
-void CurveDataSeries::setRectOfInterest(const QRectF& /*rect*/)
-{
-  //TODO?
 }

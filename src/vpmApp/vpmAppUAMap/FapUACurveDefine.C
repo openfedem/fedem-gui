@@ -588,7 +588,8 @@ void FapUACurveDefine::onModelMemberChanged(FmModelMemberBase* item)
 
 //----------------------------------------------------------------------------
 
-FapUACurveDefine::SignalConnector::SignalConnector(FapUACurveDefine* ua) : owner(ua)
+FapUACurveDefine::SignalConnector::SignalConnector(FapUACurveDefine* ua)
+  : FFaSwitchBoardConnector("FapUACurveDefine"), owner(ua)
 {
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_CHANGED,

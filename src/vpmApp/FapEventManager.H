@@ -9,6 +9,7 @@
 #define FAP_EVENT_MANAGER_H
 
 #include "FFaLib/FFaDynCalls/FFaSwitchBoard.H"
+#include "FFaLib/FFaPatterns/FFaInitialisation.H"
 #include <vector>
 #include <list>
 
@@ -41,7 +42,7 @@ public:
   static bool isInSelectionStack(FFaViewItem* item); // below current level
   static bool hasStackedSelections();
 
-  typedef std::vector<FFaViewItem*> FFaViewItems;
+  using FFaViewItems = std::vector<FFaViewItem*>;
 
   // Selection
   // An empty vector or a 0-pointer means "mechanism" in all perm select/unselect methods
@@ -151,13 +152,7 @@ private:
   static bool isDisconnectingItems;
 
   // Signal
-  class SignalConnector : public FFaSwitchBoardConnector
-  {
-  public:
-    SignalConnector();
-    virtual ~SignalConnector() {}
-  };
-  static SignalConnector signalConnector;
+  static FFaSwitchBoardConnector signalConnector;
 
   // Initializer
   friend class FFaInitialisation<FapEventManager>;
@@ -173,9 +168,10 @@ static FFaInitialisation<FapEventManager> FapEventManager_Init;
 template <class T>
 class FapPermSelChangedReceiver : public FFaSwitchBoardConnector
 {
-  typedef std::vector<FFaViewItem*> FFaViewItems;
+  using FFaViewItems = std::vector<FFaViewItem*>;
+
 public:
-  FapPermSelChangedReceiver(T* owner) : myOwner(owner)
+  FapPermSelChangedReceiver(T* owner) : FFaSwitchBoardConnector(owner->getTypeIDName()), myOwner(owner)
   {
     FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
                             FapEventManager::PERMSELECTIONCHANGED,
@@ -197,9 +193,10 @@ private:
 template <class T>
 class FapTmpSelChangedReceiver : public FFaSwitchBoardConnector
 {
-  typedef std::vector<FFaViewItem*> FFaViewItems;
+  using FFaViewItems = std::vector<FFaViewItem*>;
+
 public:
-  FapTmpSelChangedReceiver(T* owner) : myOwner(owner)
+  FapTmpSelChangedReceiver(T* owner) : FFaSwitchBoardConnector(owner->getTypeIDName()), myOwner(owner)
   {
     FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
                             FapEventManager::TMPSELECTIONCHANGED,
@@ -222,7 +219,7 @@ template <class T>
 class FapPermSelStackChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FapPermSelStackChangedReceiver(T* owner) : myOwner(owner)
+  FapPermSelStackChangedReceiver(T* owner) : FFaSwitchBoardConnector(owner->getTypeIDName()), myOwner(owner)
   {
     FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
                             FapEventManager::PERMSELECTIONSTACKCHANGED,
@@ -244,7 +241,7 @@ template <class T>
 class FapActiveWinChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FapActiveWinChangedReceiver(T* owner) : myOwner(owner)
+  FapActiveWinChangedReceiver(T* owner) : FFaSwitchBoardConnector(owner->getTypeIDName()), myOwner(owner)
   {
     FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
                             FapEventManager::ACTIVEWINDOWCHANGED,
@@ -267,7 +264,7 @@ template <class T>
 class FapActiveAnimationChangedReceiver : public FFaSwitchBoardConnector
 {
 public:
-  FapActiveAnimationChangedReceiver(T* owner) : myOwner(owner)
+  FapActiveAnimationChangedReceiver(T* owner) : FFaSwitchBoardConnector(owner->getTypeIDName()), myOwner(owner)
   {
     FFaSwitchBoard::connect(FapEventManager::getSignalConnector(),
                             FapEventManager::ACTIVE_ANIMATION_CHANGED,

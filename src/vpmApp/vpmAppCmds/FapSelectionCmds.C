@@ -244,7 +244,7 @@ void FapSelectionCmds::onPermSelectionChanged(FFaViewItems selection,
 }
 
 
-FapSelectionCmds::SignalConnector::SignalConnector()
+FapSelectionCmds::SignalConnector::SignalConnector() : FFaSwitchBoardConnector("FapSelectionCmds")
 {
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
 			  FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,

@@ -512,7 +512,8 @@ bool FapUAAnimationDefine::findResults(ResultMap& results,
 }
 //------------------------------------------------------------------------------
 
-FapUAAnimationDefine::SignalConnector::SignalConnector(FapUAAnimationDefine* ua) : owner(ua)
+FapUAAnimationDefine::SignalConnector::SignalConnector(FapUAAnimationDefine* ua)
+  : FFaSwitchBoardConnector("FapUAAnimationDefine"), owner(ua)
 {
   FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
                           FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,

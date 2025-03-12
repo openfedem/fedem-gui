@@ -38,6 +38,8 @@ public:
   FapUACommandHandler(FFuUACommandHandler* ui);
   virtual ~FapUACommandHandler() {}
 
+  virtual const char* getTypeIDName() const { return "FapUACommandHandler"; }
+
   void updateUICommands() { this->updateUICommands(true); }
   void updateUICommands(bool setNew, bool sens = false, bool toggle = false);
 

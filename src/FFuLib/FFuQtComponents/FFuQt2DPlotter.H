@@ -10,12 +10,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <QPen>
 #include <QWidget>
 
 #include "qwt_plot.h"
-#include "qwt_series_data.h"
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "FFuLib/FFu2DPlotter.H"
@@ -227,8 +227,6 @@ private slots:
   void panComplete(int dx, int dy);
 
 private:
-  int GetNewQwtCurveId();
-  int GetNewQwtMarkerId();
   QwtPlotCurve* GetCurveFromID(int curveID);
   QwtPlotMarker* GetMarkerFromID(int markerID);
 
@@ -247,31 +245,6 @@ private:
 signals:
   void graphSelected();
   void curveHighlightChanged();
-};
-
-
-class QWT_EXPORT CurveDataSeries : public QwtSeriesData<QPointF>
-{
-public:
-  CurveDataSeries(std::vector<double>* const x_data,
-                  std::vector<double>* const y_data);
-  virtual ~CurveDataSeries() {}
-  virtual size_t size() const { return x_data->size(); }
-  virtual QPointF  sample(size_t i) const;
-  virtual QRectF  boundingRect() const;
-  virtual void  setRectOfInterest(const QRectF &rect);
-
-  double xScale, yScale;
-  double xShift, yShift;
-
-  double xMax, xMin;
-  double yMax, yMin;
-
-  bool zeroAdjustX, zeroAdjustY;
-
-private:
-  std::vector<double>* const x_data;
-  std::vector<double>* const y_data;
 };
 
 #endif
