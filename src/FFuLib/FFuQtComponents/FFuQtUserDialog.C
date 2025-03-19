@@ -7,7 +7,7 @@
 
 #include <QPixmap>
 #include <QCloseEvent>
-#include <Qlabel>
+#include <QLabel>
 
 #include "FFuLib/Icons/infoDialog.xpm"
 #include "FFuLib/Icons/errorDialog.xpm"
