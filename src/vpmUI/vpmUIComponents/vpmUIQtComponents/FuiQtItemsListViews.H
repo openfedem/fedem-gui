@@ -44,6 +44,9 @@ class FuiQtRDBListView : public FuiQtItemsListView,
 {
 public:
   FuiQtRDBListView(QWidget* parent, const char* name = "RDB");
+protected:
+  // Need to override this method in order to disable the Move drop action
+  void startDrag(Qt::DropActions) override;
 };
 
 

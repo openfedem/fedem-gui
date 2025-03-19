@@ -33,7 +33,17 @@ FuiQtResultListView::FuiQtResultListView(QWidget* parent, const char* name)
 FuiQtRDBListView::FuiQtRDBListView(QWidget* parent, const char* name)
   : FuiQtItemsListView(parent,name)
 {
+  this->setDragEnabled(true);
   this->initWidgets();
+}
+
+//----------------------------------------------------------------------------
+// See comment below for similar FuiQtSimModelRDBListView method.
+void FuiQtRDBListView::startDrag(Qt::DropActions)
+{
+  QDrag* drag = new QDrag(this);
+  drag->setMimeData(this->model()->mimeData(this->selectedIndexes()));
+  drag->exec(Qt::CopyAction); // Only allow copying, not moving
 }
 
 //----------------------------------------------------------------------------
