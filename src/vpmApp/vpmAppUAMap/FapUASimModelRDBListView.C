@@ -190,24 +190,6 @@ std::string FapUASimModelRDBListView::getItemText(FFaListViewItem* item)
 }
 //----------------------------------------------------------------------------
 
-const char** FapUASimModelRDBListView::getItemPixmap(FFaListViewItem* item)
-{
-  const char** pix = NULL;
-
-  if (dynamic_cast<FFrVariableReference*>(item))
-    this->ui->setItemDragable(this->getMapItem(item),true);
-
-  return pix;
-}
-//----------------------------------------------------------------------------
-
-FFuaUICommands* FapUASimModelRDBListView::getCommands()
-{
-  // No commands in this list view yet
-  return new FuaItemsLVCommands();
-}
-//----------------------------------------------------------------------------
-
 void FapUASimModelRDBListView::permTotSelectItems(std::vector<int>& totalSelection)
 {
   // Make sure that result items are not selected in the event manager
@@ -217,8 +199,7 @@ void FapUASimModelRDBListView::permTotSelectItems(std::vector<int>& totalSelecti
   std::vector<FFaViewItem*> totalItems = this->convertItems(totalSelection);
   for (FFaViewItem* item : totalItems)
     if (dynamic_cast<FFrEntryBase*>(item) || dynamic_cast<FmMechanism*>(item)) {
-      std::vector<int> empty;
-      FapUASimModelListView::permTotSelectItems(empty);
+      FapUASimModelListView::permTotSelectItems(std::vector<int>());
       return;
     }
 

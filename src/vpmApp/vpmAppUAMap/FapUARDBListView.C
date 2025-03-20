@@ -35,16 +35,6 @@ void FapUARDBListView::setExtractor(FFrExtractor* ex)
 }
 //----------------------------------------------------------------------------
 
-void FapUARDBListView::setTopLevelItemDescr(const FFaResultDescription& item,
-					    bool includeMyself)
-{
-  if (!this->extractor) return;
-
-  this->FapUAItemsListView::setTopLevelItem(this->extractor->search(item),
-					    includeMyself);
-}
-//----------------------------------------------------------------------------
-
 FFrEntryBase* FapUARDBListView::findItem(const FFaResultDescription& item)
 {
   if (!this->extractor) return NULL;
@@ -117,22 +107,16 @@ std::string FapUARDBListView::getItemText(FFaListViewItem* item)
   else if (ffr->hasBaseID())
     name += FFaNumStr("{%d}",ffr->getBaseID());
   name += " " + ffr->getDescription();
+
   return name;
 }
 //----------------------------------------------------------------------------
 
 const char** FapUARDBListView::getItemPixmap(FFaListViewItem* item)
 {
-  if (dynamic_cast<FFrVariableReference*>(item))
-    this->ui->setItemDragable(this->getMapItem(item),true);
+  this->ui->setItemDragable(this->getMapItem(item),
+                            dynamic_cast<FFrVariableReference*>(item));
 
   return (const char**)NULL;
-}
-//----------------------------------------------------------------------------
-
-FFuaUICommands* FapUARDBListView::getCommands()
-{
-  // No commands in this list view yet
-  return new FuaItemsLVCommands();
 }
 //----------------------------------------------------------------------------

@@ -12,7 +12,8 @@
 #include "vpmApp/vpmAppUAMap/FapUARDBListView.H"
 
 
-class FapUASimModelRDBListView : public FapUASimModelListView, public FapUARDBListView
+class FapUASimModelRDBListView : public FapUASimModelListView,
+                                 public FapUARDBListView
 {
 public:
   FapUASimModelRDBListView(FuiItemsListView* ui);
@@ -22,13 +23,12 @@ protected:
   // Reimplementations from FapUAItemsListView
   virtual bool verifyItem(FFaListViewItem* item);
   virtual void getChildren(FFaListViewItem* parent,
-			   std::vector<FFaListViewItem*>& children) const;
+                           std::vector<FFaListViewItem*>& children) const;
 
   virtual std::string getItemText(FFaListViewItem* item);
-  virtual const char** getItemPixmap(FFaListViewItem* item);
 
   // Reimplementations from FapUACommandHandler
-  virtual FFuaUICommands* getCommands();
+  virtual FFuaUICommands* getCommands() { return NULL; } // No commands
 
   // Reimplementations from FapUAItemsViewHandler
   virtual void permTotSelectItems(std::vector<int>& totalSelection);

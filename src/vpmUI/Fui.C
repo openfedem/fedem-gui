@@ -109,8 +109,8 @@ void Fui::init(int& argc, char** argv)
   uiScreenWidth  = FFuaApplication::getScreenWidth();
 
   // Create the main window
-  UIgeo geo = Fui::getUIgeo(FUI_MAINWINDOW_GEO);
-  Fui::mainWindow = FuiMainWindow::create(geo.xPos, geo.yPos, geo.width, geo.height);
+  UIgeo geo  = Fui::getUIgeo(FUI_MAINWINDOW_GEO);
+  mainWindow = FuiMainWindow::create(geo.xPos, geo.yPos, geo.width, geo.height);
 }
 
 
@@ -152,7 +152,8 @@ void Fui::mainUI()
 
 void Fui::updateUICommands()
 {
-  ((FapUAMainWindow*)Fui::mainWindow->getUA())->updateUICommands();
+  if (mainWindow)
+    static_cast<FapUAMainWindow*>(mainWindow->getUA())->updateUICommands();
 }
 
 
@@ -378,6 +379,7 @@ void Fui::cancel()
         uap->setIgnorePickNotify(false);
         uap->updateUIValues();
       }
+      break;
     default:
       break;
     }
@@ -386,11 +388,11 @@ void Fui::cancel()
 
 UIgeo Fui::getUIgeo(int fuiType)
 {
-  const int mainWidth  = 990;
+  const int mainWidth = 1020;
   const int mainHeight = 820;
 
-  const int modellerWidth  = mainWidth*784/1000; // 78.4% of main window width
-  const int modellerHeight = mainHeight*65/100;  // 65% of main window height
+  const int modellerWidth = mainWidth*755/1000; // 75.5% of main window width
+  const int modellerHeight = mainHeight*63/100; // 63.0% of main window height
 
   UIgeo geo;
 

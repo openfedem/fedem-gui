@@ -163,11 +163,8 @@ void FapUARDBSelector::onRDBItemSelected(FapUAItemsViewHandler* lv)
   std::vector<FFaViewItem*> totalSelection = lv->getUISelectedItems();
   if (totalSelection.size() == 1) {
     // single selection
-    FFaResultDescription toplevelpos;
-    FFaViewItem* item = totalSelection.front();
-    if (dynamic_cast<FmSimulationModelBase*>(item))
-      toplevelpos.OGType = item->getItemName();
-    posUA->setTopLevelItemDescr(toplevelpos,false);
+    FFaResultDescription item(totalSelection.front()->getItemName());
+    posUA->setTopLevelItem(posUA->findItem(item),false);
   }
   else if (totalSelection.empty())
     posUA->showTopLevelVarsOnly();

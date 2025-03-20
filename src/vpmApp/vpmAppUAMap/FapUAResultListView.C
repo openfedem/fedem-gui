@@ -537,18 +537,20 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, int& dropAction)
     }
   }
 
-  if (graph)
+  std::vector<FFaViewItem*> items = this->getUISelectedItems();
+  if (!items.empty())
   {
     // Dropping selected curves from this UI (moving or copying them):
 
     bool isCopy = dropAction > 0;
-    std::vector<FFaViewItem*> items = this->getUISelectedItems();
     for (size_t i = 0; i < items.size() && dropAction >= 0; i++)
       if ((curve = dynamic_cast<FmCurveSet*>(items[i])))
       {
         FmGraph* oGraph = curve->getOwnerGraph();
-        if (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
-            graph->isBeamDiagram() == oGraph->isBeamDiagram())
+        if (!graph) // Curves must be dropped on a graph
+          dropAction = -4;
+        else if (curve->usingInputMode() >= FmCurveSet::EXT_CURVE ||
+                 graph->isBeamDiagram() == oGraph->isBeamDiagram())
         {
           if (isCopy)
           {
@@ -566,11 +568,10 @@ void FapUAResultListView::dropItems(int droppedOnItemIdx, int& dropAction)
         else // Illegal copy or move - result curve onto different graph type
           dropAction = -2;
       }
-      else if (!isCopy)
-        dropAction = -3; // Only curves can be moved
+      else if (!isCopy) // Only curves can be moved
+        dropAction = -3;
 
-    if (!items.empty())
-      return;
+    return;
   }
 
   // Dropping a result description from the RDB Selector UI:

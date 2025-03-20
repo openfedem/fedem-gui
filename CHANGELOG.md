@@ -8,6 +8,36 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.9] (2025-03-20)
+
+### :rocket: Added
+
+- <u>Functionality change</u>:
+  To _move_ a Curve object from one Graph to another,
+  keep the **Shift** key pressed while dropping the Curve.
+  To _copy_ a Curve object, drop the Curve without pressing any key.
+  Pressing the **Ctrl** key to copy the Curve is no longer needed.
+- FE nodes and properties which are not referred by any elements
+  will be deleted when the FE part is imported into FEDEM.
+- A separate group for Beam objects is added in the Objects Browser dialog box.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/61 :
+  The GUI crashes when deleting a Graph object while its graph view is open.
+- Issue https://github.com/openfedem/fedem-gui/issues/59 :
+  It is not possible to select curve components for Combined curves.
+- Issue https://github.com/openfedem/fedem-gui/issues/58 :
+  Copying a Curve within the same Graph using drag-and-drop
+  in the objects list view does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/56 :
+  When attaching joints, the joint symbol in the 3D modeler view
+  does not update its colors until the joint is re-selected after
+  the attach procedure is finished.
+- The time/step information in the upper right corner of the 3D modeler
+  view is not placed correctly when an Animation is running,
+  such that some of the digits in the time are cut off.
+
 ## [fedem-8.0.8] (2025-01-04)
 
 ### :rocket: Added
@@ -182,3 +212,4 @@
 [fedem-8.0.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.5...fedem-8.0.6
 [fedem-8.0.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.6...fedem-8.0.7
 [fedem-8.0.8]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.7...fedem-8.0.8
+[fedem-8.0.9]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.8...fedem-8.0.9
