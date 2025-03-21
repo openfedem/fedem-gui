@@ -199,9 +199,9 @@ void FapUASimModelRDBListView::permTotSelectItems(std::vector<int>& totalSelecti
   std::vector<FFaViewItem*> totalItems = this->convertItems(totalSelection);
   for (FFaViewItem* item : totalItems)
     if (dynamic_cast<FFrEntryBase*>(item) || dynamic_cast<FmMechanism*>(item)) {
-      FapUASimModelListView::permTotSelectItems(std::vector<int>());
+      this->permUnselectAll();
       return;
     }
 
-  FapUASimModelListView::permTotSelectItems(totalSelection);
+  this->FapUASimModelListView::permTotSelectItems(totalSelection);
 }

@@ -60,6 +60,7 @@ protected:
   virtual void tmpSelectionChangedEvent() {}
 
   virtual void permTotSelectItems(std::vector<int>& totalSelection);
+  void permUnselectAll();
 
   // misc
   std::vector<FFaViewItem*> convertItems(const std::vector<int>& in) const;
@@ -78,9 +79,6 @@ private:
   void onTmpSelectionChanged(FFaViewItem* tmpSelected,
 			     FFaViewItem* tmpUnselected,
 			     const std::vector<FFaViewItem*>& totalSelection);
-
-  void invokePermTotUISelectionChangedCB()
-    {this->permTotUISelectionChangedCB.invoke(this);}
 
   // This method should be re-impl if you want this class to work as expected
   virtual bool getItemSelectAble(FFaViewItem*) { return true; }
