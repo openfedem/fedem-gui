@@ -116,10 +116,19 @@ std::vector<int> FapUAItemsViewHandler::convertItems(const std::vector<FFaViewIt
 
 void FapUAItemsViewHandler::permTotSelectItems(std::vector<int>& totalSelection)
 {
-  if (!this->hasApplIndependentSelection)
+  if (!hasApplIndependentSelection)
     FapEventManager::permTotalSelect(this->convertItems(totalSelection));
 
-  this->invokePermTotUISelectionChangedCB();
+  permTotUISelectionChangedCB.invoke(this);
+}
+//----------------------------------------------------------------------------
+
+void FapUAItemsViewHandler::permUnselectAll()
+{
+  if (!hasApplIndependentSelection)
+    FapEventManager::permUnselectAll();
+
+  permTotUISelectionChangedCB.invoke(this);
 }
 //----------------------------------------------------------------------------
 
@@ -137,9 +146,9 @@ void FapUAItemsViewHandler::onPermSelectionChanged(const std::vector<FFaViewItem
       this->ensureItemVisible(item);
 
   this->onPermTotSelectionChanged(totalSelection);
-
   this->permSelectionChangedEvent();
-  this->invokePermTotUISelectionChangedCB();
+
+  permTotUISelectionChangedCB.invoke(this);
 }
 
 void FapUAItemsViewHandler::onTmpSelectionChanged(FFaViewItem*, FFaViewItem*,
