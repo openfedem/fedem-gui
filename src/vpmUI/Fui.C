@@ -391,8 +391,8 @@ UIgeo Fui::getUIgeo(int fuiType)
   const int mainWidth = 1020;
   const int mainHeight = 820;
 
-  const int modellerWidth = mainWidth*755/1000; // 75.5% of main window width
-  const int modellerHeight = mainHeight*63/100; // 63.0% of main window height
+  const int modellerWidth  = mainWidth *783/1000; // 78.3% of main window width
+  const int modellerHeight = mainHeight*648/1000; // 64.8% of main window height
 
   UIgeo geo;
 
