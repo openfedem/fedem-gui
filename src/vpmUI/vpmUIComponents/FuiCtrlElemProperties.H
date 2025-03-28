@@ -24,13 +24,9 @@ class FuiCtrlElemProperties : virtual public FFuMultUIComponent,
 			      public FFuUADataHandler
 {
 public:
-  FuiCtrlElemProperties() {}
-  virtual ~FuiCtrlElemProperties() {}
-
   // Virtual override of the Data dialog methods :
   virtual void setUIValues(const FFuaUIValues* values);
   virtual void buildDynamicWidgets(const FFuaUIValues* values);
-  virtual void eraseDynamicWidgets();
 
   // Lock from user input :
   virtual void setSensitivity(bool isSensitive);
@@ -58,17 +54,10 @@ protected:
 class FuaCtrlElemPropertiesValues : public FFuaUIValues
 {
 public:
-  FuaCtrlElemPropertiesValues() { pixmap = NULL; }
-  virtual ~FuaCtrlElemPropertiesValues() {}
+  using CtrlParameter = std::pair<std::string,double>;
 
-  struct CtrlParameter
-  {
-    double value;
-    std::string description;
-    CtrlParameter(double v = 0.0) { value = v; }
-  };
-
-  const char**               pixmap;
+  int                        ctrlTypeIdx = 0;
+  const char**               pixmap = NULL;
   std::vector<CtrlParameter> parameters;
 };
 
