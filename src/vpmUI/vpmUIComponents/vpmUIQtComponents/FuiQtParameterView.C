@@ -5,89 +5,108 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <Qt3Support/Q3ScrollView>
 #include <QGridLayout>
+#include <QVBoxLayout>
 #include <QLabel>
 
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
 
-#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtParameterView.H"
+#include "vpmUI/vpmUIComponents/FuiParameterView.H"
 
 
-FuiQtParameterView::FuiQtParameterView(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent,name)
+class FuiQtParameterView : public virtual FFuQtMultUIComponent,
+                           public FuiParameterView::ParameterSheet
 {
-  IAmSensitive = true;
-
-  myLayout = new QGridLayout(this);
-  myLayout->setContentsMargins(2,2,2,2);
-  myLayout->setHorizontalSpacing(8);
-  myLayout->setVerticalSpacing(1);
-}
-
-
-void FuiQtParameterView::clear()
-{
-  QLayoutItem* item;
-  while ((item = myLayout->takeAt(0)))
+public:
+  FuiQtParameterView(QWidget* parent, const char* name)
+    : FFuQtMultUIComponent(parent,name)
   {
-    delete item->widget();
-    delete item;
+    IAmSensitive = true;
+
+    Q3ScrollView* mainView = new Q3ScrollView(this);
+    QWidget* mainWidget = new QWidget(mainView->viewport());
+    mainView->addChild(mainWidget);
+
+    myLayout = new QGridLayout(mainWidget);
+    myLayout->setContentsMargins(2,2,2,2);
+    myLayout->setHorizontalSpacing(8);
+    myLayout->setVerticalSpacing(1);
+
+    QLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->addWidget(mainView);
+    this->setLayout(mainLayout);
   }
-}
 
-
-void FuiQtParameterView::setFields(const std::vector<std::string>& names)
-{
-  int row = 0;
-  QWidget* parent = myLayout->parentWidget();
-  for (const std::string& name : names)
+  virtual void setFields(const std::vector<std::string>& names,
+                         const FFaDynCB1<double>& acceptCB)
   {
-    myLayout->addWidget(new QLabel(name.c_str(),parent),row,0);
-    FFuQtIOField* field = new FFuQtIOField(parent);
-    field->setInputCheckMode(FFuIOField::DOUBLECHECK);
-    field->FFuIOField::setSensitivity(IAmSensitive);
-    field->setAcceptedCB(myAcceptedCB);
-    myLayout->addWidget(field,row++,1);
-  }
-}
-
-
-void FuiQtParameterView::setValues(const std::vector<double>& values)
-{
-  int row = 0;
-  for (double value : values)
-    if (row < myLayout->rowCount())
+    int row = 0;
+    QWidget* parent = myLayout->parentWidget();
+    for (const std::string& name : names)
     {
-      QLayoutItem* item = myLayout->itemAtPosition(row++,1);
-      FFuQtIOField* fld = item ? dynamic_cast<FFuQtIOField*>(item->widget()) : NULL;
-      if (fld) fld->FFuIOField::setValue(value);
+      myLayout->addWidget(new QLabel(name.c_str(),parent),row,0);
+      FFuQtIOField* field = new FFuQtIOField(parent);
+      field->setInputCheckMode(FFuIOField::DOUBLECHECK);
+      field->FFuIOField::setSensitivity(IAmSensitive);
+      field->setAcceptedCB(acceptCB);
+      myLayout->addWidget(field,row++,1);
     }
-    else
-      break;
-}
+  }
 
+  virtual void setValues(const std::vector<double>& values)
+  {
+    int row = 0;
+    for (double value : values)
+      if (row < myLayout->rowCount())
+      {
+        FFuQtIOField* fld = this->getField(row++);
+	if (fld) fld->FFuIOField::setValue(value);
+      }
+      else
+	break;
+  }
 
-void FuiQtParameterView::getValues(std::vector<double>& values) const
-{
-  values.clear();
-  values.reserve(myLayout->rowCount());
-  for (int row = 0; row < myLayout->rowCount(); row++)
+  virtual void getValues(std::vector<double>& values) const
+  {
+    values.clear();
+    values.reserve(myLayout->rowCount());
+    for (int row = 0; row < myLayout->rowCount(); row++)
+    {
+      FFuQtIOField* fld = this->getField(row);
+      values.push_back(fld ? fld->getDouble() : 0.0);
+    }
+  }
+
+  virtual void setSensitivity(bool isSensitive)
+  {
+    IAmSensitive = isSensitive;
+
+    for (int row = 0; row < myLayout->rowCount(); row++)
+    {
+      FFuQtIOField* fld = this->getField(row);
+      if (fld) fld->FFuIOField::setSensitivity(isSensitive);
+    }
+  }
+
+protected:
+  FFuQtIOField* getField(int row) const
   {
     QLayoutItem* item = myLayout->itemAtPosition(row,1);
-    FFuQtIOField* fld = item ? dynamic_cast<FFuQtIOField*>(item->widget()) : NULL;
-    values.push_back(fld ? fld->getDouble() : 0.0);
+    return item ? dynamic_cast<FFuQtIOField*>(item->widget()) : NULL;
   }
-}
+
+private:
+  bool IAmSensitive;
+
+  QGridLayout* myLayout;
+};
 
 
-void FuiQtParameterView::setSensitivity(bool isSensitive)
+FuiParameterView::ParameterSheet*
+FuiParameterView::createSheet(FFuMultUIComponent* parent, const char* name)
 {
-  IAmSensitive = isSensitive;
-
-  for (int row = 0; row < myLayout->rowCount(); row++)
-  {
-    QLayoutItem* item = myLayout->itemAtPosition(row,1);
-    FFuQtIOField* fld = item ? dynamic_cast<FFuQtIOField*>(item->widget()) : NULL;
-    if (fld) fld->FFuIOField::setSensitivity(isSensitive);
-  }
+  FFuQtMultUIComponent* qparent = dynamic_cast<FFuQtMultUIComponent*>(parent);
+  return new FuiQtParameterView(qparent,name);
 }

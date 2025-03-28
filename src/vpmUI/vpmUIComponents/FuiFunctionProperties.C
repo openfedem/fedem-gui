@@ -115,9 +115,9 @@ void FuiFunctionProperties::initWidgets()
   myExtrapolationSwitch->addOption("Flat");
   myExtrapolationSwitch->addOption("Linear");
 
+  myParameterView = new FuiParameterView();
   myParameterView->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
                                             onParameterValueChanged,double));
-  myParameterView->popDown();
 
   myExpandButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
 					   onExpandButtonActivated));
@@ -638,7 +638,8 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
   }
 
   else if (fv->showParameterView)
-    myParameterView->setValues(fv->myParameterValues);
+    myParameterView->setValues(fv->mySelectedFunctionTypeIdx,
+                               fv->myParameterValues);
 
   else if (fv->showMathExpr)
   {
@@ -842,11 +843,9 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   // Parameter view
 
-  myParameterView->clear();
-
   if (IAmShowingParameterView) {
-    myParameterView->setFields(fv->myParameterNames);
-    myParameterView->popUp();
+    myParameterView->setFields(fv->mySelectedFunctionTypeIdx,
+                               fv->myParameterNames, this);
 
     myExpandButton->setLabel(">");
     myExpandButton->setToolTip("Expand the Parameters view");
@@ -1077,7 +1076,8 @@ void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
     values.myJonswapSprExp = myJonswapSpreadExpField->myField->getInt();
   }
   else if (IAmShowingParameterView)
-    myParameterView->getValues(values.myParameterValues);
+    myParameterView->getValues(values.mySelectedFunctionTypeIdx,
+                               values.myParameterValues);
 
   else if (IAmShowingParameterList)
     values.myExtrapolationType = myExtrapolationSwitch->getSelectedOption();

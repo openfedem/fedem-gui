@@ -20,7 +20,6 @@ set ( COMPONENT_FILE_LIST  FuiQt3DPoint FuiQtAnimationDefine
                            FuiQtSpringDefCalc FuiQtTimeInterval FuiQtTopologyView
                            FuiQtTriadDOF FuiQtTriadSummary FuiQtVariableType FuiQtWorkSpace
                            FuiQtBeamPropSummary FuiQtBeamPropHydro FuiQtResultTabs FuiQtThreshold
-                           FuiQtParameterView
 )
 
 if ( Qwt_LIBRARY )
@@ -36,7 +35,7 @@ endif ( USE_EXT_CTRLSYS )
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST )
 ## Pure implementation files, i.e., source files without corresponding header
-set ( SOURCE_FILE_LIST FuiQtSummaryTable )
+set ( SOURCE_FILE_LIST FuiQtSummaryTable FuiQtParameterView )
 
 
 ## Header files to be moc'ed

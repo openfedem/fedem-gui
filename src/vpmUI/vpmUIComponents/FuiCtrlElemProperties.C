@@ -17,7 +17,9 @@ void FuiCtrlElemProperties::initWidgets()
 {
   myParameterFrame->setLabel("Parameters");
 
-  myParameterView->setAcceptedCB(FFaDynCB1M(FuiCtrlElemProperties,this,onValueChanged,double));
+  myParameterView = new FuiParameterView();
+  myParameterView->setAcceptedCB(FFaDynCB1M(FuiCtrlElemProperties,this,
+                                            onValueChanged,double));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
@@ -55,7 +57,7 @@ void FuiCtrlElemProperties::setUIValues(const FFuaUIValues* values)
   for (const std::pair<std::string,double>& prm : data->parameters)
     params.push_back(prm.second);
 
-  myParameterView->setValues(params);
+  myParameterView->setValues(data->ctrlTypeIdx,params);
   myElemPixmap->setPixMap(data->pixmap);
 }
 
@@ -73,14 +75,12 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
   else
   {
     myParameterFrame->popUp();
-    myParameterView->popUp();
-    myParameterView->clear();
 
     std::vector<std::string> fields;
     fields.reserve(data->parameters.size());
     for (const std::pair<std::string,double>& param : data->parameters)
       fields.push_back(param.first);
-    myParameterView->setFields(fields);
+    myParameterView->setFields(data->ctrlTypeIdx,fields,this);
   }
 
   this->placeWidgets(this->getWidth(), this->getHeight());
@@ -89,10 +89,9 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
 void FuiCtrlElemProperties::onValueChanged(double)
 {
-  std::vector<double> params;
-  myParameterView->getValues(params);
-
   FuaCtrlElemPropertiesValues values;
+  std::vector<double> params;
+  values.ctrlTypeIdx = myParameterView->getValues(params);
   values.parameters.reserve(params.size());
   for (double prm : params)
     values.parameters.push_back({ "", prm });

@@ -8,7 +8,6 @@
 #include "FuiQtFunctionProperties.H"
 #include "FuiQtQueryInputField.H"
 #include "FuiQtInputSelector.H"
-#include "FuiQtParameterView.H"
 #include "FuiQtThreshold.H"
 
 #include "FFuLib/FFuQtComponents/FFuQtMemo.H"
@@ -43,7 +42,6 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   myThreshold2 = new FuiQtThreshold(this);
 
   myParameterFrame = new FFuQtLabelFrame(this);
-  myParameterView = new FuiQtParameterView(this);
   myParameterList = new FFuQ3ScrolledList(this);
   myExpandButton = new FFuQtPushButton(this);
 

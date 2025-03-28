@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "FuiQtCtrlElemProperties.H"
-#include "FuiQtParameterView.H"
 
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
@@ -20,7 +19,6 @@ FuiQtCtrlElemProperties::FuiQtCtrlElemProperties(QWidget* parent)
 
   this->myElemPixmap     = elemPixmap;
   this->myParameterFrame = new FFuQtLabelFrame(this);
-  this->myParameterView  = new FuiQtParameterView(this);
 
   this->initWidgets();
 }
