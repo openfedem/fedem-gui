@@ -52,8 +52,8 @@ void FuiCtrlElemProperties::setUIValues(const FFuaUIValues* values)
 
   std::vector<double> params;
   params.reserve(data->parameters.size());
-  for (const FuaCtrlElemPropertiesValues::CtrlParameter& prm : data->parameters)
-    params.push_back(prm.value);
+  for (const std::pair<std::string,double>& prm : data->parameters)
+    params.push_back(prm.second);
 
   myParameterView->setValues(params);
   myElemPixmap->setPixMap(data->pixmap);
@@ -66,29 +66,24 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
   if (!data) return;
 
   if (data->parameters.empty())
-    {
-      myParameterFrame->popDown();
-      myParameterView->popDown();
-    }
+  {
+    myParameterFrame->popDown();
+    myParameterView->popDown();
+  }
   else
-    {
-      myParameterFrame->popUp();
-      myParameterView->popUp();
+  {
+    myParameterFrame->popUp();
+    myParameterView->popUp();
+    myParameterView->clear();
 
-      std::vector<std::string> fields;
-      fields.reserve(data->parameters.size());
-      for (const FuaCtrlElemPropertiesValues::CtrlParameter& param : data->parameters)
-        fields.push_back(param.description);
-	  myParameterView->setFields(fields);
-	}
+    std::vector<std::string> fields;
+    fields.reserve(data->parameters.size());
+    for (const std::pair<std::string,double>& param : data->parameters)
+      fields.push_back(param.first);
+    myParameterView->setFields(fields);
+  }
 
   this->placeWidgets(this->getWidth(), this->getHeight());
-}
-
-
-void FuiCtrlElemProperties::eraseDynamicWidgets()
-{
-  myParameterView->clear();
 }
 
 
@@ -100,7 +95,7 @@ void FuiCtrlElemProperties::onValueChanged(double)
   FuaCtrlElemPropertiesValues values;
   values.parameters.reserve(params.size());
   for (double prm : params)
-    values.parameters.push_back(FuaCtrlElemPropertiesValues::CtrlParameter(prm));
+    values.parameters.push_back({ "", prm });
 
   this->invokeSetAndGetDBValuesCB(&values);
   this->setUIValues(&values);

@@ -55,7 +55,6 @@ void FapUACtrlElemProperties::onPermSelectionChanged(const std::vector<FFaViewIt
 
   FuaCtrlElemPropertiesValues values;
   this->getDBValues(&values);
-  myUI->eraseDynamicWidgets();
   myUI->buildDynamicWidgets(&values);
   myUI->setUIValues(&values);
   myUI->setSensitivity(FpPM::isModelEditable() && FapLicenseManager::checkCtrlLicense(false));
@@ -72,15 +71,13 @@ void FapUACtrlElemProperties::getDBValues(FFuaUIValues* values)
   if (!DBVals) return;
 
   FmCtrlElementBase* item = static_cast<FmCtrlElementBase*>(mySelectedFmItem);
+  DBVals->ctrlTypeIdx = item->getTypeID();
   DBVals->pixmap = item->getPixmap();
   std::vector<ctrlVars> fmParams;
   item->getElementVariables(fmParams);
-  DBVals->parameters.resize(fmParams.size());
-  for (size_t i = 0; i < fmParams.size(); i++)
-  {
-    DBVals->parameters[i].description = fmParams[i].myString;
-    DBVals->parameters[i].value       = fmParams[i].getFcn(item);
-  }
+  DBVals->parameters.reserve(fmParams.size());
+  for (const ctrlVars& var : fmParams)
+    DBVals->parameters.push_back({ var.myString, var.getFcn(item) });
 }
 
 
@@ -102,7 +99,7 @@ void FapUACtrlElemProperties::setDBValues(FFuaUIValues* values)
   if (!FapLicenseManager::hasCtrlLicense()) return;
 
   for (size_t i = 0; i < fmParams.size() && i < UIVals->parameters.size(); i++)
-    fmParams[i].setFcn(item,UIVals->parameters[i].value);
+    fmParams[i].setFcn(item,UIVals->parameters[i].second);
 
   item->onChanged();
 }
