@@ -16,7 +16,8 @@
 class QModelIndex;
 
 
-class FFuQtScrolledList : public QListWidget, public FFuScrolledList, public FFuQtComponentBase
+class FFuQtScrolledList : public QListWidget, public FFuScrolledList,
+                          public FFuQtComponentBase
 {
   Q_OBJECT
 
@@ -30,7 +31,6 @@ public:
   virtual void setItems(const std::vector<std::string>& items); // Replace whole list
 
   virtual void deleteItem(int index); // index = 0,1,...,n
-  virtual void deleteAllItems();
 
   virtual int  getSelectedItemIndex() const;
   virtual void selectItem(int index, bool notify); // Selection slot invoked if notify==True

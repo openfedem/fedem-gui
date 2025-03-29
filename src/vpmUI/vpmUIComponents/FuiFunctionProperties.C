@@ -1137,9 +1137,8 @@ int FuiFunctionProperties::getSelectedFunctionIndex() const
 
 void FuiFunctionProperties::setChannelList(const std::vector<std::string>& channels)
 {
-  myChannelSelectUI->myItemSelector->deleteAllItems();
-  for (const std::string& chn : channels)
-    myChannelSelectUI->myItemSelector->addItem(chn.c_str());
+  myChannelSelectUI->myItemSelector->setItems(channels);
+  myChannelSelectUI->myItemSelector->selectItem(0, false);
 }
 
 

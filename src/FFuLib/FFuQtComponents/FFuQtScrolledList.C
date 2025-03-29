@@ -46,25 +46,16 @@ void FFuQtScrolledList::addItem(const std::string& item)
 
 void FFuQtScrolledList::setItems(const std::vector<std::string>& items)
 {
-  QStringList itemList;
-  itemList.reserve(items.size());
-  for (const std::string& item : items)
-    itemList.push_back(item.c_str());
   this->clear();
-  this->addItems(itemList);
-  this->repaint();
+  for (const std::string& item : items)
+    this->addItem(item);
+  this->update();
 }
 
 
 void FFuQtScrolledList::deleteItem(int index)
 {
   this->removeItemWidget(this->item(index));
-}
-
-
-void FFuQtScrolledList::deleteAllItems()
-{
-  this->clear();
 }
 
 
@@ -161,7 +152,7 @@ bool FFuQtScrolledList::event(QEvent* e)
         break;
       }
 
-  return this->QWidget::event(e);
+  return this->QListWidget::event(e);
 }
 
 void FFuQtScrolledList::keyPressEvent(QKeyEvent* e)

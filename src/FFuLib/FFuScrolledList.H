@@ -26,7 +26,6 @@ public:
   virtual void setItems(const std::vector<std::string>& items) = 0; // Replace whole list
 
   virtual void deleteItem(int index) = 0; // index = 0,1,...,n
-  virtual void deleteAllItems()      = 0;
 
   virtual int  getSelectedItemIndex() const = 0;
   virtual void selectItem(int index, bool notify = false) = 0; // Selection callback invoked if notify==True
