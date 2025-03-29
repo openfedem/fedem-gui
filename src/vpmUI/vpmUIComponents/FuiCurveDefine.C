@@ -788,9 +788,8 @@ void FuiCurveDefSheet::buildDynamicWidgets(const FuaCurveDefineValues* v)
 
 void FuiCurveDefSheet::setChannelList(const std::vector<std::string>& channels)
 {
-  this->channelSelectUI->myItemSelector->deleteAllItems();
   this->channelSelectUI->myItemSelector->setItems(channels);
-  this->channelSelectUI->myItemSelector->selectItem(0, false);
+  this->channelSelectUI->myItemSelector->selectItem(0);
 }
 
 //----------------------------------------------------------------------------

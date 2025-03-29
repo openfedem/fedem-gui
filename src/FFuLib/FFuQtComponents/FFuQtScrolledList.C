@@ -38,33 +38,12 @@ FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : QListWidget(parent)
 }
 
 
-void FFuQtScrolledList::addItem(const std::string& item)
-{
-  this->QListWidget::addItem(item.c_str());
-}
-
-
 void FFuQtScrolledList::setItems(const std::vector<std::string>& items)
 {
-  QStringList itemList;
-  itemList.reserve(items.size());
+  this->clear();
   for (const std::string& item : items)
-    itemList.push_back(item.c_str());
-  this->clear();
-  this->addItems(itemList);
+    this->addItem(item.c_str());
   this->repaint();
-}
-
-
-void FFuQtScrolledList::deleteItem(int index)
-{
-  this->removeItemWidget(this->item(index));
-}
-
-
-void FFuQtScrolledList::deleteAllItems()
-{
-  this->clear();
 }
 
 
@@ -73,14 +52,16 @@ int FFuQtScrolledList::getSelectedItemIndex() const
   return this->indexFromItem(this->currentItem()).row();
 }
 
-void FFuQtScrolledList::selectItem(int index, bool notify)
+
+bool FFuQtScrolledList::selectItem(int index)
 {
+  if (index < 0 || index >= this->count())
+    return false;
+
   this->setCurrentRow(index);
-  if (notify) {
-    QListWidgetItem* item = this->item(index);
-    if (item) this->browseSelect(this->indexFromItem(item));
-  }
+  return true;
 }
+
 
 std::string FFuQtScrolledList::getItemText(int index) const
 {
@@ -88,10 +69,6 @@ std::string FFuQtScrolledList::getItemText(int index) const
   return item ? item->text().toStdString() : "";
 }
 
-int FFuQtScrolledList::getNumberOfItems() const
-{
-  return this->count();
-}
 
 bool FFuQtScrolledList::isItemSelected(int index) const
 {
@@ -100,6 +77,7 @@ bool FFuQtScrolledList::isItemSelected(int index) const
 
   return this->getSelectedItemIndex() == index;
 }
+
 
 void FFuQtScrolledList::setSensitivity(bool isSensitive)
 {
@@ -115,12 +93,12 @@ void FFuQtScrolledList::setSensitivity(bool isSensitive)
 }
 
 
-void FFuQtScrolledList::browseSelect(const QModelIndex&  index)
+void FFuQtScrolledList::browseSelect(const QModelIndex& index)
 {
   myBrowseSelectCB.invoke(index.row());
 }
 
-void FFuQtScrolledList::activate(const QModelIndex&  index)
+void FFuQtScrolledList::activate(const QModelIndex& index)
 {
   myActivateCB.invoke(index.row());
 }
@@ -163,7 +141,7 @@ bool FFuQtScrolledList::event(QEvent* e)
         break;
       }
 
-  return this->QWidget::event(e);
+  return this->QListWidget::event(e);
 }
 
 void FFuQtScrolledList::keyPressEvent(QKeyEvent* e)

@@ -22,19 +22,13 @@ public:
 
   // List items interface
 
-  virtual void addItem(const std::string& item) = 0; // Appending item to end of list
-  virtual void setItems(const std::vector<std::string>& items) = 0; // Replace whole list
-
-  virtual void deleteItem(int index) = 0; // index = 0,1,...,n
-  virtual void deleteAllItems()      = 0;
+  virtual void setItems(const std::vector<std::string>& items) = 0;
 
   virtual int  getSelectedItemIndex() const = 0;
-  virtual void selectItem(int index, bool notify = false) = 0; // Selection callback invoked if notify==True
   virtual bool isItemSelected(int index) const = 0;
+  virtual bool selectItem(int index) = 0;
 
   virtual std::string getItemText(int index) const = 0;
-
-  virtual int getNumberOfItems() const = 0;
 
   virtual void setSensitivity(bool isSensitive) = 0;
 

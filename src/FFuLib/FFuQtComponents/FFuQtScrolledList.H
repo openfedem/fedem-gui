@@ -16,7 +16,8 @@
 class QModelIndex;
 
 
-class FFuQtScrolledList : public QListWidget, public FFuScrolledList, public FFuQtComponentBase
+class FFuQtScrolledList : public QListWidget, public FFuScrolledList,
+                          public FFuQtComponentBase
 {
   Q_OBJECT
 
@@ -24,21 +25,13 @@ public:
   FFuQtScrolledList(QWidget* parent = NULL);
   virtual ~FFuQtScrolledList() {}
 
-  // List items interface
-
-  virtual void addItem(const std::string& item); // Appending item to end of list
-  virtual void setItems(const std::vector<std::string>& items); // Replace whole list
-
-  virtual void deleteItem(int index); // index = 0,1,...,n
-  virtual void deleteAllItems();
+  virtual void setItems(const std::vector<std::string>& items);
 
   virtual int  getSelectedItemIndex() const;
-  virtual void selectItem(int index, bool notify); // Selection slot invoked if notify==True
   virtual bool isItemSelected(int index) const;
+  virtual bool selectItem(int index);
 
   virtual std::string getItemText(int index) const;
-
-  virtual int getNumberOfItems() const;
 
   virtual void setSensitivity(bool isSensitive);
 
