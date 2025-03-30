@@ -5,60 +5,43 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFU_DIALOGi_BUTTONS_H
+#ifndef FFU_DIALOG_BUTTONS_H
 #define FFU_DIALOG_BUTTONS_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include <array>
+
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuPushButton;
-class FFuFrame;
 
 
-class FFuDialogButtons : virtual public FFuMultUIComponent
+class FFuDialogButtons : virtual public FFuComponentBase
 {
 public:
-  FFuDialogButtons();
-  virtual ~FFuDialogButtons();
+  FFuDialogButtons() { buttons.fill(NULL); spacers.fill(NULL); }
 
-public:
-  enum { //Buttons
-    LEFTBUTTON, // 0
-    MIDBUTTON,  // 1
-    RIGHTBUTTON,// 2
-    NBUTTONS    // 3 
+  enum Buttons {
+    LEFTBUTTON  = 0,
+    MIDBUTTON   = 1,
+    RIGHTBUTTON = 2
   };
 
-  //You get the buttons in which you set their labels
-  //Empty label ("") gives no button
-  void setButtonLabel(int button,const char* label);
-  void setButtonSensitivity(int button,bool makeSensitive);
-  void setButtonClickedCB(const FFaDynCB1<int>& dynCB);
-  
-  virtual int getWidthHint(); 
-  virtual int getHeightHint();// with borders on all sides
+  void setButtonLabel(int button, const char* label);
+  void setButtonSensitivity(int button, bool sensitive);
+  void setButtonClickedCB(const FFaDynCB1<int>& cb) { buttonClickedCB = cb; }
 
 protected:
-  void initWidgets(const char* leftButtonLabel,const char* midButtonLabel,
-		   const char* rightButtonLabel); 
-
-  virtual void placeWidgets(int width,int height);
+  void initWidgets();
 
 private:
-  void initVariables();
   void onLeftButtonClicked();
   void onMidButtonClicked();
   void onRightButtonClicked();
 
 protected:
-  FFuPushButton* leftButton;
-  FFuPushButton* midButton;
-  FFuPushButton* rightButton;
-  FFuFrame*      separator;
-
-  bool leftButtonUp;
-  bool midButtonUp;
-  bool rightButtonUp;
+  std::array<FFuPushButton*,3>    buttons;
+  std::array<FFuComponentBase*,3> spacers;
 
 private:
   FFaDynCB1<int> buttonClickedCB;
