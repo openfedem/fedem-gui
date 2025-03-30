@@ -5,35 +5,53 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <cstring>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtDialogButtons.H"
 
 
-FFuQtDialogButtons::FFuQtDialogButtons(QWidget* parent, bool sep,
-				       const char* leftButtonLabel,
-				       const char* midButtonLabel,
-				       const char* rightButtonLabel,
-				       const char* name)
-  : FFuQtMultUIComponent(parent,name)
+FFuQtSeparator::FFuQtSeparator (QWidget* parent) : QFrame(parent)
 {
-  leftButtonUp  = strcmp(leftButtonLabel ,"") != 0;
-  midButtonUp   = strcmp(midButtonLabel  ,"") != 0;
-  rightButtonUp = strcmp(rightButtonLabel,"") != 0;
+  this->setFrameStyle(QFrame::HLine | QFrame::Sunken);
+  this->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+}
 
-  this->leftButton = new FFuQtPushButton(this);
-  this->midButton = new FFuQtPushButton(this);
-  this->rightButton = new FFuQtPushButton(this);
 
-  if (sep) {
-    FFuQtFrame* mySeparator;
-    this->separator = mySeparator = new FFuQtFrame(this);
-    mySeparator->setFrameStyle(QFrame::HLine | QFrame::Sunken);
+FFuQtDialogButtons::FFuQtDialogButtons(QWidget* parent, bool addSeparator,
+                                       const char* name)
+  : QWidget(parent)
+{
+  this->setObjectName(name);
+  this->setWidget(this);
+
+  QWidget* qButtons = addSeparator ? new QWidget() : this;
+  QBoxLayout* layout = new QHBoxLayout(qButtons);
+  layout->setContentsMargins(0,0,0,0);
+  for (size_t i = 0; i < buttons.size(); i++)
+  {
+    FFuQtPushButton* qButton = new FFuQtPushButton();
+    layout->addWidget(qButton);
+    buttons[i] = qButton;
+
+    // Add an empty frame in case the button is hidden (not labelled)
+    FFuQtFrame* qFrame = new FFuQtFrame();
+    qFrame->setFrameStyle(QFrame::NoFrame);
+    qFrame->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+    layout->addWidget(qFrame);
+    spacers[i] = qFrame;
   }
-  else
-    this->separator = NULL;
 
-  this->initWidgets(leftButtonLabel,midButtonLabel,rightButtonLabel);
+  if (addSeparator)
+  {
+    layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0,0,0,0);
+    layout->addStretch(1);
+    layout->addWidget(new FFuQtSeparator());
+    layout->addWidget(qButtons);
+  }
+
+  this->initWidgets();
 }

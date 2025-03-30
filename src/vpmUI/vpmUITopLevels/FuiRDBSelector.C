@@ -59,8 +59,8 @@ void FuiRDBSelector::initWidgets()
 
 void FuiRDBSelector::setOkCancelDialog(bool yesOrNo)
 {
-  dialogButtons->setButtonLabel(DONE, yesOrNo ? "OK" : "");
-  dialogButtons->setButtonLabel(APPLY, yesOrNo ? "Apply" : "");
+  dialogButtons->setButtonLabel(DONE, yesOrNo ? "OK" : NULL);
+  dialogButtons->setButtonLabel(APPLY, yesOrNo ? "Apply" : NULL);
   dialogButtons->setButtonLabel(CANCEL, yesOrNo ? "Cancel" : "Close");
 }
 //----------------------------------------------------------------------------
