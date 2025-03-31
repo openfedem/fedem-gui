@@ -10,6 +10,9 @@
 #include "FFuLib/FFuQtComponents/FFuQtScrolledList.H"
 #include "FFuLib/FFuQtComponents/FFuQtScrolledListDialog.H"
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
 
 FFuQtScrolledListDialog::FFuQtScrolledListDialog(QWidget*,
 						 int xpos, int ypos,
@@ -18,17 +21,31 @@ FFuQtScrolledListDialog::FFuQtScrolledListDialog(QWidget*,
 						 const char* name)
   : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name)
 {
-  myItemSelector = new FFuQtScrolledList(this);
-  myDialogButtons = new FFuQtDialogButtons(this);
-  labNotesImage = new FFuQtLabel(this);
-  labNotesLabel = new FFuQtLabel(this);
-  labNotesText = new FFuQtLabel(this);
+  myItemSelector = new FFuQtScrolledList();
+  myDialogButtons = new FFuQtDialogButtonsF();
+  labNotesImage = new FFuQtLabel();
+  labNotesLabel = new FFuQtLabel();
+  labNotesText = new FFuQtLabel();
 
-  this->FFuScrolledListDialog::init();
+  QWidget* notesLabel = new QWidget();
+  QBoxLayout* layout = new QHBoxLayout(notesLabel);
+  layout->setContentsMargins(0,10,0,0);
+  layout->setAlignment(Qt::AlignLeft);
+  layout->addWidget(static_cast<FFuQtLabel*>(labNotesImage));
+  layout->addWidget(static_cast<FFuQtLabel*>(labNotesLabel));
+  notesLabel->setLayout(layout);
+
+  layout = new QVBoxLayout(this);
+  layout->addWidget(static_cast<FFuQtScrolledList*>(myItemSelector));
+  layout->addWidget(notesLabel);
+  layout->addWidget(static_cast<FFuQtLabel*>(labNotesText));
+  layout->addWidget(static_cast<FFuQtDialogButtonsF*>(myDialogButtons));
+
+  this->initWidgets();
 }
 
 
 void FFuQtScrolledListDialog::closeEvent(QCloseEvent*)
 {
-  this->callOkButtonClickedCB();
+  this->onDlgButtonClicked(FFuDialogButtons::RIGHTBUTTON);
 }
