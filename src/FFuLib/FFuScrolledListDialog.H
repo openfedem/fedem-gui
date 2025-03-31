@@ -19,7 +19,7 @@ class FFuLabel;
 class FFuScrolledListDialog : virtual public FFuTopLevelShell
 {
 public:
-  FFuScrolledListDialog() {}
+  FFuScrolledListDialog() { showNotes = false; }
   virtual ~FFuScrolledListDialog() {}
 
   int getItem() const;
@@ -41,26 +41,17 @@ public:
 
 protected:
   void onDlgButtonClicked(int);
-  void callCancelButtonClickedCB();
-  void callOkButtonClickedCB();
-  void callApplyButtonClickedCB();
 
-  // widget placement - from MuitiUIComponent
-  virtual void placeWidgets(int width, int height);
+  void initWidgets();
 
-  // Initialisation to be called by UILib dep. subclass
-  void init();
-
-protected:
+private:
   FFaDynCB1<int> myOkButtonClickedCB;
   FFaDynCB1<int> myCancelButtonClickedCB;
   FFaDynCB1<int> myApplyButtonClickedCB;
-  FFaDynCB1<int> myItemChangedCB;
 
   FFaDynCB2<int,FFuComponentBase*> myOkButtonClickedWPtrCB;
   FFaDynCB2<int,FFuComponentBase*> myCancelButtonClickedWPtrCB;
   FFaDynCB2<int,FFuComponentBase*> myApplyButtonClickedWPtrCB;
-  FFaDynCB2<int,FFuComponentBase*> myItemChangedWPtrCB;
 };
 
 #endif
