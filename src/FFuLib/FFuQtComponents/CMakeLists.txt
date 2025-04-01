@@ -45,6 +45,7 @@ set ( COMPONENT_FILE_LIST  FFuQtButton
                            FFuQtToolButton
                            FFuQtUserDialog
                            FFuQtDropDownBox
+                           FFuQ3ScrolledList
 )
 if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FFuQt2DPlotter )
@@ -76,6 +77,7 @@ set ( QT_MOC_HEADER_FILE_LIST  FFuQtColorComboBox
                                FFuQtToggleButton
                                FFuQtToolButton
                                FFuQtLabel
+                               FFuQ3ScrolledList
      )
 
 if ( Qwt_LIBRARY )
