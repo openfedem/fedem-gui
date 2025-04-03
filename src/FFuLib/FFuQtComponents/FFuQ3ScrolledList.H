@@ -5,25 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFU_QT_SCROLLED_LIST_H
-#define FFU_QT_SCROLLED_LIST_H
+#ifndef FFU_Q3_SCROLLED_LIST_H
+#define FFU_Q3_SCROLLED_LIST_H
 
-#include <QListWidget>
+#include <Qt3Support/Q3ListBox>
 
 #include "FFuLib/FFuScrolledList.H"
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 
-class QModelIndex;
 
-
-class FFuQtScrolledList : public QListWidget, public FFuScrolledList,
+class FFuQ3ScrolledList : public Q3ListBox, public FFuScrolledList,
                           public FFuQtComponentBase
 {
   Q_OBJECT
 
 public:
-  FFuQtScrolledList(QWidget* parent = NULL);
-  virtual ~FFuQtScrolledList() {}
+  FFuQ3ScrolledList(QWidget* parent = NULL);
+  virtual ~FFuQ3ScrolledList() {}
 
   virtual void setItems(const std::vector<std::string>& items);
 
@@ -36,8 +34,8 @@ public:
   virtual void setSensitivity(bool isSensitive);
 
 private slots:
-  void browseSelect(const QModelIndex& index);
-  void activate(const QModelIndex& index);
+  void browseSelect(int index);
+  void activate(int index);
   void deleteAll();
   void paste();
 

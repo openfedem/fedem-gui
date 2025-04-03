@@ -22,7 +22,7 @@
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
-#include "FFuLib/FFuQtComponents/FFuQtScrolledList.H"
+#include "FFuLib/FFuQtComponents/FFuQ3ScrolledList.H"
 #include "FFuLib/FFuQtComponents/FFuQtScrolledListDialog.H"
 #include "FFuLib/FFuQtComponents/FFuQtTabbedWidgetStack.H"
 
@@ -47,7 +47,7 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent,
 
   myParameterFrame = new FFuQtLabelFrame(this);
   myParameterView = new FFuQtTableView(this);
-  myParameterList = new FFuQtScrolledList(this);
+  myParameterList = new FFuQ3ScrolledList(this);
   myExpandButton = new FFuQtPushButton(this);
 
   myExtrapolationLabel = new FFuQtLabel(this);

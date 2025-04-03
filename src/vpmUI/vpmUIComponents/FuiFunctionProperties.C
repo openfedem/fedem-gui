@@ -1189,9 +1189,8 @@ int FuiFunctionProperties::getSelectedFunctionIndex() const
 
 void FuiFunctionProperties::setChannelList(const std::vector<std::string>& channels)
 {
-  myChannelSelectUI->myItemSelector->deleteAllItems();
-  for (const std::string& chn : channels)
-    myChannelSelectUI->myItemSelector->addItem(chn.c_str());
+  myChannelSelectUI->myItemSelector->setItems(channels);
+  myChannelSelectUI->myItemSelector->selectItem(0);
 }
 
 
@@ -1241,8 +1240,8 @@ void FuiFunctionProperties::onDeleteButtonActivated()
   if (currItem > -1)
     myDeleteCB.invoke(currItem);
 
-  if (currItem > -1 && currItem < myParameterList->getNumberOfItems())
-    myParameterList->selectItem(currItem, true);
+  if (myParameterList->selectItem(currItem))
+    this->onParameterSelected(currItem);
 }
 
 
