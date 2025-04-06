@@ -53,11 +53,6 @@ void FuiLinkRamSettings::initWidgets()
 
   myTable->setSelectionPolicy(FFuTable::NO_SELECTION);
 
-/* Does not work with Qt4 due to unexpected recursion
-  myTable->setColumnResizedCB(FFaDynCB3M(FuiLinkRamSettings, this, columnSizeChanged, int, int, int));
-*/
-  myTable->setCellDoubleClicked(FFaDynCB3M(FuiLinkRamSettings, this, tableDoubleClicked, int, int, int));
-
   this->FuiTopLevelDialog::initWidgets();
 }
 

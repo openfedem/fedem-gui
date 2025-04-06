@@ -93,17 +93,17 @@ void FuiDutyCycleOptions::initWidgets()
   this->eventTable->setColumnLabel(MASTER, "Master");
   this->eventTable->setColumnSensitivity(EVENT, false); // we will handle this
   this->eventTable->setColumnSensitivity(MASTER, false); // internally
-  this->eventTable->setCellClickedCB(FFaDynCB3M(FuiDutyCycleOptions, this,
+  this->eventTable->setCellClickedCB(FFaDynCB2M(FuiDutyCycleOptions, this,
  						onEventCellClicked,
- 						int, int, int));
+						int, int));
 
   this->linkTable->setSelectionPolicy(FFuTable::NO_SELECTION);
   this->linkTable->showRowHeader(false);
   this->linkTable->showColumnHeader(false);
   this->linkTable->setNumberColumns(1);
-  this->linkTable->setCellClickedCB(FFaDynCB3M(FuiDutyCycleOptions, this,
+  this->linkTable->setCellClickedCB(FFaDynCB2M(FuiDutyCycleOptions, this,
 					       onLinkCellClicked,
-					       int, int, int));
+					       int, int));
 
   this->addEventButton->setLabel("Add event");
   this->addEventButton->setActivateCB(FFaDynCB0M(FuiDutyCycleOptions,this,onAddEventButtonClicked));
@@ -233,7 +233,7 @@ void FuiDutyCycleOptions::toggleAllLinks(bool on)
 }
 
 
-void FuiDutyCycleOptions::onLinkCellClicked(int row, int col, int)
+void FuiDutyCycleOptions::onLinkCellClicked(int row, int col)
 {
   // HACK
   // To aid easier toggelig of links (flaw in Qt 3.0.4)
@@ -244,7 +244,7 @@ void FuiDutyCycleOptions::onLinkCellClicked(int row, int col, int)
 }
 
 
-void FuiDutyCycleOptions::onEventCellClicked(int row, int col, int)
+void FuiDutyCycleOptions::onEventCellClicked(int row, int col)
 {
   if (col == MASTER) // Ignoring everything not related to master col
     for (int r = 0; r < this->eventTable->getNumberRows(); r++)

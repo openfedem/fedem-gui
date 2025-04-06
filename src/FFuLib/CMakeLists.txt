@@ -33,6 +33,7 @@ set ( COMPONENT_FILE_LIST  FFuLogicButtonGroup
                            FFuListViewItem
                            FFuButton
                            FFuUserDialog
+                           FFuTable
 )
 
 ## Pure header files, i.e., header files without a corresponding source file
@@ -52,7 +53,6 @@ set ( HEADER_FILE_LIST     FFu2DPlotter
                            FFuScrolledList
                            FFuSpinBox
                            FFuTabbedWidgetStack
-                           FFuTable
                            FFuTableView
                            FFuToggleButton
                            FFuToolBar
