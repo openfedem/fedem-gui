@@ -38,15 +38,8 @@ private:
   virtual void getUIValues(FFuaUIValues* values);
   virtual void placeWidgets(int width, int height);
 
-  void updateColumnWidths();
-  void columnSizeChanged(int col, int oldSize, int newSize);
-  void tableDoubleClicked(int row, int col, int button);
-
 protected:
   FFuTable* myTable;
-
-private:
-  std::vector<double> myRelColWidths;
 };
 
 
