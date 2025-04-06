@@ -47,39 +47,17 @@ void FuiJointSummary::initWidgets()
   myFrictionDof->addOption("Ry");
   myFrictionDof->addOption("Rz");
 
-  mySummaryTable->setNumberColumns(10);
-  mySummaryTable->showColumnHeader(true);
-  mySummaryTable->showRowHeader(true);
-
-  mySummaryTable->setColumnLabel(0, "Constraint");
-  myRelColWidths.push_back(14);
-
-  mySummaryTable->setColumnLabel(1, "Load");
-  myRelColWidths.push_back(14);
-
-  mySummaryTable->setColumnLabel(2, "Model length");
-  myRelColWidths.push_back(16);
-
-  mySummaryTable->setColumnLabel(3, "Init disp.");
-  myRelColWidths.push_back(12);
-
-  mySummaryTable->setColumnLabel(4, "Length change");
-  myRelColWidths.push_back(20);
-
-  mySummaryTable->setColumnLabel(5, "Init vel.");
-  myRelColWidths.push_back(10);
-
-  mySummaryTable->setColumnLabel(6, "Spring");
-  myRelColWidths.push_back(20);
-
-  mySummaryTable->setColumnLabel(7, "Spr. scale");
-  myRelColWidths.push_back(15);
-
-  mySummaryTable->setColumnLabel(8, "Damper");
-  myRelColWidths.push_back(15);
-
-  mySummaryTable->setColumnLabel(9, "Dmp. scale");
-  myRelColWidths.push_back(14);
+  mySummaryTable->setNumberColumns(10, true);
+  mySummaryTable->setColumnLabel(0, "Constraint"   , 14.0);
+  mySummaryTable->setColumnLabel(1, "Load"         , 14.0);
+  mySummaryTable->setColumnLabel(2, "Model length" , 16.0);
+  mySummaryTable->setColumnLabel(3, "Init disp."   , 12.0);
+  mySummaryTable->setColumnLabel(4, "Length change", 20.0);
+  mySummaryTable->setColumnLabel(5, "Init vel."    , 10.0);
+  mySummaryTable->setColumnLabel(6, "Spring"       , 20.0);
+  mySummaryTable->setColumnLabel(7, "Spr. scale"   , 15.0);
+  mySummaryTable->setColumnLabel(8, "Damper"       , 15.0);
+  mySummaryTable->setColumnLabel(9, "Dmp. scale"   , 14.0);
 
   myDefDamperLabel->setLabel("**) Use deformational velocity in damping force calculation");
 
@@ -278,7 +256,7 @@ void FuiJointSummary::placeWidgets(int width, int height)
     mySetAllFixedButton->setEdgeGeometry(v3,v3+150,curHR,curHR+16);
   }
 
-  this->updateColumnWidths();
+  mySummaryTable->updateColumnWidths();
 }
 
 
@@ -431,4 +409,6 @@ void FuiJointSummary::setSummary(int jv, const FuiJointDOFValues& jval)
       colText = jval.myDamperFCVals.selectedScaleEngine->getInfoString();
 
   mySummaryTable->insertText(jv, col, colText);
+
+  mySummaryTable->setTableRowReadOnly(jv, true);
 }

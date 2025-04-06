@@ -5,11 +5,10 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUISUMMARYTABLE_H
-#define FUISUMMARYTABLE_H
+#ifndef FUI_SUMMARY_TABLE_H
+#define FUI_SUMMARY_TABLE_H
 
 #include "FFuLib/FFuBase/FFuMultUIComponent.H"
-#include <vector>
 
 class FFuTable;
 class FFuLabel;
@@ -18,20 +17,15 @@ class FFuLabel;
 class FuiSummaryTable : public virtual FFuMultUIComponent
 {
 public:
-  FuiSummaryTable() { mySummaryTable = 0; myAddBCLabel = 0; }
+  FuiSummaryTable() { mySummaryTable = NULL; myAddBCLabel = NULL; }
   virtual ~FuiSummaryTable() {}
-
-  FFuTable* mySummaryTable;
-  FFuLabel* myAddBCLabel;
 
 protected:
   virtual void initWidgets();
 
-  void updateColumnWidths();
-  void columnSizeChanged(int col, int oldSize, int newSize);
-  void tableDoubleClicked(int row, int col, int button);
-
-  std::vector<double> myRelColWidths;
+public:
+  FFuTable* mySummaryTable;
+  FFuLabel* myAddBCLabel;
 };
 
 #endif
