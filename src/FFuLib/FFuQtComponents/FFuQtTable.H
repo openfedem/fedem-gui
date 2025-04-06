@@ -87,11 +87,11 @@ public:
 protected slots:
   void fwdSelectionChanged()               { mySelectionChangedCB.invoke(); }
   void fwdCurrentCellChanged(int r, int c) { myCurrentCellChangedCB.invoke(r,c); }
-  void fwdCellClicked(int r, int c)        { myCellClickedCB.invoke(r,c,0); }
-  void fwdCellDoubleClicked(int r, int c)  { myCellDoubleClickedCB.invoke(r,c,0); }
-  void fwdCellPressed(int r, int c)        { myCellPressedCB.invoke(r,c,0); }
-  void fwdColumnResized(int c,int o,int n) { myColumnResizedCB.invoke(c,o,n); }
   void fwdCellValueChanged(int r, int c)   { myCellValueChangedCB.invoke(r,c); }
+  void fwdCellPressed(int r, int c)        { myCellPressedCB.invoke(r,c); }
+  void fwdCellClicked(int r, int c)        { myCellClickedCB.invoke(r,c); }
+  void fwdCellDoubleClicked(int, int)      { this->updateColumnWidths(); }
+  void fwdColumnResized(int c,int o,int n) { this->columnSizeChanged(c,o,n); }
 
 private:
   bool isInsideTable(int row, int col) const;

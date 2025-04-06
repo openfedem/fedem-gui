@@ -38,7 +38,7 @@
 class FFuTable : virtual public FFuComponentBase
 {
 public:
-  FFuTable() {}
+  FFuTable() { resizingColumn = -1; }
   virtual ~FFuTable() {}
 
   //! Adds row of components. Append if row is negative or out of bounds.
@@ -68,10 +68,10 @@ public:
   //! Sets a toggle value.
   virtual void setCheckBoxItemToggle(int row, int col, bool toggle) = 0;
 
-  /*! Deletes widgets and sets sizes to 0. This might not be what you want. \sa clearTableItems */
-  void clearTable() { this->clearTableItems(); this->setNumberRows(0); this->setNumberColumns(0); }
+  /*! Deletes widgets and sets sizes to 0. \sa clearTableItems(). */
+  void clearTable();
   /*! Deletes items (not widgets?) contained in table, but leaves dimensions */
-  void clearTableItems() { for (int i = 0; i < this->getNumberRows(); i++) this->deleteRow(i); }
+  void clearTableItems();
   /*! Deletes the widget at position */
   virtual void clearCellContents(int row, int cell) = 0;
   /*! Deletes the widgets in row */
@@ -81,6 +81,8 @@ public:
 
   /*! Sets column header label */
   virtual void setColumnLabel(int col, const std::string& text) = 0;
+  /*! Sets column header label and associated initial relative width */
+  void setColumnLabel(size_t col, const std::string& text, double relWidth);
   /*! Gets column header label */
   virtual std::string getColumnLabel(int col) = 0;
   /*! Sets row header label */
@@ -122,6 +124,8 @@ public:
   virtual void setNumberRows(int num) = 0;
   /*! Set number of columns */
   virtual void setNumberColumns(int cols) = 0;
+  /*! Set number of columns and with relative column widths */
+  void setNumberColumns(size_t cols, bool withRelativeWidths);
 
   virtual int getRowHeight(int row) = 0;
   virtual int getColumnWidth(int col) = 0;
@@ -129,32 +133,16 @@ public:
   virtual void setColumnWidth(int col, int width) = 0;
   virtual void setRowHeight(int row, int height) = 0;
 
-  void setColumnWidth(int width)
-  {
-    for (int col = 0; col < this->getNumberColumns(); col++)
-      this->setColumnWidth(col, width);
-  }
-  void setRowHeight(int height)
-  {
-    for (int row = 0; row < this->getNumberRows(); row++)
-      this->setRowHeight(row, height);
-  }
+  void setColumnWidth(int width);
+  void setRowHeight(int height);
 
   /*! Allow row to be stretchable */
   virtual void stretchRowHeight(int row, bool stretchable) = 0;
   /*! Allow col to be stretchable */
   virtual void stretchColWidth(int col, bool stretchable) = 0;
 
-  void stretchRowsHeight(bool stretchable)
-  {
-    for (int row = 0; row < this->getNumberRows(); row++)
-      this->stretchRowHeight(row, stretchable);
-  }
-  void stretchColsWidth(bool stretchable)
-  {
-    for (int col = 0; col < this->getNumberColumns(); col++)
-      this->stretchColWidth(col, stretchable);
-  }
+  void stretchRowsHeight(bool stretchable);
+  void stretchColsWidth(bool stretchable);
 
   /*! Adjust column width so that the column is wide enough to display the widest cell */
   virtual void adjustColumnWidth(int col) = 0;
@@ -167,55 +155,36 @@ public:
   virtual void setSensitivity(bool isSensitive) = 0;
   virtual void setCellSensitivity(int row, int col, bool isSensitive) = 0;
 
-  void setRowSensitivity(int row, bool isSensitive)
-  {
-    for (int col = 0; col < this->getNumberColumns(); col++) {
-      this->setCellSensitivity(row, col, isSensitive);
-      this->setTableCellReadOnly(row, col, !isSensitive);
-    }
-  }
-  void setColumnSensitivity(int col, bool isSensitive)
-  {
-    for (int row = 0; row < this->getNumberRows(); row++) {
-      this->setCellSensitivity(row, col, isSensitive);
-      this->setTableCellReadOnly(row, col, !isSensitive);
-    }
-  }
+  void setRowSensitivity(int row, bool isSensitive);
+  void setColumnSensitivity(int col, bool isSensitive);
 
   virtual void setTableCellReadOnly(int row, int col, bool ro) = 0;
 
-  void setTableReadOnly(bool ro)
-  {
-    for (int row = 0; row < this->getNumberRows(); row++)
-      this->setTableRowReadOnly(row, ro);
-  }
-  void setTableRowReadOnly(int row, bool ro)
-  {
-    for (int col = 0; col < this->getNumberColumns(); col++)
-      this->setTableCellReadOnly(row, col, ro);
-  }
-  void setTableColumnReadOnly(int col, bool ro)
-  {
-    for (int row = 0; row < this->getNumberRows(); row++)
-      this->setTableCellReadOnly(row, col, ro);
-  }
+  void setTableReadOnly(bool ro);
+  void setTableRowReadOnly(int row, bool ro);
+  void setTableColumnReadOnly(int col, bool ro);
 
-  void setSelectionChangedCB  (const FFaDynCB0&              cb) { mySelectionChangedCB   = cb; }
-  void setCurrentCellChangedCB(const FFaDynCB2<int,int>&     cb) { myCurrentCellChangedCB = cb; }
-  void setCellClickedCB       (const FFaDynCB3<int,int,int>& cb) { myCellClickedCB        = cb; }
-  void setCellDoubleClicked   (const FFaDynCB3<int,int,int>& cb) { myCellDoubleClickedCB  = cb; }
-  void setCellPressedCB       (const FFaDynCB3<int,int,int>& cb) { myCellPressedCB        = cb; }
-  void setCellValueChangedCB  (const FFaDynCB2<int,int>&     cb) { myCellValueChangedCB   = cb; }
-  void setColumnResizedCB     (const FFaDynCB3<int,int,int>& cb) { myColumnResizedCB      = cb; }
+  void setSelectionChangedCB  (const FFaDynCB0&          cb) { mySelectionChangedCB = cb; }
+  void setCurrentCellChangedCB(const FFaDynCB2<int,int>& cb) { myCurrentCellChangedCB = cb; }
+  void setCellValueChangedCB  (const FFaDynCB2<int,int>& cb) { myCellValueChangedCB = cb; }
+  void setCellPressedCB       (const FFaDynCB2<int,int>& cb) { myCellPressedCB = cb; }
+  void setCellClickedCB       (const FFaDynCB2<int,int>& cb) { myCellClickedCB = cb; }
 
 protected:
-  FFaDynCB0              mySelectionChangedCB;
-  FFaDynCB2<int,int>     myCurrentCellChangedCB;
-  FFaDynCB3<int,int,int> myCellClickedCB;
-  FFaDynCB3<int,int,int> myCellDoubleClickedCB;
-  FFaDynCB3<int,int,int> myCellPressedCB;
-  FFaDynCB2<int,int>     myCellValueChangedCB;
-  FFaDynCB3<int,int,int> myColumnResizedCB;
+  FFaDynCB0          mySelectionChangedCB;
+  FFaDynCB2<int,int> myCurrentCellChangedCB;
+  FFaDynCB2<int,int> myCellValueChangedCB;
+  FFaDynCB2<int,int> myCellPressedCB;
+  FFaDynCB2<int,int> myCellClickedCB;
+
+  void columnSizeChanged(int col, int oldSize, int newSize);
+
+public:
+  void updateColumnWidths();
+
+private:
+  std::vector<double> myRelColWidths;
+  int                 resizingColumn;
 };
 
 #endif

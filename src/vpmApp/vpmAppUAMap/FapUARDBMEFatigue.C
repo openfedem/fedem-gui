@@ -89,7 +89,7 @@ FapUARDBMEFatigue::FapUARDBMEFatigue(FuiRDBMEFatigue* uic)
 
   // Set callbacks
   this->ui->tableMain->setCellClickedCB(
-    FFaDynCB3M(FapUARDBMEFatigue, this, onCellClicked, int, int, int));
+    FFaDynCB2M(FapUARDBMEFatigue, this, onCellClicked, int, int));
   this->ui->useProbToggle->setToggleCB(
     FFaDynCB1M(FapUARDBMEFatigue, this, onUsePropToggle, bool));
 
@@ -238,7 +238,7 @@ void FapUARDBMEFatigue::finishUI()
 }
 //----------------------------------------------------------------------------
 
-void FapUARDBMEFatigue::onCellClicked(int row, int col, int)
+void FapUARDBMEFatigue::onCellClicked(int row, int col)
 {
   // Toggle check boxes on/off
   if (col == 0 && row < (int)probability.size()) {

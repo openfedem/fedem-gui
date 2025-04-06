@@ -27,7 +27,7 @@ private:
   virtual void finishUI();
 
   // Callbacks
-  void onCellClicked(int row, int col, int button);
+  void onCellClicked(int row, int col);
   void onUsePropToggle(bool value);
 
   // Updates the damage table
