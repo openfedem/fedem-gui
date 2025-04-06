@@ -47,18 +47,10 @@ void FuiTriadSummary::initWidgets()
   myConnectorMenu->addOption("Rigid");
   myConnectorMenu->addOption("Flexible");
 
-  mySummaryTable->setNumberColumns(3);
-  mySummaryTable->showColumnHeader(true);
-  mySummaryTable->showRowHeader(true);
-
-  mySummaryTable->setColumnLabel(0, "Constraint");
-  myRelColWidths.push_back(35);
-
-  mySummaryTable->setColumnLabel(1, "Load/Motion");
-  myRelColWidths.push_back(35);
-
-  mySummaryTable->setColumnLabel(2, "Initial velocity");
-  myRelColWidths.push_back(30);
+  mySummaryTable->setNumberColumns(3, true);
+  mySummaryTable->setColumnLabel(0, "Constraint", 35);
+  mySummaryTable->setColumnLabel(1, "Load/Motion", 35);
+  mySummaryTable->setColumnLabel(2, "Initial velocity", 30);
 
   this->FuiSummaryTable::initWidgets();
 }
@@ -127,7 +119,7 @@ void FuiTriadSummary::placeWidgets(int width, int height)
   mySummaryTable->setEdgeGeometry(v9,width,h1,tabHeight); tabHeight += vBorder;
   myAddBCLabel->setEdgeGeometry(v9,width,tabHeight,tabHeight+fontHeight);
 
-  this->updateColumnWidths();
+  mySummaryTable->updateColumnWidths();
 }
 
 
@@ -168,4 +160,6 @@ void FuiTriadSummary::setSummary(int dof, const FuiTriadDOFValues& tval)
 
   // Initial velocity
   mySummaryTable->insertText(dof, 2, FFaNumStr(tval.myInitVel,1,8));
+
+  mySummaryTable->setTableRowReadOnly(dof, true);
 }
