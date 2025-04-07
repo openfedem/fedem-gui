@@ -20,7 +20,11 @@ public:
   FuiSummaryTable() { mySummaryTable = NULL; myAddBCLabel = NULL; }
   virtual ~FuiSummaryTable() {}
 
+  int getTableHeight() const;
+
 protected:
+  static FFuTable* createTable(FFuComponentBase* parent);
+
   virtual void initWidgets();
 
 public:

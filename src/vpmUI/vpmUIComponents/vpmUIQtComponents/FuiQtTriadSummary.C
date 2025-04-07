@@ -5,7 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FFuLib/FFuQtComponents/FFuQtTable.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
@@ -36,11 +35,7 @@ FuiQtTriadSummary::FuiQtTriadSummary(QWidget* parent,
   myConnectorMenu = new FFuQtOptionMenu(this);
   myAddBCLabel = new FFuQtLabel(this);
 
-  FFuQtTable* qSummaryTable = new FFuQtTable(this);
-  qSummaryTable->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
-  qSummaryTable->setLineWidth(2);
-
-  mySummaryTable = qSummaryTable;
+  mySummaryTable = FuiSummaryTable::createTable(this);
 
   this->initWidgets();
 }
