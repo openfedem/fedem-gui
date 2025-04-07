@@ -113,7 +113,7 @@ void FuiTriadSummary::placeWidgets(int width, int height)
   myConnectorFrame->setEdgeGeometry(v5,v8,h61,h71); h61 += fontHeight + vBorder;
   myConnectorMenu->setEdgeGeometry(v6,v7,h61,h71-2*vBorder);
 
-  int tabHeight = h1 + (7*(mySummaryTable->getNumberRows()+1)/5+2)*fontHeight;
+  int tabHeight = h1 + this->getTableHeight();
   int tabBottom = myAddBCLabel->isPoppedUp() ? h10-fontHeight : h10;
   if (tabHeight > tabBottom) tabHeight = tabBottom;
   mySummaryTable->setEdgeGeometry(v9,width,h1,tabHeight); tabHeight += vBorder;

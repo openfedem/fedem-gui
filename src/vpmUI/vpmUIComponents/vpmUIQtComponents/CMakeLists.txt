@@ -35,7 +35,7 @@ endif ( USE_EXT_CTRLSYS )
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST )
 ## Pure implementation files, i.e., source files without corresponding header
-set ( SOURCE_FILE_LIST )
+set ( SOURCE_FILE_LIST FuiQtSummaryTable )
 
 
 ## Header files to be moc'ed

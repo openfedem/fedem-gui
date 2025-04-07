@@ -151,29 +151,28 @@ void FuiJointSummary::showCamVars(bool yesOrNo)
 
 void FuiJointSummary::placeWidgets(int width, int height)
 {
+  int tabHeight  = this->getTableHeight();
   int fontHeight = this->getFontHeigth();
-  int fontWidth  = this->getFontWidth("  Ry ");
+  int fontWidth  = this->getFontWidth("Ry");
 
-  mySummaryTable->setColumnHeaderHeight(fontHeight+4);
-  mySummaryTable->setRowHeaderWidth(fontWidth);
-
-  double numLines = (mySummaryTable->getNumberRows()+1)*1.5 + 0.125;
-
+  double totalHeight = tabHeight;
   if (IAmShowingCamVars)
-    numLines += 4.775; // = 1/2 + 3*(1.3+1/8)
+    totalHeight += 4.775*fontHeight; // = 1/2 + 3*(1.3+1/8)
   else if (IAmShowingFriction > 1)
-    numLines += 4.525; // = 3.0 + 1.4 + 1/8
+    totalHeight += 4.525*fontHeight; // = 3.0 + 1.4 + 1/8
   else if (IAmShowingFriction > 0)
-    numLines += 3.125; // = 3.0 + 1/8
+    totalHeight += 3.125*fontHeight; // = 3.0 + 1/8
 
   if (myScrewToggle->isPoppedUp())
-    numLines += 3.125; // = 3.0 + 1/8
+    totalHeight += 3.125*fontHeight; // = 3.0 + 1/8
 
-  if (numLines*fontHeight > height)
-    fontHeight = (int)(height/numLines);
+  if (totalHeight > height)
+  {
+    fontHeight = static_cast<int>(fontHeight*height/totalHeight);
+    tabHeight  = static_cast<int>(tabHeight*height/totalHeight);
+  }
 
-  int h = fontHeight * 3*(mySummaryTable->getNumberRows()+1)/2 + 5;
-  mySummaryTable->setEdgeGeometry(0, width, 0, h);
+  mySummaryTable->setEdgeGeometry(0, width, 0, tabHeight);
 
   int border = 3*fontWidth/10;
   int vBorder = fontHeight/8;
@@ -182,7 +181,7 @@ void FuiJointSummary::placeWidgets(int width, int height)
   int v3 = v2 + fontWidth;
   int v4 = width - border;
 
-  int curHL = h + vBorder;
+  int curHL = tabHeight + vBorder;
   int curHR = curHL;
 
   int fieldH = 7*fontHeight/5;
@@ -202,9 +201,9 @@ void FuiJointSummary::placeWidgets(int width, int height)
   if (IAmShowingFootNotes)
   {
     if (IAmShowingCamVars)
-      curHL += curH-h;
+      curHL += curH-tabHeight;
     else
-      curHR += curH-h;
+      curHR += curH-tabHeight;
   }
 
   if (IAmShowingFriction > 0) {
@@ -252,8 +251,8 @@ void FuiJointSummary::placeWidgets(int width, int height)
   }
 
   if (IAmShowingFixFreeAll) {
-    mySetAllFreeButton->setEdgeGeometry(v3,v3+150,curHR,curHR+16); v3 += 150+border;
-    mySetAllFixedButton->setEdgeGeometry(v3,v3+150,curHR,curHR+16);
+    mySetAllFreeButton->setEdgeGeometry(v3,v3+150,curHR,curHR+25); v3 += 150+border;
+    mySetAllFixedButton->setEdgeGeometry(v3,v3+150,curHR,curHR+25);
   }
 
   mySummaryTable->updateColumnWidths();
