@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <Qt3Support/Q3ScrollView>
-#include <QGridLayout>
+#include <QResizeEvent>
 #include <QVBoxLayout>
 #include <QLabel>
 
@@ -21,18 +21,13 @@ class FuiQtParameterView : public virtual FFuQtMultUIComponent,
 {
 public:
   FuiQtParameterView(QWidget* parent, const char* name)
-    : FFuQtMultUIComponent(parent,name)
+    : FFuQtMultUIComponent(parent,name), IAmSensitive(true), xpos(0)
   {
-    IAmSensitive = true;
-
     Q3ScrollView* mainView = new Q3ScrollView(this);
-    QWidget* mainWidget = new QWidget(mainView->viewport());
-    mainView->addChild(mainWidget);
-
-    myLayout = new QGridLayout(mainWidget);
-    myLayout->setContentsMargins(2,2,2,2);
-    myLayout->setHorizontalSpacing(8);
-    myLayout->setVerticalSpacing(1);
+    mainView->addChild(myMainWidget = new QWidget(mainView->viewport()));
+    mainView->setVScrollBarMode(Q3ScrollView::Auto);
+    mainView->setHScrollBarMode(Q3ScrollView::AlwaysOff);
+    mainView->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
 
     QLayout* mainLayout = new QVBoxLayout(this);
     mainLayout->addWidget(mainView);
@@ -42,65 +37,73 @@ public:
   virtual void setFields(const std::vector<std::string>& names,
                          const FFaDynCB1<double>& acceptCB)
   {
-    int row = 0;
-    QWidget* parent = myLayout->parentWidget();
+    myLabels.reserve(names.size());
+    myFields.reserve(names.size());
     for (const std::string& name : names)
     {
-      myLayout->addWidget(new QLabel(name.c_str(),parent),row,0);
-      FFuQtIOField* field = new FFuQtIOField(parent);
+      FFuQtIOField* field = new FFuQtIOField(myMainWidget);
       field->setInputCheckMode(FFuIOField::DOUBLECHECK);
       field->FFuIOField::setSensitivity(IAmSensitive);
       field->setAcceptedCB(acceptCB);
-      myLayout->addWidget(field,row++,1);
+      myFields.push_back(field);
+      myLabels.push_back(new QLabel(name.c_str(),myMainWidget));
+      int labelWidth = myLabels.back()->sizeHint().width();
+      if (labelWidth+10 > xpos) xpos = labelWidth+10;
     }
   }
 
   virtual void setValues(const std::vector<double>& values)
   {
-    int row = 0;
-    for (double value : values)
-      if (row < myLayout->rowCount())
-      {
-        FFuQtIOField* fld = this->getField(row++);
-	if (fld) fld->FFuIOField::setValue(value);
-      }
-      else
-	break;
+    for (size_t row = 0; row < myFields.size() && row < values.size(); row++)
+      myFields[row]->FFuIOField::setValue(values[row]);
   }
 
   virtual void getValues(std::vector<double>& values) const
   {
     values.clear();
-    values.reserve(myLayout->rowCount());
-    for (int row = 0; row < myLayout->rowCount(); row++)
-    {
-      FFuQtIOField* fld = this->getField(row);
-      values.push_back(fld ? fld->getDouble() : 0.0);
-    }
+    values.reserve(myFields.size());
+    for (const FFuQtIOField* fld : myFields)
+      values.push_back(fld->getDouble());
   }
 
   virtual void setSensitivity(bool isSensitive)
   {
     IAmSensitive = isSensitive;
-
-    for (int row = 0; row < myLayout->rowCount(); row++)
-    {
-      FFuQtIOField* fld = this->getField(row);
-      if (fld) fld->FFuIOField::setSensitivity(isSensitive);
-    }
+    for (FFuQtIOField* fld : myFields)
+      fld->FFuIOField::setSensitivity(isSensitive);
   }
 
 protected:
-  FFuQtIOField* getField(int row) const
+  virtual void resizeEvent(QResizeEvent* e)
   {
-    QLayoutItem* item = myLayout->itemAtPosition(row,1);
-    return item ? dynamic_cast<FFuQtIOField*>(item->widget()) : NULL;
+    if (myFields.empty()) return;
+
+    int height = e->size().height();
+    int width  = e->size().width();
+
+    QWidget* mainView = this->layout()->itemAt(0)->widget();
+    mainView->setGeometry(0,0,width,height);
+
+    QScrollBar* bar = static_cast<Q3ScrollView*>(mainView)->verticalScrollBar();
+    if (bar->isVisible()) width -= bar->width();
+
+    int ypos = 0;
+    int fieldHeight = myFields.front()->sizeHint().height();
+    for (size_t row = 0; row < myLabels.size(); row++, ypos += fieldHeight+2)
+    {
+      myLabels[row]->setGeometry(2,ypos,xpos-10,fieldHeight);
+      myFields[row]->setGeometry(xpos,ypos,width-xpos-5,fieldHeight);
+    }
+    myFields.front()->parentWidget()->resize(width,ypos);
   }
 
 private:
   bool IAmSensitive;
+  int  xpos;
 
-  QGridLayout* myLayout;
+  QWidget*                   myMainWidget;
+  std::vector<QWidget*>      myLabels;
+  std::vector<FFuQtIOField*> myFields;
 };
 
 
