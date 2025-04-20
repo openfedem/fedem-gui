@@ -5,7 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <Qt3Support/Q3ScrollView>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QResizeEvent>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -23,10 +24,10 @@ public:
   FuiQtParameterView(QWidget* parent, const char* name)
     : FFuQtMultUIComponent(parent,name), xpos(0)
   {
-    Q3ScrollView* mainView = new Q3ScrollView(this);
-    mainView->addChild(myMainWidget = new QWidget(mainView->viewport()));
-    mainView->setVScrollBarMode(Q3ScrollView::Auto);
-    mainView->setHScrollBarMode(Q3ScrollView::AlwaysOff);
+    QScrollArea* mainView = new QScrollArea(this);
+    mainView->setWidget(myMainWidget = new QWidget(mainView->viewport()));
+    mainView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    mainView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mainView->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
 
     QLayout* mainLayout = new QVBoxLayout(this);
@@ -68,7 +69,7 @@ protected:
     QWidget* mainView = this->layout()->itemAt(0)->widget();
     mainView->setGeometry(0,0,width,height);
 
-    QScrollBar* bar = static_cast<Q3ScrollView*>(mainView)->verticalScrollBar();
+    QScrollBar* bar = static_cast<QScrollArea*>(mainView)->verticalScrollBar();
     if (bar->isVisible()) width -= bar->width();
 
     int ypos = 0;

@@ -46,8 +46,7 @@ set ( COMPONENT_FILE_LIST  FFuQtButton
                            FFuQtToolButton
                            FFuQtUserDialog
                            FFuQtDropDownBox
-                           FFuQ3ScrolledList
-)
+    )
 
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST )
@@ -74,8 +73,7 @@ set ( QT_MOC_HEADER_FILE_LIST  FFuQtColorComboBox
                                FFuQtToggleButton
                                FFuQtToolButton
                                FFuQtLabel
-                               FFuQ3ScrolledList
-     )
+    )
 
 if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FFuQt2DPlotter )
