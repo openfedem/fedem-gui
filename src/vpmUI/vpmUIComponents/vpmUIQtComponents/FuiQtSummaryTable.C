@@ -19,7 +19,7 @@ FFuTable* FuiSummaryTable::createTable(FFuComponentBase* parent)
 
   int minSize = table->verticalHeader()->minimumSectionSize();
   table->verticalHeader()->setDefaultSectionSize(minSize);
-  table->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+  table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
   // Somehow this is neeeded to set the proper font size
   QFont font = table->font();
