@@ -95,17 +95,20 @@ int FpProcess::run(const FpProcessOptions& options)
 
   myDeathHandler = options.deathHandler;
 
+  QString     command;
   QStringList arguments;
-  if (!options.prefix.empty()) {
+  if (options.prefix.empty())
+    command = program.c_str();
+  else
+  {
     // Split the process prefix (typically ssh -n user@host) into single words
-    char* s = new char[options.prefix.size()];
-    strcpy(s,options.prefix.c_str());
-    for (char* p = strtok(s," "); p; p = strtok(NULL," "))
+    char* s = strdup(options.prefix.c_str());
+    char* p = strtok(s," ");
+    command = p;
+    while ((p = strtok(NULL," ")))
       arguments.append(p);
-    delete[] s;
+    free(s);
   }
-
-  arguments.append(program.c_str());
   for (const std::string& arg : options.args)
     arguments.append(arg.c_str());
 
@@ -117,11 +120,12 @@ int FpProcess::run(const FpProcessOptions& options)
   connect(myQProcess,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(processFinished(int,QProcess::ExitStatus)));
 
   // Try to start the process
-  QString command = arguments.join(" ");
-  myQProcess->start(command);
+  myQProcess->start(command,arguments);
   if (myQProcess->state() == QProcess::NotRunning)
   {
-    FFaMsg::list(" *** Error: Failed to start "+ command.toStdString() +"\n",true);
+    ListUI <<" *** Error: Failed to start "<< command.toStdString();
+    for (const std::string& arg : options.args) ListUI <<" "<< arg;
+    FFaMsg::list("\n",true);
     return -1;
   }
 
