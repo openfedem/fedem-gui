@@ -8,7 +8,7 @@
 #ifndef FAP_TOOLS_CMDS_H
 #define FAP_TOOLS_CMDS_H
 
-#include "FapCmdsBase.H"
+#include "vpmApp/vpmAppCmds/FapCmdsBase.H"
 #include "FFaLib/FFaPatterns/FFaInitialisation.H"
 
 
@@ -19,7 +19,9 @@ public:
   static bool setFileAssociationsEx();
   static bool checkFileAssociations();
 
-  static bool getAddonExe(int index = 0, char* path = NULL, char* name = NULL);
+  static bool haveAddons();
+  static bool getAddonExe(size_t index, std::string& addon,
+                          bool fullPath = false);
 
 private:
   static void init();
@@ -27,6 +29,8 @@ private:
   static void addonLaunch(int index);
 
   friend class FFaInitialisation<FapToolsCmds>;
+
+  static std::vector<std::string> ourAddons;
 };
 
 static FFaInitialisation<FapToolsCmds> _Init;

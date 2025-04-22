@@ -5,7 +5,7 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FapToolsCmds.H"
+#include "vpmApp/vpmAppCmds/FapToolsCmds.H"
 #include "vpmApp/FapLicenseManager.H"
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
@@ -18,6 +18,7 @@
 #include "vpmDisplay/FdCtrlDB.H"
 #endif
 #include "vpmPM/FpPM.H"
+#include "vpmDB/FmFileSys.H"
 #include "vpmDB/FmDB.H"
 #include "vpmDB/FmTurbine.H"
 
@@ -34,7 +35,10 @@
 #define LAMBDA(func) FFaDynCB0S([](){ func; })
 #define LAMBDA_CTRL(func) FFaDynCB0S([](){ if (FapLicenseManager::hasCtrlLicense()) func; })
 
-//----------------------------------------------------------------------------
+std::vector<std::string> FapToolsCmds::ourAddons;
+
+
+//------------------------------------------------------------------------------
 
 void FapToolsCmds::init()
 {
@@ -245,56 +249,48 @@ void FapToolsCmds::init()
     // The text and tooltip with Addon names are set later, when the menu is activated
   }
 }
-//----------------------------------------------------------------------------
 
-bool FapToolsCmds::getAddonExe(int index, char* pszExePath, char* pszExeName)
+
+bool FapToolsCmds::haveAddons()
 {
 #if defined(win32) || defined(win64)
-  // Get module path
-  std::string modulePath = FpPM::getFullFedemPath("addons");
-  std::string addOnFilter = modulePath + "\\*.exe";
-  // Find files
-  WIN32_FIND_DATA ffd;
-  HANDLE hFind = ::FindFirstFile(addOnFilter.c_str(), &ffd);
-  if (hFind == INVALID_HANDLE_VALUE)
-    return false;
-  int i = 0; do
-  {
-    if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-      continue;
-    if (index == i) {
-      // ExeName
-      if (pszExeName)
-        strtok(strcpy(pszExeName,ffd.cFileName),".");
-      // ExePath
-      if (pszExePath) {
-        strcpy(pszExePath,modulePath.c_str());
-        strcat(pszExePath,"\\");
-        strcat(pszExePath,ffd.cFileName);
-      }
-      return true;
-    }
-    i++;
-  }
-  while (::FindNextFile(hFind, &ffd) != 0);
-  ::FindClose(hFind);
+  const char* filter = "*.exe";
 #else
-  std::cerr <<"  ** FapToolsCmds::getAddonExe("<< index;
-  if (pszExePath) std::cerr <<",char*";
-  if (pszExeName) std::cerr <<",char*";
-  std::cerr <<"): No Linux support"<< std::endl;
+  const char* filter = "*";
 #endif
-  return false;
+  return FmFileSys::getFiles(ourAddons,FpPM::getFullFedemPath("addons"),filter);
+}
+
+
+bool FapToolsCmds::getAddonExe(size_t index, std::string& addon, bool fullPath)
+{
+  if (index >= ourAddons.size())
+    return false;
+
+  if (fullPath)
+  {
+    addon = FpPM::getFullFedemPath("addons");
+#if defined(win32) || defined(win64)
+    addon += "\\";
+#else
+    addon += "/";
+#endif
+    addon += ourAddons[index];
+  }
+  else
+    addon = ourAddons[index].substr(0,ourAddons[index].find_first_of('.'));
+
+  return true;
 }
 
 
 void FapToolsCmds::addonLaunch(int index)
 {
 #if defined(win32) || defined(win64)
-  char szExePath[MAX_PATH];
-  if (FapToolsCmds::getAddonExe(index,szExePath))
+  std::string exePath;
+  if (FapToolsCmds::getAddonExe(index,exePath,true))
   {
-    std::string cmd = std::string(szExePath) + " " + std::to_string(GetCurrentProcessId());
+    std::string cmd = exePath + " " + std::to_string(GetCurrentProcessId());
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
@@ -304,7 +300,8 @@ void FapToolsCmds::addonLaunch(int index)
                   NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
   }
 #else
-  std::cerr <<"  ** FapToolsCmds::addonLaunch("<< index <<"): No Linux support"<< std::endl;
+  std::cerr <<"  ** FapToolsCmds::addonLaunch("<< index
+            <<"): No Linux support"<< std::endl;
 #endif
 }
 
