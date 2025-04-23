@@ -8,15 +8,15 @@
 #ifndef FFU_QT_MEMO_H
 #define FFU_QT_MEMO_H
 
-#include <Qt3Support/Q3TextEdit>
+#include <QTextEdit>
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "FFuLib/FFuMemo.H"
 
-class Q3PopupMenu;
+class QMenu;
 
 
-class FFuQtMemo : public Q3TextEdit, public FFuMemo, public FFuQtComponentBase
+class FFuQtMemo : public QTextEdit, public FFuMemo, public FFuQtComponentBase
 {
   Q_OBJECT
 
@@ -63,9 +63,6 @@ public:
 
   virtual void setTextFont(const FFuaFont& aFont);
 
-private slots:
-  void fwdSelectionChanged() { mySelectionChangedCB.invoke(); }
-
 protected:
 
   // Colors and fonts. Reimplemented from FFuQtComponentBase,
@@ -75,7 +72,7 @@ protected:
   virtual void setFonts (FFuaFontSet aFontSet);
 
   virtual void keyPressEvent(QKeyEvent* event);
-  virtual Q3PopupMenu* createPopupMenu(const QPoint& pos);
+  virtual QMenu* createPopupMenu(const QPoint& pos);
 };
 
 #endif

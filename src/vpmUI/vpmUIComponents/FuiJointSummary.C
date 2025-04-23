@@ -47,39 +47,17 @@ void FuiJointSummary::initWidgets()
   myFrictionDof->addOption("Ry");
   myFrictionDof->addOption("Rz");
 
-  mySummaryTable->setNumberColumns(10);
-  mySummaryTable->showColumnHeader(true);
-  mySummaryTable->showRowHeader(true);
-
-  mySummaryTable->setColumnLabel(0, "Constraint");
-  myRelColWidths.push_back(14);
-
-  mySummaryTable->setColumnLabel(1, "Load");
-  myRelColWidths.push_back(14);
-
-  mySummaryTable->setColumnLabel(2, "Model length");
-  myRelColWidths.push_back(16);
-
-  mySummaryTable->setColumnLabel(3, "Init disp.");
-  myRelColWidths.push_back(12);
-
-  mySummaryTable->setColumnLabel(4, "Length change");
-  myRelColWidths.push_back(20);
-
-  mySummaryTable->setColumnLabel(5, "Init vel.");
-  myRelColWidths.push_back(10);
-
-  mySummaryTable->setColumnLabel(6, "Spring");
-  myRelColWidths.push_back(20);
-
-  mySummaryTable->setColumnLabel(7, "Spr. scale");
-  myRelColWidths.push_back(15);
-
-  mySummaryTable->setColumnLabel(8, "Damper");
-  myRelColWidths.push_back(15);
-
-  mySummaryTable->setColumnLabel(9, "Dmp. scale");
-  myRelColWidths.push_back(14);
+  mySummaryTable->setNumberColumns(10, true);
+  mySummaryTable->setColumnLabel(0, "Constraint"   , 14.0);
+  mySummaryTable->setColumnLabel(1, "Load"         , 14.0);
+  mySummaryTable->setColumnLabel(2, "Model length" , 16.0);
+  mySummaryTable->setColumnLabel(3, "Init disp."   , 12.0);
+  mySummaryTable->setColumnLabel(4, "Length change", 20.0);
+  mySummaryTable->setColumnLabel(5, "Init vel."    , 10.0);
+  mySummaryTable->setColumnLabel(6, "Spring"       , 20.0);
+  mySummaryTable->setColumnLabel(7, "Spr. scale"   , 15.0);
+  mySummaryTable->setColumnLabel(8, "Damper"       , 15.0);
+  mySummaryTable->setColumnLabel(9, "Dmp. scale"   , 14.0);
 
   myDefDamperLabel->setLabel("**) Use deformational velocity in damping force calculation");
 
@@ -173,29 +151,28 @@ void FuiJointSummary::showCamVars(bool yesOrNo)
 
 void FuiJointSummary::placeWidgets(int width, int height)
 {
+  int tabHeight  = this->getTableHeight();
   int fontHeight = this->getFontHeigth();
-  int fontWidth  = this->getFontWidth("  Ry ");
+  int fontWidth  = this->getFontWidth("Ry");
 
-  mySummaryTable->setColumnHeaderHeight(fontHeight+4);
-  mySummaryTable->setRowHeaderWidth(fontWidth);
-
-  double numLines = (mySummaryTable->getNumberRows()+1)*1.5 + 0.125;
-
+  double totalHeight = tabHeight;
   if (IAmShowingCamVars)
-    numLines += 4.775; // = 1/2 + 3*(1.3+1/8)
+    totalHeight += 4.775*fontHeight; // = 1/2 + 3*(1.3+1/8)
   else if (IAmShowingFriction > 1)
-    numLines += 4.525; // = 3.0 + 1.4 + 1/8
+    totalHeight += 4.525*fontHeight; // = 3.0 + 1.4 + 1/8
   else if (IAmShowingFriction > 0)
-    numLines += 3.125; // = 3.0 + 1/8
+    totalHeight += 3.125*fontHeight; // = 3.0 + 1/8
 
   if (myScrewToggle->isPoppedUp())
-    numLines += 3.125; // = 3.0 + 1/8
+    totalHeight += 3.125*fontHeight; // = 3.0 + 1/8
 
-  if (numLines*fontHeight > height)
-    fontHeight = (int)(height/numLines);
+  if (totalHeight > height)
+  {
+    fontHeight = static_cast<int>(fontHeight*height/totalHeight);
+    tabHeight  = static_cast<int>(tabHeight*height/totalHeight);
+  }
 
-  int h = fontHeight * 3*(mySummaryTable->getNumberRows()+1)/2 + 5;
-  mySummaryTable->setEdgeGeometry(0, width, 0, h);
+  mySummaryTable->setEdgeGeometry(0, width, 0, tabHeight);
 
   int border = 3*fontWidth/10;
   int vBorder = fontHeight/8;
@@ -204,7 +181,7 @@ void FuiJointSummary::placeWidgets(int width, int height)
   int v3 = v2 + fontWidth;
   int v4 = width - border;
 
-  int curHL = h + vBorder;
+  int curHL = tabHeight + vBorder;
   int curHR = curHL;
 
   int fieldH = 7*fontHeight/5;
@@ -224,9 +201,9 @@ void FuiJointSummary::placeWidgets(int width, int height)
   if (IAmShowingFootNotes)
   {
     if (IAmShowingCamVars)
-      curHL += curH-h;
+      curHL += curH-tabHeight;
     else
-      curHR += curH-h;
+      curHR += curH-tabHeight;
   }
 
   if (IAmShowingFriction > 0) {
@@ -274,11 +251,11 @@ void FuiJointSummary::placeWidgets(int width, int height)
   }
 
   if (IAmShowingFixFreeAll) {
-    mySetAllFreeButton->setEdgeGeometry(v3,v3+150,curHR,curHR+16); v3 += 150+border;
-    mySetAllFixedButton->setEdgeGeometry(v3,v3+150,curHR,curHR+16);
+    mySetAllFreeButton->setEdgeGeometry(v3,v3+150,curHR,curHR+25); v3 += 150+border;
+    mySetAllFixedButton->setEdgeGeometry(v3,v3+150,curHR,curHR+25);
   }
 
-  this->updateColumnWidths();
+  mySummaryTable->updateColumnWidths();
 }
 
 
@@ -431,4 +408,6 @@ void FuiJointSummary::setSummary(int jv, const FuiJointDOFValues& jval)
       colText = jval.myDamperFCVals.selectedScaleEngine->getInfoString();
 
   mySummaryTable->insertText(jv, col, colText);
+
+  mySummaryTable->setTableRowReadOnly(jv, true);
 }

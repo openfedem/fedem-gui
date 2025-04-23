@@ -5,9 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <cstdlib>
-#include <cmath>
-
 #include "vpmUI/vpmUITopLevels/FuiLinkRamSettings.H"
 #include "FFuLib/FFuTable.H"
 
@@ -32,19 +29,11 @@ void FuiLinkRamSettings::initWidgets()
 {
   myTable->showRowHeader(false);
   myTable->showColumnHeader(true);
-  myTable->setNumberColumns(3);
+  myTable->setNumberColumns(3, true);
 
-  myTable->setColumnLabel(ID,    "Id");
-  myTable->setColumnLabel(NAME,  "Part                      ");
-  myTable->setColumnLabel(LEVEL, "Status       ");
-
-  myTable->adjustColumnWidth(ID);
-  myTable->adjustColumnWidth(NAME);
-  myTable->adjustColumnWidth(LEVEL);
-
-  myRelColWidths.push_back( 50*myTable->getColumnWidth(ID));
-  myRelColWidths.push_back( 50*myTable->getColumnWidth(NAME));
-  myRelColWidths.push_back( 50*myTable->getColumnWidth(LEVEL));
+  myTable->setColumnLabel(ID,    "Id",     10);
+  myTable->setColumnLabel(NAME,  "Part",   70);
+  myTable->setColumnLabel(LEVEL, "Status", 20);
 
   myTable->setRowHeight(50);
 
@@ -53,9 +42,6 @@ void FuiLinkRamSettings::initWidgets()
 
   myTable->setSelectionPolicy(FFuTable::NO_SELECTION);
 
-  myTable->setColumnResizedCB(FFaDynCB3M(FuiLinkRamSettings, this, columnSizeChanged, int, int, int));
-  myTable->setCellDoubleClicked(FFaDynCB3M(FuiLinkRamSettings, this, tableDoubleClicked, int, int, int));
-
   this->FuiTopLevelDialog::initWidgets();
 }
 
@@ -63,8 +49,9 @@ void FuiLinkRamSettings::initWidgets()
 void FuiLinkRamSettings::placeWidgets(int width, int height)
 {
   myTable->setEdgeGeometry(3, width-3, 3, height-this->getDialogButtonsHeightHint());
+  myTable->updateColumnWidths();
+
   this->FuiTopLevelDialog::placeWidgets(width,height);
-  this->updateColumnWidths();
 }
 
 
@@ -129,69 +116,4 @@ void FuiLinkRamSettings::getUIValues(FFuaUIValues* values)
     lData.ramLevel = myTable->getComboItemSelection(i,LEVEL);
     uiv->rowData.push_back(lData);
   }
-}
-
-
-void FuiLinkRamSettings::updateColumnWidths()
-{
-  int totColumnWidth = this->getWidth() - myTable->getRowHeaderWidth() - 10 - 18;
-  size_t i;
-  double totalRelWidth = 0.0;
-  for (i = 0; i < myRelColWidths.size(); ++i)
-    totalRelWidth += myRelColWidths[i];
-
-  double columnUnitWidth = totColumnWidth/totalRelWidth;
-  double leftovers = 0.0; double dummy;
-  for (i = 0; i < myRelColWidths.size(); ++i)
-    leftovers += modf(columnUnitWidth*myRelColWidths[i], &dummy);
-
-  for (i = 0; i < myRelColWidths.size()-1; ++i)
-    {
-      double colW  = columnUnitWidth*myRelColWidths[i];
-      if ( (modf(colW, &dummy) >= 0.5) && (leftovers > 0))
-        {
-          myTable->setColumnWidth(i, (int)(colW + 0.5));
-          --leftovers;
-        }
-      else
-        myTable->setColumnWidth(i, (int)(colW));
-    }
-  myTable->setColumnWidth(i, (int)((columnUnitWidth*myRelColWidths[i]) + leftovers));
-}
-
-
-void FuiLinkRamSettings::columnSizeChanged(int col, int oldSize, int newSize)
-{
-  double totalRelWidth = 0.0;
-  size_t i;
-  for (i = 0; i < myRelColWidths.size(); ++i)
-    totalRelWidth += myRelColWidths[i];
-  int totColumnWidth = this->getWidth() - myTable->getRowHeaderWidth() - 10 - 18;
-
-  size_t ucol = col > 0 ? col : 0;
-  int columnWidthsBeforeChangedOne = 0;
-  for (i = 0; i < ucol; ++i)
-    columnWidthsBeforeChangedOne += myTable->getColumnWidth(i);
-
-  if (newSize + columnWidthsBeforeChangedOne >= totColumnWidth - 5)
-    newSize = oldSize;
-
-  double newRelColWidth = newSize * myRelColWidths[col]/oldSize;
-  double difference = newRelColWidth - myRelColWidths[col];
-  myRelColWidths[col] = newRelColWidth;
-
-  double totRelColWidthRest = 0.0;
-  for (i = ucol+1; i < myRelColWidths.size(); ++i)
-    totRelColWidthRest += myRelColWidths[i];
-
-  for (i = ucol+1; i < myRelColWidths.size(); ++i)
-    myRelColWidths[i] -= myRelColWidths[i]*difference/totRelColWidthRest;
-
-  this->updateColumnWidths();
-}
-
-
-void FuiLinkRamSettings::tableDoubleClicked(int, int, int)
-{
-  this->updateColumnWidths();
 }

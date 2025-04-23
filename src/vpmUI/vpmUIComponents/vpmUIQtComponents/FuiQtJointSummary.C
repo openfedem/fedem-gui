@@ -5,7 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FFuLib/FFuQtComponents/FFuQtTable.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
@@ -20,11 +19,8 @@ FuiQtJointSummary::FuiQtJointSummary(QWidget* parent, int xpos, int ypos,
 				     int width, int height, const char* name)
   : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
 {
-  FFuQtTable* qsummaryTable;
-  mySummaryTable = qsummaryTable = new FFuQtTable(this);
-  qsummaryTable->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
-  qsummaryTable->setLineWidth(2);
-  qsummaryTable->setHScrollBarMode(Q3ScrollView::AlwaysOff);
+  mySummaryTable      = FuiSummaryTable::createTable(this);
+
   myAddBCLabel        = new FFuQtLabel(this);
   myDefDamperLabel    = new FFuQtLabel(this);
   myDOF_TZ_Toggle     = new FFuQtToggleButton(this);

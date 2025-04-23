@@ -96,12 +96,10 @@ public:
   //! \details If none are set, use QTextEdit default menu (Copy, Select All).
   void setPopUpMenuCmds(const std::vector<FFuaCmdItem*>& cmds) { commands = cmds; }
 
-  void setTextChangedCB(const FFaDynCB0& cb)       { myTextChangedCB = cb; }
-  void setSelectionChangedCB(const FFaDynCB0& cb)  { mySelectionChangedCB = cb; }
+  void setTextChangedCB(const FFaDynCB0& cb) { myTextChangedCB = cb; }
 
 protected:
   FFaDynCB0 myTextChangedCB;
-  FFaDynCB0 mySelectionChangedCB;
 
   std::vector<FFuaCmdItem*> commands;
 };

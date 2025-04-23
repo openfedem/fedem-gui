@@ -417,7 +417,7 @@ static void showPDFfile(QString& strUrl)
   if (strAR.isEmpty()) {
     std::string errmsg("Unable to find Adobe Acrobat Reader when opening file:\n");
     strUrl.replace("file://", "");
-    errmsg.append(strUrl);
+    errmsg.append(strUrl.toStdString());
     errmsg.append("\n\nWould you like to try open the PDF using an other reader?");
     if (FFaMsg::dialog(errmsg, FFaMsg::YES_NO_CANCEL) == 1) {
       // Try shell open
@@ -469,10 +469,9 @@ bool FuiQtProperties::initStartGuide()
   if (!fileOk) {
     // Get path of the startguide folder from Windows registry.
     // The path must use forward slashes, and must end with a forward slash.
+    std::string regkey = std::string("FMM-file\\internal\\") + FedemAdmin::getVersion();
     HKEY hk;
-    LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT,
-                              "FMM-file\\internal\\" + QString(FedemAdmin::getVersion()),
-                              0, KEY_QUERY_VALUE, &hk);
+    LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, regkey.c_str(), 0, KEY_QUERY_VALUE, &hk);
     if (err == ERROR_SUCCESS) {
       // Get registry value
       char path[2048];
@@ -501,7 +500,7 @@ bool FuiQtProperties::initStartGuide()
   // Set fields
   mySGLogoImage->setPixMap(startGuideLogo_xpm,true);
   mySGHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.0</b></i></font>");
-  mySGContentLabel->setLabel(strData);
+  mySGContentLabel->setLabel(strData.toStdString());
   mySGContentLabel->setLinkActivatedCB(FFaDynCB1S(onURLActivated,const std::string&));
   mySGLogoBorderRight->setPixMap(startGuideBorderRight_xpm,true);
   FFuaPalette pal;

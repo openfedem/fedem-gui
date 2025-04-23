@@ -61,8 +61,8 @@ private:
   void onDelEventButtonClicked();
   void onCheckAllButtonClicked();
   void onCheckNoneButtonClicked();
-  void onLinkCellClicked(int row, int col, int button);
-  void onEventCellClicked(int row, int col, int button);
+  void onLinkCellClicked(int row, int col);
+  void onEventCellClicked(int row, int col);
 
 protected:
   FFuTable* eventTable;

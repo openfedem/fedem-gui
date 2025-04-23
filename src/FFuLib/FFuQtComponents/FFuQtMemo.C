@@ -16,9 +16,9 @@
   \date \b 21.03.03 Extended. Inherits QTextEdit instead of QMultiLineEdit.
 */
 
-#include <Qt3Support/Q3PopupMenu>
 #include <QScrollBar>
 #include <QTextStream>
+#include <QMenu>
 #include <QFile>
 #include <QFont>
 #include <QKeyEvent>
@@ -28,11 +28,9 @@
 
 
 //! Constructor
-FFuQtMemo::FFuQtMemo(QWidget* parent) : Q3TextEdit(parent,"FFuQtMemo")
+FFuQtMemo::FFuQtMemo(QWidget* parent) : QTextEdit(parent)
 {
   this->setWidget(this);
-
-  QObject::connect(this,SIGNAL(selectionChanged()),this,SLOT(fwdSelectionChanged()));
 }
 
 
@@ -91,42 +89,43 @@ void FFuQtMemo::setTextFont(const FFuaFont& aFont)
 //! Positions the cursor according to a QTextCursor::MoveOperation
 void FFuQtMemo::setCursorPos(int action, bool select)
 {
+  QTextCursor::MoveMode mode = select ? QTextCursor::KeepAnchor : QTextCursor::MoveAnchor;
   switch (action) {
   case MOVE_BACK:
-    this->moveCursor(MoveBackward,select);
+    this->moveCursor(QTextCursor::PreviousCharacter,mode);
     break;
   case MOVE_FORWARD:
-    this->moveCursor(MoveForward,select);
+    this->moveCursor(QTextCursor::NextCharacter,mode);
     break;
   case MOVE_BACK_WORD:
-    this->moveCursor(MoveWordBackward,select);
+    this->moveCursor(QTextCursor::PreviousWord,mode);
     break;
   case MOVE_FORWARD_WORD:
-    this->moveCursor(MoveWordForward,select);
+    this->moveCursor(QTextCursor::NextWord,mode);
     break;
   case MOVE_UP:
-    this->moveCursor(MoveUp,select);
+    this->moveCursor(QTextCursor::Up,mode);
     break;
   case MOVE_DOWN:
-    this->moveCursor(MoveDown,select);
+    this->moveCursor(QTextCursor::Down,mode);
     break;
   case MOVE_LINE_START:
-    this->moveCursor(MoveLineStart,select);
+    this->moveCursor(QTextCursor::StartOfLine,mode);
     break;
   case MOVE_LINE_END:
-    this->moveCursor(MoveLineEnd,select);
+    this->moveCursor(QTextCursor::EndOfLine,mode);
     break;
   case MOVE_HOME:
-    this->moveCursor(MoveHome,select);
+    this->moveCursor(QTextCursor::Start,mode);
     break;
   case MOVE_END:
-    this->moveCursor(MoveEnd,select);
+    this->moveCursor(QTextCursor::End,mode);
     break;
   case MOVE_PG_UP:
-    this->moveCursor(MovePgUp,select);
+    this->moveCursor(QTextCursor::PreviousBlock,mode);
     break;
   case MOVE_PG_DOWN:
-    this->moveCursor(MovePgDown,select);
+    this->moveCursor(QTextCursor::NextBlock,mode);
     break;
   }
 }
@@ -135,12 +134,12 @@ void FFuQtMemo::setCursorPos(int action, bool select)
 //! Returns the displayed text
 void FFuQtMemo::getText(std::string& txt) const
 {
-  txt = this->text().toStdString();
+  txt = this->toPlainText().toStdString();
 }
 
 std::string FFuQtMemo::getText() const
 {
-  return this->text().toStdString();
+  return this->toPlainText().toStdString();
 }
 
 
@@ -197,7 +196,7 @@ void FFuQtMemo::setColors(FFuaPalette aPalette)
 
   QPalette textFieldPalette(textFieldNormal, textFieldNormal, textFieldNormal);
 
-  this->Q3TextEdit::setPalette(textFieldPalette);
+  this->setPalette(textFieldPalette);
 }
 
 
@@ -211,14 +210,14 @@ void FFuQtMemo::setFonts(FFuaFontSet aFontSet)
   textFieldFont.setBold     (aFontSet.TextFieldFont.IsBold  );
   textFieldFont.setItalic   (aFontSet.TextFieldFont.IsItalic);
 
-  this->Q3TextEdit::setFont(textFieldFont);
+  this->setFont(textFieldFont);
 }
 
 
 //! Sets how to wrap words at right side of widget
 void FFuQtMemo::setNoWordWrap()
 {
-  this->setWordWrap(NoWrap);
+  this->setWordWrapMode(QTextOption::NoWrap);
 }
 
 
@@ -286,11 +285,10 @@ void FFuQtMemo::ensureCursorIsVisible()
 //! Returns whether the user is seeing the end of the memo contents.
 bool FFuQtMemo::isViewingEnd() const
 {
-  int y = this->contentsY();
-  int height = this->contentsHeight();
-  int visibHeight = this->visibleHeight();
-  return (y >= (height - visibHeight - 3));
-  return true;
+  int vpos = this->verticalScrollBar()->value();
+  int vmax = this->verticalScrollBar()->maximum();
+  int step = this->verticalScrollBar()->pageStep();
+  return vpos >= vmax-step;
 }
 
 
@@ -304,13 +302,13 @@ bool FFuQtMemo::isDraggingVScroll()
 //! Scrolls to the end of the document
 void FFuQtMemo::scrollToEnd()
 {
-  this->scrollToBottom();
+  this->moveCursor(QTextCursor::End);
 }
 
 //! Scrolls to the top of the document
 void FFuQtMemo::scrollToTop()
 {
-  this->setContentsPos(0,0);
+  this->moveCursor(QTextCursor::Start);
 }
 
 
@@ -319,15 +317,15 @@ void FFuQtMemo::insertText(const char* text, bool noScroll)
 {
   if (noScroll)
   {
-    int x = this->contentsX();
-    int y = this->contentsY();
-
-    this->setCursorPos(FFuMemo::MOVE_END, false);
-    this->insert(text);
-    this->setContentsPos(x, y);
+    QTextCursor cursor = this->textCursor();
+    int pos = cursor.position();
+    this->moveCursor(QTextCursor::End);
+    this->insertPlainText(text);
+    cursor.setPosition(pos);
+    this->setTextCursor(cursor);
   }
   else
-    this->insert(text);
+    this->insertPlainText(text);
 }
 
 //! Enables or disables undo and redo
@@ -339,13 +337,13 @@ void FFuQtMemo::enableUndoRedo(bool enable)
 //! Returns number of charachters in document
 int FFuQtMemo::getNumChar() const
 {
-  return this->text().length();
+  return this->toPlainText().length();
 }
 
 //! Returns true if there is a selection in the document
 bool FFuQtMemo::hasSelection() const
 {
-  return this->hasSelectedText();
+  return this->textCursor().hasSelection();
 }
 
 //! Returns true if undo and redo is enabled
@@ -364,13 +362,14 @@ bool FFuQtMemo::readOnly() const
 //! Invokes the text-changed call-back when the Return key is pressed.
 void FFuQtMemo::keyPressEvent(QKeyEvent* event)
 {
-  this->Q3TextEdit::keyPressEvent(event);
+  this->QTextEdit::keyPressEvent(event);
   if (!myTextChangedCB.empty() && event->key() == Qt::Key_Return)
   {
-    int para, index;
-    this->getCursorPosition(&para,&index);
+    QTextCursor cursor = this->textCursor();
+    int pos = cursor.position();
     myTextChangedCB.invoke();
-    this->setCursorPosition(para,index);
+    cursor.setPosition(pos);
+    this->setTextCursor(cursor);
   }
 }
 
@@ -379,7 +378,7 @@ void FFuQtMemo::keyPressEvent(QKeyEvent* event)
   Creates a pop up menu, accoring to what user have set
 */
 
-Q3PopupMenu* FFuQtMemo::createPopupMenu(const QPoint& pos)
+QMenu* FFuQtMemo::createPopupMenu(const QPoint& pos)
 {
   // This was a shortcut to custom pop up
   // quite usable, and you will avoid
@@ -429,7 +428,7 @@ Q3PopupMenu* FFuQtMemo::createPopupMenu(const QPoint& pos)
   */
 
   if (commands.empty())
-    return this->Q3TextEdit::createPopupMenu(pos);
+    return this->createStandardContextMenu(pos);
 
   FFuQtPopUpMenu* popUp = new FFuQtPopUpMenu(this);
   for (FFuaCmdItem* cmd : commands)

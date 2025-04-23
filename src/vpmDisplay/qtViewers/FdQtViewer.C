@@ -154,38 +154,38 @@ FdQtViewer::FdQtViewer(QWidget* parent, const char* name, SbBool, SoQtViewer::Ty
 
 FdQtViewer::~FdQtViewer()
 {
-  // Reset repeat status for function keys (if necessary). This code
-  // is needed because the user might quit the application while we
-  // are still in "EnterNotify modus".
-  //this->repeatFunctionkeysReset(XtDisplay(this->getWidget()));
-
   delete animationSensor;
   myMultiplier->unref();
 }
 
 
 // Process the given event to change the camera
-// SoQt port
-void
-FdQtViewer::processEvent( QEvent *qevent )
+void FdQtViewer::processEvent(QEvent* qevent)
 {
-	// Check if cursors need to be defined (they can only
-	// be defined after the window has been std::mapped. 
-	// Receiving events guarantees that the window has 
-	// been std::mapped.
-	if ( !this->createdCursors )
-	{
-		this->defineCursors();
-		this->getGLWidget()->setCursor(this->baseCursor);
-	}
+  // Check if cursors need to be defined (they can be
+  // defined only after the window has been mapped).
+  // Receiving events guarantees that the window has been mapped.
+  if (!this->createdCursors)
+  {
+    this->defineCursors();
+    this->getGLWidget()->setCursor(this->baseCursor);
+  }
 
-	bool eventHandeled = false;
+  bool eventHandeled = false;
+  myQtEventCB.invoke(qevent,eventHandeled);
+  if (!eventHandeled)
+  {
+    QKeyEvent*   keyEv = NULL;
+    QMouseEvent* mouseEv = NULL;
 
-	myQtEventCB.invoke(qevent, eventHandeled);
-
-	if ( !eventHandeled ){
-		QKeyEvent *keyEv = 0;
-		QMouseEvent *mouseEv = 0;
+    // Lambda function scaling the key-triggered rotation angle.
+    auto&& keyScale = [&keyEv](double rotAngle)
+    {
+      rotAngle *= 0.01;
+      if (keyEv->modifiers() & Qt::ControlModifier) rotAngle *= 0.01;
+      if (keyEv->modifiers() & Qt::AltModifier)     rotAngle *= 0.01;
+      return rotAngle;
+    };
 
 		QPoint pointerPos = this->getGLWidget()->mapFromGlobal( QCursor::pos() );
 
@@ -217,12 +217,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Up:
 				this->stopAnimating();
 
-				if ( keyEv->state() & Qt::ShiftModifier){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(this->myKeyRotationAngle * factor, 0);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
@@ -238,12 +234,9 @@ FdQtViewer::processEvent( QEvent *qevent )
 
 			case Qt::Key_Down:
 				this->stopAnimating();
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(-this->myKeyRotationAngle * factor, 0);
-				}
+
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(-keyScale(myKeyRotationAngle), 0);
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);
@@ -260,12 +253,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Left:
 				this->stopAnimating();
 
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(0, this->myKeyRotationAngle * factor);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(0, keyScale(myKeyRotationAngle));
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue( this->mousePosMoNot[0],
 						this->mousePosMoNot[1]
@@ -286,12 +275,8 @@ FdQtViewer::processEvent( QEvent *qevent )
 			case Qt::Key_Right:
 				this->stopAnimating();
 
-				if ( keyEv -> modifiers() & Qt::ShiftModifier ){
-          float factor = 0.01;
-          if (keyEv->modifiers() & Qt::ControlModifier) factor *= 0.001;
-          if (keyEv->modifiers() & Qt::AltModifier) factor *= 0.001;
-					this->rotateCamera(0, -this->myKeyRotationAngle * factor);
-				}
+				if (keyEv->modifiers() & Qt::ShiftModifier)
+				  this->rotateCamera(0, -keyScale(myKeyRotationAngle));
 				else if ( keyEv -> modifiers() & Qt::ControlModifier ){
 					this->mousePosPrevMoNot.setValue(this->mousePosMoNot[0],
 						this->mousePosMoNot[1]);

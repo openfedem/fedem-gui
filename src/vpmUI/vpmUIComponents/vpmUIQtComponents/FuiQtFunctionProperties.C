@@ -18,7 +18,6 @@
 #include "FFuLib/FFuQtComponents/FFuQtTable.H"
 #include "FFuLib/FFuQtComponents/FFuQtSpinBox.H"
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
-#include "FFuLib/FFuQtComponents/FFuQtTableView.H"
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
@@ -27,11 +26,8 @@
 #include "FFuLib/FFuQtComponents/FFuQtTabbedWidgetStack.H"
 
 
-FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent,
-						 int xpos, int ypos,
-						 int width, int height,
-						 const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
+  : FFuQtMultUIComponent(parent,"FunctionProperties")
 {
   myTypeFrame = new FFuQtLabelFrame(this);
   myTypeSwitch = new FFuQtOptionMenu(this);
@@ -46,7 +42,6 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent,
   myThreshold2 = new FuiQtThreshold(this);
 
   myParameterFrame = new FFuQtLabelFrame(this);
-  myParameterView = new FFuQtTableView(this);
   myParameterList = new FFuQ3ScrolledList(this);
   myExpandButton = new FFuQtPushButton(this);
 

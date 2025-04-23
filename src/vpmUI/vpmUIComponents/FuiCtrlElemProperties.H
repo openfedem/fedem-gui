@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUICTRLELEMPROPERTIES_H
-#define FUICTRLELEMPROPERTIES_H
+#ifndef FUI_CTRL_ELEM_PROPERTIES_H
+#define FUI_CTRL_ELEM_PROPERTIES_H
 
 #include "FFuLib/FFuBase/FFuMultUIComponent.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
@@ -15,9 +15,8 @@
 #include <vector>
 
 class FFuLabel;
-class FFuLabelField;
 class FFuLabelFrame;
-class FFuTableView;
+class FuiParameterView;
 
 
 class FuiCtrlElemProperties : virtual public FFuMultUIComponent,
@@ -25,22 +24,14 @@ class FuiCtrlElemProperties : virtual public FFuMultUIComponent,
 			      public FFuUADataHandler
 {
 public:
-  FuiCtrlElemProperties() {}
-  virtual ~FuiCtrlElemProperties() {}
-
   // Virtual override of the Data dialog methods :
   virtual void setUIValues(const FFuaUIValues* values);
   virtual void buildDynamicWidgets(const FFuaUIValues* values);
-  virtual void eraseDynamicWidgets();
 
   // Lock from user input :
   virtual void setSensitivity(bool isSensitive);
 
 protected:
-  // Callback called by all fields. Collects all the data from
-  // the ui and calls invokeNewValuesCB with the new data.
-  void onValueChanged(char* dummy);
-
   // Init method to be called by UILibDep sub class after it
   // has initialized all the shado widget pointers.
   void initWidgets();
@@ -48,30 +39,25 @@ protected:
   // Overridden method that does the geometry management :
   virtual void placeWidgets(int width, int height);
 
-  // A method to be reimplemented in ui-lib dependent subclass
-  // that must make a FFuLabelField and return it.
-  virtual FFuLabelField* makeALabelField() = 0;
+private:
+  // Callback called by all fields. Collects all the data from
+  // the UI and calls setAndGetDBValuesCB with the new data.
+  void onValueChanged(double);
 
-  FFuLabel*      myElemPixmap;
-  FFuLabelFrame* myParameterFrame;
-  FFuTableView*  myParameterView;
+protected:
+  FFuLabel*         myElemPixmap;
+  FFuLabelFrame*    myParameterFrame;
+  FuiParameterView* myParameterView;
 };
 
 
 class FuaCtrlElemPropertiesValues : public FFuaUIValues
 {
 public:
-  FuaCtrlElemPropertiesValues() { pixmap = 0; }
-  virtual ~FuaCtrlElemPropertiesValues() {}
+  using CtrlParameter = std::pair<std::string,double>;
 
-  struct CtrlParameter
-  {
-    double value;
-    std::string description;
-    CtrlParameter(double v = 0.0) { value = v; }
-  };
-
-  const char**          pixmap;
+  int                        ctrlTypeIdx = 0;
+  const char**               pixmap = NULL;
   std::vector<CtrlParameter> parameters;
 };
 
