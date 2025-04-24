@@ -262,5 +262,6 @@ void FdDBPointSelectionData::createAndUpdateUI()
 
 void FdDBPointSelectionData::hideUI()
 {
-  dynamic_cast<FuiQtMainWindow*>(Fui::getMainWindow())->removeDefinitionWidget(myGroupBox);
+  if (myGroupBox)
+    dynamic_cast<FuiQtMainWindow*>(Fui::getMainWindow())->removeDefinitionWidget(myGroupBox);
 }
