@@ -37,7 +37,7 @@ public:
   virtual void refresh() {}
   virtual void iconify() {}
   virtual void deiconify() {}
-  virtual void setTitle(const char*) {}
+  virtual void setTitle(const char*) = 0;
 
   // SKE: I suspect there is a bug or misunderstood functionality
   // in the QWidget::show/raise methods.

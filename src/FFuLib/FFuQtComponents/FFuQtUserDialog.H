@@ -21,6 +21,8 @@ public:
   FFuQtUserDialog(const char* msgText, int dialogType,
                   const char** buttonTexts, unsigned int nButton, bool isModal);
 
+  virtual void setTitle(const char* title);
+
   virtual int execute();
 };
 

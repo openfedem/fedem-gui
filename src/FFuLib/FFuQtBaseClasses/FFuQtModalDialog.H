@@ -24,7 +24,8 @@ public:
 		   const char* title = "FFuQtModalDialogUI",
 		   const char* name  = "FFuQtModalDialog",
 		   Qt::WindowFlags f = Qt::Widget);
-  virtual ~FFuQtModalDialog() {}
+
+  virtual void setTitle(const char* title);
 
   virtual bool execute();
   virtual void closeDialog(bool resultCode);

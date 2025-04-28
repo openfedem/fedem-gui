@@ -28,6 +28,12 @@ FFuQtModalDialog::FFuQtModalDialog(int xpos, int ypos,
 }
 
 
+void FFuQtModalDialog::setTitle(const char* title)
+{
+  this->setWindowTitle(title);
+}
+
+
 bool FFuQtModalDialog::execute()
 {
   FFuaApplication::breakUserEventBlock(true);

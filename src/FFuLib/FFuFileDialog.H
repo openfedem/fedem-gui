@@ -34,10 +34,9 @@ public:
     FFU_DIRECTORY_ONLY
   };
 
-  typedef std::vector<std::string> Strings;
+  using Strings = std::vector<std::string>;
 
   FFuFileDialog(DialogType type, bool modal);
-  virtual ~FFuFileDialog() {}
 
   //! \brief Creates a file selection dialog with the following parameters:
   //! \param[in] curDir Initial directory
@@ -72,12 +71,6 @@ public:
 
   //! Return filter id, from addFilter()'s id argument
   virtual int getSelectedFilter() const = 0;
-
-  //! Set dialog caption
-  virtual void setTitle(const std::string& title) = 0;
-
-  //! Set initial directory
-  virtual void setDirectory(const std::string& dir) = 0;
 
   //! Set initital file name (can be absolute)
   void setDefaultName(const std::string& aName) { myDefaultFile = aName; }
@@ -142,8 +135,7 @@ protected:
 
   struct FileFilter
   {
-    FileFilter() : id(-2) {}
-    int         id;
+    int         id = -2;
     std::string descr;
     Strings     extensions;
   };

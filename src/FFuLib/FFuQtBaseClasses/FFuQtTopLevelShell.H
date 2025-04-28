@@ -8,9 +8,6 @@
 #ifndef FUI_QT_TOP_LEVEL_SHELL_H
 #define FUI_QT_TOP_LEVEL_SHELL_H
 
-#include <map>
-#include <QObject>
-
 #include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 
@@ -27,7 +24,6 @@ public:
 		     const char* title = "FFuQtTopLevelShellUI",
 		     const char* name  = "FFuQtTopLevelShell",
 		     Qt::WindowFlags f = Qt::Widget);
-  virtual ~FFuQtTopLevelShell() {}
 
   // Qt Implementation of standard window actions :
 
