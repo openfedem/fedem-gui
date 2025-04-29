@@ -51,16 +51,15 @@ public:
   //! id -1 is reserved for non-user-set filters, i.e., "All files", etc.
   void addFilter(const std::string& descr, const std::string& extension,
                  bool defaultFilter = false, int id = -2);
-  //! Adds a filter with description \a descr and with several \a extensions.
+  //! Adds a filter with description and several extensions.
   void addFilter(const std::string& descr, const Strings& extensions,
                  bool defaultFilter = false, int id = -2);
-  //! Adds a filter with description \a descr and with several \a extensions.
+  //! Adds a filter with description and several extensions.
   void addFilter(const std::string& descr,
-                 const std::set<std::string>& extensions,
+                 const std::set<std::string>& exts,
                  bool defaultFilter = false, int id = -2)
   {
-    this->addFilter(descr,Strings(extensions.begin(),extensions.end()),
-                    defaultFilter,id);
+    this->addFilter(descr,Strings(exts.begin(),exts.end()),defaultFilter,id);
   }
 
   //! Adds "All Files" filter
@@ -87,9 +86,11 @@ public:
   void setSelectedDirectoryCB(const FFaDynCB1<std::string>& cb) { mySelectedDirCB = cb; }
 
   //! Adds an option menu. Give the menu an unique identifier with \a optID
-  virtual void addUserOptionMenu(const std::string& optID, const std::string& label) = 0;
+  virtual void addUserOptionMenu(const std::string& optID,
+                                 const std::string& label) = 0;
   //! Adds an option to option menu with id \a optID
-  virtual void addUserOption(const std::string& optID, const std::string& text,
+  virtual void addUserOption(const std::string& optID,
+                             const std::string& text,
                              bool defaultOption = false) = 0;
   //! Returns the selected option std::string in option menu with id \a optID
   virtual std::string getSelectedUserOption(const std::string& optID) const = 0;
@@ -119,9 +120,11 @@ public:
   //! Returns field value of field with label \a label
   virtual std::string getTextFieldValue(const std::string& label) const = 0;
 
-protected:
-  virtual void setNonBlockableWidget(FFuComponentBase*) {}
+  //! Resets the memorized directories (on Save As...)
+  static void resetMemoryMap(const std::string& newDir,
+                             const std::string& oldDir = "");
 
+protected:
   DialogType myDlgType;
   bool iAmModal;
   bool showAllFilesFilter;
@@ -142,6 +145,15 @@ protected:
 
   std::map<std::string,FileFilter> myFilterMap;
   std::string                      myDefaultFilter;
+
+  struct Memory
+  {
+    std::string currentDir;
+    std::string currentFilter;
+    std::map<std::string,std::string> userOpts;
+  };
+
+  static std::map<std::string,Memory> ourMemory;
 };
 
 #endif

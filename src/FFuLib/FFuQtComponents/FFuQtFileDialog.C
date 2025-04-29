@@ -11,7 +11,6 @@
 #include <QGridLayout>
 
 #include "FFuLib/FFuAuxClasses/FFuaApplication.H"
-#include "FFuLib/FFuFileDialogMemoryMap.H"
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtFileDialog.H"
@@ -73,31 +72,36 @@ void FFuQtFileDialog::setTitle(const char* title)
 
 void FFuQtFileDialog::setFileFilter()
 {
-  std::string memFilt;
-  // workaround Qt problem in setting a remembered filter
-  if (!myMemorizer.empty())
-    memFilt = FFuFileDialogMemoryMap::instance()->fileDialogMemory[myMemorizer].currentFilter;
-
+  bool appendAllFilter = showAllFilesFilter;
+  const char* allFiles = "All files (*)";
   QStringList filters;
-  for (const std::pair<const std::string,FileFilter>& filter : myFilterMap)
-    if (memFilt != filter.first) {
-      if (myDefaultFilter != filter.first)
-	filters.append(filter.first.c_str());
-      else
-	filters.prepend(filter.first.c_str());
-    }
 
-  if (!memFilt.empty())
+  // workaround Qt problem in setting a remembered filter
+  std::map<std::string,Memory>::const_iterator it = ourMemory.find(myMemorizer);
+  if (it != ourMemory.end())
+  {
+    const std::string& memFilt = it->second.currentFilter;
+    for (const std::pair<const std::string,FileFilter>& filter : myFilterMap)
+      if (filter.first != memFilt)
+      {
+        if (myDefaultFilter != filter.first)
+          filters.append(filter.first.c_str());
+        else
+          filters.prepend(filter.first.c_str());
+      }
+
     if (myFilterMap.find(memFilt) != myFilterMap.end())
       filters.prepend(memFilt.c_str());
 
-  if (showAllFilesFilter) {
-    const char* allFiles = "All files (*)";
-    if (memFilt != allFiles)
-      filters.append(allFiles);
-    else
+    if (showAllFilesFilter && memFilt == allFiles)
+    {
       filters.prepend(allFiles);
+      appendAllFilter = false;
+    }
   }
+
+  if (appendAllFilter)
+    filters.append(allFiles);
 
   this->setNameFilters(filters);
 }
@@ -320,11 +324,11 @@ void FFuQtFileDialog::closeEvent(QCloseEvent* e)
 
 void FFuQtFileDialog::storeMemory()
 {
-  if (myMemorizer.empty())
-    return;
-
-  FFuFileDialogMemoryMap::instance()->fileDialogMemory[myMemorizer].currentDir    = this->directory().path().toStdString();
-  FFuFileDialogMemoryMap::instance()->fileDialogMemory[myMemorizer].currentFilter = this->selectedNameFilter().toStdString();
+  if (!myMemorizer.empty())
+  {
+    ourMemory[myMemorizer].currentDir    = this->directory().path().toStdString();
+    ourMemory[myMemorizer].currentFilter = this->selectedNameFilter().toStdString();
+  }
 }
 
 
@@ -337,13 +341,12 @@ void FFuQtFileDialog::recallMemory()
     if (!cp.isNull())
       this->selectFile(cp);
   }
-
-  if (myMemorizer.empty())
-    return;
-
-  const std::string& memDir = FFuFileDialogMemoryMap::instance()->fileDialogMemory[myMemorizer].currentDir;
-  if (!memDir.empty() && myDefaultFile.empty())
-    this->setDirectory(memDir.c_str());
+  else
+  {
+    std::map<std::string,Memory>::const_iterator it = ourMemory.find(myMemorizer);
+    if (it != ourMemory.end())
+      this->setDirectory(it->second.currentDir.c_str());
+  }
 }
 
 

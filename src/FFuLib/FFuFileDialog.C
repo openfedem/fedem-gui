@@ -49,6 +49,9 @@
 Fmd_SOURCE_INIT(FUI_FILESELECTOR, FFuFileDialog, FFuTopLevelShell);
 
 
+std::map<std::string,FFuFileDialog::Memory> FFuFileDialog::ourMemory;
+
+
 FFuFileDialog::FFuFileDialog(DialogType type, bool modal)
 {
   Fmd_CONSTRUCTOR_INIT(FFuFileDialog);
@@ -89,4 +92,13 @@ void FFuFileDialog::addFilter(const std::string& descr,
 
   if (defaultFilter)
     myDefaultFilter = tmpFilter;
+}
+
+
+void FFuFileDialog::resetMemoryMap(const std::string& newDir,
+                                   const std::string& oldDir)
+{
+  for (std::pair<const std::string,Memory>& mem : ourMemory)
+    if (oldDir.empty() || mem.second.currentDir == oldDir)
+      mem.second.currentDir = newDir;
 }

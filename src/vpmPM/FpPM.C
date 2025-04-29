@@ -38,7 +38,7 @@
 #include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
 #include "FFuLib/FFuProgressDialog.H"
-#include "FFuLib/FFuFileDialogMemoryMap.H"
+#include "FFuLib/FFuFileDialog.H"
 #ifdef FT_HAS_WND
 #include "FFuLib/FFuCustom/mvcModels/BladeSelectionModel.H"
 #include "FFuLib/FFuCustom/mvcModels/AirfoilSelectionModel.H"
@@ -999,7 +999,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   FapUACommandHandler::updateAllUICommands(true,true);
 
   // Reset all file dialog memorizers to the new model file location
-  FFuFileDialogMemoryMap::instance()->resetDir(path);
+  FFuFileDialog::resetMemoryMap(path);
 
   Fui::okToGetUserInput(); // This block is started in FpPM::closeModel
 
@@ -1824,7 +1824,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   // Reset the file dialog memorizers if we save to a new location.
   // But only for those that actually were using the model file path.
   if (newModelP != oldModelP)
-    FFuFileDialogMemoryMap::instance()->resetDir(newModelP,oldModelP);
+    FFuFileDialog::resetMemoryMap(newModelP,oldModelP);
 
   Fui::okToGetUserInput();
 
