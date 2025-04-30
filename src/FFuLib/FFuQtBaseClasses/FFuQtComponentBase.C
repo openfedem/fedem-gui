@@ -12,10 +12,16 @@
   \date 3 Feb 1999
 */
 
-#include <QWidget>
 #include <QFontMetrics>
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
+
+
+FFuQtWidget::FFuQtWidget(QWidget* parent, const char* name) : QWidget(parent)
+{
+  this->setWidget(this);
+  this->setObjectName(name);
+}
 
 
 /*!
