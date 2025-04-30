@@ -19,12 +19,9 @@ class FFuDialogButtons;
 class FFuColorDialog : virtual public FFuTopLevelShell
 {
 public:
-  FFuColorDialog() {}
-  virtual ~FFuColorDialog() {}
-
   void setInitialColor(const FFuColor& aColor);
   void setColor(const FFuColor& aColor, bool notify = true);
-  FFuColor getColor() const;
+  const FFuColor& getColor() const;
 
   void setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB);
   void setOkButtonClickedCB(const FFaDynCB1<FFuColor>& aDynCB);
@@ -35,12 +32,8 @@ public:
   void setCancelButtonClickedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB);
 
 protected:
-
   void onDlgButtonClicked(int);
   void onColorChanged(FFuColor aColor);
-
-  // widget placement - from MuitiUIComponent
-  virtual void placeWidgets(int width, int height);
 
   // Initialisation to be called by UILib dep. subclass
   void init();

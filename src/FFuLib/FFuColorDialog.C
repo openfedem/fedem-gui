@@ -31,16 +31,9 @@ void FFuColorDialog::init()
   myColorSelector->setColorChangedCB(FFaDynCB1M(FFuColorDialog,this,onColorChanged,FFuColor));
 }
 
-//! Widget placement
-void FFuColorDialog::placeWidgets(int width, int height)
-{
-  myColorSelector->setEdgeGeometry(10, width-10, 10, height - myDialogButtons->getHeightHint());
-  myDialogButtons->setEdgeGeometry(0, width,  height - myDialogButtons->getHeightHint(), height);
-}
-
 
 //! Returns the current normalized RGB colors
-FFuColor FFuColorDialog::getColor() const
+const FFuColor& FFuColorDialog::getColor() const
 {
   return myColorSelector->getColor();
 }
