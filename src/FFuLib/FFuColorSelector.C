@@ -5,11 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FFuLib/FFuFrame.H"
 #include "FFuLib/FFuScale.H"
-#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuIOField.H"
-
 #include "FFuLib/FFuColorSelector.H"
 
 enum colorComponent { RED = 0, GREEN = 1, BLUE = 2 };
@@ -29,79 +26,24 @@ enum colorComponent { RED = 0, GREEN = 1, BLUE = 2 };
   \author Jens Lien
 */
 
-FFuColorSelector::FFuColorSelector()
-{
-  iAmColorInited = false;
-  myInitialColor = myColor = {0,0,0};
-}
-
-
 void FFuColorSelector::init()
 {
-  myRedLabel->setLabel("Red");
-  myRedScale->setDragCB(FFaDynCB1M(FFuColorSelector, this, sliderRedValue, int));
   myRedScale->setMinMax(0,255);
+  myRedScale->setDragCB(FFaDynCB1M(FFuColorSelector, this, sliderRedValue, int));
   myRedValue->setAcceptedCB(FFaDynCB1M(FFuColorSelector, this, fieldRedValue, int));
   myRedValue->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myRedValue->setValue(0);
 
-  myGreenLabel->setLabel("Green");
-  myGreenScale->setDragCB(FFaDynCB1M(FFuColorSelector, this, sliderGreenValue, int));
   myGreenScale->setMinMax(0,255);
+  myGreenScale->setDragCB(FFaDynCB1M(FFuColorSelector, this, sliderGreenValue, int));
   myGreenValue->setAcceptedCB(FFaDynCB1M(FFuColorSelector, this, fieldGreenValue, int));
   myGreenValue->setInputCheckMode(FFuIOField::INTEGERCHECK);
 
-  myBlueLabel->setLabel("Blue");
-  myBlueScale->setDragCB(FFaDynCB1M(FFuColorSelector, this, sliderBlueValue, int));
   myBlueScale->setMinMax(0,255);
+  myBlueScale->setDragCB(FFaDynCB1M(FFuColorSelector, this, sliderBlueValue, int));
   myBlueValue->setAcceptedCB(FFaDynCB1M(FFuColorSelector, this, fieldBlueValue, int));
   myBlueValue->setInputCheckMode(FFuIOField::INTEGERCHECK);
 
   this->updateSlidersAndFields();
-  this->updateSampleFrame();
-}
-
-
-void FFuColorSelector::placeWidgets(int width, int height)
-{
-  // establish sizes:
-  int gWidth = this->getFontWidth("Green");
-  int valWidth = 3 * this->getFontMaxWidth();
-
-  // grid lines
-  // vertical
-  int glV1  = FFuMultUIComponent::getGridLinePos(width, 0,          FFuMultUIComponent::FROM_START);
-  int glV2  = FFuMultUIComponent::getGridLinePos(width, gWidth,     FFuMultUIComponent::FROM_START);
-  int glV3  = FFuMultUIComponent::getGridLinePos(width, glV2 + 10,  FFuMultUIComponent::FROM_START);
-
-  int glV7  = FFuMultUIComponent::getGridLinePos(width, height,            FFuMultUIComponent::FROM_END);
-  int glV6  = FFuMultUIComponent::getGridLinePos(width, (glV7 - 10),       FFuMultUIComponent::FROM_START);
-  int glV5  = FFuMultUIComponent::getGridLinePos(width, (glV6 - valWidth), FFuMultUIComponent::FROM_START);
-  int glV4  = FFuMultUIComponent::getGridLinePos(width, (glV5 - 10),       FFuMultUIComponent::FROM_START);
-
-  int glV8  = FFuMultUIComponent::getGridLinePos(width, 0, FFuMultUIComponent::FROM_END);
-
-  // horizontal:
-  int glH1  = FFuMultUIComponent::getGridLinePos(height,    0);
-  int glH2  = FFuMultUIComponent::getGridLinePos(height,  250);
-  int glH3  = FFuMultUIComponent::getGridLinePos(height,  375);
-  int glH4  = FFuMultUIComponent::getGridLinePos(height,  625);
-  int glH5  = FFuMultUIComponent::getGridLinePos(height,  750);
-  int glH6  = FFuMultUIComponent::getGridLinePos(height, 1000);
-
-  myRedLabel->setEdgeGeometry( glV1, glV2, glH1, glH2);
-  myRedScale->setEdgeGeometry( glV3, glV4, glH1, glH2);
-  myRedValue->setEdgeGeometry( glV5, glV6, glH1, glH2);
-
-  myGreenLabel->setEdgeGeometry( glV1, glV2, glH3, glH4);
-  myGreenScale->setEdgeGeometry( glV3, glV4, glH3, glH4);
-  myGreenValue->setEdgeGeometry( glV5, glV6, glH3, glH4);
-
-  myBlueLabel->setEdgeGeometry( glV1, glV2, glH5, glH6);
-  myBlueScale->setEdgeGeometry( glV3, glV4, glH5, glH6);
-  myBlueValue->setEdgeGeometry( glV5, glV6, glH5, glH6);
-
-  myColorSampleFrame->setEdgeGeometry( glV7, glV8, glH1, glH6);
 }
 
 
@@ -156,11 +98,11 @@ void FFuColorSelector::setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB)
 void FFuColorSelector::updateSlidersAndFields()
 {
   myRedScale->  setValue(myColor[RED]);
-  myRedValue->  setValue((int)myColor[RED]);
+  myRedValue->  setValue(myColor[RED]);
   myGreenScale->setValue(myColor[GREEN]);
-  myGreenValue->setValue((int)myColor[GREEN]);
+  myGreenValue->setValue(myColor[GREEN]);
   myBlueScale-> setValue(myColor[BLUE]);
-  myBlueValue-> setValue((int)myColor[BLUE]);
+  myBlueValue-> setValue(myColor[BLUE]);
 }
 
 
@@ -172,10 +114,7 @@ void FFuColorSelector::fieldRedValue(int red)
     red = 255;
 
   myRedScale->setValue(red);
-  myRedValue->setValue(red);
-  myColor[RED] = red;
-  myColorChangedCB.invoke(myColor);
-  this->updateSampleFrame();
+  this->sliderRedValue(red);
 }
 
 void FFuColorSelector::fieldGreenValue(int green)
@@ -186,10 +125,7 @@ void FFuColorSelector::fieldGreenValue(int green)
     green = 255;
 
   myGreenScale->setValue(green);
-  myGreenValue->setValue(green);
-  myColor[GREEN] = green;
-  myColorChangedCB.invoke(myColor);
-  this->updateSampleFrame();
+  this->sliderGreenValue(green);
 }
 
 void FFuColorSelector::fieldBlueValue(int blue)
@@ -200,10 +136,7 @@ void FFuColorSelector::fieldBlueValue(int blue)
     blue = 255;
 
   myBlueScale->setValue(blue);
-  myBlueValue->setValue(blue);
-  myColor[BLUE] = blue;
-  myColorChangedCB.invoke(myColor);
-  this->updateSampleFrame();
+  this->sliderBlueValue(blue);
 }
 
 

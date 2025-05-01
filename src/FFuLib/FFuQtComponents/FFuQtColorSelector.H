@@ -5,36 +5,27 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _FFUQTCOLORSELECTOR_H_
-#define _FFUQTCOLORSELECTOR_H_
+#ifndef FFU_QT_COLOR_SELECTOR_H
+#define FFU_QT_COLOR_SELECTOR_H
 
-
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "FFuLib/FFuColorSelector.H"
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
 
-class QWidget;
-class FFuQtFrame;
+class QFrame;
 
-class FFuQtColorSelector: public FFuQtMultUIComponent, public  FFuColorSelector
+
+class FFuQtColorSelector : public FFuQtWidget, public FFuColorSelector
 {
-
 public:
-  FFuQtColorSelector(QWidget* parent = 0,
-		     int xpos=100,
-		     int ypos=100,
-		     int width=260,
-		     int height=80,
-		     const char* name="Color selector");
-  virtual ~FFuQtColorSelector(){};
-  
+  FFuQtColorSelector(QWidget* parent=NULL, const char* name="Color selector");
+
 protected:
   virtual void updateSampleFrame();
-  
+  virtual void resizeEvent(QResizeEvent* e);
+
 private:
-  FFuQtFrame* qtColorSampleFrame;
-
-  
+  QWidget* mySelector;
+  QFrame*  mySampleFrame;
 };
-
 
 #endif

@@ -8,21 +8,18 @@
 #ifndef FFU_COLOR_SELECTOR_H
 #define FFU_COLOR_SELECTOR_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuColor.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
-class FFuFrame;
 class FFuScale;
-class FFuLabel;
 class FFuIOField;
 
 
-class FFuColorSelector : virtual public FFuMultUIComponent
+class FFuColorSelector : virtual public FFuComponentBase
 {
 public:
-  FFuColorSelector();
-  virtual ~FFuColorSelector() {}
+  FFuColorSelector() { myColor = myInitialColor = { 0,0,0 }; }
 
   const FFuColor& getInitialColor() const { return myInitialColor; }
   const FFuColor& getColor() const { return myColor; }
@@ -31,26 +28,18 @@ public:
   void setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB);
 
 protected:
-  // widget placement - from MuitiUIComponent
-  virtual void placeWidgets(int width, int height);
-
   // Initialisation to be called by UILib dep. subclass
   void init();
 
   virtual void updateSampleFrame() = 0;
 
 protected:
-  // components:
-  FFuFrame*      myColorSampleFrame;
-  FFuScale*      myRedScale;
-  FFuScale*      myGreenScale;
-  FFuScale*      myBlueScale;
-  FFuLabel*      myRedLabel;
-  FFuLabel*      myGreenLabel;
-  FFuLabel*      myBlueLabel;
-  FFuIOField*    myRedValue;
-  FFuIOField*    myGreenValue;
-  FFuIOField*    myBlueValue;
+  FFuScale*   myRedScale;
+  FFuScale*   myGreenScale;
+  FFuScale*   myBlueScale;
+  FFuIOField* myRedValue;
+  FFuIOField* myGreenValue;
+  FFuIOField* myBlueValue;
 
   FFaDynCB1<FFuColor> myColorChangedCB;
 
