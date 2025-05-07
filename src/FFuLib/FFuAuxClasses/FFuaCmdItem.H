@@ -18,16 +18,21 @@
 
 class FFuaCmdItem
 {
+  static void printCmdListToFile();
+
 public:
+  // FFaInitializer init - used for the cmdItemMap;
+  static void init();
+
+  static void enableCmdLogging(bool doEnable) { weAreLoggingCmds = doEnable; }
+  static FFuaCmdItem* getCmdItem(const std::string& cmdItemId);
+
   // A FFuaCmdItem subject to static management must have a cmdItemId string
   // otherwise it escapes the static management
   FFuaCmdItem(const std::string& cmdItemId = "");
 
   // A FFuaCmdItem must not be deleted as long as it is in use
   virtual ~FFuaCmdItem();
-
-  static FFuaCmdItem* getCmdItem(const std::string& cmdItemId);
-  static void enableCmdLogging(bool doEnable) { weAreLoggingCmds = doEnable; }
 
   const std::string& getCmdItemId() const { return this->cmdItemId; }
 
@@ -38,7 +43,7 @@ public:
     this->setToggleAble(false);
     this->activatedCB = dynCB;
   }
-  void invokeActivatedCB() ;
+  void invokeActivatedCB();
   void setToggledCB(const FFaDynCB1<bool>& dynCB) {
     this->setToggleAble(true);
     this->toggledCB = dynCB;
@@ -50,28 +55,14 @@ public:
   // You should set this cb if possible, ie if the db stores the toggle statuses
   void setGetToggledCB(const FFaDynCB1<bool&>& dynCB) {this->getToggledCB = dynCB;}
 
-private:
-  void invokeGetSensitivityCB(bool& sensitivity)
-  {this->getSensitivityCB.invoke(sensitivity);}
-  void invokeGetToggledCB(bool& toggle)
-  {this->getToggledCB.invoke(toggle);}
-
-  static void printCmdListToFile();
-
-  void initVars();
-
-public:
-  // item attributes
   // icons are used in front of popupmenu text entries and on toolbuttons
-  // small should be < 23 pix
-  // popupmenues do always require a small icon, if not it a bigone is scaled
-  void setBigIcon(const char** pixMap) { this->bigIcon = pixMap; }
-  const char** getBigIcon() const { return this->bigIcon; }
+  void setSvgIcon(const char* svgFile) { this->svgIcon = svgFile; }
+  const char* getSvgIcon() const { return this->svgIcon; }
 
   void setSmallIcon(const char** pixMap) { this->smallIcon = pixMap; }
   const char** getSmallIcon() const { return this->smallIcon; }
 
-  bool hasIcon() const { return this->bigIcon || this->smallIcon; }
+  bool hasIcon() const { return this->svgIcon || this->smallIcon; }
 
   // pixmaps are used as a substitute for the text on popupmenu entries
   void setPixmap(const char** pixMap) { this->pixmap = pixMap; }
@@ -88,6 +79,7 @@ public:
   int getAccelKey() const { return this->accelKey; }
 
   bool getSensitivity();
+
   // toggle
   void setToggleAble(bool toggleable) { this->toggleAble = toggleable; }
   bool getToggleAble() const { return this->toggleAble; }
@@ -107,13 +99,8 @@ public:
   void setMenuButtonPopupMode(bool val) { this->menuButtonPopupMode = val; }
   bool getMenuButtonPopupMode() const { return this->menuButtonPopupMode; }
 
-  // FFaInitializer init - used for the cmdItemMap;
-  static void init();
-
 private:
-  typedef std::map<std::string,FFuaCmdItem*> CommandMap;
-
-  static CommandMap* cmdItemMap;
+  static std::map<std::string,FFuaCmdItem*>* cmdItemMap;
   static bool weAreLoggingCmds;
 
   std::string cmdItemId;
@@ -123,7 +110,7 @@ private:
   FFaDynCB1<bool&> getSensitivityCB;
   FFaDynCB1<bool&> getToggledCB;
 
-  const char** bigIcon;
+  const char*  svgIcon;
   const char** smallIcon;
   const char** pixmap;
   std::string text;
@@ -140,7 +127,7 @@ class FFuaCmdHeaderItem : public FFuaCmdItem
 {
 public:
   // A FFuaCmdHeaderItem is NOT book-kept (in static management)
-  FFuaCmdHeaderItem(const std::string& text = "");
+  FFuaCmdHeaderItem(const std::string& text = "") { this->setText(text); }
   // A FFuaCmdHeaderItem can be deleted even if it is used
   virtual ~FFuaCmdHeaderItem() {}
 
