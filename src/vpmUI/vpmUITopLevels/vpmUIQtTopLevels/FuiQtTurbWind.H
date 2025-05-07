@@ -15,8 +15,6 @@
 
 class QCheckBox;
 class QComboBox;
-class QGroupBox;
-class QLabel;
 class QLineEdit;
 class QPushButton;
 class QTextEdit;
@@ -27,12 +25,10 @@ class FuiQtTurbWind : public FFuQtTopLevelShell, public FuiTurbWind
   Q_OBJECT
 
 public:
-  FuiQtTurbWind(QWidget* parent = NULL,
-                int xpos = 100, int ypos = 100,
+  FuiQtTurbWind(int xpos = 100, int ypos = 100,
                 int width = 100, int height = 100,
                 const char* title= "Fedem",
                 const char* name = "FuiQtTurbWind");
-  virtual ~FuiQtTurbWind() {}
 
   virtual void setValues(double hubHeight, double gridSize,
                          double timeInc, double duration,
@@ -56,41 +52,20 @@ private slots:
 
 private:
   QProcess*    pProcess;
-  QLabel*      labTopImg;
-  QGroupBox*   frmTurbSpc;
-  QLabel*      labHubHeight;
-  QLabel*      labGridHeight;
   QLineEdit*   editHubHeight;
   QLineEdit*   editGridHeight;
-  QLabel*      labGridWidth;
   QLineEdit*   editGridWidth;
   QLineEdit*   editNumGridY;
-  QLabel*      labNumGridY;
-  QLabel*      labNumGridZ;
   QLineEdit*   editNumGridZ;
-  QLabel*      labTimeStep;
   QLineEdit*   editTimeStep;
-  QLabel*      labDuration;
   QLineEdit*   editDuration;
   QComboBox*   cmbIECturbc;
-  QLabel*      labIECturbc;
   QLineEdit*   editRefHt;
-  QLabel*      labRefHt;
-  QLabel*      labInfoA1;
-  QLabel*      labInfoA2;
-  QLabel*      labInfoA3;
-  QGroupBox*   frmGenerate;
-  QLabel*      labTemplateFile;
-  QLabel*      labWindType;
   QComboBox*   cmbWindType;
-  QLabel*      labWindSpeed;
   QLineEdit*   editWindSpeed;
-  QLabel*      labPLExp;
   QLineEdit*   editPLExp;
   QCheckBox*   chkTowerPoints;
-  QLabel*      labRandSeed1;
   QLineEdit*   editRandSeed1;
-  QLabel*      labOutputFolder;
   QLineEdit*   editOutputFolder;
   QLineEdit*   editTemplateFile;
   QPushButton* btnTemplateFile;
@@ -98,9 +73,6 @@ private:
   QPushButton* btnGenerate;
   QPushButton* btnClose;
   QPushButton* btnHelp;
-  QLabel*      labInfoB2;
-  QLabel*      labInfoB1;
-  QLabel*      labInfoB3;
   QTextEdit*   textEdit;
 };
 

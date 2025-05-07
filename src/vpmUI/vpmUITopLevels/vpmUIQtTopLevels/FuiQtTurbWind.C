@@ -11,8 +11,7 @@
 
 extern const char* info_xpm[];
 
-#include <QApplication>
-#include <QDesktopServices>
+#include <QStandardPaths>
 #include <QComboBox>
 #include <QGroupBox>
 #include <QLabel>
@@ -28,192 +27,210 @@ extern const char* info_xpm[];
 FuiTurbWind* FuiTurbWind::create(int xpos, int ypos, int width, int height,
                                  const char* title, const char* name)
 {
-  return new FuiQtTurbWind(NULL,xpos,ypos,width,height,title,name);
+  return new FuiQtTurbWind(xpos,ypos,width,height,title,name);
 }
 
 
-FuiQtTurbWind::FuiQtTurbWind(QWidget* parent,
-                             int xpos, int ypos, int width, int height,
+FuiQtTurbWind::FuiQtTurbWind(int xpos, int ypos, int width, int height,
                              const char* title, const char* name)
-  : FFuQtTopLevelShell(parent, xpos, ypos, width, height, title, name), pProcess(NULL)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name), pProcess(NULL)
 {
-  labTopImg = new QLabel(this);
-  labTopImg->setObjectName(QString::fromUtf8("labTopImg"));
-  labTopImg->setGeometry(QRect(0, -2, 581, 111));
-  labTopImg->setFrameShape(QFrame::NoFrame);
-  labTopImg->setPixmap(QPixmap(turbWind_xpm));
+  QLabel* label = new QLabel(this);
+  label->setObjectName("labTopImg");
+  label->setGeometry(0, -2, 581, 111);
+  label->setFrameShape(QFrame::NoFrame);
+  label->setPixmap(QPixmap(turbWind_xpm));
 
-  frmTurbSpc = new QGroupBox(this);
-  frmTurbSpc->setObjectName(QString::fromUtf8("frmTurbSpc"));
-  frmTurbSpc->setGeometry(QRect(10, 120, 256, 321));
+  QGroupBox* frmTurbSpc = new QGroupBox(this);
+  frmTurbSpc->setObjectName("frmTurbSpc");
+  frmTurbSpc->setGeometry(10, 120, 256, 321);
 
-  labHubHeight = new QLabel(frmTurbSpc);
-  labHubHeight->setObjectName(QString::fromUtf8("labHubHeight"));
-  labHubHeight->setGeometry(QRect(10, 28, 81, 16));
+  label = new QLabel("Hub height",frmTurbSpc);
+  label->setObjectName("labHubHeight");
+  label->setGeometry(10, 28, 81, 16);
+
   editHubHeight = new QLineEdit(frmTurbSpc);
-  editHubHeight->setObjectName(QString::fromUtf8("editHubHeight"));
-  editHubHeight->setGeometry(QRect(100, 25, 126, 20));
+  editHubHeight->setObjectName("editHubHeight");
+  editHubHeight->setGeometry(100, 25, 126, 20);
   editHubHeight->setMaxLength(20);
 
-  labGridHeight = new QLabel(frmTurbSpc);
-  labGridHeight->setObjectName(QString::fromUtf8("labGridHeight"));
-  labGridHeight->setGeometry(QRect(10, 53, 71, 16));
+  label = new QLabel("Grid height",frmTurbSpc);
+  label->setObjectName("labGridHeight");
+  label->setGeometry(10, 53, 71, 16);
+
   editGridHeight = new QLineEdit(frmTurbSpc);
-  editGridHeight->setObjectName(QString::fromUtf8("editGridHeight"));
-  editGridHeight->setGeometry(QRect(100, 50, 126, 20));
+  editGridHeight->setObjectName("editGridHeight");
+  editGridHeight->setGeometry(100, 50, 126, 20);
   editGridHeight->setMaxLength(20);
 
-  labGridWidth = new QLabel(frmTurbSpc);
-  labGridWidth->setObjectName(QString::fromUtf8("labGridWidth"));
-  labGridWidth->setGeometry(QRect(10, 78, 71, 16));
+  label = new QLabel("Grid width",frmTurbSpc);
+  label->setObjectName("labGridWidth");
+  label->setGeometry(10, 78, 71, 16);
+
   editGridWidth = new QLineEdit(frmTurbSpc);
-  editGridWidth->setObjectName(QString::fromUtf8("editGridWidth"));
-  editGridWidth->setGeometry(QRect(100, 75, 126, 20));
+  editGridWidth->setObjectName("editGridWidth");
+  editGridWidth->setGeometry(100, 75, 126, 20);
   editGridWidth->setMaxLength(20);
 
-  labNumGridZ = new QLabel(frmTurbSpc);
-  labNumGridZ->setObjectName(QString::fromUtf8("labNumGridZ"));
-  labNumGridZ->setGeometry(QRect(10, 103, 71, 16));
+  label = new QLabel("Num. grid Y",frmTurbSpc);
+  label->setObjectName("labNumGridZ");
+  label->setGeometry(10, 103, 71, 16);
+
   editNumGridZ = new QLineEdit(frmTurbSpc);
-  editNumGridZ->setObjectName(QString::fromUtf8("editNumGridZ"));
-  editNumGridZ->setGeometry(QRect(100, 100, 126, 20));
+  editNumGridZ->setObjectName("editNumGridZ");
+  editNumGridZ->setGeometry(100, 100, 126, 20);
   editNumGridZ->setMaxLength(20);
 
-  labNumGridY = new QLabel(frmTurbSpc);
-  labNumGridY->setObjectName(QString::fromUtf8("labNumGridY"));
-  labNumGridY->setGeometry(QRect(10, 128, 71, 16));
+  label = new QLabel("Num. grid Z",frmTurbSpc);
+  label->setObjectName("labNumGridY");
+  label->setGeometry(10, 128, 71, 16);
+
   editNumGridY = new QLineEdit(frmTurbSpc);
-  editNumGridY->setObjectName(QString::fromUtf8("editNumGridY"));
-  editNumGridY->setGeometry(QRect(100, 125, 126, 20));
+  editNumGridY->setObjectName("editNumGridY");
+  editNumGridY->setGeometry(100, 125, 126, 20);
   editNumGridY->setMaxLength(20);
 
-  labTimeStep = new QLabel(frmTurbSpc);
-  labTimeStep->setObjectName(QString::fromUtf8("labTimeStep"));
-  labTimeStep->setGeometry(QRect(10, 153, 71, 16));
+  label = new QLabel("Time step",frmTurbSpc);
+  label->setObjectName("labTimeStep");
+  label->setGeometry(10, 153, 71, 16);
+
   editTimeStep = new QLineEdit(frmTurbSpc);
-  editTimeStep->setObjectName(QString::fromUtf8("editTimeStep"));
-  editTimeStep->setGeometry(QRect(100, 150, 126, 20));
+  editTimeStep->setObjectName("editTimeStep");
+  editTimeStep->setGeometry(100, 150, 126, 20);
   editTimeStep->setMaxLength(20);
 
-  labDuration = new QLabel(frmTurbSpc);
-  labDuration->setObjectName(QString::fromUtf8("labDuration"));
-  labDuration->setGeometry(QRect(10, 178, 71, 16));
+  label = new QLabel("Duration",frmTurbSpc);
+  label->setObjectName("labDuration");
+  label->setGeometry(10, 178, 71, 16);
+
   editDuration = new QLineEdit(frmTurbSpc);
-  editDuration->setObjectName(QString::fromUtf8("editDuration"));
-  editDuration->setGeometry(QRect(100, 175, 126, 20));
+  editDuration->setObjectName("editDuration");
+  editDuration->setGeometry(100, 175, 126, 20);
   editDuration->setMaxLength(20);
 
-  labIECturbc = new QLabel(frmTurbSpc);
-  labIECturbc->setObjectName(QString::fromUtf8("labIECturbc"));
-  labIECturbc->setGeometry(QRect(10, 203, 80, 16));
+  label = new QLabel("IEC turbine class",frmTurbSpc);
+  label->setObjectName("labIECturbc");
+  label->setGeometry(10, 203, 80, 16);
+
   cmbIECturbc = new QComboBox(frmTurbSpc);
-  cmbIECturbc->setObjectName(QString::fromUtf8("cmbIECturbc"));
-  cmbIECturbc->setGeometry(QRect(100, 200, 126, 22));
+  cmbIECturbc->setObjectName("cmbIECturbc");
+  cmbIECturbc->setGeometry(100, 200, 126, 22);
   cmbIECturbc->setEditable(true);
 
-  labInfoA1 = new QLabel(frmTurbSpc);
-  labInfoA1->setObjectName(QString::fromUtf8("labInfoA1"));
-  labInfoA1->setGeometry(QRect(10, 229, 21, 16));
-  labInfoA1->setPixmap(QPixmap(info_xpm));
-  labInfoA2 = new QLabel(frmTurbSpc);
-  labInfoA2->setObjectName(QString::fromUtf8("labInfoA2"));
-  labInfoA2->setGeometry(QRect(30, 231, 46, 13));
-  labInfoA3 = new QLabel(frmTurbSpc);
-  labInfoA3->setObjectName(QString::fromUtf8("labInfoA3"));
-  labInfoA3->setGeometry(QRect(10, 244, 231, 65));
-  labInfoA3->setAlignment(Qt::AlignJustify|Qt::AlignVCenter);
+  label = new QLabel(frmTurbSpc);
+  label->setObjectName("labInfoA1");
+  label->setGeometry(10, 229, 21, 16);
+  label->setPixmap(QPixmap(info_xpm));
+  label = new QLabel(frmTurbSpc);
+  label->setObjectName("labInfoA2");
+  label->setGeometry(30, 231, 46, 13);
+  label->setText("<b>Note</b>");
+
+  QLabel* labInfoA3 = new QLabel(frmTurbSpc);
+  labInfoA3->setObjectName("labInfoA3");
+  labInfoA3->setGeometry(10, 244, 231, 65);
+  labInfoA3->setAlignment(Qt::AlignJustify | Qt::AlignVCenter);
   labInfoA3->setWordWrap(true);
 
-  frmGenerate = new QGroupBox(this);
-  frmGenerate->setObjectName(QString::fromUtf8("frmGenerate"));
-  frmGenerate->setGeometry(QRect(279, 120, 291, 166+42));
+  QGroupBox* frmGenerate = new QGroupBox(this);
+  frmGenerate->setObjectName("frmGenerate");
+  frmGenerate->setGeometry(279, 120, 291, 208);
 
-  labTemplateFile = new QLabel(frmGenerate);
-  labTemplateFile->setObjectName(QString::fromUtf8("labTemplateFile"));
-  labTemplateFile->setGeometry(QRect(10, 28, 71, 16));
+  label = new QLabel("Template file",frmGenerate);
+  label->setObjectName("labTemplateFile");
+  label->setGeometry(10, 28, 71, 16);
+
   editTemplateFile = new QLineEdit(frmGenerate);
-  editTemplateFile->setObjectName(QString::fromUtf8("editTemplateFile"));
-  editTemplateFile->setGeometry(QRect(100, 25, 156, 20));
+  editTemplateFile->setObjectName("editTemplateFile");
+  editTemplateFile->setGeometry(100, 25, 156, 20);
   btnTemplateFile = new QPushButton(frmGenerate);
-  btnTemplateFile->setObjectName(QString::fromUtf8("btnTemplateFile"));
-  btnTemplateFile->setGeometry(QRect(260, 23, 21, 23));
+  btnTemplateFile->setObjectName("btnTemplateFile");
+  btnTemplateFile->setGeometry(260, 23, 21, 23);
 
-  labOutputFolder = new QLabel(frmGenerate);
-  labOutputFolder->setObjectName(QString::fromUtf8("labOutputFolder"));
-  labOutputFolder->setGeometry(QRect(10, 53, 71, 16));
+  label = new QLabel("Output folder",frmGenerate);
+  label->setObjectName("labOutputFolder");
+  label->setGeometry(10, 53, 71, 16);
+
   editOutputFolder = new QLineEdit(frmGenerate);
-  editOutputFolder->setObjectName(QString::fromUtf8("editOutputFolder"));
-  editOutputFolder->setGeometry(QRect(100, 50, 156, 20));
+  editOutputFolder->setObjectName("editOutputFolder");
+  editOutputFolder->setGeometry(100, 50, 156, 20);
   btnOutputFolder = new QPushButton(frmGenerate);
-  btnOutputFolder->setObjectName(QString::fromUtf8("btnOutputFolder"));
-  btnOutputFolder->setGeometry(QRect(260, 48, 21, 23));
+  btnOutputFolder->setObjectName("btnOutputFolder");
+  btnOutputFolder->setGeometry(260, 48, 21, 23);
 
-  labWindType = new QLabel(frmGenerate);
-  labWindType->setObjectName(QString::fromUtf8("labWindType"));
-  labWindType->setGeometry(QRect(10, 78, 86, 16));
+  label = new QLabel("Turbulence type",frmGenerate);
+  label->setObjectName("labWindType");
+  label->setGeometry(10, 78, 86, 16);
+
   cmbWindType = new QComboBox(frmGenerate);
-  cmbWindType->setObjectName(QString::fromUtf8("cmbWindType"));
-  cmbWindType->setGeometry(QRect(100, 75, 156, 22));
+  cmbWindType->setObjectName("cmbWindType");
+  cmbWindType->setGeometry(100, 75, 156, 22);
 
-  labWindSpeed = new QLabel(frmGenerate);
-  labWindSpeed->setObjectName(QString::fromUtf8("labWindSpeed"));
-  labWindSpeed->setGeometry(QRect(10, 108, 71, 16));
+  label = new QLabel("Wind speed",frmGenerate);
+  label->setObjectName("labWindSpeed");
+  label->setGeometry(10, 108, 71, 16);
+
   editWindSpeed = new QLineEdit(frmGenerate);
-  editWindSpeed->setObjectName(QString::fromUtf8("editWindSpeed"));
-  editWindSpeed->setGeometry(QRect(100, 105, 56, 20));
+  editWindSpeed->setObjectName("editWindSpeed");
+  editWindSpeed->setGeometry(100, 105, 56, 20);
 
-  labPLExp = new QLabel(frmGenerate);
-  labPLExp->setObjectName(QString::fromUtf8("labPLExp"));
-  labPLExp->setGeometry(QRect(168, 108, 30, 16));
+  label = new QLabel("PLExp",frmGenerate);
+  label->setObjectName("labPLExp");
+  label->setGeometry(168, 108, 30, 16);
+
   editPLExp = new QLineEdit(frmGenerate);
-  editPLExp->setObjectName(QString::fromUtf8("editPLExp"));
-  editPLExp->setGeometry(QRect(200, 105, 56, 20));
+  editPLExp->setObjectName("editPLExp");
+  editPLExp->setGeometry(200, 105, 56, 20);
 
-  labRefHt = new QLabel(frmGenerate);
-  labRefHt->setObjectName(QString::fromUtf8("labRefHt"));
-  labRefHt->setGeometry(QRect(10, 133, 71, 16));
+  label = new QLabel("Ref. height",frmGenerate);
+  label->setObjectName("labRefHt");
+  label->setGeometry(10, 133, 71, 16);
+
   editRefHt = new QLineEdit(frmGenerate);
-  editRefHt->setObjectName(QString::fromUtf8("editRefHt"));
-  editRefHt->setGeometry(QRect(100, 130, 156, 20));
+  editRefHt->setObjectName("editRefHt");
+  editRefHt->setGeometry(100, 130, 156, 20);
   editRefHt->setMaxLength(20);
 
   chkTowerPoints = new QCheckBox(frmGenerate);
-  chkTowerPoints->setObjectName(QString::fromUtf8("chkTowerPoints"));
-  chkTowerPoints->setGeometry(QRect(100, 155, 156, 20));
+  chkTowerPoints->setObjectName("chkTowerPoints");
+  chkTowerPoints->setGeometry(100, 155, 156, 20);
 
-  labRandSeed1 = new QLabel(frmGenerate);
-  labRandSeed1->setObjectName(QString::fromUtf8("labRandSeed1"));
-  labRandSeed1->setGeometry(QRect(10, 183, 75, 16));
+  label = new QLabel("Random seed 1",frmGenerate);
+  label->setObjectName("labRandSeed1");
+  label->setGeometry(10, 183, 75, 16);
+
   editRandSeed1 = new QLineEdit(frmGenerate);
-  editRandSeed1->setObjectName(QString::fromUtf8("editRandSeed1"));
-  editRandSeed1->setGeometry(QRect(100, 180, 156, 20));
+  editRandSeed1->setObjectName("editRandSeed1");
+  editRandSeed1->setGeometry(100, 180, 156, 20);
 
   btnGenerate = new QPushButton(this);
-  btnGenerate->setObjectName(QString::fromUtf8("btnGenerate"));
-  btnGenerate->setGeometry(QRect(280, 410, 91, 26));
+  btnGenerate->setObjectName("btnGenerate");
+  btnGenerate->setGeometry(280, 410, 91, 26);
   btnClose = new QPushButton(this);
-  btnClose->setObjectName(QString::fromUtf8("btnClose"));
-  btnClose->setGeometry(QRect(380, 410, 91, 26));
+  btnClose->setObjectName("btnClose");
+  btnClose->setGeometry(380, 410, 91, 26);
   btnHelp = new QPushButton(this);
-  btnHelp->setObjectName(QString::fromUtf8("btnHelp"));
-  btnHelp->setGeometry(QRect(480, 410, 91, 26));
+  btnHelp->setObjectName("btnHelp");
+  btnHelp->setGeometry(480, 410, 91, 26);
 
-  labInfoB1 = new QLabel(this);
-  labInfoB1->setObjectName(QString::fromUtf8("labInfoB1"));
-  labInfoB1->setGeometry(QRect(280, 332, 21, 16));
-  labInfoB1->setPixmap(QPixmap(info_xpm));
-  labInfoB2 = new QLabel(this);
-  labInfoB2->setObjectName(QString::fromUtf8("labInfoB2"));
-  labInfoB2->setGeometry(QRect(300, 334, 46, 13));
-  labInfoB3 = new QLabel(this);
-  labInfoB3->setObjectName(QString::fromUtf8("labInfoB3"));
-  labInfoB3->setGeometry(QRect(280, 347, 301, 65));
-  labInfoB3->setAlignment(Qt::AlignJustify|Qt::AlignVCenter);
+  label = new QLabel(this);
+  label->setObjectName("labInfoB1");
+  label->setGeometry(280, 332, 21, 16);
+  label->setPixmap(QPixmap(info_xpm));
+  label = new QLabel(this);
+  label->setObjectName("labInfoB2");
+  label->setGeometry(300, 334, 46, 13);
+  label->setText("<b>Note</b>");
+
+  QLabel* labInfoB3 = new QLabel(this);
+  labInfoB3->setObjectName("labInfoB3");
+  labInfoB3->setGeometry(280, 347, 301, 65);
+  labInfoB3->setAlignment(Qt::AlignJustify | Qt::AlignVCenter);
   labInfoB3->setWordWrap(false);
 
   textEdit = new QTextEdit(this);
-  textEdit->setObjectName(QString::fromUtf8("textEdit"));
-  textEdit->setGeometry(QRect(10, 445, 561, 316));
+  textEdit->setObjectName("textEdit");
+  textEdit->setGeometry(10, 445, 561, 316);
 
   QWidget::setTabOrder(editHubHeight, editGridHeight);
   QWidget::setTabOrder(editGridHeight, editGridWidth);
@@ -237,65 +254,39 @@ FuiQtTurbWind::FuiQtTurbWind(QWidget* parent,
   QWidget::setTabOrder(btnClose, btnHelp);
   QWidget::setTabOrder(btnHelp, textEdit);
 
-  labTopImg->setText(QString());
-  frmTurbSpc->setTitle(QApplication::translate("Dialog", "Turbine Specification for Wind", 0, QApplication::UnicodeUTF8));
-  labHubHeight->setText(QApplication::translate("Dialog", "Hub height", 0, QApplication::UnicodeUTF8));
-  labGridHeight->setText(QApplication::translate("Dialog", "Grid height ", 0, QApplication::UnicodeUTF8));
-  editHubHeight->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
-  editGridHeight->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
-  labGridWidth->setText(QApplication::translate("Dialog", "Grid width", 0, QApplication::UnicodeUTF8));
-  editGridWidth->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
+  frmTurbSpc->setTitle("Turbine Specification for Wind");
+  editHubHeight->setText("0.0");
+  editGridHeight->setText("0.0");
+  editGridWidth->setText("0.0");
 
-  labNumGridY->setText(QApplication::translate("Dialog", "Num. grid Y", 0, QApplication::UnicodeUTF8));
-  editNumGridY->setText(QApplication::translate("Dialog", "0", 0, QApplication::UnicodeUTF8));
-  labNumGridZ->setText(QApplication::translate("Dialog", "Num. grid Z", 0, QApplication::UnicodeUTF8));
-  editNumGridZ->setText(QApplication::translate("Dialog", "0", 0, QApplication::UnicodeUTF8));
-  labTimeStep->setText(QApplication::translate("Dialog", "Time step", 0, QApplication::UnicodeUTF8));
-  editTimeStep->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
-  labDuration->setText(QApplication::translate("Dialog", "Duration", 0, QApplication::UnicodeUTF8));
-  editDuration->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
+  editNumGridY->setText("0");
+  editNumGridZ->setText("0");
+  editTimeStep->setText("0.0");
+  editDuration->setText("0.0");
   cmbIECturbc->clear();
-  cmbIECturbc->insertItems(0, QStringList()
-   << QApplication::translate("Dialog", "A", 0, QApplication::UnicodeUTF8)
-   << QApplication::translate("Dialog", "B", 0, QApplication::UnicodeUTF8)
-   << QApplication::translate("Dialog", "C", 0, QApplication::UnicodeUTF8)
-  );
-  labIECturbc->setText(QApplication::translate("Dialog", "IEC turbine class", 0, QApplication::UnicodeUTF8));
-  editRefHt->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
-  labRefHt->setText(QApplication::translate("Dialog", "Ref. height", 0, QApplication::UnicodeUTF8));
-  labInfoA1->setText(QString());
-  labInfoA2->setText(QApplication::translate("Dialog", "<b>Note</b>", 0, QApplication::UnicodeUTF8));
-  labInfoA3->setText(QApplication::translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+  cmbIECturbc->insertItems(0, { "A", "B", "C" });
+  editRefHt->setText("0.0");
+  labInfoA3->setText("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">The 'Hub height' value is extracted from the Fedem model. You will typically not modify this value. The 'Ref. height' value is initially set to the same value as 'Hub height,' but you may wish to adjust this value.</span></p></body></html>", 0, QApplication::UnicodeUTF8));
-  frmGenerate->setTitle(QApplication::translate("Dialog", "Generate Wind File", 0, QApplication::UnicodeUTF8));
-  labTemplateFile->setText(QApplication::translate("Dialog", "Template file", 0, QApplication::UnicodeUTF8));
-  labWindType->setText(QApplication::translate("Dialog", "Turbulence type", 0, QApplication::UnicodeUTF8));
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">The 'Hub height' value is extracted from the Fedem model. You will typically not modify this value. The 'Ref. height' value is initially set to the same value as 'Hub height,' but you may wish to adjust this value.</span></p></body></html>");
+  frmGenerate->setTitle("Generate Wind File");
   cmbWindType->clear();
-  cmbWindType->insertItems(0, QStringList()
-   << QApplication::translate("Dialog", "NTM", 0, QApplication::UnicodeUTF8)
-   << QApplication::translate("Dialog", "ETM - class 1 turbine", 0, QApplication::UnicodeUTF8)
-   << QApplication::translate("Dialog", "ETM - class 2 turbine", 0, QApplication::UnicodeUTF8)
-   << QApplication::translate("Dialog", "ETM - class 3 turbine", 0, QApplication::UnicodeUTF8)
-  );
-  labWindSpeed->setText(QApplication::translate("Dialog", "Wind speed", 0, QApplication::UnicodeUTF8));
-  editWindSpeed->setText(QApplication::translate("Dialog", "0.0", 0, QApplication::UnicodeUTF8));
-  labPLExp->setText(QApplication::translate("Dialog", "PLExp", 0, QApplication::UnicodeUTF8));
-  editPLExp->setText(QApplication::translate("Dialog", "0.11", 0, QApplication::UnicodeUTF8));
-  chkTowerPoints->setText(QApplication::translate("Dialog", "Include tower points", 0, QApplication::UnicodeUTF8));
-  labRandSeed1->setText(QApplication::translate("Dialog", "Random seed 1", 0, QApplication::UnicodeUTF8));
-  editRandSeed1->setText(QApplication::translate("Dialog", "1234567", 0, QApplication::UnicodeUTF8));
-  labOutputFolder->setText(QApplication::translate("Dialog", "Output folder", 0, QApplication::UnicodeUTF8));
-  btnTemplateFile->setText(QApplication::translate("Dialog", "...", 0, QApplication::UnicodeUTF8));
-  btnOutputFolder->setText(QApplication::translate("Dialog", "...", 0, QApplication::UnicodeUTF8));
-  btnGenerate->setText(QApplication::translate("Dialog", "Generate", 0, QApplication::UnicodeUTF8));
-  btnClose->setText(QApplication::translate("Dialog", "Close", 0, QApplication::UnicodeUTF8));
-  btnHelp->setText(QApplication::translate("Dialog", "Help", 0, QApplication::UnicodeUTF8));
-  labInfoB2->setText(QApplication::translate("Dialog", "<b>Note</b>", 0, QApplication::UnicodeUTF8));
-  labInfoB1->setText(QString());
-  labInfoB3->setText(QApplication::translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+  cmbWindType->insertItems(0,{ "NTM",
+                               "ETM - class 1 turbine",
+                               "ETM - class 2 turbine",
+                               "ETM - class 3 turbine" });
+  editWindSpeed->setText("0.0");
+  editPLExp->setText("0.11");
+  chkTowerPoints->setText("Include tower points");
+  editRandSeed1->setText("1234567");
+  btnTemplateFile->setText("...");
+  btnOutputFolder->setText("...");
+  btnGenerate->setText("Generate");
+  btnClose->setText("Close");
+  btnHelp->setText("Help");
+  labInfoB3->setText("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
@@ -303,7 +294,7 @@ FuiQtTurbWind::FuiQtTurbWind(QWidget* parent,
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">- The template file is copied and filled in by this tool.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">- The output folder receives all output from the tool.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">- Additional parameters are available in the template file.</span></p>\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p></body></html>", 0, QApplication::UnicodeUTF8));
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;\"></p></body></html>");
 
   // Set up slots
   connect(btnTemplateFile, SIGNAL(clicked()), this, SLOT(onBtnTemplateFileClick()));
@@ -371,9 +362,9 @@ void FuiQtTurbWind::setValues(double hubHeight, double gridSize,
 void FuiQtTurbWind::onBtnTemplateFileClick()
 {
   // Show file open dialog
-  QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+  QString fileName = QFileDialog::getOpenFileName(this, "Open File",
                                                   templateDir.c_str(),
-                                                  tr("INP Files (*.inp);;All Files (*.*)"));
+                                                  "INP Files (*.inp);;All Files (*.*)");
   fileName.replace('\\','/');
   editTemplateFile->setText(fileName);
 }
@@ -385,11 +376,11 @@ void FuiQtTurbWind::onBtnOutputFolderClick()
   QString dir1 = editOutputFolder->text();
 
   // Get user's document directory
-  if (dir1.count() == 0)
-    dir1 = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+  if (dir1.isEmpty())
+    dir1 = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 
   // Show directory dialog
-  QString dir2 = QFileDialog::getExistingDirectory(this, tr("Open Directory"), dir1,
+  QString dir2 = QFileDialog::getExistingDirectory(this, "Open Directory", dir1,
                                                    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
   // Set field
@@ -414,9 +405,9 @@ void setTurboSimLineEntryDouble(QByteArray& line, const char* szName, double val
   int pos = locateEntry(line,szName);
   if (pos < 0) return;
 
-  QString sVal;
-  sVal.sprintf("%.8f   ",value);
-  line.replace(0,pos,sVal.toAscii());
+  char sVal[32];
+  sprintf(sVal,"%.8f   ",value);
+  line.replace(0,pos,sVal);
 }
 
 void setTurboSimLineEntryInt(QByteArray& line, const char* szName, int value)
@@ -424,9 +415,9 @@ void setTurboSimLineEntryInt(QByteArray& line, const char* szName, int value)
   int pos = locateEntry(line,szName);
   if (pos < 0) return;
 
-  QString sVal;
-  sVal.sprintf("%d   ",value);
-  line.replace(0,pos,sVal.toAscii());
+  char sVal[32];
+  sprintf(sVal,"%d   ",value);
+  line.replace(0,pos,sVal);
 }
 
 void setTurboSimLineEntryStr(QByteArray& line, const char* szName, const QString& value, bool quote = true)
@@ -439,7 +430,8 @@ void setTurboSimLineEntryStr(QByteArray& line, const char* szName, const QString
     sVal = "\"" + value + "\"   ";
   else
     sVal = value + "   ";
-  line.replace(0,pos,sVal.toAscii());
+  std::string strVal(sVal.toStdString());
+  line.replace(0,pos,strVal.c_str());
 }
 
 
@@ -493,7 +485,7 @@ void FuiQtTurbWind::onBtnGenerateClick()
     msgBox.exec();
     return;
   }
-  else if (strTemplateFile.count() == 0) {
+  else if (strTemplateFile.isEmpty()) {
     QMessageBox msgBox(QMessageBox::Warning, "Error",
                        "<b>Illegal entry:</b><br>"
                        "You must specify a template file.",
@@ -502,7 +494,7 @@ void FuiQtTurbWind::onBtnGenerateClick()
     msgBox.exec();
     return;
   }
-  else if (strOutputFolder.count() == 0) {
+  else if (strOutputFolder.isEmpty()) {
     QMessageBox msgBox(QMessageBox::Warning, "Error",
                        "<b>Illegal entry:</b><br>"
                        "You must specify a output folder.",
@@ -528,8 +520,8 @@ void FuiQtTurbWind::onBtnGenerateClick()
   dir.mkpath(strOutputFile);
 
   // Set output file name
-  QString strFileName;
-  strFileName.sprintf("windSpeed-%.2f-rs-%d.inp",fWindSpeed,nRandSeed1);
+  char strFileName[32];
+  sprintf(strFileName,"windSpeed-%.2f-rs-%d.inp",fWindSpeed,nRandSeed1);
   strOutputFile += strFileName;
 
   // Clone template file
@@ -576,17 +568,13 @@ void FuiQtTurbWind::onBtnGenerateClick()
   // Show output field
   this->setMinimumSize(580,770);
 
-  // Process arguments
-  QStringList arguments;
-  arguments << strOutputFile;
-
   // Start process
   textEdit->append("Generating " + strOutputFile + ".. Please wait..");
   pProcess = new QProcess(this);
   connect(pProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(onReadyReadStandardOutput()));
   connect(pProcess, SIGNAL(readyReadStandardError()), this, SLOT(onReadyReadStandardError()));
   connect(pProcess, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(onFinished(int,QProcess::ExitStatus)));
-  pProcess->start(turbsim_exe.c_str(), arguments);
+  pProcess->start(turbsim_exe.c_str(), { strOutputFile });
   btnGenerate->setEnabled(false);
 }
 
