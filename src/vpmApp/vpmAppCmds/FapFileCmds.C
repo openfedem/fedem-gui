@@ -35,6 +35,7 @@
 #endif
 #if defined(FT_HAS_SEV)
 #include "assemblyCreators/eventCreator.H"
+#include <fstream>
 #endif
 
 #include "FFuLib/FFuFileDialog.H"
@@ -51,9 +52,8 @@
 #include "FFaLib/FFaProfiler/FFaProfiler.H"
 #endif
 
-#include <fstream>
+using FmPartInt = std::pair<FmPart*,int>;
 
-typedef std::pair<FmPart*,int> FmPartInt;
 
 //----------------------------------------------------------------------------
 
@@ -641,7 +641,9 @@ void FapFileCmds::changeLink()
     FFaMsg::list("  -> Changing RAM usage setting to full FE model.\n");
 
   part->readyForUpdate();
-  part->setUserDescription(FFaFilePath::getBaseName(fName,true));
+  // Don't update the description if the user has entered some #-commands
+  if (part->getUserDescription().find('#') == std::string::npos)
+    part->setUserDescription(FFaFilePath::getBaseName(fName,true));
 
   // Actually import the part
   Fui::noUserInputPlease();
@@ -741,7 +743,7 @@ void FapFileCmds::setModelLinkRep(bool switchToInternal)
         int isSaved = 0;
         if (part->isSaved(false)) isSaved += 1;
         if (FapLinkReducer::isReduced(part)) isSaved += 2;
-        if (isSaved > 0) savedParts.push_back(std::make_pair(part,isSaved));
+        if (isSaved > 0) savedParts.emplace_back(part,isSaved);
       }
   }
 
