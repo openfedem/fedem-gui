@@ -745,6 +745,7 @@ public:
 
   FFaDynCB0 myDofSetAllFreeCB;
   FFaDynCB0 myDofSetAllFixedCB;
+  FFaDynCB0 mySwapJointCB;
 
   // Pipe Surface
   bool   showPipeSurfaceData;

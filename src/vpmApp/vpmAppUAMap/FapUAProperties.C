@@ -164,6 +164,7 @@ FapUAProperties::FapUAProperties(FuiProperties* uic)
 
   pv.myDofSetAllFreeCB = FFaDynCB0M(FapUAProperties,this,dofSetAllFree);
   pv.myDofSetAllFixedCB = FFaDynCB0M(FapUAProperties,this,dofSetAllFixed);
+  pv.mySwapJointCB = FFaDynCB0M(FapUAProperties,this,swapJointCB);
 
   pv.myLoadViewAttackPointCB = FFaDynCB1M(FapUAProperties,this,loadViewAttackPointCB,bool);
   pv.myLoadViewAttackWhatCB  = FFaDynCB1M(FapUAProperties,this,loadViewAttackWhatCB,bool);
@@ -740,10 +741,12 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	  pv->showDOF_TZ_Toggle = true;
 	  pv->myIsDOF_TZ_legal = item->isLegalDOF(FmJointBase::Z_TRANS);
 	}
+      else if (item->isOfType(FmPrismJoint::getClassTypeID()))
+        pv->showJointData = 3;
+      else if (item->isOfType(FmCylJoint::getClassTypeID()))
+        pv->showJointData = 4;
       else
-	{
-	  pv->showJointData = true;
-	}
+        pv->showJointData = 1;
 
       this->getDBJointVariables(item, pv->myJointVals);
 
@@ -3741,28 +3744,42 @@ void FapUAProperties::reverseMasterCB()
 }
 
 
+void FapUAProperties::swapJointCB()
+{
+  FmJointBase* newJoint = NULL;
+  if (mySelectedFmItem->isOfType(FmPrismJoint::getClassTypeID()))
+    newJoint = new FmCylJoint();
+  else if (mySelectedFmItem->isOfType(FmCylJoint::getClassTypeID()))
+    newJoint = new FmPrismJoint();
+  else
+    return;
+
+  FmJointBase* oldJoint = static_cast<FmJointBase*>(mySelectedFmItem);
+  newJoint->clone(mySelectedFmItem,FmBase::DEEP_REPLACE);
+  newJoint->connect();
+  oldJoint->eraseKeepDOFs();
+  FapEventManager::permTotalSelect(newJoint);
+
+  newJoint->draw();
+  this->updateUIValues();
+}
+
+
 void FapUAProperties::setAllDofs(bool fixed)
 {
   FmHasDOFsBase* node = dynamic_cast<FmHasDOFsBase*>(mySelectedFmItem);
   if (!node) return;
 
-  bool changed = false;
-  for (int i = 0; i < FmHasDOFsBase::MAX_DOF; i++)
-    changed |= node->setStatusForDOF(i, fixed ? FmHasDOFsBase::FIXED : FmHasDOFsBase::FREE);
-
-  this->updateUIValues();
-
-  if (changed) node->onChanged();
+  if (node->setStatusForAllDOFs(fixed))
+    node->onChanged();
 
   // Update the multi-selected items, if any
   for (FmModelMemberBase* item : mySelectedFmItems)
     if ((node = dynamic_cast<FmHasDOFsBase*>(item)))
-    {
-      changed = false;
-      for (int i = 0; i < FmHasDOFsBase::MAX_DOF; i++)
-	changed |= node->setStatusForDOF(i, fixed ? FmHasDOFsBase::FIXED : FmHasDOFsBase::FREE);
-      if (changed) node->onChanged();
-    }
+      if (node->setStatusForAllDOFs(fixed))
+        node->onChanged();
+
+  this->updateUIValues();
 }
 
 

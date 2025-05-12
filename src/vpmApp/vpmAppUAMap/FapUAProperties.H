@@ -73,6 +73,7 @@ private:
   void swapMasterSlaveCB();
   void addMasterCB();
   void reverseMasterCB();
+  void swapJointCB();
 
   void dofStatusToggledCB(int dof, int stat);
   void setAllDofs(bool fixed);

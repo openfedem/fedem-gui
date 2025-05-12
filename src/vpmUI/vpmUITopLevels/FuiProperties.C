@@ -2519,6 +2519,8 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     if (!pv->myJointVals.empty())
       myJointTabs->addTabPage(myJointResults, "Results");
 
+    myJointSummary->showSwapJoint(pv->showJointData-2);
+
     myJointTabs->setCurrentTab(mySelectedJointTab);
     this->onJointTabSelected(0);
     myJointTabs->popUp();
@@ -4157,6 +4159,7 @@ void FuiProperties::setCBs(const FFuaUIValues* values)
 
   myJointSummary->mySetAllFixedButton->setActivateCB(pv->myDofSetAllFixedCB);
   myJointSummary->mySetAllFreeButton->setActivateCB(pv->myDofSetAllFreeCB);
+  myJointSummary->mySwapJointButton->setActivateCB(pv->mySwapJointCB);
 
   myDofStatusCB = pv->myDofStatusCB;
 
