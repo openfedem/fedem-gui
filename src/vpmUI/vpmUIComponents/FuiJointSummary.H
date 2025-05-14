@@ -22,12 +22,10 @@ class FuiJointDOFValues;
 class FuiJointSummary : public FuiSummaryTable
 {
 public:
-  FuiJointSummary() {}
-  virtual ~FuiJointSummary() {}
-
   void setRowLabel(int dof, const FuiJointDOFValues& jval, const char** labels);
   void setSummary(int dof, const FuiJointDOFValues& jval);
   void showFixFreeAll(bool yesOrNo);
+  void showSwapJoint(int jType);
   void showTzToggle(bool yesOrNo);
   void showFriction(char yesOrNo);
   void showScrew(bool yesOrNo);
@@ -37,6 +35,7 @@ public:
   FFuLabel           * myDefDamperLabel;
   FFuPushButton      * mySetAllFreeButton;
   FFuPushButton      * mySetAllFixedButton;
+  FFuPushButton      * mySwapJointButton;
   FFuLabelFrame      * myFrictionFrame;
   FuiQueryInputField * myFriction;
   FFuLabel           * myFrictionLabel;
@@ -54,6 +53,7 @@ protected:
 
 private:
   bool IAmShowingFixFreeAll;
+  bool IAmShowingSwapJoint;
   bool IAmShowingTzToggle;
   char IAmShowingFriction;
   bool IAmShowingScrew;

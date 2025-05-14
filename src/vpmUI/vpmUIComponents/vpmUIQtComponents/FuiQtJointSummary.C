@@ -26,6 +26,7 @@ FuiQtJointSummary::FuiQtJointSummary(QWidget* parent, int xpos, int ypos,
   myDOF_TZ_Toggle     = new FFuQtToggleButton(this);
   mySetAllFreeButton  = new FFuQtPushButton(this);
   mySetAllFixedButton = new FFuQtPushButton(this);
+  mySwapJointButton   = new FFuQtPushButton(this);
   myFrictionFrame     = new FFuQtLabelFrame(this);
   myFriction          = new FuiQtQueryInputField(this);
   myFrictionLabel     = new FFuQtLabel(this);

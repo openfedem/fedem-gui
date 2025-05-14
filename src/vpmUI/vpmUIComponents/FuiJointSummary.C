@@ -84,6 +84,21 @@ void FuiJointSummary::showFixFreeAll(bool yesOrNo)
 }
 
 
+void FuiJointSummary::showSwapJoint(int jType)
+{
+  IAmShowingSwapJoint = jType > 0;
+  if (IAmShowingSwapJoint) {
+    if (jType == 1)
+      mySwapJointButton->setLabel("Convert to Cylindric joint");
+    else
+      mySwapJointButton->setLabel("Convert to Prismatic joint");
+    mySwapJointButton->popUp();
+  }
+  else
+    mySwapJointButton->popDown();
+}
+
+
 void FuiJointSummary::showTzToggle(bool yesOrNo)
 {
   IAmShowingTzToggle = yesOrNo;
@@ -253,6 +268,11 @@ void FuiJointSummary::placeWidgets(int width, int height)
   if (IAmShowingFixFreeAll) {
     mySetAllFreeButton->setEdgeGeometry(v3,v3+150,curHR,curHR+25); v3 += 150+border;
     mySetAllFixedButton->setEdgeGeometry(v3,v3+150,curHR,curHR+25);
+  }
+
+  if (IAmShowingSwapJoint) {
+    int labelW = mySwapJointButton->getWidthHint()+10;
+    mySwapJointButton->setEdgeGeometry(v4-labelW, v4, curHR, curHR+25);
   }
 
   mySummaryTable->updateColumnWidths();
