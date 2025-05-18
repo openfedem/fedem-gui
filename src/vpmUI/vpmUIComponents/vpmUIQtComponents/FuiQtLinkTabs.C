@@ -20,6 +20,7 @@
 #include "FFuLib/FFuQtComponents/FFuQtRadioButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
+#include "FFuLib/FFuQtComponents/FFuQtScrolledList.H"
 
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtPositionData.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQt3DPoint.H"
@@ -130,11 +131,20 @@ FuiQtLinkNodeSheet::FuiQtLinkNodeSheet(QWidget* parent, const char* name)
   : FFuQtWidget(parent,name)
 {
   myNodePosition = new FuiQt3DPoint(NULL,"FE node",true,true);
+  myElementLabel = new FFuQtLabel();
+  myElements     = new FFuQtScrolledList();
 
   this->initWidgets();
 
-  QLayout* layout = new QVBoxLayout(this);
+  QBoxLayout* layout1 = new QVBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->addWidget(myElementLabel->getQtWidget());
+  layout1->addWidget(myElements->getQtWidget(),1);
+
+  QBoxLayout* layout = new QHBoxLayout(this);
   layout->addWidget(myNodePosition->getQtWidget());
+  layout->addSpacing(10);
+  layout->addLayout(layout1,1);
 }
 
 

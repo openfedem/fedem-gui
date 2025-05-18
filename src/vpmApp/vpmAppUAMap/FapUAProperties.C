@@ -447,18 +447,16 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       // Topology view:
 
-      std::vector<FmModelMemberBase*> refs, joints;
+      std::vector<FmModelMemberBase*> refs;
+      std::set<FmModelMemberBase*> joints;
       sprChar->getReferringObjs(refs,"mySpringChar");
       for (FmModelMemberBase* refObj : refs)
         if (refObj->isOfType(FmJointSpring::getClassTypeID()))
         {
           // Make sure joints using this in several DOFs are added only once
           FmModelMemberBase* owner = ((FmJointSpring*)refObj)->getOwnerJoint();
-          if (std::find(joints.begin(),joints.end(),owner) == joints.end())
-          {
+          if (joints.insert(owner).second)
             this->addTopologyItem(pv->myTopology,owner);
-            joints.push_back(owner);
-          }
         }
         else
           this->addTopologyItem(pv->myTopology,refObj);
@@ -891,6 +889,8 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
           // Picked FE node
           double* X = pv->myLinkValues.feNodePos.getPt();
           item->getNodePos(pv->myLinkValues.feNode,X,X+1,X+2);
+          item->getNodeConnectivity(pv->myLinkValues.feNode,
+                                    pv->myLinkValues.elmList);
         }
 #endif
 
@@ -1081,16 +1081,15 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       this->addTopologyItem(pv->myTopology,item->bearingJoint,0,"Bearing");
 #ifdef FAP_DEBUG
       std::multimap<std::string,FFaFieldContainer*> reffingObjs;
-      std::multimap<std::string,FFaFieldContainer*>::iterator it;
       item->getReferringObjs(reffingObjs);
       this->addTopologyItem(pv->myTopology,NULL,0,"Used by:");
-      for (it = reffingObjs.begin(); it != reffingObjs.end(); ++it)
-        this->addTopologyItem(pv->myTopology,dynamic_cast<FmModelMemberBase*>(it->second),1);
+      for (const std::pair<const std::string,FFaFieldContainer*>& ref : reffingObjs)
+        this->addTopologyItem(pv->myTopology,dynamic_cast<FmModelMemberBase*>(ref.second),1);
 
       item->getReferredObjs(reffingObjs);
       this->addTopologyItem(pv->myTopology,NULL,0,"Using:");
-      for (it = reffingObjs.begin(); it != reffingObjs.end(); ++it)
-        this->addTopologyItem(pv->myTopology,dynamic_cast<FmModelMemberBase*>(it->second),1);
+      for (const std::pair<const std::string,FFaFieldContainer*>& ref : reffingObjs)
+        this->addTopologyItem(pv->myTopology,dynamic_cast<FmModelMemberBase*>(ref.second),1);
 #endif
     }
 
@@ -1294,43 +1293,38 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
   // Function or Friction
 
   else if (mySelectedFmItem->isOfType(FmParamObjectBase::getClassTypeID()))
-    {
-      pv->showFunctionData = true;
+  {
+    pv->showFunctionData = true;
 
-      // FapUAFunctionProperties does the job
+    // FapUAFunctionProperties does the job
 
-      // Topology view:
+    // Topology view:
 
-      FmSimulationModelBase* refObj;
-      std::vector<FmModelMemberBase*> joints;
-      std::multimap<std::string,FFaFieldContainer*> refs;
-      std::multimap<std::string,FFaFieldContainer*>::iterator rit;
-      mySelectedFmItem->getReferringObjs(refs);
-      for (rit = refs.begin(); rit != refs.end(); ++rit)
-	if ((refObj = dynamic_cast<FmSimulationModelBase*>(rit->second)))
-	{
-	  if (refObj->isOfType(FmEngine::getClassTypeID()) && !refObj->isListable())
-	  {
-	    this->addTopologyItem(pv->myTopology,NULL,0,"Used by:");
-	    this->addEngineUsedByTopology(pv->myTopology,(FmEngine*)refObj,1);
-	    continue;
-	  }
-	  else if (refObj->isOfType(FmJointSpring::getClassTypeID()))
-	    refObj = ((FmJointSpring*)refObj)->getOwnerJoint();
-	  else if (refObj->isOfType(FmJointDamper::getClassTypeID()))
-	    refObj = ((FmJointDamper*)refObj)->getOwnerJoint();
+    std::set<FmSimulationModelBase*> joints;
+    std::multimap<std::string,FFaFieldContainer*> refs;
+    mySelectedFmItem->getReferringObjs(refs);
+    for (const std::pair<const std::string,FFaFieldContainer*>& ref : refs)
+      if (FmSimulationModelBase* obj = dynamic_cast<FmSimulationModelBase*>(ref.second); obj)
+      {
+        if (obj->isOfType(FmEngine::getClassTypeID()) && !obj->isListable())
+        {
+          this->addTopologyItem(pv->myTopology,NULL,0,"Used by:");
+          this->addEngineUsedByTopology(pv->myTopology,(FmEngine*)obj,1);
+          continue;
+        }
+        else if (obj->isOfType(FmJointSpring::getClassTypeID()))
+          obj = ((FmJointSpring*)obj)->getOwnerJoint();
+        else if (obj->isOfType(FmJointDamper::getClassTypeID()))
+          obj = ((FmJointDamper*)obj)->getOwnerJoint();
 
-	  // Make sure joints using this in several DOFs are added only once
-	  if (refObj && refObj->isOfType(FmJointBase::getClassTypeID())) {
-	    if (std::find(joints.begin(),joints.end(),refObj) == joints.end())
-	      joints.push_back(refObj);
-	    else
-	      continue;
-	  }
+        // Make sure joints using this in several DOFs are added only once
+        if (obj && obj->isOfType(FmJointBase::getClassTypeID()))
+          if (!joints.insert(obj).second)
+            continue;
 
-	  this->addTopologyItem(pv->myTopology,refObj);
-	}
-    }
+        this->addTopologyItem(pv->myTopology,obj);
+      }
+  }
 
   // Control element
 
@@ -2093,16 +2087,15 @@ void FapUAProperties::addEngineArgumentTopology(std::vector<FuiTopologyItem>& to
 void FapUAProperties::addEngineUsedByTopology(std::vector<FuiTopologyItem>& topology,
                                               FmEngine* item, int level)
 {
-  std::vector<FmModelMemberBase*> joints;
+  std::set<FmModelMemberBase*> joints;
   std::vector<FmModelMemberBase*> controlledList;
   item->getUsers(controlledList);
   for (FmModelMemberBase* obj : controlledList)
-    if (obj->isOfType(FmHasDOFsBase::getClassTypeID())) {
+    if (obj->isOfType(FmHasDOFsBase::getClassTypeID()))
+    {
       // Make sure joints/triads using this in several DOFs are added only once
-      if (std::find(joints.begin(),joints.end(),obj) == joints.end()) {
+      if (joints.insert(obj).second)
         this->addTopologyItem(topology,obj,level);
-        joints.push_back(obj);
-      }
     }
     else if (!obj->isOfType(FmCurveSet::getClassTypeID()))
       // Curves are listed separately under "Plotted by"
@@ -2200,15 +2193,14 @@ void FapUAProperties::addJointDescendantTopology(std::vector<FuiTopologyItem>& t
   if (level > 0) return;
 
   std::multimap<std::string,FFaFieldContainer*> referringObjs;
-  std::multimap<std::string,FFaFieldContainer*>::iterator it;
   item->getReferringObjs(referringObjs);
 
   firstDof = true;
-  for (it = referringObjs.begin(); it != referringObjs.end(); ++it)
-    if (it->first.find("Joint") < it->first.size())
+  for (const std::pair<const std::string,FFaFieldContainer*>& ref : referringObjs)
+    if (ref.first.find("Joint") < ref.first.size())
     {
       if (firstDof) this->addTopologyItem(topol,NULL,0,"Used by:");
-      this->addTopologyItem(topol,dynamic_cast<FmModelMemberBase*>(it->second),1);
+      this->addTopologyItem(topol,dynamic_cast<FmModelMemberBase*>(ref.second),1);
       firstDof = false;
     }
 }
@@ -2993,8 +2985,8 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
       item->Do = pv->myBeamProp[0];
       item->Di = pv->myBeamProp[1];
       item->EA = pv->myBeamProp[2];
-      item->EI = std::make_pair(pv->myBeamProp[3],pv->myBeamProp[4]);
-      item->GAs = std::make_pair(pv->myBeamProp[14],pv->myBeamProp[15]);
+      item->EI = { pv->myBeamProp[3], pv->myBeamProp[4] };
+      item->GAs = { pv->myBeamProp[14], pv->myBeamProp[15] };
       item->GIt = pv->myBeamProp[5];
       item->Mass = pv->myBeamProp[6];
       item->breakDependence = pv->myBeamBreakDependence;
@@ -3008,8 +3000,8 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
       }
       else
 	item->updateDependentValues();
-      item->ShrRed = std::make_pair(pv->myBeamProp[12],pv->myBeamProp[13]);
-      item->ShrCentre = std::make_pair(pv->myBeamProp[16],pv->myBeamProp[17]);
+      item->ShrRed = { pv->myBeamProp[12], pv->myBeamProp[13] };
+      item->ShrCentre = { pv->myBeamProp[16], pv->myBeamProp[17] };
       item->hydroToggle = pv->myBeamHydroToggle;
       item->Db = pv->myHydroProp[0];
       item->Dd = pv->myHydroProp[1];
