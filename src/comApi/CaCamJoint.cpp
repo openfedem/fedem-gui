@@ -11,6 +11,7 @@
 #include "CaDOF.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmCamJoint.H"
 #include "vpmDB/FmCamFriction.H"
@@ -142,8 +143,7 @@ void CaCamJoint::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pCamJoint);
 
-  m_pCamJoint->setUserDescription(val);
-
+  m_pCamJoint->setUserDescription(CaConvert(val));
   m_pCamJoint->onChanged();
 }
 
@@ -576,7 +576,7 @@ STDMETHODIMP CaCamJoint::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaCamJoint, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

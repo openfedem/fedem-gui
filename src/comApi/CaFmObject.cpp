@@ -8,6 +8,7 @@
 #include "CaFmObject.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmModelMemberBase.H"
 
@@ -67,7 +68,7 @@ void CaFmObject::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -93,7 +94,7 @@ BSTR CaFmObject::GetValue(LPCTSTR FieldName)
 {
   CA_CHECK(m_ptr);
 
-  FFaFieldBase* pField = m_ptr->getField(FieldName);
+  FFaFieldBase* pField = m_ptr->getField(CaConvert(FieldName));
   if (pField == NULL)
     return SysAllocString(CA2W(""));
 
@@ -106,11 +107,11 @@ void CaFmObject::SetValue(LPCTSTR FieldName, LPCTSTR Value)
 {
   CA_CHECK(m_ptr);
 
-  FFaFieldBase* pField = m_ptr->getField(FieldName);
+  FFaFieldBase* pField = m_ptr->getField(CaConvert(FieldName));
   if (pField == NULL)
     return;
 
-  std::istringstream s(Value);
+  std::istringstream s(CaConvert(Value));
   s >> *pField;
 }
 
@@ -206,7 +207,7 @@ STDMETHODIMP CaFmObject::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaFmObject, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -251,7 +252,7 @@ STDMETHODIMP CaFmObject::XLocalClass::GetValue(BSTR FieldName, BSTR* Value)
   METHOD_PROLOGUE(CaFmObject, LocalClass);
   TRY
   {
-    *Value = pThis->GetValue(CW2A(FieldName));
+    *Value = pThis->GetValue(FieldName);
   }
   CATCH_ALL(e)
   {
@@ -266,7 +267,7 @@ STDMETHODIMP CaFmObject::XLocalClass::SetValue(BSTR FieldName, BSTR Value)
   METHOD_PROLOGUE(CaFmObject, LocalClass);
   TRY
   {
-    pThis->SetValue(CW2A(FieldName), CW2A(Value));
+    pThis->SetValue(FieldName, Value);
   }
   CATCH_ALL(e)
   {

@@ -11,6 +11,7 @@
 #include "CaDOF.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmFreeJoint.H"
 
@@ -144,8 +145,7 @@ void CaJoint::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pJoint);
 
-  m_pJoint->setUserDescription(val);
-
+  m_pJoint->setUserDescription(CaConvert(val));
   m_pJoint->onChanged();
 }
 
@@ -647,7 +647,7 @@ STDMETHODIMP CaJoint::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaJoint, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
