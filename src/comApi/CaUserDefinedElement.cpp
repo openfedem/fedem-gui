@@ -9,6 +9,7 @@
 #include "CaTriad.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmUserDefinedElement.H"
 #include "vpmDB/FmTriad.H"
@@ -77,7 +78,7 @@ void CaUserDefinedElement::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -282,7 +283,7 @@ STDMETHODIMP CaUserDefinedElement::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaUserDefinedElement, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

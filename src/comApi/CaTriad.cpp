@@ -12,6 +12,7 @@
 #include "CaDOF.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmTriad.H"
 #include "vpmDB/FmBeam.H"
@@ -209,8 +210,7 @@ void CaTriad::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pTriad);
 
-  m_pTriad->setUserDescription(val);
-
+  m_pTriad->setUserDescription(CaConvert(val));
   m_pTriad->onChanged();
 }
 
@@ -279,8 +279,7 @@ void CaTriad::put_Tag(LPCTSTR val)
 {
   CA_CHECK(m_pTriad);
 
-  m_pTriad->setTag(val);
-
+  m_pTriad->setTag(CaConvert(val));
   m_pTriad->onChanged();
 }
 
@@ -756,7 +755,7 @@ STDMETHODIMP CaTriad::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaTriad, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -846,7 +845,7 @@ STDMETHODIMP CaTriad::XLocalClass::put_Tag(BSTR val)
   METHOD_PROLOGUE(CaTriad, LocalClass);
   TRY
   {
-    pThis->put_Tag(CW2A(val));
+    pThis->put_Tag(val);
   }
   CATCH_ALL(e)
   {

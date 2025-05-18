@@ -9,6 +9,7 @@
 #include "CaPart.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmStrainRosette.H"
 
@@ -81,7 +82,7 @@ void CaStrainRosette::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pStrainRosette);
 
-  m_pStrainRosette->setUserDescription(val);
+  m_pStrainRosette->setUserDescription(CaConvert(val));
   m_pStrainRosette->onChanged();
 }
 
@@ -452,7 +453,7 @@ STDMETHODIMP CaStrainRosette::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaStrainRosette, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

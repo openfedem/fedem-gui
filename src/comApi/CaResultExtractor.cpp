@@ -8,6 +8,7 @@
 #include "CaResultExtractor.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmDB.H"
 #include "vpmDB/FmMechanism.H"
@@ -92,10 +93,10 @@ void CaResultExtractor::put_FileNames(LPCTSTR val)
 {
   if (val == NULL)
     AfxThrowOleException(E_INVALIDARG);
-  CreateExtractor(val);
+  CreateExtractor(CW2A(val));
 }
 
-bool CaResultExtractor::CreateExtractor(LPCTSTR szFileNames)
+bool CaResultExtractor::CreateExtractor(LPCSTR szFileNames)
 {
   if (m_pExtractor != NULL)
     delete m_pExtractor;
@@ -140,22 +141,20 @@ VARIANT CaResultExtractor::Read(LPCTSTR ObjectType, LPCTSTR BaseIDs, LPCTSTR Var
     if (ObjectType == NULL)
       AfxThrowOleException(E_INVALIDARG);
 
-    char* bcopy = strdup(BaseIDs);
-    char* pstr = strtok(bcopy,";");
+    std::string bcopy = CaConvert(BaseIDs);
+    char* pstr = strtok(const_cast<char*>(bcopy.c_str()), ";");
     for (; pstr; pstr = strtok(NULL,";"))
       vnBaseIds.push_back(atol(pstr));
-    free(bcopy);
   }
   else if (ObjectType != NULL)
     AfxThrowOleException(E_INVALIDARG);
 
   // Get variable description
   std::vector<std::string> vstr;
-  char* vcopy = strdup(Variables);
-  char* pstr = strtok(vcopy,";");
+  std::string vcopy = CaConvert(Variables);
+  char* pstr = strtok(const_cast<char*>(vcopy.c_str()), ";");
   for (; pstr; pstr = strtok(NULL,";"))
     vstr.push_back(pstr);
-  free(vcopy);
 
   std::vector<FFpVar> vVariables;
   vVariables.reserve(vstr.size());
@@ -173,9 +172,10 @@ VARIANT CaResultExtractor::Read(LPCTSTR ObjectType, LPCTSTR BaseIDs, LPCTSTR Var
   }
 
   // Read from FRS
+  std::string objType = CaConvert(ObjectType);
   DoubleVectors values;
   std::string errorMsg;
-  bool status = FFp::readHistories(ObjectType, vnBaseIds, vVariables,
+  bool status = FFp::readHistories(objType.c_str(), vnBaseIds, vVariables,
                                    m_pExtractor, *StartTime, *EndTime,
                                    m_readTime, values, errorMsg);
   if (!errorMsg.empty()) std::cout << errorMsg << std::endl;
@@ -278,7 +278,7 @@ BOOL CaResultExtractor::OpenSNCurveLib(LPCTSTR SNCurveFile)
   if (SNCurveFile == NULL)
     AfxThrowOleException(E_INVALIDARG);
 
-  return FFpFatigue::readSNCurves(SNCurveFile);
+  return FFpFatigue::readSNCurves(CaConvert(SNCurveFile));
 }
 
 double CaResultExtractor::CalcDamage(VARIANT ArrayRx1, long SNStd, long SNCurve)
@@ -341,7 +341,7 @@ VARIANT CaResultExtractor::ReadCurve(LPCTSTR BaseIDs, double* StartTime, double*
   ArrayNx2.vt = VT_EMPTY;
 
   std::vector<FmCurveSet*> curves;
-  std::string baseIDstring(BaseIDs);
+  std::string baseIDstring = CaConvert(BaseIDs);
 
   // Skip delimiters at beginning.
   std::string::size_type lastPos = baseIDstring.find_first_not_of(";", 0);
@@ -487,7 +487,7 @@ STDMETHODIMP CaResultExtractor::XLocalClass::put_FileNames(BSTR val)
   METHOD_PROLOGUE(CaResultExtractor, LocalClass);
   TRY
   {
-    pThis->put_FileNames(CW2A(val));
+    pThis->put_FileNames(val);
   }
   CATCH_ALL(e)
   {
@@ -533,7 +533,7 @@ STDMETHODIMP CaResultExtractor::XLocalClass::Read(BSTR ObjectType, BSTR BaseIDs,
   METHOD_PROLOGUE(CaResultExtractor, LocalClass);
   TRY
   {
-    *ArrayNxM = pThis->Read(CW2A(ObjectType), CW2A(BaseIDs), CW2A(Variables), StartTime, EndTime);
+    *ArrayNxM = pThis->Read(ObjectType, BaseIDs, Variables, StartTime, EndTime);
   }
   CATCH_ALL(e)
   {
@@ -548,7 +548,7 @@ STDMETHODIMP CaResultExtractor::XLocalClass::ReadCurve(BSTR BaseID, double* Star
   METHOD_PROLOGUE(CaResultExtractor, LocalClass);
   TRY
   {
-    *ArrayNx2 = pThis->ReadCurve(CW2A(BaseID), StartTime, EndTime);
+    *ArrayNx2 = pThis->ReadCurve(BaseID, StartTime, EndTime);
   }
   CATCH_ALL(e)
   {
@@ -580,7 +580,7 @@ STDMETHODIMP CaResultExtractor::XLocalClass::OpenSNCurveLib(BSTR SNCurveFile,
   METHOD_PROLOGUE(CaResultExtractor, LocalClass);
   TRY
   {
-    *pVal = pThis->OpenSNCurveLib(CW2A(SNCurveFile));
+    *pVal = pThis->OpenSNCurveLib(SNCurveFile);
   }
   CATCH_ALL(e)
   {

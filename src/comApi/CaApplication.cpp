@@ -30,11 +30,12 @@
 #include "CaMaterial.h"
 #include "CaFriction.h"
 #include "CaFunction.h"
-#include "CaMacros.h"
 #include "CaGraph.h"
 #include "CaCurve.h"
 #include "CaFmObject.h"
 #include "CaVesselMotion.h"
+#include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmStructAssembly.H"
 #include "vpmDB/FmRiser.H"
@@ -171,9 +172,9 @@ IDispatch* CaApplication::get_Item(long Index)
 
 BSTR CaApplication::get_ExePath()
 {
-  char szPath[MAX_PATH];
-  GetModuleFileName(NULL, (LPCH)szPath, MAX_PATH);
-  return SysAllocString(CA2W(szPath));
+  wchar_t szPath[MAX_PATH];
+  GetModuleFileName(NULL, szPath, MAX_PATH);
+  return SysAllocString(szPath);
 }
 
 BSTR CaApplication::get_ModelFileName()
@@ -253,7 +254,7 @@ BOOL CaApplication::Open(LPCTSTR pszFileName, BOOL bLoadLinks)
   if (!FpPM::closeModel())
     return FALSE;
 
-  if (FpPM::vpmModelOpen(pszFileName,bLoadLinks))
+  if (FpPM::vpmModelOpen(CaConvert(pszFileName),bLoadLinks))
     return TRUE;
 
   FpPM::vpmModelNew();
@@ -271,7 +272,7 @@ BOOL CaApplication::SaveAs(LPCTSTR pszFileName, BOOL bSaveResults, BOOL bSaveRed
 {
   CA_CHECK_LICENSE(true);
 
-  return FpPM::vpmModelSaveAs(pszFileName, bSaveResults, bSaveReducedParts);
+  return FpPM::vpmModelSaveAs(CaConvert(pszFileName), bSaveResults, bSaveReducedParts);
 }
 
 BOOL CaApplication::Close()
@@ -1034,7 +1035,7 @@ IResultExtractor* CaApplication::CreateResultExtractor(LPCTSTR FRSFileNames)
   // Get FRS file names
   std::string FRSFileList;
   if (FRSFileNames != NULL)
-    FRSFileList = FRSFileNames;
+    FRSFileList = CaConvert(FRSFileNames);
   if (FRSFileList.empty())
     FRSFileList = FmDB::getMechanismObject()->getResultStatusData()->getFileNames("frs");
 
@@ -1210,8 +1211,8 @@ IGenericObject* CaApplication::CreateGenericObject(LPCTSTR ObjectType, LPCTSTR O
   if (obj == NULL)
     AfxThrowOleException(E_OUTOFMEMORY);
   obj->setParentAssembly(m_pCurrentSubAssembly);
-  obj->objectType.setValue(ObjectType);
-  obj->objectDefinition.setValue(ObjectDefinition);
+  obj->objectType.setValue(CaConvert(ObjectType));
+  obj->objectDefinition.setValue(CaConvert(ObjectDefinition));
   obj->connect();
   pCaGenericObject->m_pGenericObject = obj;
 
@@ -1336,10 +1337,11 @@ IDispatch* CaApplication::FindByDescription(LPCTSTR UserDescription)
 {
   CA_CHECK_LICENSE(false);
 
+  std::string descr = CaConvert(UserDescription);
   std::vector<FmModelMemberBase*> items;
   FmDB::getAllOfType(items,FmModelMemberBase::getClassTypeID());
   for (FmModelMemberBase* item : items)
-    if (item->getUserDescription().compare(UserDescription) == 0)
+    if (item->getUserDescription().compare(descr) == 0)
       return CreateCOMObjectWrapper(item);
 
   return NULL;
@@ -1386,7 +1388,8 @@ IPart* CaApplication::LoadFEPart(LPCTSTR FileName, BOOL RelativePath)
 {
   CA_CHECK_LICENSE(true);
 
-  if (!FmFileSys::isReadable(FileName))
+  std::string fileName = CaConvert(FileName);
+  if (!FmFileSys::isReadable(fileName))
     return NULL;
 
   FmPart* part = new FmPart;
@@ -1395,13 +1398,13 @@ IPart* CaApplication::LoadFEPart(LPCTSTR FileName, BOOL RelativePath)
   part->setParentAssembly(m_pCurrentSubAssembly);
   part->connect();
   part->myCalculateMass.setValue(FmPart::FROM_FEM);
-  if (!part->importPart(FileName,NULL,RelativePath))
+  if (!part->importPart(fileName,NULL,RelativePath))
   {
     part->erase();
     return NULL;
   }
 
-  part->setUserDescription(FFaFilePath::getBaseName(FileName,true));
+  part->setUserDescription(FFaFilePath::getBaseName(fileName,true));
   part->onChanged();
   part->draw();
 
@@ -1633,7 +1636,7 @@ STDMETHODIMP CaApplication::XLocalClass::Open(BSTR FileName, VARIANT_BOOL LoadLi
   METHOD_PROLOGUE(CaApplication, LocalClass);
   TRY
   {
-    *pbRet = pThis->Open(CW2A(FileName), LoadLinks);
+    *pbRet = pThis->Open(FileName, LoadLinks);
   }
   CATCH_ALL(e)
   {
@@ -1663,7 +1666,7 @@ STDMETHODIMP CaApplication::XLocalClass::SaveAs(BSTR FileName, VARIANT_BOOL Save
   METHOD_PROLOGUE(CaApplication, LocalClass);
   TRY
   {
-    *pbRet = pThis->SaveAs(CW2A(FileName), SaveResults, SaveReducedParts);
+    *pbRet = pThis->SaveAs(FileName, SaveResults, SaveReducedParts);
   }
   CATCH_ALL(e)
   {
@@ -1934,7 +1937,7 @@ STDMETHODIMP CaApplication::XLocalClass::CreateResultExtractor(BSTR FRSFileNames
   METHOD_PROLOGUE(CaApplication, LocalClass);
   TRY
   {
-    *ppResultExtractor = pThis->CreateResultExtractor(CW2A(FRSFileNames));
+    *ppResultExtractor = pThis->CreateResultExtractor(FRSFileNames);
   }
   CATCH_ALL(e)
   {
@@ -1995,7 +1998,7 @@ STDMETHODIMP CaApplication::XLocalClass::CreateGenericObject(BSTR ObjectType, BS
   METHOD_PROLOGUE(CaApplication, LocalClass);
   TRY
   {
-    *ppGenericObject = pThis->CreateGenericObject(CW2A(ObjectType), CW2A(ObjectDefinition), Desc);
+    *ppGenericObject = pThis->CreateGenericObject(ObjectType, ObjectDefinition, Desc);
   }
   CATCH_ALL(e)
   {
@@ -2101,7 +2104,7 @@ STDMETHODIMP CaApplication::XLocalClass::FindByDescription(BSTR UserDescription,
   METHOD_PROLOGUE(CaApplication, LocalClass);
   TRY
   {
-    *ppRet = pThis->FindByDescription(CW2A(UserDescription));
+    *ppRet = pThis->FindByDescription(UserDescription);
   }
   CATCH_ALL(e)
   {
@@ -2146,7 +2149,7 @@ STDMETHODIMP CaApplication::XLocalClass::LoadFEPart(BSTR FileName, VARIANT_BOOL 
   METHOD_PROLOGUE(CaApplication, LocalClass);
   TRY
   {
-    *ppRet = pThis->LoadFEPart(CW2A(FileName), RelativePath);
+    *ppRet = pThis->LoadFEPart(FileName, RelativePath);
   }
   CATCH_ALL(e)
   {

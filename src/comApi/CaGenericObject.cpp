@@ -8,6 +8,7 @@
 #include "CaGenericObject.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmGenericDBObject.H"
 
@@ -65,8 +66,8 @@ BSTR CaGenericObject::get_Description()
 void CaGenericObject::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pGenericObject);
-  m_pGenericObject->setUserDescription(val);
 
+  m_pGenericObject->setUserDescription(CaConvert(val));
   m_pGenericObject->onChanged();
 }
 
@@ -79,8 +80,8 @@ BSTR CaGenericObject::get_ObjectType()
 void CaGenericObject::put_ObjectType(LPCTSTR val)
 {
   CA_CHECK(m_pGenericObject);
-  m_pGenericObject->objectType.setValue(val);
 
+  m_pGenericObject->objectType.setValue(CaConvert(val));
   m_pGenericObject->onChanged();
 }
 
@@ -93,8 +94,8 @@ BSTR CaGenericObject::get_ObjectDefinition()
 void CaGenericObject::put_ObjectDefinition(LPCTSTR val)
 {
   CA_CHECK(m_pGenericObject);
-  m_pGenericObject->objectDefinition.setValue(val);
 
+  m_pGenericObject->objectDefinition.setValue(CaConvert(val));
   m_pGenericObject->onChanged();
 }
 
@@ -204,7 +205,7 @@ STDMETHODIMP CaGenericObject::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaGenericObject, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -234,7 +235,7 @@ STDMETHODIMP CaGenericObject::XLocalClass::put_ObjectType(BSTR val)
   METHOD_PROLOGUE(CaGenericObject, LocalClass);
   TRY
   {
-    pThis->put_ObjectType(CW2A(val));
+    pThis->put_ObjectType(val);
   }
   CATCH_ALL(e)
   {
@@ -264,7 +265,7 @@ STDMETHODIMP CaGenericObject::XLocalClass::put_ObjectDefinition(BSTR val)
   METHOD_PROLOGUE(CaGenericObject, LocalClass);
   TRY
   {
-    pThis->put_ObjectDefinition(CW2A(val));
+    pThis->put_ObjectDefinition(val);
   }
   CATCH_ALL(e)
   {
