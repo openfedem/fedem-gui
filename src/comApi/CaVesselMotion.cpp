@@ -9,6 +9,7 @@
 #include "CaApplication.h"
 #include "CaFunction.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmVesselMotion.H"
 
@@ -72,7 +73,7 @@ void CaVesselMotion::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -87,7 +88,7 @@ void CaVesselMotion::put_RAOFilePath(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->raoFile.setValue(val);
+  m_ptr->raoFile.setValue(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -311,7 +312,7 @@ STDMETHODIMP CaVesselMotion::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaVesselMotion, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -341,7 +342,7 @@ STDMETHODIMP CaVesselMotion::XLocalClass::put_RAOFilePath(BSTR val)
   METHOD_PROLOGUE(CaVesselMotion, LocalClass);
   TRY
   {
-    pThis->put_RAOFilePath(CW2A(val));
+    pThis->put_RAOFilePath(val);
   }
   CATCH_ALL(e)
   {

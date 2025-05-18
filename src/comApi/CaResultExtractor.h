@@ -106,7 +106,7 @@ public:
 
 public:
   // Implementation
-  bool CreateExtractor(LPCTSTR szFileNames);
+  bool CreateExtractor(LPCSTR szFileNames);
 
 private:
   // Properties
