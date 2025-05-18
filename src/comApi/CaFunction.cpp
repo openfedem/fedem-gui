@@ -8,6 +8,7 @@
 #include "CaFunction.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmAllFunctionHeaders.H"
 #include "vpmDB/FmEngine.H"
@@ -174,7 +175,7 @@ void CaFunction::put_Parameters(LPCTSTR val)
     return;
 
   // Split string
-  std::string strParams(val);
+  std::string strParams = CaConvert(val);
   std::vector<std::string> vNames, vValues;
   char* psz = strtok(const_cast<char*>(strParams.c_str()),";");
   for (; psz; psz = strtok(NULL,";")) {
@@ -294,7 +295,7 @@ void CaFunction::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -583,7 +584,7 @@ void CaFunction::SetPolylineFromFile(LPCTSTR FileName, const VARIANT FAR& Channe
   }
 
   // Set data
-  plFunc->setDevice(FileName,strChannelName);
+  plFunc->setDevice(CaConvert(FileName),strChannelName);
   plFunc->scaleFactor.setValue(fScaleFactor);
   plFunc->verticalShift.setValue(fVerticalShift);
   plFunc->zeroAdjust.setValue(bZeroAdjust);
@@ -605,7 +606,7 @@ void CaFunction::SetMathExpression(LPCTSTR Expression)
   }
 
   mathFunc->setFunctionUse(FmMathFuncBase::FuncUse::GENERAL);
-  mathFunc->setExpressionString(Expression);
+  mathFunc->setExpressionString(CaConvert(Expression));
   mathFunc->connect();
 
   engine->setFunction(mathFunc);
@@ -1194,7 +1195,7 @@ STDMETHODIMP CaFunction::XLocalClass::put_Parameters(BSTR val)
   METHOD_PROLOGUE(CaFunction, LocalClass);
   TRY
   {
-    pThis->put_Parameters(CW2A(val));
+    pThis->put_Parameters(val);
   }
   CATCH_ALL(e)
   {
@@ -1284,7 +1285,7 @@ STDMETHODIMP CaFunction::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaFunction, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -1421,7 +1422,7 @@ STDMETHODIMP CaFunction::XLocalClass::SetPolylineFromFile(BSTR FileName, VARIANT
   METHOD_PROLOGUE(CaFunction, LocalClass);
   TRY
   {
-    pThis->SetPolylineFromFile(CW2A(FileName), ChannelName, ScaleFactor, ZeroAdjust, VerticalShift);
+    pThis->SetPolylineFromFile(FileName, ChannelName, ScaleFactor, ZeroAdjust, VerticalShift);
   }
   CATCH_ALL(e)
   {
@@ -1436,7 +1437,7 @@ STDMETHODIMP CaFunction::XLocalClass::SetMathExpression(BSTR Expression)
   METHOD_PROLOGUE(CaFunction, LocalClass);
   TRY
   {
-    pThis->SetMathExpression(CW2A(Expression));
+    pThis->SetMathExpression(Expression);
   }
   CATCH_ALL(e)
   {

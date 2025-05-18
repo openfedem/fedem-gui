@@ -8,6 +8,7 @@
 #include "CaSolverManager.h"
 #include "CaApplication.h"
 #include "CaSimulationEvent.h"
+#include "CaStrConv.h"
 
 #include "vpmApp/vpmAppCmds/FapSolveCmds.H"
 #include "vpmDB/FmDB.H"
@@ -153,7 +154,8 @@ void CaSolverManager::EraseEventResults()
 
 BOOL CaSolverManager::WriteSolverInputFile(LPCTSTR FileName)
 {
-  FmSolverParser solverParser(FileName);
+  std::string fileName = CaConvert(FileName);
+  FmSolverParser solverParser(fileName.c_str());
   return solverParser.writeFullFile();
 }
 
@@ -467,7 +469,7 @@ STDMETHODIMP CaSolverManager::XLocalClass::WriteSolverInputFile(BSTR FileName, V
 	METHOD_PROLOGUE(CaSolverManager, LocalClass);
 	TRY
 	{
-		*pVal = pThis->WriteSolverInputFile(CW2A(FileName));
+		*pVal = pThis->WriteSolverInputFile(FileName);
 	}
 	CATCH_ALL(e)
 	{

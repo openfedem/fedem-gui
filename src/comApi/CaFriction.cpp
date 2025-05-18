@@ -8,6 +8,7 @@
 #include "CaFriction.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmRotFriction.H"
 #include "vpmDB/FmPrismaticFriction.H"
@@ -205,8 +206,8 @@ BSTR CaFriction::get_Description()
 void CaFriction::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pFriction);
-  m_pFriction->setUserDescription(val);
 
+  m_pFriction->setUserDescription(CaConvert(val));
   m_pFriction->onChanged();
 }
 
@@ -514,7 +515,7 @@ STDMETHODIMP CaFriction::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaFriction, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
