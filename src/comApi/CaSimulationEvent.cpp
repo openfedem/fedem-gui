@@ -8,6 +8,7 @@
 #include "CaSimulationEvent.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmSimulationEvent.H"
 #include "vpmDB/FmfWaveSinus.H"
@@ -93,7 +94,8 @@ BSTR CaSimulationEvent::get_Description()
 void CaSimulationEvent::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pSimulationEvent);
-  m_pSimulationEvent->setUserDescription(val);
+
+  m_pSimulationEvent->setUserDescription(CaConvert(val));
   m_pSimulationEvent->onChanged();
 }
 
@@ -117,31 +119,31 @@ void CaSimulationEvent::AddPropertyValue(IDispatch* ModelObject, LPCTSTR Propert
   // Get arguments
   FmSimulationModelBase* modelObj =
     dynamic_cast<FmSimulationModelBase*>(CaApplication::GetFromCOMObjectWrapper(ModelObject));
-  std::string fieldName(PropertyName);
-  std::string fieldValue(Value);
+  std::string fieldName = CaConvert(PropertyName);
+  std::string fieldValue = CaConvert(Value);
 
   // Field name mapping for Jonswap wave spectrum functions
   FmfWaveSpectrum* pWaveFunc = dynamic_cast<FmfWaveSpectrum*>(modelObj);
   if ((pWaveFunc != NULL) && (pWaveFunc->spectrum.getValue() == FmfWaveSpectrum::FmSpectrum::JONSWAP)) {
-    if (stricmp(PropertyName, "Hs") == 0)
+    if (_wcsicmp(PropertyName, L"Hs") == 0)
       fieldName = "SIGNIFICANT_WAVE_HEIGHT";
-    else if (stricmp(PropertyName, "Tp") == 0)
+    else if (_wcsicmp(PropertyName, L"Tp") == 0)
       fieldName = "PEAK_PERIOD";
-    else if (stricmp(PropertyName, "Gamma") == 0)
+    else if (_wcsicmp(PropertyName, L"Gamma") == 0)
       fieldName = "SPECTRAL_PEAKEDNESS";
-    else if (stricmp(PropertyName, "N") == 0)
+    else if (_wcsicmp(PropertyName, L"N") == 0)
       fieldName = "WAVE_COMPONENTS";
-    else if (stricmp(PropertyName, "RndSeed") == 0)
+    else if (_wcsicmp(PropertyName, L"RndSeed") == 0)
       fieldName = "RANDOM_SEED";
-    else if (stricmp(PropertyName, "TRange") == 0)
+    else if (_wcsicmp(PropertyName, L"TRange") == 0)
       fieldName = "PERIOD_RANGE";
-    else if (stricmp(PropertyName, "TRangeMin") == 0)
+    else if (_wcsicmp(PropertyName, L"TRangeMin") == 0)
       AfxThrowOleException(E_INVALIDARG); // Safeguard
-    else if (stricmp(PropertyName, "TRangeMax") == 0)
+    else if (_wcsicmp(PropertyName, L"TRangeMax") == 0)
       AfxThrowOleException(E_INVALIDARG); // Safeguard
-    else if (stricmp(PropertyName, "AutoCalcGamma") == 0)
+    else if (_wcsicmp(PropertyName, L"AutoCalcGamma") == 0)
       fieldName = "AUTO_CALC_SPECTRAL_PEAKEDNESS";
-    else if (stricmp(PropertyName, "AutoCalcTRange") == 0)
+    else if (_wcsicmp(PropertyName, L"AutoCalcTRange") == 0)
       fieldName = "AUTO_CALC_PERIOD_RANGE";
   }
 
@@ -302,7 +304,7 @@ STDMETHODIMP CaSimulationEvent::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaSimulationEvent, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -347,7 +349,7 @@ STDMETHODIMP CaSimulationEvent::XLocalClass::AddPropertyValue(IDispatch* ModelOb
   METHOD_PROLOGUE(CaSimulationEvent, LocalClass);
   TRY
   {
-    pThis->AddPropertyValue(ModelObject, CW2A(PropertyName), CW2A(Value));
+    pThis->AddPropertyValue(ModelObject, PropertyName, Value);
   }
   CATCH_ALL(e)
   {

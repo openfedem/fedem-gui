@@ -10,6 +10,7 @@
 #include "CaCrossSection.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmBeam.H"
 #include "vpmDB/FmBeamProperty.H"
@@ -94,7 +95,7 @@ void CaBeam::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pBeam);
 
-  m_pBeam->setUserDescription(val);
+  m_pBeam->setUserDescription(CaConvert(val));
   m_pBeam->onChanged();
 }
 
@@ -473,7 +474,7 @@ STDMETHODIMP CaBeam::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaBeam, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

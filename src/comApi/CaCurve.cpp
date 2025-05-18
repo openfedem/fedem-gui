@@ -8,6 +8,7 @@
 #include "CaCurve.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmCurveSet.H"
 
@@ -82,8 +83,7 @@ void CaCurve::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
-
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -123,8 +123,7 @@ void CaCurve::put_Legend(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setLegend(val);
-
+  m_ptr->setLegend(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -277,14 +276,13 @@ void CaCurve::SetResult(int Axis, LPCTSTR OGType, long BaseID, long UserID,
 {
   CA_CHECK(m_ptr);
 
-  FFaResultDescription curveDesc(OGType,BaseID,UserID);
-  curveDesc.varRefType = RefType;
+  FFaResultDescription curveDesc(CaConvert(OGType).c_str(), BaseID, UserID);
+  curveDesc.varRefType = CaConvert(RefType);
 
-  char* dcopy = strdup(DescPath);
-  char* pstr = strtok(dcopy,";");
+  std::string dcopy = CaConvert(DescPath);
+  char* pstr = strtok(const_cast<char*>(dcopy.c_str()),";");
   for (; pstr; pstr = strtok(NULL,";"))
     curveDesc.varDescrPath.push_back(pstr);
-  free(dcopy);
 
   m_ptr->setResult(Axis,curveDesc);
 }
@@ -312,7 +310,7 @@ void CaCurve::SetResultOper(int Axis, LPCTSTR Oper)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setResultOper(Axis, std::string(Oper));
+  m_ptr->setResultOper(Axis, CaConvert(Oper));
 }
 
 BSTR CaCurve::GetResultOper(int Axis)
@@ -334,7 +332,7 @@ void CaCurve::SetCombinedCurve(LPCTSTR Expression,
   m_ptr->useInputMode(FmCurveSet::COMB_CURVES);
 
   // Set expression
-  m_ptr->setExpression(Expression);
+  m_ptr->setExpression(CaConvert(Expression));
 
   // Lambda function for assigning a component curve
   auto&& setCurve = [this](IUnknown* crv, int icomp)
@@ -455,7 +453,7 @@ STDMETHODIMP CaCurve::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaCurve, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -530,7 +528,7 @@ STDMETHODIMP CaCurve::XLocalClass::put_Legend(BSTR val)
   METHOD_PROLOGUE(CaCurve, LocalClass);
   TRY
   {
-    pThis->put_Legend(CW2A(val));
+    pThis->put_Legend(val);
   }
   CATCH_ALL(e)
   {
@@ -846,7 +844,7 @@ STDMETHODIMP CaCurve::XLocalClass::SetResult(int Axis, BSTR OGType, long BaseID,
   METHOD_PROLOGUE(CaCurve, LocalClass);
   TRY
   {
-    pThis->SetResult(Axis, CW2A(OGType), BaseID, UserID, CW2A(RefType), CW2A(DescPath));
+    pThis->SetResult(Axis, OGType, BaseID, UserID, RefType, DescPath);
   }
   CATCH_ALL(e)
   {
@@ -877,7 +875,7 @@ STDMETHODIMP CaCurve::XLocalClass::SetResultOper(int Axis, BSTR Oper)
   METHOD_PROLOGUE(CaCurve, LocalClass);
   TRY
   {
-    pThis->SetResultOper(Axis, CW2A(Oper));
+    pThis->SetResultOper(Axis, Oper);
   }
   CATCH_ALL(e)
   {
@@ -908,7 +906,7 @@ STDMETHODIMP CaCurve::XLocalClass::SetCombinedCurve(BSTR Expression, ICurve* A, 
   METHOD_PROLOGUE(CaCurve, LocalClass);
   TRY
   {
-    pThis->SetCombinedCurve(CW2A(Expression), A, B, C, D, E);
+    pThis->SetCombinedCurve(Expression, A, B, C, D, E);
   }
   CATCH_ALL(e)
   {
