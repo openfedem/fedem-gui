@@ -110,6 +110,10 @@ endforeach ( FILE ${SOURCE_FILE_LIST} )
 set ( HEADER_FILES ${HPP_HEADER_FILES} )
 set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 
+if ( WIN )
+  string ( APPEND CMAKE_CXX_FLAGS " -D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING" )
+endif ( WIN )
+
 
 #
 # Dependencies and system libraries
