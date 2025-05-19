@@ -20,7 +20,7 @@ class FFuColorDialog : virtual public FFuTopLevelShell
 {
 public:
   void setInitialColor(const FFuColor& aColor);
-  void setColor(const FFuColor& aColor, bool notify = true);
+  void setColor(const FFuColor& aColor);
   const FFuColor& getColor() const;
 
   void setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB);

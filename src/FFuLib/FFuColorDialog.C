@@ -52,9 +52,9 @@ void FFuColorDialog::setInitialColor(const FFuColor& aColor)
   Set the current color
   \sa FFuColorSelector::setColor
 */
-void FFuColorDialog::setColor(const FFuColor& aColor, bool notify)
+void FFuColorDialog::setColor(const FFuColor& aColor)
 {
-  myColorSelector->setColor(aColor, notify);
+  myColorSelector->setColor(aColor);
 }
 
 

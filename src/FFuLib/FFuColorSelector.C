@@ -55,14 +55,14 @@ void FFuColorSelector::init()
 
 void FFuColorSelector::setInitialColor(const FFuColor& aColor)
 {
-  myInitialColor = aColor;
-  iAmColorInited = true;
-  this->setColor(aColor);
+  myInitialColor = myColor = aColor;
+
+  this->updateSlidersAndFields();
+  this->updateSampleFrame();
 }
 
 /*!
-  Set the selected color for the dialog. The first time this
-  is called, the color is also used as initial color.
+  Set the selected color for the dialog.
   \param aColor the color to be set
   \param notify if true, the color change callback is called.
   \sa setInitialColor getColor setColorChangeCB
@@ -70,12 +70,6 @@ void FFuColorSelector::setInitialColor(const FFuColor& aColor)
 
 void FFuColorSelector::setColor(const FFuColor& aColor, bool notify)
 {
-  if (!iAmColorInited)
-  {
-    myInitialColor = aColor;
-    iAmColorInited = true;
-  }
-
   myColor = aColor;
 
   this->updateSlidersAndFields();

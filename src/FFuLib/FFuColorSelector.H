@@ -45,7 +45,6 @@ protected:
 
   FFuColor myColor;
   FFuColor myInitialColor;
-  bool iAmColorInited;
 
 private:
   void updateSlidersAndFields();
