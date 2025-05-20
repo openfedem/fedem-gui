@@ -18,15 +18,10 @@ class FFuQtUserDialog : public QMessageBox, public FFuUserDialog,
                         public FFuQtComponentBase
 {
 public:
-  FFuQtUserDialog(const char* msgText, int dialogType, const char** buttonTexts,
-		  unsigned int nButtons, bool modal = true);
-  virtual ~FFuQtUserDialog() {}
+  FFuQtUserDialog(const char* msgText, int dialogType,
+                  const char** buttonTexts, unsigned int nButton, bool isModal);
 
   virtual int execute();
-
-private:
-  virtual void closeEvent(QCloseEvent* e);
-  virtual void done(int r);
 };
 
 #endif
