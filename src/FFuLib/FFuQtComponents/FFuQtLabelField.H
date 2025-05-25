@@ -5,24 +5,21 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFUQTLABELFIELD_H
-#define FFUQTLABELFIELD_H
+#ifndef FFU_QT_LABEL_FIELD_H
+#define FFU_QT_LABEL_FIELD_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "FFuLib/FFuLabelField.H"
 
-class FFuQtLabelField : public FFuQtMultUIComponent, public FFuLabelField
+
+class FFuQtLabelField : public FFuQtWidget, public FFuLabelField
 {
 public :
-  FFuQtLabelField(QWidget* parent = 0,
-		  int xpos = 100, int ypos  = 100,
-		  int width= 100, int height= 15,
-		  const char* name = "FFuLabelField");
-  virtual ~FFuQtLabelField() {}
+  FFuQtLabelField(QWidget* parent = NULL, const char* name = "FFuQtLabelField");
 
-  virtual void setSensitivity(bool setSensitive){this->FFuLabelField::setSensitivity(setSensitive);}
-  virtual bool getSensitivity() {return this->FFuLabelField::getSensitivity();}
-  virtual void setToolTip(const char* tip) {this->FFuLabelField::setToolTip(tip);}
+  virtual void setSensitivity(bool s) { this->FFuLabelField::setSensitivity(s); }
+  virtual bool getSensitivity() { return this->FFuLabelField::getSensitivity(); }
+  virtual void setToolTip(const char* t) { this->FFuLabelField::setToolTip(t); }
 };
 
 #endif

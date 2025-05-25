@@ -34,44 +34,36 @@ void FuiBeamPropSummary::initWidgets()
 
   myDoField->setLabel("Do");
   myDoField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myDoField->setLabelMargin(0);
   myDoField->setLabelWidth(15);
 
   myDiField->setLabel("Di");
   myDiField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myDiField->setLabelMargin(0);
   myDiField->setLabelWidth(15);
 
   myImage->setPixMap(pipe_xpm);
 
   myGEAField->setLabel("EA");
   myGEAField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myGEAField->setLabelMargin(0);
   myGEAField->setLabelWidth(25);
 
   myGEIyyField->setLabel("EIyy");
   myGEIyyField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myGEIyyField->setLabelMargin(0);
   myGEIyyField->setLabelWidth(25);
 
   myGEIzzField->setLabel("EIzz");
   myGEIzzField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myGEIzzField->setLabelMargin(0);
   myGEIzzField->setLabelWidth(25);
 
   myGItField->setLabel("GIt");
   myGItField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myGItField->setLabelMargin(0);
   myGItField->setLabelWidth(25);
 
   myGmlField->setLabel("<font face='Symbol'>r</font>A");
   myGmlField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myGmlField->setLabelMargin(0);
   myGmlField->setLabelWidth(25);
 
   myGIpField->setLabel("<font face='Symbol'>r</font>Ip");
   myGIpField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myGIpField->setLabelMargin(0);
   myGIpField->setLabelWidth(25);
 
   // Dependent properties
@@ -81,25 +73,21 @@ void FuiBeamPropSummary::initWidgets()
 
   myAField->setLabel("A");
   myAField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myAField->setLabelMargin(0);
   myAField->setLabelWidth(25);
   myAField->setSensitivity(false);
 
   myIyField->setLabel("Iyy");
   myIyField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myIyField->setLabelMargin(0);
   myIyField->setLabelWidth(25);
   myIyField->setSensitivity(false);
 
   myIzField->setLabel("Izz");
   myIzField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myIzField->setLabelMargin(0);
   myIzField->setLabelWidth(25);
   myIzField->setSensitivity(false);
 
   myIpField->setLabel("Ip");
   myIpField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myIpField->setLabelMargin(0);
   myIpField->setLabelWidth(25);
   myIpField->setSensitivity(false);
 
@@ -109,34 +97,28 @@ void FuiBeamPropSummary::initWidgets()
 
   myShearKYField->setLabel("ky");
   myShearKYField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShearKYField->setLabelMargin(0);
   myShearKYField->setLabelWidth(25);
 
   myShearKZField->setLabel("kz");
   myShearKZField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShearKZField->setLabelMargin(0);
   myShearKZField->setLabelWidth(25);
 
   myShearGAsyField->setLabel("GAs,y");
   myShearGAsyField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShearGAsyField->setLabelMargin(0);
   myShearGAsyField->setLabelWidth(35);
 
   myShearGAszField->setLabel("GAs,z");
   myShearGAszField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShearGAszField->setLabelMargin(0);
   myShearGAszField->setLabelWidth(35);
 
   myShearSFrame->setLabel("Shear center offset");
 
   myShearSYField->setLabel("sy");
   myShearSYField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShearSYField->setLabelMargin(0);
   myShearSYField->setLabelWidth(25);
 
   myShearSZField->setLabel("sz");
   myShearSZField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShearSZField->setLabelMargin(0);
   myShearSZField->setLabelWidth(25);
 }
 

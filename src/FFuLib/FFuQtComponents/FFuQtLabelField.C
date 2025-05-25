@@ -5,22 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
+#include <QHBoxLayout>
 
+#include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 
-FFuQtLabelField::FFuQtLabelField(QWidget* parent ,
-				 int xpos , int ypos ,
-				 int width, int height,
-				 const char* name)
-  :FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+
+FFuQtLabelField::FFuQtLabelField(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
 {
-  this->myLabel = new FFuQtLabel(this);
-  this->myField = new FFuQtIOField(this);
-}
- 
-FFuLabelField * FFuLabelField::create(FFuComponentBase * parent)
-{
-  return new FFuQtLabelField(dynamic_cast<QWidget*>(parent));
+  FFuQtLabel* qLabel;
+  FFuQtIOField* qField;
+  myLabel = qLabel = new FFuQtLabel();
+  myField = qField = new FFuQtIOField();
+
+  QLayout* layout = new QHBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qLabel);
+  layout->addWidget(qField);
 }

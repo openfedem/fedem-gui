@@ -217,12 +217,10 @@ void FuiProperties::initWidgets()
   myVisualize3DButton->popDown();
   myVisualize3DStartAngleField->setLabel("Start");
   myVisualize3DStartAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myVisualize3DStartAngleField->setLabelMargin(1);
   myVisualize3DStartAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myVisualize3DStartAngleField->popDown();
   myVisualize3DStopAngleField->setLabel("Stop");
   myVisualize3DStopAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myVisualize3DStopAngleField->setLabelMargin(1);
   myVisualize3DStopAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myVisualize3DStopAngleField->popDown();
 
@@ -231,24 +229,20 @@ void FuiProperties::initWidgets()
   myShaftSDMassField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myShaftSDMassField->setLabel("Mass proportional");
   myShaftSDMassField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShaftSDMassField->setLabelMargin(0);
 
   myShaftSDStiffnessField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myShaftSDStiffnessField->setLabel("Stiffness proportional");
   myShaftSDStiffnessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShaftSDStiffnessField->setLabelMargin(0);
 
   myShaftDPFrame->setLabel("Scaling of Dynamic Properties");
 
   myShaftDPStiffnessField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myShaftDPStiffnessField->setLabel("Stiffness scale");
   myShaftDPStiffnessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShaftDPStiffnessField->setLabelMargin(0);
 
   myShaftDPMassField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myShaftDPMassField->setLabel("Mass scale");
   myShaftDPMassField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myShaftDPMassField->setLabelMargin(0);
 
   myShaftNoteALabel->setPixMap(info_xpm);
   myShaftNoteBLabel->setLabel("<b>Notes</b>");
@@ -283,12 +277,10 @@ void FuiProperties::initWidgets()
   // Turbine, Nacelle, Gearbox, etc. (shared)
 
   mySubassMassField->setLabel("Mass");
-  mySubassMassField->setLabelMargin(0);
   mySubassMassField->setSensitivity(false);
   mySubassMassField->popDown();
 
   mySubassLengthField->setLabel("Length");
-  mySubassLengthField->setLabelMargin(0);
   mySubassLengthField->setSensitivity(false);
   mySubassLengthField->popDown();
 
@@ -407,11 +399,9 @@ void FuiProperties::initWidgets()
   myRiserVisualize3DButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
   myRiserVisualize3DStartAngleField->setLabel("Start");
   myRiserVisualize3DStartAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myRiserVisualize3DStartAngleField->setLabelMargin(1);
   myRiserVisualize3DStartAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRiserVisualize3DStopAngleField->setLabel("Stop");
   myRiserVisualize3DStopAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myRiserVisualize3DStopAngleField->setLabelMargin(1);
   myRiserVisualize3DStopAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
 
   myRiserMudFrame->setLabel(" ");
@@ -422,12 +412,10 @@ void FuiProperties::initWidgets()
   myRiserMudDensityField->setLabel("Mud density");
   myRiserMudDensityField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRiserMudDensityField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRiserMudDensityField->setLabelMargin(0);
 
   myRiserMudLevelField->setLabel("Mud level");
   myRiserMudLevelField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRiserMudLevelField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRiserMudLevelField->setLabelMargin(0);
 
   myRiserGeneralFrame->popDown();
   myRiserInternalToDefLabel->popDown();
@@ -627,7 +615,6 @@ void FuiProperties::initWidgets()
   mySpindelOffsetField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySpindelOffsetField->setLabel("Z offset");
   mySpindelOffsetField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  mySpindelOffsetField->setLabelMargin(0);
 
   myTireDataFileLabel->popDown();
   myTireDataFileField->popDown();
@@ -648,15 +635,12 @@ void FuiProperties::initWidgets()
   myRoadZShiftField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRoadZShiftField->setLabel("Vertical shift");
   myRoadZShiftField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRoadZShiftField->setLabelMargin(0);
   myRoadXOffsetField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRoadXOffsetField->setLabel("Horizontal offset");
   myRoadXOffsetField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRoadXOffsetField->setLabelMargin(0);
   myRoadZRotationField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRoadZRotationField->setLabel("Rotation about Z axis");
   myRoadZRotationField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRoadZRotationField->setLabelMargin(0);
 
   myUseFileRoadRadio->setLabel("Road defined by file");
   myRoadDataFileLabel->setLabel("Road file");
@@ -687,19 +671,15 @@ void FuiProperties::initWidgets()
   myMatPropRhoField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myMatPropRhoField->setLabel("<font face='Symbol'><font size='+1'>r</font></font>");
   myMatPropRhoField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myMatPropRhoField->setLabelMargin(0);
   myMatPropEField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myMatPropEField->setLabel("E");
   myMatPropEField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myMatPropEField->setLabelMargin(0);
   myMatPropNuField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myMatPropNuField->setLabel("<font face='Symbol'><font size='+1'>n</font></font>");
   myMatPropNuField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myMatPropNuField->setLabelMargin(0);
   myMatPropGField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myMatPropGField->setLabel("G");
   myMatPropGField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myMatPropGField->setLabelMargin(0);
   myMatPropRhoField->popDown();
   myMatPropEField->popDown();
   myMatPropNuField->popDown();
@@ -713,26 +693,21 @@ void FuiProperties::initWidgets()
   mySeaStateWidthField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySeaStateWidthField->setLabel("X-length");
   mySeaStateWidthField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  mySeaStateWidthField->setLabelMargin(0);
   mySeaStateHeightField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySeaStateHeightField->setLabel("Y-length");
   mySeaStateHeightField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  mySeaStateHeightField->setLabelMargin(0);
 
   mySeaStateWidthPosField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySeaStateWidthPosField->setLabel("X");
   mySeaStateWidthPosField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  mySeaStateWidthPosField->setLabelMargin(0);
 
   mySeaStateHeightPosField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySeaStateHeightPosField->setLabel("Y");
   mySeaStateHeightPosField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  mySeaStateHeightPosField->setLabelMargin(0);
 
   mySeaStateNumPoints->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySeaStateNumPoints->setLabel("Quantization");
   mySeaStateNumPoints->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  mySeaStateNumPoints->setLabelMargin(0);
 
   mySeaStateShowGridToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
   mySeaStateShowGridToggle->setLabel("Show quantization lines");
@@ -1758,30 +1733,25 @@ void FuiProperties::placeWidgets(int width, int height)
 
       myStrRosNodesField       ->setEdgeGeometry(v2, v11, h3, h4);
       myStrRosNodesField->setLabelWidth(v3-v2);
-      myStrRosNodesField->setLabelMargin(0);
       myStrRosEditNodesButton  ->setEdgeGeometry(v12, v14, h3-bAdd, h4+bAdd);
 
       myOrientationFrame       ->setEdgeGeometry(v1, v16, h5, h8);
       myStrRosAngleField       ->setEdgeGeometry(v2, v9, h6, h7);
       myStrRosAngleField->setLabelWidth(v3-v2);
-      myStrRosAngleField->setLabelMargin(0);
       myStrRosEditDirButton    ->setEdgeGeometry(v10, v15, h6-bAdd, h7+bAdd);
 
       myLayerFrame->setEdgeGeometry(v1, v6, h9, h16);
       myStrRosUseFEHeightToggle->setEdgeGeometry(v2, v5, h10, h11);
       myStrRosHeightField      ->setEdgeGeometry(v2, v5, h12, h13);
       myStrRosHeightField->setLabelWidth(this->getFontWidth("HeightM"));
-      myStrRosHeightField->setLabelMargin(0);
       myStrRosFlipZButton      ->setEdgeGeometry(v2, v4, h14-bAdd, h15+bAdd);
 
       myMaterialFrame->setEdgeGeometry(v7, v16, h9, h16);
       myStrRosUseFEMatToggle   ->setEdgeGeometry(v8, v15, h10, h11);
       myStrRosEmodField        ->setEdgeGeometry(v8, v15, h12, h13);
       myStrRosEmodField->setLabelWidth(v13-v8);
-      myStrRosEmodField->setLabelMargin(0);
       myStrRosNuField          ->setEdgeGeometry(v8, v15, h14,h15);
       myStrRosNuField->setLabelWidth(v13-v8);
-      myStrRosNuField->setLabelMargin(0);
     }
 
   // Element group
