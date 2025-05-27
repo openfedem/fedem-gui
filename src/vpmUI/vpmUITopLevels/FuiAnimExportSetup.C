@@ -11,7 +11,6 @@
 #include "FFuLib/FFuSpinBox.H"
 #include "FFuLib/FFuRadioButton.H"
 #include "FFuLib/FFuIOField.H"
-#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuPushButton.H"
 #include "FFuLib/FFuDialogButtons.H"
 #include "FFuLib/FFuFileDialog.H"
@@ -68,7 +67,6 @@ void FuiAnimExportSetup::initWidgets()
   everyNthSpinBox->setWrapping(false);
   everyNthSpinBox->setSensitivity(false);
 
-  myFileLabel->setLabel("File");
 #if defined(win32) || defined(win64)
   myFileField->setValue("C:\\animation.mpeg");
 #else
@@ -83,51 +81,6 @@ void FuiAnimExportSetup::initWidgets()
   dialogButtons->setButtonLabel(CANCEL, "Cancel");
   dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiAnimExportSetup,this,
 					       onDialogButtonClicked,int));
-}
-
-
-void FuiAnimExportSetup::placeWidgets(int width, int height)
-{
-  dialogButtons->setEdgeGeometry(0, width,
-				 height - dialogButtons->getHeightHint(),
-				 height);
-
-  int border = this->getBorder();
-  int top = border;
-  int bottom = dialogButtons->getYPos();
-  int left = border;
-  int right = width - border;
-  int rowHeight = (bottom - top)/5;
-
-  // Center of each row
-  int c1 = top + rowHeight/2;
-  int c2 = c1 + rowHeight;
-  int c3 = c2 + rowHeight;
-  int c4 = c3 + rowHeight;
-  int c5 = c4 + rowHeight;
-
-  // File stuff
-  myFileLabel->setCenterYGeometrySizeHint(left, c1);
-  myBrowseButton->setCenterYGeometry(right - myBrowseButton->getWidthHint(), c1,
-				     myBrowseButton->getWidthHint(), myBrowseButton->getHeightHint());
-  myFileField->setEdgeGeometry(myFileLabel->getXRightPos() + border, myBrowseButton->getXPos() - border,
-			       c1 - myFileField->getHeightHint()/2, c1 + myFileField->getHeightHint()/2);
-
-  // Radio btns
-  myAllBtn->setCenterYGeometrySizeHint(left, c2);
-  myRealBtn->setCenterYGeometrySizeHint(left, c3);
-  myOmitBtn->setCenterYGeometrySizeHint(left, c4);
-  mySomeBtn->setCenterYGeometrySizeHint(left, c5);
-
-  // Spin boxes
-  int radioRight = myOmitBtn->getXRightPos();
-  if (mySomeBtn->getXRightPos() > radioRight)
-    radioRight = mySomeBtn->getXRightPos();
-
-  int spinBoxLeft = radioRight + 3*border;
-
-  omitNthSpinBox->setCenterYGeometrySizeHint(spinBoxLeft, c4);
-  everyNthSpinBox->setCenterYGeometrySizeHint(spinBoxLeft, c5);
 }
 
 

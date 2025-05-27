@@ -8,8 +8,8 @@
 #include "vpmUI/vpmUITopLevels/FuiMiniFileBrowser.H"
 #include "FFuLib/FFuListView.H"
 #include "FFuLib/FFuListViewItem.H"
-#include "FFuLib/FFuDialogButtons.H"
 #include "FFuLib/FFuMemo.H"
+#include "FFuLib/FFuDialogButtons.H"
 #include "FFuLib/FFuPopUpMenu.H"
 
 
@@ -37,26 +37,10 @@ FuiMiniFileBrowser::FuiMiniFileBrowser()
 {
   Fmd_CONSTRUCTOR_INIT(FuiMiniFileBrowser);
 
-  splitter = NULL;
   listView = NULL;
   infoView = NULL;
 
   dialogButtons = NULL;
-}
-
-
-void FuiMiniFileBrowser::placeWidgets(int width, int height)
-{
-  int border = 2;
-  int left = border;
-  int right = width - border;
-  int top = border;
-
-  int btop = height - dialogButtons->getHeightHint();
-  dialogButtons->setEdgeGeometry(0, width, btop, height);
-
-  int bottom = dialogButtons->getYPos() - border;
-  splitter->setEdgeGeometry(left, right, top, bottom);
 }
 
 

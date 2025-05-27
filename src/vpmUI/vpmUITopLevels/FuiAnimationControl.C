@@ -320,8 +320,6 @@ void FuiAnimationControl::setUIValues(const FFuaUIValues* values)
 
   this->tickMarkCountField->setValue(animValues->tickMarkCountVal);
   this->tickMarkSpaceField->setValue(animValues->tickMarkSpacingVal);
-
-  this->placeWidgets(this->getWidth(),this->getHeight());
 }
 //-----------------------------------------------------------------------------
 

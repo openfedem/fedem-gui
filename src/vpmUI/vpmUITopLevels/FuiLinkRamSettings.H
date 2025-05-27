@@ -22,7 +22,6 @@ class FuiLinkRamSettings : public FuiTopLevelDialog
 
 public:
   FuiLinkRamSettings();
-  virtual ~FuiLinkRamSettings() {}
 
   static FuiLinkRamSettings* create(int xpos = 100, int ypos = 100,
                                     int width = 100, int height = 100,
@@ -36,7 +35,6 @@ private:
   virtual FFuaUIValues* createValuesObject();
   virtual void setUIValues(const FFuaUIValues* values);
   virtual void getUIValues(FFuaUIValues* values);
-  virtual void placeWidgets(int width, int height);
 
 protected:
   FFuTable* myTable;
@@ -46,9 +44,6 @@ protected:
 class FuaLinkRamSettingsValues : public FFuaUIValues
 {
 public:
-  FuaLinkRamSettingsValues() {}
-  virtual ~FuaLinkRamSettingsValues() {}
-
   struct RamSetting
   {
     std::string id;

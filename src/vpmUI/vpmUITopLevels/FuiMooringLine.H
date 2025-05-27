@@ -10,7 +10,6 @@
 
 #include "FFuLib/FFuBase/FFuModalDialog.H"
 
-class FFuLabel;
 class FFuLabelField;
 class FFuOptionMenu;
 class FFuDialogButtons;
@@ -22,12 +21,8 @@ class FuiMooringLine : virtual public FFuModalDialog
 
 protected:
   FuiMooringLine();
-  virtual ~FuiMooringLine() {}
 
   void initWidgets();
-
-private:
-  virtual void placeWidgets(int width, int height);
 
 public:
   static FuiMooringLine* create(int xpos = 100, int ypos = 100,
@@ -37,13 +32,12 @@ public:
 
   void addElmType(const std::string& etype, bool clear = false);
 
-  int getElmType();
-  int getNumSeg();
-  double getLength();
+  int getElmType() const;
+  int getNumSeg() const;
+  double getLength() const;
 
 protected:
   FFuLabelField* myNumField;
-  FFuLabel*      myTypeLabel;
   FFuOptionMenu* myTypeMenu;
   FFuLabelField* myLengthField;
 

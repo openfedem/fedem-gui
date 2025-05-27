@@ -9,6 +9,7 @@
 #define FUI_SPLIT_BEAM_H
 
 #include "FFuLib/FFuBase/FFuModalDialog.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuLabelField;
 class FFuDialogButtons;
@@ -20,7 +21,6 @@ class FuiSplitBeam : virtual public FFuModalDialog
 
 protected:
   FuiSplitBeam();
-  virtual ~FuiSplitBeam() {}
 
   static FuiSplitBeam* create(int xpos = 100, int ypos = 100,
 			      int width = 100, int height = 100,
@@ -38,7 +38,6 @@ protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
   virtual void onDialogButtonClicked(int);
 
 protected:

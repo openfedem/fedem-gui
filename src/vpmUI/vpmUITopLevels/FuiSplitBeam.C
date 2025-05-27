@@ -32,18 +32,6 @@ void FuiSplitBeam::initWidgets()
 }
 
 
-void FuiSplitBeam::placeWidgets(int width, int height)
-{
-  int rowHeight = 30;
-  int border = this->getBorder();
-  int yPos = height - myDialogButtons->getHeightHint();
-  myDialogButtons->setEdgeGeometry(0, width, yPos, height);
-
-  yPos = border;
-  myNumField->setEdgeGeometry(border, width-border, yPos, yPos+rowHeight);
-}
-
-
 void FuiSplitBeam::onDialogButtonClicked(int button)
 {
   myClickedCB.invoke(button);

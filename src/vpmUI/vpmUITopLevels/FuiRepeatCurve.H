@@ -9,6 +9,7 @@
 #define FUI_REPEAT_CURVE_H
 
 #include "FFuLib/FFuBase/FFuModalDialog.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuLabel;
 class FFuLabelField;
@@ -21,7 +22,6 @@ class FuiRepeatCurve : virtual public FFuModalDialog
 
 protected:
   FuiRepeatCurve();
-  virtual ~FuiRepeatCurve() {}
 
   static FuiRepeatCurve* create(int xpos = 100, int ypos = 100,
 				int width = 100, int height = 100,
@@ -41,7 +41,6 @@ protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
   virtual void onDialogButtonClicked(int);
 
 protected:

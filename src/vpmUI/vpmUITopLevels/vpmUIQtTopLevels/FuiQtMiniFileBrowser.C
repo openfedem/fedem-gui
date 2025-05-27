@@ -6,11 +6,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QStyleFactory>
+#include <QVBoxLayout>
+#include <QSplitter>
 
 #include "FFuLib/FFuQtComponents/FFuQtMemo.H"
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
-#include "FFuLib/FFuQtComponents/FFuQtSplitter.H"
 #include "FFuLib/FFuQtComponents/FFuQtDialogButtons.H"
+
 #include "FuiQtMiniFileBrowser.H"
 
 
@@ -26,23 +28,25 @@ FuiQtMiniFileBrowser::FuiQtMiniFileBrowser(int xpos, int ypos,
 					   const char* title, const char* name)
   : FFuQtTopLevelShell(NULL, xpos, ypos, width, height, title, name)
 {
-  FFuQtSplitter* qSplitter = new FFuQtSplitter(Qt::Horizontal,this);
+  QSplitter*     qSplitter = new QSplitter(Qt::Horizontal);
   FFuQtListView* qListView = new FFuQtListView(qSplitter);
   FFuQtMemo*     qInfoView = new FFuQtMemo(qSplitter);
 
   qListView->setStyle(QStyleFactory::create("windows"));
   qInfoView->setFont({"Courier",8});
 
-  dialogButtons = new FFuQtDialogButtons(this);
-
-  this->splitter = qSplitter;
-  this->listView = qListView;
-  this->infoView = qInfoView;
+  listView = qListView;
+  infoView = qInfoView;
+  dialogButtons = new FFuQtDialogButtons(NULL,false);
 
   qSplitter->setSizes({360,400});
   qSplitter->setStretchFactor(0,0);
   qSplitter->setStretchFactor(1,1);
-  qSplitter->refresh();
 
   this->initWidgets();
+
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(5,0,5,10);
+  layout->addWidget(qSplitter,1);
+  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons));
 }

@@ -23,7 +23,6 @@ class FuiPlugins : virtual public FFuModalDialog
 
 protected:
   FuiPlugins();
-  virtual ~FuiPlugins() {}
 
   static FuiPlugins* create(int xpos = 100, int ypos  = 100,
 			    int width= 100, int height= 100,
@@ -39,18 +38,20 @@ protected:
   virtual void setNoPlugins(unsigned int nPlugin) = 0;
 
 private:
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUp();
   virtual void onDialogButtonClicked(int);
 
 protected:
-  std::vector<FFuToggleButton*> pluginToggle;
-  std::vector<FFuLabel*>        pluginLabel;
+  struct Plugin
+  {
+    FFuToggleButton* toggl;
+    FFuLabel*        label;
+    std::string      name;
+    Plugin(FFuToggleButton* t = NULL, FFuLabel* l = NULL) : toggl(t),label(l) {}
+  };
 
-  FFuDialogButtons* dialogButtons;
-
-private:
-  std::vector<std::string> myPlugins;
+  std::vector<Plugin> myPlugins;
+  FFuDialogButtons*   dialogButtons;
 };
 
 #endif
