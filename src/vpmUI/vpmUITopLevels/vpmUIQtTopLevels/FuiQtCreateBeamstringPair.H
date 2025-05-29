@@ -12,15 +12,12 @@
 #include "vpmUI/vpmUITopLevels/FuiCreateBeamstringPair.H"
 
 
-class FuiQtCreateBeamstringPair : public FFuQtTopLevelShell, public FuiCreateBeamstringPair
+class FuiQtCreateBeamstringPair : public FFuQtTopLevelShell,
+                                  public FuiCreateBeamstringPair
 {
 public:
-  FuiQtCreateBeamstringPair(QWidget* parent = 0,
-		      int xpos =100, int ypos  =100,
-		      int width=100, int height=100,
-		      const char* title= "Fedem",
-		      const char* name = "FuiQtCreateBeamstringPair");
-  virtual ~FuiQtCreateBeamstringPair() {}
+  FuiQtCreateBeamstringPair(int xpos, int ypos, int width, int height,
+                            const char* title, const char* name);
 
 private:
   virtual void setSensitivity(bool isSensitive)
