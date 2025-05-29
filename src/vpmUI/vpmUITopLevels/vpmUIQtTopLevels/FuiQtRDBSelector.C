@@ -5,11 +5,13 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FuiQtRDBSelector.H"
+#include <QVBoxLayout>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtItemsListViews.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtDialogButtons.H"
-#include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
+
+#include "FuiQtRDBSelector.H"
 
 
 FuiRDBSelector* FuiRDBSelector::create(int xpos, int ypos,
@@ -25,16 +27,22 @@ FuiQtRDBSelector::FuiQtRDBSelector(int xpos, int ypos,
 				   int width, int height,
 				   const char* title,
 				   const char* name)
-  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name,Qt::WindowStaysOnTopHint)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,
+                       title,name,Qt::WindowStaysOnTopHint)
 {
-  this->lvRes = new FuiQtSimModelRDBListView(this,"SimModelRDBListView");
-  this->lvPos = new FuiQtRDBListView(this,"RDBListView");
-  this->resLabel = new FFuQtLabel(this);
-  this->posLabel = new FFuQtLabel(this);
-  this->notesImage = new FFuQtLabel(this);
-  this->notesLabel = new FFuQtLabel(this);
-  this->notesText = new FFuQtLabel(this);
-  this->dialogButtons = new FFuQtDialogButtons(this);
+  lvRes = new FuiQtSimModelRDBListView(NULL,"SimModelRDBListView");
+  lvPos = new FuiQtRDBListView(NULL,"RDBListView");
+  notesText = new FFuQtLabel();
+  dialogButtons = new FFuQtDialogButtons();
 
   this->initWidgets();
+
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(new QLabel("Existing Results"));
+  layout->addWidget(static_cast<FuiQtSimModelRDBListView*>(lvRes),3);
+  layout->addWidget(new QLabel("Possible Results"));
+  layout->addWidget(static_cast<FuiQtRDBListView*>(lvPos),1);
+  layout->addWidget(new FFuQtNotesLabel());
+  layout->addWidget(static_cast<FFuQtLabel*>(notesText));
+  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons));
 }
