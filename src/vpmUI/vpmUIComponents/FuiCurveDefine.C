@@ -896,11 +896,7 @@ void FuiCurveDefSheet::initWidgets()
   this->channelBtn->setActivateCB(FFaDynCB0M(FuiCurveDefSheet,this,
 					     onChannelBtnClicked));
   this->channelSelectUI->setTitle("Channel list");
-  this->channelSelectUI->showNotes = true;
-  this->channelSelectUI->labNotesText->setLabel("Column 1 is the first <u>after</u> the argument column.");
-  this->channelSelectUI->labNotesImage->popUp();
-  this->channelSelectUI->labNotesLabel->popUp();
-  this->channelSelectUI->labNotesText->popUp();
+  this->channelSelectUI->setNotesText("Column 1 is the first <u>after</u> the argument column.");
   this->channelSelectUI->setCancelButtonClickedCB(FFaDynCB1M(FuiCurveDefSheet,this,
 							     onChannelSelectCancel,int));
   this->channelSelectUI->setOkButtonClickedCB(FFaDynCB1M(FuiCurveDefSheet,this,

@@ -5,9 +5,12 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QtGui/QPixmap>
+#include <QHBoxLayout>
+#include <QPixmap>
 
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
+
+extern const char* info_xpm[];
 
 
 FFuQtLabel::FFuQtLabel(QWidget* parent) : QLabel(parent)
@@ -22,12 +25,13 @@ FFuQtLabel::FFuQtLabel(QWidget* parent) : QLabel(parent)
 
 void FFuQtLabel::setPixMap(const char** pixmap, bool stretch)
 {
-  if (pixmap) {
+  if (pixmap)
+  {
     this->setScaledContents(stretch);
-    this->QLabel::setPixmap(QPixmap(pixmap));
+    this->setPixmap(QPixmap(pixmap));
   }
   else
-    this->QLabel::clear();
+    this->clear();
 }
 
 
@@ -46,4 +50,18 @@ std::string FFuQtLabel::getLabel() const
 void FFuQtLabel::fwdLinkActivated(const QString& txt)
 {
   myLinkActivatedCB.invoke(txt.toStdString());
+}
+
+
+FFuQtNotesLabel::FFuQtNotesLabel(QWidget* parent) : QWidget(parent)
+{
+  this->setWidget(this);
+
+  QLabel*  qImage = new QLabel();
+  QLayout* layout = new QHBoxLayout(this);
+  qImage->setPixmap(QPixmap(info_xpm));
+  layout->setContentsMargins(0,0,0,0);
+  layout->setAlignment(Qt::AlignLeft);
+  layout->addWidget(qImage);
+  layout->addWidget(new QLabel("<b>Notes</b>"));
 }

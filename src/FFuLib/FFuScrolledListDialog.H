@@ -12,15 +12,15 @@
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuScrolledList;
-class FFuDialogButtons;
 class FFuLabel;
+class FFuDialogButtons;
 
 
 class FFuScrolledListDialog : virtual public FFuTopLevelShell
 {
 public:
-  FFuScrolledListDialog() { showNotes = false; }
-  virtual ~FFuScrolledListDialog() {}
+  FFuScrolledListDialog();
+  void setNotesText(const char* text);
 
   int getItem() const;
 
@@ -32,14 +32,13 @@ public:
   void setCancelButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB);
   void setApplyButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB);
 
-  FFuDialogButtons* myDialogButtons;
-  FFuScrolledList* myItemSelector;
-  FFuLabel* labNotesImage;
-  FFuLabel* labNotesLabel;
-  FFuLabel* labNotesText;
-  bool showNotes;
+  FFuScrolledList*  myItemSelector;
 
 protected:
+  FFuComponentBase* myNotesLabel;
+  FFuLabel*         myNotesText;
+  FFuDialogButtons* myDialogButtons;
+
   void onDlgButtonClicked(int);
 
   void initWidgets();
