@@ -12,21 +12,19 @@
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 
-class FFuLabel;
-class FFuPushButton;
-class FFuDialogButtons;
 class FuiSimModelRDBListView;
 class FuiRDBListView;
+class FFuLabel;
+class FFuDialogButtons;
 
 
 class FuiRDBSelector : virtual public FFuTopLevelShell,
-		       public FFuUAExistenceHandler, public FFuUAFinishHandler
+                       public FFuUAExistenceHandler, public FFuUAFinishHandler
 {
   Fmd_HEADER_INIT();
 
 public:
   FuiRDBSelector();
-  virtual ~FuiRDBSelector() {}
 
   static FuiRDBSelector* create(int xpos = 100, int ypos  = 100,
 				int width= 100, int height= 100,
@@ -34,8 +32,8 @@ public:
 				const char* name = "FuiRDBSelector");
 
   void setResultAppliedCB(const FFaDynCB0& dynCB) { resultAppliedCB = dynCB; }
-  void setApplyable(bool able);
   void setOkCancelDialog(bool yesOrNo);
+  void setApplyable(bool able);
 
 protected:
   void initWidgets();
@@ -43,7 +41,6 @@ protected:
   virtual bool onClose();
 
 private:
-  void close() { this->invokeFinishedCB(); }
   void onDialogButtonClicked(int button);
 
 public:
@@ -58,7 +55,6 @@ protected:
   FFuLabel* notesText;
 
   FFuDialogButtons* dialogButtons;
-  FFuPushButton*    closeButton;
 
 private:
   FFaDynCB0 resultAppliedCB;

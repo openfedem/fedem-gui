@@ -10,7 +10,6 @@
 #include "vpmUI/Icons/FuiIconPixmaps.H"
 #include "FFuLib/FFuOptionMenu.H"
 #include "FFuLib/FFuLabel.H"
-#include "FFuLib/FFuPushButton.H"
 #include "FFuLib/FFuDialogButtons.H"
 
 
@@ -36,15 +35,13 @@ FuiRDBSelector::FuiRDBSelector()
   this->notesLabel = 0;
   this->notesText = 0;
   this->dialogButtons = 0;
-  this->closeButton = 0;
 }
 //----------------------------------------------------------------------------
 
 void FuiRDBSelector::initWidgets()
 {
-  this->dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiRDBSelector,this,
-						     onDialogButtonClicked,int));
-  this->closeButton->setActivateCB(FFaDynCB0M(FuiRDBSelector,this,close));
+  dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiRDBSelector,this,
+                                               onDialogButtonClicked,int));
 
   this->resLabel->setLabel("Existing Results");
   this->posLabel->setLabel("Possible Results");
@@ -54,12 +51,7 @@ void FuiRDBSelector::initWidgets()
     "You can \"drag and drop\" these fields to the results viewer\n"
     "(i.e., the Results tree on the left side of the main window).");
 
-  this->dialogButtons->setButtonLabel(DONE,"OK");
-  this->dialogButtons->setButtonLabel(APPLY,"Apply");
-  this->dialogButtons->setButtonLabel(CANCEL,"Cancel");
-
-  this->closeButton->setLabel("Close");
-  this->closeButton->popDown();
+  this->setOkCancelDialog(true);
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
@@ -67,28 +59,16 @@ void FuiRDBSelector::initWidgets()
 
 void FuiRDBSelector::setOkCancelDialog(bool yesOrNo)
 {
-  if (yesOrNo) {
-    this->dialogButtons->popUp();
-    this->closeButton->popDown();
-  }
-  else {
-    this->closeButton->popUp();
-    this->dialogButtons->popDown();
-  }
-}
-//----------------------------------------------------------------------------
-
-bool FuiRDBSelector::onClose()
-{
-  this->onDialogButtonClicked(CANCEL);
-  return false;
+  dialogButtons->setButtonLabel(DONE, yesOrNo ? "OK" : "");
+  dialogButtons->setButtonLabel(APPLY, yesOrNo ? "Apply" : "");
+  dialogButtons->setButtonLabel(CANCEL, yesOrNo ? "Cancel" : "Close");
 }
 //----------------------------------------------------------------------------
 
 void FuiRDBSelector::setApplyable(bool able)
 {
-  this->dialogButtons->setButtonSensitivity(DONE,able);
-  this->dialogButtons->setButtonSensitivity(APPLY,able);
+  dialogButtons->setButtonSensitivity(DONE,able);
+  dialogButtons->setButtonSensitivity(APPLY,able);
 }
 //----------------------------------------------------------------------------
 
@@ -120,19 +100,23 @@ void FuiRDBSelector::placeWidgets(int width,int height)
   this->notesText->setEdgeGeometry( glbl,    glbr, glh4-31, glh4+8);
 
   this->dialogButtons->setEdgeGeometry(0,width,glh4,height);
-  this->closeButton->setEdgeGeometry(glbr-this->closeButton->getWidthHint(), glbr,glh4+2*border,height-border);
+
   this->notesText->toFront();
+}
+//----------------------------------------------------------------------------
+
+bool FuiRDBSelector::onClose()
+{
+  this->invokeFinishedCB();
+  return false;
 }
 //----------------------------------------------------------------------------
 
 void FuiRDBSelector::onDialogButtonClicked(int button)
 {
-  if (button==DONE) {
+  if (button == DONE || button == APPLY)
     this->resultAppliedCB.invoke();
-    this->invokeFinishedCB();
-  }
-  else if (button==APPLY)
-    this->resultAppliedCB.invoke();
-  else if (button==CANCEL)
+
+  if (button == DONE || button == CANCEL)
     this->invokeFinishedCB();
 }
