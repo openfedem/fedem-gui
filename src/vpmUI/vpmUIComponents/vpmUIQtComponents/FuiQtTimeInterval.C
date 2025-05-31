@@ -5,40 +5,54 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtTimeInterval.H"
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
 
-#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
 
-//----------------------------------------------------------------------------
+#include "FuiQtTimeInterval.H"
 
 
-FuiQtTimeInterval::FuiQtTimeInterval(QWidget* parent,const char* name)
-  : FFuQtMultUIComponent(parent,name)
+FuiQtTimeInterval::FuiQtTimeInterval(QWidget* parent, const char* name)
+  : FFuQtLabelFrame(parent)
 {
-  this->timeIntervalFrame = new FFuQtLabelFrame(this);
-  this->startLabel = new FFuQtLabel(this);
-  this->startField = new FFuQtIOField(this);
-  //this->startUnits = new FFuQtLabel(this);
-  this->stopLabel = new FFuQtLabel(this);
-  this->stopField = new FFuQtIOField(this); 
-  //this->stopUnits = new FFuQtLabel(this);
-  this->incrLabel = new FFuQtLabel(this);
-  this->incrField = new FFuQtIOField(this);  
-  //this->incrUnits = new FFuQtLabel(this);
+  this->setObjectName(name);
+  this->setLabel("Time Interval");
+
+  startField = new FFuQtIOField();
+  stopField  = new FFuQtIOField();
+  incrField  = new FFuQtIOField();
   
-  this->allStepsToggle = new FFuQtToggleButton(this);
-  this->resetButton = new FFuQtPushButton(this);
+  FFuQtToggleButton* qToggle = new FFuQtToggleButton();
+  FFuQtPushButton*  qPushBtn = new FFuQtPushButton();
+  allStepsToggle = qToggle;
+  resetButton    = qPushBtn;
 
-  //base class component initiation
-  this->FuiTimeInterval::initWidgets();
-}
-//----------------------------------------------------------------------------
+  this->initWidgets();
 
-FuiQtTimeInterval::~FuiQtTimeInterval()
-{
+  QWidget* qInterval = new QWidget();
+  QGridLayout* grLay = new QGridLayout(qInterval);
+  grLay->setContentsMargins(0,0,0,0);
+  grLay->addWidget(new QLabel("Start")    ,0,0);
+  grLay->addWidget(new QLabel("Stop")     ,1,0);
+  grLay->addWidget(new QLabel("Increment"),2,0);
+  grLay->addWidget(static_cast<FFuQtIOField*>(startField),0,1);
+  grLay->addWidget(static_cast<FFuQtIOField*>(stopField) ,1,1);
+  grLay->addWidget(static_cast<FFuQtIOField*>(incrField) ,2,1);
+  grLay->addWidget(qToggle,3,1);
+
+  QWidget*    qReset = new QWidget();
+  QBoxLayout* layout = new QHBoxLayout(qReset);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addStretch(1);
+  layout->addWidget(qPushBtn);
+
+  layout = new QVBoxLayout(this);
+  layout->setSpacing(0);
+  layout->addWidget(qInterval);
+  layout->addWidget(qReset);
 }
-//----------------------------------------------------------------------------
