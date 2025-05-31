@@ -25,28 +25,12 @@ void FuiTopLevelDialog::initWidgets()
   this->dialogButtons->setButtonLabel(APPLY,"Apply");
   this->dialogButtons->setButtonLabel(CANCEL,"Cancel");
 
-  this->placeWidgets(this->getWidth(),this->getHeight());
-
   FFuUAExistenceHandler::invokeCreateUACB(this);
-}
-
-
-int FuiTopLevelDialog::getDialogButtonsHeightHint() const
-{
-  return this->dialogButtons->getHeightHint();
-}
-
-
-void FuiTopLevelDialog::placeWidgets(int width, int height)
-{
-  int y = height - this->dialogButtons->getHeightHint();
-  this->dialogButtons->setEdgeGeometry(0,width,y,height);
 }
 
 
 void FuiTopLevelDialog::onPoppedUp()
 {
-  this->placeWidgets(this->getWidth(),this->getHeight());
   this->updateUIValues();
 }
 

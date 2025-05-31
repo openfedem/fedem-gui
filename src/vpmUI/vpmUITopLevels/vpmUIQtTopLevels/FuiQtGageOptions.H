@@ -5,34 +5,24 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTGAGEOPTIONS_H
-#define FUIQTGAGEOPTIONS_H
+#ifndef FUI_QT_GAGE_OPTIONS_H
+#define FUI_QT_GAGE_OPTIONS_H
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
 #include "vpmUI/vpmUITopLevels/FuiGageOptions.H"
 
-// Typedefs and fwd declarations
 
-class FuiQtGageOptions: public FFuQtTopLevelShell,
-			public FuiGageOptions
+class FuiQtGageOptions : public FFuQtTopLevelShell, public FuiGageOptions
 {
 public:
-  FuiQtGageOptions(QWidget* parent=0,int xpos=100,int ypos=100,
-			int width=100,int height=100,
-			const char* title= "",
-			const char* name = "FuiQtGageOptions");
-  virtual ~FuiQtGageOptions();
+  FuiQtGageOptions(int xpos, int ypos, int width, int height,
+                   const char* title, const char* name);
 
-// Operations
 private:
-  virtual void setSensitivity(bool isSensitive) {
-    FuiGageOptions::setSensitivity(isSensitive);}
-
-// Attributes 
-private: 
- 
-
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiGageOptions::setSensitivity(isSensitive);
+  }
 };
-/////////////////////////////////////////////////////////////////////////////
 
 #endif

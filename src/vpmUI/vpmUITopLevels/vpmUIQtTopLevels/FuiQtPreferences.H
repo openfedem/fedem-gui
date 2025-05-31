@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTPREFERENCES_H  
-#define FUIQTPREFERENCES_H
+#ifndef FUI_QT_PREFERENCES_H
+#define FUI_QT_PREFERENCES_H
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
 #include "vpmUI/vpmUITopLevels/FuiPreferences.H"
@@ -15,16 +15,14 @@
 class FuiQtPreferences : public FFuQtTopLevelShell, public FuiPreferences
 {
 public:
-  FuiQtPreferences(QWidget* parent = 0,
-		   int xpos  = 100, int ypos   = 100,
-		   int width = 100, int height = 100,
-		   const char* title= "Fedem",
-		   const char* name = "FuiQtPreferences");
-
-  virtual ~FuiQtPreferences();
+  FuiQtPreferences(int xpos, int ypos, int width, int height,
+                   const char* title, const char* name);
 
 private:
-  virtual void setSensitivity(bool sen) { FuiPreferences::setSensitivity(sen); }
+  virtual void setSensitivity(bool sens)
+  {
+    this->FuiPreferences::setSensitivity(sens);
+  }
 };
 
 #endif

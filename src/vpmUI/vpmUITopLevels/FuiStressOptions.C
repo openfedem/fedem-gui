@@ -7,9 +7,8 @@
 
 #include "vpmUI/vpmUITopLevels/FuiStressOptions.H"
 #include "FFuLib/FFuLabelFrame.H"
-#include "FFuLib/FFuLabelField.H"
-#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuToggleButton.H"
+#include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuFileBrowseField.H"
 #include "FFuLib/FFuFileDialog.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
@@ -29,22 +28,23 @@ FuiStressOptions::FuiStressOptions()
 
 void FuiStressOptions::initWidgets()
 {
-  this->time->setResetCB(FFaDynCB0M(FuiStressOptions,this,onResetTimeClicked));
+  this->time->setResetCB(FFaDynCB0M(FFaDynCB0,&resetTimeCB,invoke));
 
   this->outputFrame->setLabel("Output Options");
-  this->deformationToggle->setLabel("deformation");
-  this->stressResToggle->setLabel("stress resultant tensor");
-  this->stressToggle[0]->setLabel("stress tensor");
-  this->stressToggle[1]->setLabel("von Mises stress");
-  this->stressToggle[2]->setLabel("max principal stress");
-  this->stressToggle[3]->setLabel("min principal stress");
-  this->stressToggle[4]->setLabel("max shear stress");
-  this->strainToggle[0]->setLabel("strain tensor");
-  this->strainToggle[1]->setLabel("von Mises strain");
-  this->strainToggle[2]->setLabel("max principal strain");
-  this->strainToggle[3]->setLabel("min principal strain");
-  this->strainToggle[4]->setLabel("max shear strain");
+  this->stressToggle[0]->setLabel("stress resultant tensor");
+  this->stressToggle[1]->setLabel("stress tensor");
+  this->stressToggle[2]->setLabel("von Mises stress");
+  this->stressToggle[3]->setLabel("max principal stress");
+  this->stressToggle[4]->setLabel("min principal stress");
+  this->stressToggle[5]->setLabel("max shear stress");
+  this->strainToggle[0]->setLabel("deformation");
+  this->strainToggle[1]->setLabel("strain tensor");
+  this->strainToggle[2]->setLabel("von Mises strain");
+  this->strainToggle[3]->setLabel("max principal strain");
+  this->strainToggle[4]->setLabel("min principal strain");
+  this->strainToggle[5]->setLabel("max shear strain");
 
+  this->vtfFrame->setLabel("VTF Export");
   this->autoVTFToggle->setLabel("Automatic export to GLview VTF file");
   this->autoVTFToggle->setToggleCB(FFaDynCB1M(FuiStressOptions,this,
 					      onAutoVTFToggled,bool));
@@ -60,85 +60,13 @@ void FuiStressOptions::initWidgets()
 						 onAutoVTFFileChanged,
 						 const std::string&,int));
 
-  this->fringeLabel->setLabel("Contour range for Express VTF file (von Mises stress only)");
-  this->minFringeField->setLabel("Min");
-  this->maxFringeField->setLabel("Max");
-
   this->FuiTopLevelDialog::initWidgets();
-}
-//----------------------------------------------------------------------------
-
-void FuiStressOptions::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int timet = border;
-  int timeb = 34*height/100;
-  this->time->setEdgeGeometry(border,width-border,timet,timeb);
-
-  int sep = this->time->getSepH();
-  int widgeth = this->time->getWidgetH();
-
-  int frameFonth = this->outputFrame->getFontHeigth();
-
-  int incr = sep+widgeth;
-  int outputframet = timeb+sep;
-  int ypos = outputframet + frameFonth+incr/2;
-  int outputframeb = ypos + 5*incr+widgeth/2+sep;
-
-  this->outputFrame->setEdgeGeometry(border,width-border,outputframet,outputframeb);
-  this->deformationToggle->setCenterYGeometryWidthHint(2*border,ypos,widgeth);
-  this->stressResToggle->setCenterYGeometryWidthHint(width/2,ypos,widgeth);
-  ypos += incr;
-  for (int i = 0; i < 5; i++, ypos += incr) {
-    this->strainToggle[i]->setCenterYGeometryWidthHint(2*border,ypos,widgeth);
-    this->stressToggle[i]->setCenterYGeometryWidthHint(width/2,ypos,widgeth);
-  }
-
-  ypos += sep;
-  this->autoVTFToggle->setCenterYGeometryWidthHint(border,ypos,widgeth);
-  ypos += incr/2;
-  this->autoVTFField->setEdgeGeometry(border,width-border,ypos,ypos+widgeth);
-  ypos += incr+sep;
-
-  this->fringeLabel->setEdgeGeometry(border,width-border,ypos,ypos+frameFonth);
-  ypos += frameFonth+sep;
-  this->minFringeField->setEdgeGeometry(border,width/2-sep,ypos,ypos+widgeth);
-  this->maxFringeField->setEdgeGeometry(width/2+sep,width-border,ypos,ypos+widgeth);
-
-  if (showVTFfield) {
-    this->autoVTFToggle->popUp();
-    this->autoVTFField->popUp();
-    this->fringeLabel->popUp();
-    this->minFringeField->popUp();
-    this->maxFringeField->popUp();
-  }
-  else {
-    this->autoVTFToggle->popDown();
-    this->autoVTFField->popDown();
-    this->fringeLabel->popDown();
-    this->minFringeField->popDown();
-    this->maxFringeField->popDown();
-  }
-
-  this->FuiTopLevelDialog::placeWidgets(width,height);
 }
 //-----------------------------------------------------------------------------
 
 void FuiStressOptions::setTimeUIValues(const FuaTimeIntervalValues* timeValues)
 {
   this->time->setUIValues(timeValues);
-}
-//-----------------------------------------------------------------------------
-
-void FuiStressOptions::setResetTimeCB(const FFaDynCB0& dynCB)
-{
-  this->resetTimeCB = dynCB;
-}
-//-----------------------------------------------------------------------------
-
-void FuiStressOptions::onResetTimeClicked()
-{
-  this->resetTimeCB.invoke();
 }
 //-----------------------------------------------------------------------------
 
@@ -185,11 +113,11 @@ void FuiStressOptions::setUIValues(const FFuaUIValues* values)
   FuaStressOptionsValues* stressValues = (FuaStressOptionsValues*) values;
 
   this->time->setUIValues(&stressValues->timeValues);
-  this->deformationToggle->setValue(stressValues->deformationOutput);
-  this->stressResToggle->setValue(stressValues->stressResOutput);
+  this->strainToggle.front()->setValue(stressValues->deformationOutput);
+  this->stressToggle.front()->setValue(stressValues->stressResOutput);
   for (int i = 0; i < 5; i++) {
-    this->strainToggle[i]->setValue(stressValues->strainOutput[i]);
-    this->stressToggle[i]->setValue(stressValues->stressOutput[i]);
+    this->strainToggle[1+i]->setValue(stressValues->strainOutput[i]);
+    this->stressToggle[1+i]->setValue(stressValues->stressOutput[i]);
   }
   if ((showVTFfield = stressValues->autoVTFSwitch >= 0)) {
     this->autoVTFToggle->setValue(stressValues->autoVTFSwitch);
@@ -200,7 +128,11 @@ void FuiStressOptions::setUIValues(const FFuaUIValues* values)
     this->setVTFLabel(stressValues->autoVTFFileType);
     this->minFringeField->setValue(stressValues->vtfFringeMin);
     this->maxFringeField->setValue(stressValues->vtfFringeMax);
+    this->vtfFrame->popUp();
   }
+  else
+    this->vtfFrame->popDown();
+
   this->setSensitivity(stressValues->isSensitive);
 }
 //-----------------------------------------------------------------------------
@@ -210,18 +142,18 @@ void FuiStressOptions::getUIValues(FFuaUIValues* values)
   FuaStressOptionsValues* stressValues = (FuaStressOptionsValues*) values;
 
   this->time->getUIValues(&stressValues->timeValues);
-  stressValues->deformationOutput = this->deformationToggle->getValue();
-  stressValues->stressResOutput   = this->stressResToggle->getValue();
+  stressValues->deformationOutput = this->strainToggle.front()->getValue();
+  stressValues->stressResOutput   = this->stressToggle.front()->getValue();
   for (int i = 0; i < 5; i++) {
-    stressValues->stressOutput[i] = this->stressToggle[i]->getValue();
-    stressValues->strainOutput[i] = this->strainToggle[i]->getValue();
+    stressValues->stressOutput[i] = this->stressToggle[1+i]->getValue();
+    stressValues->strainOutput[i] = this->strainToggle[1+i]->getValue();
   }
   if (showVTFfield) {
     stressValues->autoVTFSwitch   = this->autoVTFToggle->getValue();
     stressValues->autoVTFFileName = this->autoVTFField->getFileName();
     stressValues->autoVTFFileType = this->autoVTFField->getFilterID();
-    stressValues->vtfFringeMin    = this->minFringeField->getValue();
-    stressValues->vtfFringeMax    = this->maxFringeField->getValue();
+    stressValues->vtfFringeMin    = this->minFringeField->getDouble();
+    stressValues->vtfFringeMax    = this->maxFringeField->getDouble();
   }
   else
     stressValues->autoVTFSwitch = -1;

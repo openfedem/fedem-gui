@@ -11,7 +11,7 @@
 #include "vpmUI/vpmUITopLevels/FuiTopLevelDialog.H"
 #include "vpmUI/vpmUIComponents/FuiTimeInterval.H"
 
-class FFuLabelField;
+class FFuIOField;
 class FFuToggleButton;
 class FFuPushButton;
 
@@ -22,7 +22,6 @@ class FuiGageOptions : public FuiTopLevelDialog
 
 public:
   FuiGageOptions();
-  virtual ~FuiGageOptions() {}
 
   static FuiGageOptions* create(int xpos = 100, int ypos  = 100,
 				int width= 100, int height= 100,
@@ -30,7 +29,7 @@ public:
 				const char* name = "FuiGageOptions");
 
   void setTimeUIValues(const FuaTimeIntervalValues* timeValues);
-  void setResetTimeCB(const FFaDynCB0& dynCB);
+  void setResetTimeCB(const FFaDynCB0& dynCB) { resetTimeCB = dynCB; }
   void setImportRosetteFileCB(const FFaDynCB0& dynCB);
 
   virtual void setSensitivity(bool sens);
@@ -42,50 +41,32 @@ private:
   virtual FFuaUIValues* createValuesObject();
   virtual void setUIValues(const FFuaUIValues* values);
   virtual void getUIValues(FFuaUIValues* values);
-  virtual void placeWidgets(int width, int height);
-
-  void onResetTimeClicked();
-  void onAutoDacExportToggled(bool value);
-  void onRainflowToggled(bool value);
 
 protected:
   FuiTimeInterval* time;
 
   FFuToggleButton* autoDacExportToggle;
-  FFuLabelField*   dacSampleRateField;
-  FFuPushButton*   importRosFileButton;
+  FFuIOField*      dacSampleRateField;
   FFuToggleButton* rainflowToggle;
-  FFuLabelField*   binSizeField;
+  FFuIOField*      binSizeField;
+  FFuPushButton*   importRosFileButton;
 
 private:
   FFaDynCB0 resetTimeCB;
   FFaDynCB0 importRosFileCB;
 };
 
-/////////////////////////////////////////////////////////////////////////////
 
 class FuaGageOptionsValues : public FFuaUIValues
 {
 public:
-  FuaGageOptionsValues() {
-    this->autoDacSwitch = false;
-    this->dacSampleRate = 0.0;
-    this->rainflowSwitch = false;
-    this->binSize = 0.0;
-    this->isSensitive = true;
-  }
-  virtual ~FuaGageOptionsValues() {}
-
-public:
   FuaTimeIntervalValues timeValues;
 
-  bool   autoDacSwitch;
-  double dacSampleRate;
-  bool   rainflowSwitch;
-  double binSize;
-
-  bool isSensitive;
+  bool   autoDacSwitch  = false;
+  double dacSampleRate  = 0.0;
+  bool   rainflowSwitch = false;
+  double binSize        = 0.0;
+  bool   isSensitive    = true;
 };
-/////////////////////////////////////////////////////////////////////////////
 
 #endif
