@@ -5,8 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QPixmap>
-#include <QCloseEvent>
 #include <QLabel>
 
 #include "FFuLib/Icons/infoDialog.xpm"
@@ -48,7 +46,7 @@ FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
   : QMessageBox(QMessageBox::NoIcon,"Fedem",msgText,StdButtons(nButtons))
 {
   this->setWidget(this);
-  this->iAmModal = isModal;
+  this->setModal(isModal);
 
   //set buttontext
   if (nButtons>0) this->setButtonText(QMessageBox::Yes   ,buttonTexts[0]);
@@ -76,8 +74,9 @@ FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
   if (dialogType >= FFuDialog::FT_LOGO)
     this->findChild<QLabel*>("qt_msgbox_label")->setFixedWidth(400);
 
-  if (!this->iAmModal){
-    this->setAttribute (Qt::WA_DeleteOnClose, true);
+  if (!isModal)
+  {
+    this->setAttribute(Qt::WA_DeleteOnClose,true);
     this->show();
   }
 }
@@ -85,9 +84,9 @@ FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
 
 int FFuQtUserDialog::execute()
 {
-  if (this->iAmModal) FFuaApplication::breakUserEventBlock(true);
+  FFuaApplication::breakUserEventBlock(true);
   int ret = this->exec();
-  if (this->iAmModal) FFuaApplication::breakUserEventBlock(false);
+  FFuaApplication::breakUserEventBlock(false);
 
   switch (ret) {
   case QMessageBox::Yes:
@@ -98,16 +97,4 @@ int FFuQtUserDialog::execute()
     return 2;
   }
   return -1; //if accidentally called on a modeless dialog
-}
-//----------------------------------------------------------------------------
-
-void FFuQtUserDialog::closeEvent(QCloseEvent* e)
-{
-  e->accept();
-}
-//----------------------------------------------------------------------------
-
-void FFuQtUserDialog::done(int r)
-{
-  this->QMessageBox::done(r);
 }

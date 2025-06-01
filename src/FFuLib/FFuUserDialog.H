@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFUUSERDIALOG_H
-#define FFUUSERDIALOG_H
+#ifndef FFU_USER_DIALOG_H
+#define FFU_USER_DIALOG_H
 
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 
@@ -17,7 +17,6 @@ class FFuUserDialog : virtual public FFuTopLevelShell
 
 public:
   FFuUserDialog();
-  virtual ~FFuUserDialog() {}
 
   // Static create method implemented in GUIlib-dependent code.
   // Used instead of the GUIlib-dependent constructor.
@@ -25,17 +24,12 @@ public:
 			       int          dialogType,
 			       const char** buttonTexts,
 			       unsigned int nButtons,
-			       bool         modal = true);
+			       bool         isModal = true);
 
   // Local event loop to be called when a modal behaviour is needed.
   // Returns indices with respect to buttonTexts.
   // Implemented in GUIlib-dependent code.
   virtual int execute() = 0;
-
-protected:
-  virtual void setNonBlockableWidget(FFuComponentBase*) {}
-
-  bool iAmModal;
 };
 
 #endif
