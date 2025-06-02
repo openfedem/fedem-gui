@@ -17,13 +17,11 @@
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 #include "FFuLib/FFuColor.H"
 
-class FFuLabel;
-class FFuFrame;
-class FFuScale;
-class FFuColorSelector;
-class FFuDialogButtons;
-class FFuOptionMenu;
 class FFuLabelFrame;
+class FFuOptionMenu;
+class FFuColorSelector;
+class FFuScale;
+class FFuDialogButtons;
 class FuaAppearanceValues;
 
 
@@ -35,7 +33,6 @@ class FuiAppearance : virtual public FFuTopLevelShell,
 
 public:
   FuiAppearance();
-  virtual ~FuiAppearance() {}
 
   // Static create method to use instead of constructor :
   // Implementation in GUILib Dependenet implementation file
@@ -47,7 +44,7 @@ public:
 
   virtual void setUIValues(const FFuaUIValues* values);
   bool getValues(FuaAppearanceValues* values) const;
-  virtual bool updateDBValues(bool updateui=true);
+  virtual bool updateDBValues(bool = true);
 
   virtual bool onClose();
 
@@ -65,76 +62,46 @@ public:
   void setLinesLODText(const std::vector<std::string>& options);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets(void);
 
-private:
-  void placeDetails(FFuComponentBase *parent);
-  void placeColor(FFuComponentBase *parent);
-  void placeMaterial(FFuComponentBase *parent);
+  FFuLabelFrame* myDetailsFrame;
+  FFuLabelFrame* myColorFrame;
+  FFuLabelFrame* myMaterialFrame;
 
-protected:
-
-  // Main frames
-
-  FFuLabelFrame *myDetailsFrame;
-  FFuLabelFrame *myColorFrame;
-  FFuLabelFrame *myMaterialFrame;
-
-  FFuColorSelector *myColorSelector;
-
-  // Dialog button:
+  FFuOptionMenu*    myPolygonOptions;
+  FFuOptionMenu*    myLinesOptions;
+  FFuColorSelector* myColorSelector;
+  FFuScale*         myShininessScale;
+  FFuScale*         myTransparencyScale;
 
   FFuDialogButtons* myDialogButtons;
 
-  FFuLabel *myShininessLabel;
-  FFuLabel *myTransparencyLabel;
-  FFuScale *myShininessScale;
-  FFuScale *myTransparencyScale;
-
-  FFuLabel *myPolygonsLabel;
-  FFuLabel *myLinesLabel;
-
-  FFuOptionMenu *myPolygonOptions;
-  FFuOptionMenu *myLinesOptions;
-
 private:
-  bool isShininessChanged;
-  bool isTransparencyChanged;
-  bool isColorChanged;
   bool isPolygonsChanged;
   bool isLinesChanged;
+  bool isColorChanged;
+  bool isShininessChanged;
+  bool isTransparencyChanged;
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
 
 class FuaAppearanceValues : public FFuaUIValues
 {
 public:
-  FuaAppearanceValues()
-  {
-    isShininessChanged = isTransparencyChanged = isColorChanged = false;
-    isPolygonsChanged = isLinesChanged = false;
-    myShininess = myTransparency = 0;
-    myPolygonsValue = myLinesValue = 0;
-  }
-  virtual ~FuaAppearanceValues() {}
+  bool isPolygonsChanged = false;
+  int  myPolygonsValue = 0;
 
-  bool isShininessChanged;
-  int  myShininess;
+  bool isLinesChanged = false;
+  int  myLinesValue = 0;
 
-  bool isTransparencyChanged;
-  int  myTransparency;
-
-  bool isColorChanged;
+  bool isColorChanged = false;
   FFuColor myColor;
 
-  bool isPolygonsChanged;
-  int  myPolygonsValue;
+  bool isShininessChanged = false;
+  int  myShininess = 0;
 
-  bool isLinesChanged;
-  int  myLinesValue;
+  bool isTransparencyChanged = false;
+  int  myTransparency = 0;
 };
 
 #endif

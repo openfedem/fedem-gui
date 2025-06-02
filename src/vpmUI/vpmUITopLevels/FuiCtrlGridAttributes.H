@@ -12,11 +12,9 @@
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 
-class FFuPushButton;
-class FFuLabel;
 class FFuIOField;
 class FFuToggleButton;
-class FFuFrame;
+class FFuPushButton;
 
 
 class FuiCtrlGridAttributes : virtual public FFuTopLevelShell,
@@ -24,69 +22,39 @@ class FuiCtrlGridAttributes : virtual public FFuTopLevelShell,
 			      public FFuUADataHandler
 {
 public:
-  FuiCtrlGridAttributes() {}
-  virtual ~FuiCtrlGridAttributes() {}
-
-  // Method to set the values provided into the ui:
-
   virtual void setUIValues(const FFuaUIValues* values);
 
 protected:
-
-  // Standard init method to be called from subclass constructor :
-
   void initWidgets();
-
-  // Geometry management from MultUIComponent :
-
-  virtual void placeWidgets(int width, int height);
 
   virtual void onPoppedUp() { this->updateUIValues(); }
 
 private:
-
-  // This pulls out the data from the fields, etc.
-  // and calls setAndGetDBValuesCB on FFuUADataHandler:
-
-  void onValuesChanged();
-
-  // CB's to forward changes to "onValuesChanged" :
-
-  void onToggeled(bool) { this->onValuesChanged(); }
-  void onDoubleChanged(double) { this->onValuesChanged(); }
+  void onDoubleChanged(double);
+  void onToggeled(bool) { this->onDoubleChanged(0.0); }
 
 protected:
-  FFuLabel*        myGridSizeLabel;
   FFuToggleButton* myGridToggleButton;
-  FFuLabel*        myGXLabel;
-  FFuLabel*        myGYLabel;
   FFuIOField*      myGXField;
   FFuIOField*      myGYField;
 
-  FFuFrame* myGridSnapSeparator;
-
-  FFuLabel*        mySnapDistLabel;
   FFuToggleButton* mySnapToggleButton;
-  FFuLabel*        mySXLabel;
-  FFuLabel*        mySYLabel;
   FFuIOField*      mySXField;
   FFuIOField*      mySYField;
 
-  FFuFrame* myCloseSeparator;
-
-  FFuPushButton* myCloseButton;
+  FFuPushButton*   myCloseButton;
 };
 
 
 class FuaCtrlGridValues : public FFuaUIValues
 {
 public:
-  bool   gridOn;
-  double gridXSpacing;
-  double gridYSpacing;
-  bool   snapOn;
-  double snapXSpacing;
-  double snapYSpacing;
+  bool   gridOn = false;
+  double gridXSpacing = 0.0;
+  double gridYSpacing = 0.0;
+  bool   snapOn = false;
+  double snapXSpacing = 0.0;
+  double snapYSpacing = 0.0;
 };
 
 #endif

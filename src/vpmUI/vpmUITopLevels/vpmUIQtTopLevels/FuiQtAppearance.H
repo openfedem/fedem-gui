@@ -12,12 +12,11 @@
 #include "vpmUI/vpmUITopLevels/FuiAppearance.H"
 
 
-class FuiQtAppearance: public FFuQtTopLevelShell, public FuiAppearance
+class FuiQtAppearance : public FFuQtTopLevelShell, public FuiAppearance
 {
 public:
   FuiQtAppearance(int xpos, int ypos, int width, int height,
                   const char* title, const char* name);
-  virtual ~FuiQtAppearance() {}
 };
 
 #endif

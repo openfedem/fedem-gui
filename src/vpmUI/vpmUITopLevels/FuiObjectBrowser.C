@@ -6,8 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmUI/vpmUITopLevels/FuiObjectBrowser.H"
-#include "vpmUI/Pixmaps/objectBrowser1.xpm"
-#include "vpmUI/Pixmaps/objectBrowser2.xpm"
 #include "vpmUI/Fui.H"
 
 #include "vpmDB/FmDB.H"
@@ -18,7 +16,6 @@
 #include "vpmDB/FmSubAssembly.H"
 
 #include "FFaLib/FFaString/FFaStringExt.H"
-#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuMemo.H"
 #include "FFuLib/FFuListView.H"
@@ -42,11 +39,6 @@ FuiObjectBrowser::FuiObjectBrowser()
 
 void FuiObjectBrowser::initWidgets()
 {
-  this->headerImage1->setPixMap(objectBrowser1_xpm, false);
-  this->headerImage2->setPixMap(objectBrowser2_xpm, true);
-
-  this->searchLabel->setLabel("Search and browse objects:");
-
   this->searchField->setValue("(All)");
   this->searchField->setToolTip("Type a search expression here.\n"
                                 "See Help for more information.");
@@ -69,8 +61,6 @@ void FuiObjectBrowser::initWidgets()
   this->searchView->setPermSelectionChangedCB(FFaDynCB0M(FuiObjectBrowser,this,
                                                          onSelectionChanged));
 
-  this->outputLabel->setLabel("Object details:");
-
   this->outputMemo->clearText();
   this->outputMemo->setEditable(false);
 
@@ -81,72 +71,11 @@ void FuiObjectBrowser::initWidgets()
   this->helpButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,
                                              onHelpButtonClicked));
 
-  FFuaPalette pal;
-  pal.setStdBackground(211,211,211);
-  this->sepLabel->setColors(pal);
-
   this->copyDataButton->setLabel("Copy data");
   this->copyDataButton->setActivateCB(FFaDynCB0M(FuiObjectBrowser,this,
                                                  onCopyDataButtonClicked));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
-}
-//----------------------------------------------------------------------------
-
-void FuiObjectBrowser::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int fieldHeight = 20; // hard coded field height?!
-
-  int v1 = border;
-  int v2 = width/2 - 2;
-  int v3 = width/2 + 2;
-  int v4 = width-border;
-  int y1 = border + 77;
-  int y2 = height - border - 33;
-
-  this->headerImage1->setEdgeGeometry(0, 605, 0, 74);
-  this->headerImage2->setEdgeGeometry(0, width, 0, 77);
-
-  int y = y1;
-  this->searchLabel->setEdgeGeometry(v1, v2, y, y+fieldHeight);
-  y += fieldHeight+2;
-  this->searchField->setEdgeGeometry(v1, v2-93, y, y+fieldHeight);
-  this->searchButton->setEdgeGeometry(v2-88, v2, y, y+fieldHeight);
-  y += fieldHeight+2;
-
-  this->searchView->setEdgeGeometry(v1, v2, y, y2);
-
-  y = y2 + border;
-  int d = (v2-v1)/3;
-  this->closeButton->setEdgeGeometry(v1, v1+d-4, y, height-border);
-  this->helpButton->setEdgeGeometry(v1+d, v1+d*2-4, y, height-border);
-  this->sepLabel->setEdgeGeometry(v1+d*2, v1+d*2+1, y, height-border);
-  this->copyDataButton->setEdgeGeometry(v1+d*2+4, v1+d*3, y, height-border);
-
-  y = y1;
-  this->outputLabel->setEdgeGeometry(v3, v4, y, y+fieldHeight);
-  y += fieldHeight+2;
-  this->outputMemo->setEdgeGeometry(v3, v4, y, height-border);
-
-  if (height >= 200) {
-    this->closeButton->popUp();
-    this->helpButton->popUp();
-    this->sepLabel->popUp();
-    this->copyDataButton->popUp();
-  }
-  else {
-    this->closeButton->popDown();
-    this->helpButton->popDown();
-    this->sepLabel->popDown();
-    this->copyDataButton->popDown();
-  }
-}
-//-----------------------------------------------------------------------------
-
-void FuiObjectBrowser::onPoppedUp()
-{
-  this->placeWidgets(this->getWidth(),this->getHeight());
 }
 //----------------------------------------------------------------------------
 

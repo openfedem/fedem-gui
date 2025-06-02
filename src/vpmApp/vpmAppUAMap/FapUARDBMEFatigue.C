@@ -22,7 +22,7 @@
 #include "FFaLib/FFaString/FFaStringExt.H"
 #include "FFuLib/FFuProgressDialog.H"
 #include "FFuLib/FFuTable.H"
-#include "FFuLib/FFuLabelField.H"
+#include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuToggleButton.H"
 #include "FFpLib/FFpFatigue/FFpSNCurveLib.H"
 #include "FFpLib/FFpFatigue/FFpSNCurve.H"

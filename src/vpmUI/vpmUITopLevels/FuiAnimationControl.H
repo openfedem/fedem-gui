@@ -11,24 +11,21 @@
 #include <vector>
 #include <string>
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
-#include "FFuLib/FFuRadioButton.H"
 
-class FFuToggleButton;
-class FFuPushButton;
-class FFuLabel;
 class FFuLabelFrame;
+class FFuToggleButton;
+class FFuRadioButton;
 class FFuIOField;
 class FFuOptionMenu;
 class FFuDialogButtons;
 class FuaQueryBase;
-class FmModelMemberBase;
 class FuiQueryInputField;
 class FFuaQueryBase;
+class FmModelMemberBase;
 
 
 class FuiAnimationControl : virtual public FFuTopLevelShell,
@@ -40,7 +37,7 @@ class FuiAnimationControl : virtual public FFuTopLevelShell,
 
 public:
   FuiAnimationControl();
-  virtual ~FuiAnimationControl() {}
+
   static FuiAnimationControl* create(int xpos = 100, int ypos  = 100,
                                      int width= 100, int height= 100,
                                      const char* title= "Animation Control",
@@ -53,7 +50,6 @@ protected:
   virtual bool onClose();
 
 private:
-  virtual void placeWidgets(int width,int height);
   virtual void onPoppedUp();
 
   // Inside callback functions
@@ -61,13 +57,8 @@ private:
   void onMenuSelected(int)        { this->updateDBValues(); }
   void onFieldValueChanged(char*) { this->updateDBValues(); }
 
-  void onTickMarkCountToggled(bool toggle) {
-    this->tickMarkSpaceRadio->setValue(!toggle);
-    this->updateDBValues();}
-  void onTickMarkSpaceToggled(bool toggle) {
-    this->tickMarkCountRadio->setValue(!toggle);
-    this->updateDBValues();}
-
+  void onTickMarkCountToggled(bool toggle);
+  void onTickMarkSpaceToggled(bool toggle);
   void onDialogButtonClicked(int button);
 
   // From datahandler
@@ -77,7 +68,6 @@ private:
 
 protected:
   FFuLabelFrame*      cameraFrame;
-  FFuLabel*           cameraLabel;
   FuiQueryInputField* cameraMenu;
 
   FFuLabelFrame*   motionFrame;
@@ -86,23 +76,17 @@ protected:
 
   FFuLabelFrame*   defFrame;
   FFuToggleButton* defToggle;
-  FFuLabel*        defScaleLabel;
   FFuIOField*      defScaleField;
 
   FFuLabelFrame*   legendFrame;
   FFuToggleButton* fringeToggle;
   FFuToggleButton* legendToggle;
 
-  FFuLabel*      legendColorsLabel;
   FFuOptionMenu* legendColorsMenu;
-  FFuLabel*      legendMappingLabel;
   FFuOptionMenu* legendMappingMenu;
-  FFuLabel*      legendLookLabel;
   FFuOptionMenu* legendLookMenu;
 
-  FFuLabel*   legendMaxLabel;
   FFuIOField* legendMaxField;
-  FFuLabel*   legendMinLabel;
   FFuIOField* legendMinField;
 
   FFuLabelFrame*  tickMarkFrame;
@@ -113,55 +97,38 @@ protected:
 
   FFuDialogButtons* dialogButtons;
 };
-/////////////////////////////////////////////////////////////////////////////
+
 
 class FuaAnimationControlValues : public FFuaUIValues
 {
 public:
-  FuaAnimationControlValues()
-  {
-    this->linkMotion         = false;
-    this->triadMotion        = false;
-    this->def                = false;
-    this->defScale           = 0.0;
-    this->defScalePossible   = false;
-    this->fringe             = false;
-    this->legend             = false;
-    this->legendRange        = std::make_pair(0.0,0.0);
-    this->tickMarkCount      = false;
-    this->tickMarkCountVal   = 0;
-    this->tickMarkSpacingVal = 0.0;
-    this->myLinkQuery        = NULL;
-    this->myLinkToFollow     = NULL;
-  }
-  virtual ~FuaAnimationControlValues() {}
-
   // Follow-me camera
-  FFuaQueryBase*     myLinkQuery;
-  FmModelMemberBase* myLinkToFollow;
+  FFuaQueryBase*     myLinkQuery    = NULL;
+  FmModelMemberBase* myLinkToFollow = NULL;
 
-  // motion
-  bool linkMotion,triadMotion;
+  // rigid body motion
+  bool linkMotion  = false;
+  bool triadMotion = false;
 
-  // def
-  bool   def;
-  double defScale;
-  bool   defScalePossible;
+  // deformation
+  bool   def              = false;
+  double defScale         = 0.0;
+  bool   defScalePossible = false;
 
   // legend
-  bool fringe,legend;
+  bool fringe = false;
+  bool legend = false;
 
   std::vector<std::string> legendColors;   std::string selLegendColor;
   std::vector<std::string> legendMappings; std::string selLegendMapping;
   std::vector<std::string> legendLooks;    std::string selLegendLook;
 
-  std::pair<double,double> legendRange;
+  std::pair<double,double> legendRange = { 0.0,0.0 };
 
   // tick marks
-  bool   tickMarkCount;
-  int    tickMarkCountVal;
-  double tickMarkSpacingVal;
+  bool   tickMarkCount      = false;
+  int    tickMarkCountVal   = 0;
+  double tickMarkSpacingVal = 0.0;
 };
-/////////////////////////////////////////////////////////////////////////////
 
 #endif
