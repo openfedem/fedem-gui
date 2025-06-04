@@ -14,16 +14,12 @@
 #include "FFuLib/FFuBase/FFuModalDialog.H"
 
 
-class FFuQtModalDialog : public QDialog,
-                         public FFuQtComponentBase,
+class FFuQtModalDialog : public QDialog, public FFuQtComponentBase,
                          virtual public FFuModalDialog
 {
 public:
-  FFuQtModalDialog(int xpos = 100, int ypos  = 100,
-		   int width= 100, int height= 100,
-		   const char* title = "FFuQtModalDialogUI",
-		   const char* name  = "FFuQtModalDialog",
-		   Qt::WindowFlags f = Qt::Widget);
+  FFuQtModalDialog(int xpos, int ypos, int width, int height,
+                   const char* title, const char* name);
 
   virtual void setTitle(const char* title);
 
@@ -32,7 +28,6 @@ public:
 
 private:
   // Reimplemented from QWidget to handle various events
-  virtual void resizeEvent(QResizeEvent*);
   virtual void closeEvent(QCloseEvent*);
   virtual bool event(QEvent*);
 };
