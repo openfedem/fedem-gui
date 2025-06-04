@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QtGui/QPixmap>
 #include <QMdiSubWindow>
+#include <QPixmap>
 #include <QIcon>
 
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtModeller.H"
@@ -40,7 +40,7 @@ FuiQtModeller::FuiQtModeller(QWidget* parent,
   : FFuQtMDIWindow(parent,xpos,ypos,width,height,title,name)
 {
   this->myPlayPanel = new FuiQtPlayPanel(this);
-  this->my3Dpoint = new FuiQt3DPoint(this);
+  this->my3DpointUI = new FuiQt3DPoint(this);
 #ifdef USE_INVENTOR
   this->myViewer = FdViewer::create(this);
 #else
@@ -49,4 +49,19 @@ FuiQtModeller::FuiQtModeller(QWidget* parent,
   myQtSubWindow->setWindowIcon(QIcon(QPixmap(openMechModeller_xpm)));
 
   this->initWidgets();
+}
+
+
+void FuiQtModeller::resizeEvent(QResizeEvent* e)
+{
+  this->QWidget::resizeEvent(e);
+
+  int w = this->getWidth();
+  int h = this->getHeight();
+
+  myPlayPanel->setSizeGeometry(w-130,h-200,130,200);
+  my3DpointUI->setSizeGeometry(w-180,h-125,180,125);
+
+  if (myViewer)
+    myViewer->setSizeGeometry(0,0,w,h);
 }

@@ -5,23 +5,21 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTMODELLER_H
-#define FUIQTMODELLER_H
+#ifndef FUI_QT_MODELLER_H
+#define FUI_QT_MODELLER_H
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtMDIWindow.H"
 #include "vpmUI/vpmUITopLevels/FuiModeller.H"
 
 
-class FuiQtModeller: public FFuQtMDIWindow, public FuiModeller
+class FuiQtModeller : public FFuQtMDIWindow, public FuiModeller
 {
 public:
-  FuiQtModeller(QWidget* parent=0,int xpos  = 100, int ypos   = 100,
-		int width = 100, int height = 100,
-		const char *title="Modeler",
-		const char* name="FuiModeller");
-  virtual ~FuiQtModeller(){}
+  FuiQtModeller(QWidget* parent, int xpos, int ypos, int width, int height,
+                const char* title, const char* name);
 
-
+protected:
+  virtual void resizeEvent(QResizeEvent* e);
 };
 
 #endif

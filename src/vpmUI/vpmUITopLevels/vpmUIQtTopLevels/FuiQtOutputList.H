@@ -8,8 +8,8 @@
 #ifndef FUI_QT_OUTPUT_LIST_H
 #define FUI_QT_OUTPUT_LIST_H
 
-#include "vpmUI/vpmUITopLevels/FuiOutputList.H"
 #include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
+#include "vpmUI/vpmUITopLevels/FuiOutputList.H"
 
 
 class FuiQtOutputList : public FFuQtTopLevelShell, public FuiOutputList
@@ -18,7 +18,9 @@ public:
   FuiQtOutputList(int xpos, int ypos, int width, int height,
                   const char* title = "Output List",
                   const char* name  = "FuiOutputList");
-  virtual ~FuiQtOutputList() {}
+
+protected:
+  virtual void resizeEvent(QResizeEvent* e);
 };
 
 #endif

@@ -36,18 +36,6 @@ void FuiCtrlModeller::initWidgets()
 }
 
 
-void FuiCtrlModeller::onPoppedUp()
-{
-  this->placeWidgets(this->getWidth(), this->getHeight());
-}
-
-
-void FuiCtrlModeller::placeWidgets(int width, int height)
-{
-  if (myViewer) myViewer->setEdgeGeometry(0,width,0,height);
-}
-
-
 void FuiCtrlModeller::showGridUI(bool doShow)
 {
   if (!myCtrlGridAttributes)

@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QMdiSubWindow>
-#include <QtGui/QPixmap>
+#include <QPixmap>
 #include <QIcon>
 #include <QEvent>
 
@@ -26,6 +26,7 @@ FuiGraphView* FuiGraphViewTLS::create(FFuComponentBase* parent,
   FuiGraphViewTLS* tls = new FuiQtGraphViewTLS(dynamic_cast<QWidget*>(parent),
                                                xpos,ypos,width,height,title,name);
   tls->popUp();
+
   return tls->getGraphViewComp();
 }
 //----------------------------------------------------------------------------
@@ -37,16 +38,15 @@ FuiQtGraphViewTLS::FuiQtGraphViewTLS(QWidget* parent,
                                      const char* name)
   : FFuQtMDIWindow(parent,xpos,ypos,width,height,title,name)
 {
-  this->graphView = new FuiQtGraphView(this);
+  myView = new FuiQtGraphView(this);
 
-  QPixmap icon(graph_xpm);
-  myQtSubWindow->setWindowIcon(QIcon(icon));
+  myQtSubWindow->setWindowIcon(QIcon(QPixmap(graph_xpm)));
 
-  this->setFocusProxy(dynamic_cast<QWidget*>(this->graphView));
+  this->setFocusProxy(dynamic_cast<QWidget*>(myView));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 
-  this->graphView->updateSession();
+  myView->updateSession();
 }
 //----------------------------------------------------------------------------
 
@@ -94,3 +94,10 @@ bool FuiQtGraphView::event(QEvent* e)
   return ret;
 }
 //----------------------------------------------------------------------------
+
+void FuiQtGraphViewTLS::resizeEvent(QResizeEvent* e)
+{
+  this->QWidget::resizeEvent(e);
+
+  myView->setSizeGeometry(0,0,this->getWidth(),this->getHeight());
+}

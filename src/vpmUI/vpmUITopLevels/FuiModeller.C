@@ -28,7 +28,7 @@ FuiModeller::FuiModeller()
   Fmd_CONSTRUCTOR_INIT(FuiModeller);
 
   myViewer = NULL;
-  my3Dpoint = NULL;
+  my3DpointUI = NULL;
   myPlayPanel = NULL;
 }
 
@@ -39,24 +39,12 @@ FuiModeller::FuiModeller()
 
 void FuiModeller::initWidgets()
 {
-  if (myViewer) myViewer->toBack();
-  my3Dpoint->toFront();
+  if (myViewer)
+    myViewer->toBack();
+
+  my3DpointUI->toFront();
   myPlayPanel->toFront();
   myPlayPanel->popDown();
-}
-
-//////////////////////////////////////////////////////////////////////
-//
-//  Geometry Management
-//
-
-void FuiModeller::placeWidgets(int width, int height)
-{
-  int glH1 = FFuMultUIComponent::getGridLinePos(height,0,FFuMultUIComponent::FROM_END);
-
-  myPlayPanel->setEdgeGeometry(width-130, width, glH1-200, glH1);
-  my3Dpoint->setEdgeGeometry(width-180, width, glH1-125, glH1);
-  if (myViewer) myViewer->setEdgeGeometry(0,width,0,height);
 }
 
 
@@ -80,12 +68,12 @@ void FuiModeller::mapAnimControls(bool yesOrNo)
 
 void FuiModeller::setPointChangedCB(const FFaDynCB2<const FaVec3&,bool>& aDynCB)
 {
-  this->my3Dpoint->setPointChangedCB(aDynCB);
+  my3DpointUI->setPointChangedCB(aDynCB);
 }
 
 void FuiModeller::setRefChangedCB( const FFaDynCB1<bool> &aDynCB)
 {
-  this->my3Dpoint->setRefChangedCB(aDynCB);
+  my3DpointUI->setRefChangedCB(aDynCB);
 }
 
 void FuiModeller::setAnimTypeChangedCB( const FFaDynCB1<int>& aDynCB)
@@ -146,8 +134,6 @@ void FuiModeller::cancel()
 }
 
 
-// If the user closes the modeller window, we'll assume he want to quit.
-
 bool FuiModeller::onClose()
 {
   //TODO introduce the finish hadler
@@ -155,6 +141,7 @@ bool FuiModeller::onClose()
   Fui::modellerUI(false,true);
   return false;
 }
+
 
 void FuiModeller::onPoppedDownToMem()
 {

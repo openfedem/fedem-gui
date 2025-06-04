@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QtGui/QPixmap>
 #include <QMdiSubWindow>
+#include <QPixmap>
 #include <QIcon>
 
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtCtrlModeller.H"
@@ -47,4 +47,13 @@ FuiQtCtrlModeller::FuiQtCtrlModeller(QWidget* parent,
   myQtSubWindow->setWindowIcon(QIcon(QPixmap(ctrlSystem_xpm)));
 
   this->initWidgets();
+}
+
+
+void FuiQtCtrlModeller::resizeEvent(QResizeEvent* e)
+{
+  this->QWidget::resizeEvent(e);
+
+  if (myViewer)
+    myViewer->setSizeGeometry(0,0,this->getWidth(),this->getHeight());
 }
