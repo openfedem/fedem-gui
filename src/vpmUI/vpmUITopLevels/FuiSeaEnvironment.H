@@ -14,18 +14,15 @@
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 #include "FFaLib/FFaAlgebra/FFaVec3.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
-#include <vector>
-#include <string>
 
 class FFuLabelFrame;
-class FFuLabelField;
-class FFuLabel;
+class FFuIOField;
 class FFuDialogButtons;
 class Fui3DPoint;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
-class FmModelMemberBase;
 class FFuaQueryBase;
+class FmModelMemberBase;
 
 
 class FuiSeaEnvironment : virtual public FFuTopLevelShell,
@@ -37,7 +34,6 @@ class FuiSeaEnvironment : virtual public FFuTopLevelShell,
 
 public:
   FuiSeaEnvironment();
-  virtual ~FuiSeaEnvironment() {}
 
   static FuiSeaEnvironment* create(int xpos = 100, int ypos = 100,
 				   int width = 100, int height = 100,
@@ -51,8 +47,7 @@ protected:
   virtual bool onClose();
 
 private:
-  virtual void placeWidgets(int width, int height);
-  virtual void onPoppedUp();
+  virtual void onPoppedUp() { this->updateUIValues(); }
 
   void onCurrentSelected(FmModelMemberBase*);
   void onWaveSelected(FmModelMemberBase*);
@@ -63,9 +58,9 @@ private:
   virtual void getUIValues(FFuaUIValues* values);
 
 protected:
-  FFuLabelField* waterDensityField;
-  FFuLabelField* meanSeaLevelField;
-  FFuLabelField* seaDepthField;
+  FFuIOField*    waterDensityField;
+  FFuIOField*    meanSeaLevelField;
+  FFuIOField*    seaDepthField;
 
   FFuLabelFrame* gravitationFrame;
   Fui3DPoint*    gravitationVector;
@@ -74,80 +69,49 @@ protected:
   Fui3DPoint*    waveDirectionVector;
 
   FFuLabelFrame* marineGrowthFrame;
-  FFuLabelField* marineGrowthDensityField;
-  FFuLabelField* marineGrowthThicknessField;
-  FFuLabelField* marineGrowthUpperLimitField;
-  FFuLabelField* marineGrowthLowerLimitField;
+  FFuIOField*    marineGrowthDensityField;
+  FFuIOField*    marineGrowthThicknessField;
+  FFuIOField*    marineGrowthUpperLimitField;
+  FFuIOField*    marineGrowthLowerLimitField;
 
-  FFuLabel*           waveLabel;
   FuiQueryInputField* waveQueryField;
-
-  FFuLabel*           currLabel;
   FuiQueryInputField* currQueryField;
-
-  FFuLabel*           currDirLabel;
   FuiQueryInputField* currDirQueryField;
-
-  FFuLabel*           currScaleLabel;
   FuiQueryInputField* currScaleQueryField;
-
-  FFuLabel*           hdfScaleLabel;
   FuiQueryInputField* hdfScaleQueryField;
 
   FFuDialogButtons* dialogButtons;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 
 class FuaSeaEnvironmentValues : public FFuaUIValues
 {
 public:
-  FuaSeaEnvironmentValues() {
-    this->waterDensity = 0.0;
-    this->seaLevelValue = 0.0;
-    this->seaDepth = 0.0;
-    this->waveQuery = 0;
-    this->currQuery = 0;
-    this->scaleQuery = 0;
-    this->marineGrowthDensity = 0;
-    this->marineGrowthThickness = 0;
-    this->marineGrowthUpperLimit = 0;
-    this->marineGrowthLowerLimit = 0;
-    this->waveFunction = 0;
-    this->currFunction = 0;
-    this->currDirFunction = 0;
-    this->currScaleEngine = 0;
-    this->hdfScaleEngine = 0;
-    this->waveDirSens = true;
-    this->isSensitive = true;
-  }
-  virtual ~FuaSeaEnvironmentValues() {}
+  FFuaQueryBase* waveQuery  = NULL;
+  FFuaQueryBase* currQuery  = NULL;
+  FFuaQueryBase* scaleQuery = NULL;
 
-  FFuaQueryBase* waveQuery;
-  FFuaQueryBase* currQuery;
-  FFuaQueryBase* scaleQuery;
-
-  FmModelMemberBase* waveFunction;
-  FmModelMemberBase* currFunction;
-  FmModelMemberBase* currDirFunction;
-  FmModelMemberBase* currScaleEngine;
-  FmModelMemberBase* hdfScaleEngine;
+  FmModelMemberBase* waveFunction    = NULL;
+  FmModelMemberBase* currFunction    = NULL;
+  FmModelMemberBase* currDirFunction = NULL;
+  FmModelMemberBase* currScaleEngine = NULL;
+  FmModelMemberBase* hdfScaleEngine  = NULL;
 
   FFaDynCB1<FuiQueryInputFieldValues&> editCB;
 
-  double waterDensity;
-  double seaLevelValue;
-  double seaDepth;
+  double waterDensity  = 0.0;
+  double seaLevelValue = 0.0;
+  double seaDepth      = 0.0;
   FaVec3 gravitation;
   FaVec3 waveDirection;
 
-  double marineGrowthDensity;
-  double marineGrowthThickness;
-  double marineGrowthUpperLimit;
-  double marineGrowthLowerLimit;
+  double marineGrowthDensity    = 0.0;
+  double marineGrowthThickness  = 0.0;
+  double marineGrowthUpperLimit = 0.0;
+  double marineGrowthLowerLimit = 0.0;
 
-  bool waveDirSens;
-  bool isSensitive;
+  bool waveDirSens = true;
+  bool isSensitive = true;
 };
-////////////////////////////////////////////////////////////////////////////////
 
 #endif
