@@ -7,9 +7,7 @@
 
 #include "vpmUI/vpmUIComponents/Fui3DPoint.H"
 #include "FFuLib/FFuIOField.H"
-#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuOptionMenu.H"
-#include "FFuLib/FFuFrame.H"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -19,9 +17,6 @@
 
 void Fui3DPoint::init()
 {
-  this->myFrame->setLook(FFuFrame::PANEL_RAISED);
-  this->myFrame->setBorderWidth(1);
-
   this->myXField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->myXField->setAcceptPolicy(FFuIOField::ENTERONLY);
   this->myXField->setDoubleDisplayMode(FFuIOField::AUTO);
@@ -37,63 +32,11 @@ void Fui3DPoint::init()
   this->myZField->setDoubleDisplayMode(FFuIOField::AUTO);
   this->myZField->setAcceptedCB(FFaDynCB1M(Fui3DPoint,this,callPointChangedCB,double));
 
-  this->myZLabel->setLabel("Z");
-  this->myYLabel->setLabel("Y");
-  this->myXLabel->setLabel("X");
-
   if (!this->myRefMenu) return;
 
-  this->myRefLabel->setLabel("Reference");
   this->myRefMenu->addOption("Global");
   this->myRefMenu->addOption("Local");
   this->myRefMenu->setOptionSelectedCB(FFaDynCB1M(Fui3DPoint,this,callRefChangedCB,int));
-}
-
-
-////////////////////////////////////////////////////////////////////////
-//
-//  Geometry management :
-//
-
-void Fui3DPoint::placeWidgets(int width, int height)
-{
-  // Horisontal GridLines :
-
-  int glH1  = FFuMultUIComponent::getGridLinePos(height,  40);
-  int glH2  = FFuMultUIComponent::getGridLinePos(height, 240);
-  int glH3  = FFuMultUIComponent::getGridLinePos(height, 280);
-  int glH4  = FFuMultUIComponent::getGridLinePos(height, 506);
-  int glH5  = FFuMultUIComponent::getGridLinePos(height, 733);
-  int glH6  = FFuMultUIComponent::getGridLinePos(height, 960);
-  if (!this->myRefMenu) {
-    glH3 = glH1;
-    glH4 = FFuMultUIComponent::getGridLinePos(height, 347);
-    glH5 = FFuMultUIComponent::getGridLinePos(height, 653);
-  }
-
-  // Vertical GridLines :
-
-  int glV1  = FFuMultUIComponent::getGridLinePos(width,  40);
-  int glV2  = FFuMultUIComponent::getGridLinePos(width,  200);
-  int glV3  = FFuMultUIComponent::getGridLinePos(width,  500);
-  int glV4  = FFuMultUIComponent::getGridLinePos(width,  960);
-
-  // Setting geometry :
-
-  this->myFrame->setEdgeGeometry   (0   ,width,   0 ,height);
-
-  this->myXLabel->setEdgeGeometry  (glV1, glV2, glH3, glH4 );
-  this->myYLabel->setEdgeGeometry  (glV1, glV2, glH4, glH5 );
-  this->myZLabel->setEdgeGeometry  (glV1, glV2, glH5, glH6 );
-
-  this->myXField->setEdgeGeometry  (glV2, glV4 ,glH3 ,glH4 );
-  this->myYField->setEdgeGeometry  (glV2, glV4 ,glH4 ,glH5 );
-  this->myZField->setEdgeGeometry  (glV2, glV4 ,glH5 ,glH6 );
-
-  if (!this->myRefMenu) return;
-
-  this->myRefLabel->setEdgeGeometry(glV1, glV3, glH1, glH2);
-  this->myRefMenu->setEdgeGeometry (glV3, glV4, glH1, glH2);
 }
 
 
@@ -102,16 +45,6 @@ void Fui3DPoint::setSensitivity(bool sensitive)
   this->myZField->setSensitivity(sensitive);
   this->myYField->setSensitivity(sensitive);
   this->myXField->setSensitivity(sensitive);
-}
-
-void Fui3DPoint::setLook(int look)
-{
-  myFrame->setLook(look);
-}
-
-void Fui3DPoint::setBorderWidth(int width)
-{
-  myFrame->setBorderWidth(width);
 }
 
 
@@ -133,13 +66,6 @@ void Fui3DPoint::setYvalue(double value)
 void Fui3DPoint::setZvalue(double value)
 {
   this->myZField->setValue(value);
-}
-
-void Fui3DPoint::setValue(const FaVec3& point)
-{
-  this->myXField->setValue(point[0]);
-  this->myYField->setValue(point[1]);
-  this->myZField->setValue(point[2]);
 }
 
 void Fui3DPoint::setValue(double x, double y, double z)
@@ -167,9 +93,7 @@ double Fui3DPoint::getZvalue() const
 
 FaVec3 Fui3DPoint::getValue() const
 {
-  return FaVec3(this->myXField->getDouble(),
-		this->myYField->getDouble(),
-		this->myZField->getDouble());
+  return FaVec3(this->getXvalue(),this->getYvalue(),this->getZvalue());
 }
 
 

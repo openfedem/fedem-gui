@@ -5,38 +5,48 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-//#define QT3_SUPPORT // temporary
-#include "FFuLib/FFuQtComponents/FFuQtFrame.H"
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QLabel>
+
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
-#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQt3DPoint.H"
+
+#include "FuiQt3DPoint.H"
 
 
-FuiQt3DPoint::FuiQt3DPoint(QWidget* parent,
-			   int xpos,
-			   int ypos,
-			   int width,
-			   int height,
-			   const char* name,
-			   bool refMenu)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name, bool refMenu)
+  : FFuQtWidget(parent,name)
 {
-  this->myFrame = new FFuQtFrame(this);
-  if (refMenu) {
-    this->myRefLabel = new FFuQtLabel(this);
-    this->myRefMenu  = new FFuQtOptionMenu(this);
-  }
-  else {
-    this->myRefLabel = 0;
-    this->myRefMenu  = 0;
-  }
-  this->myZLabel = new FFuQtLabel  (this);
-  this->myYLabel = new FFuQtLabel  (this);
-  this->myXLabel = new FFuQtLabel  (this);
-  this->myXField = new FFuQtIOField(this);
-  this->myYField = new FFuQtIOField(this);
-  this->myZField = new FFuQtIOField(this);
+  myXField = new FFuQtIOField();
+  myYField = new FFuQtIOField();
+  myZField = new FFuQtIOField();
+  myRefMenu = refMenu ? new FFuQtOptionMenu() : NULL;
 
   this->init();
+
+  QWidget* qPoint = refMenu ? new QWidget() : this;
+  QGridLayout* gl = new QGridLayout(qPoint);
+  if (refMenu) gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(20);
+  gl->setVerticalSpacing(2);
+  gl->addWidget(new QLabel("X"),0,0);
+  gl->addWidget(new QLabel("Y"),1,0);
+  gl->addWidget(new QLabel("Z"),2,0);
+  gl->addWidget(static_cast<FFuQtIOField*>(myXField),0,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(myYField),1,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(myZField),2,1);
+
+  if (refMenu)
+  {
+    QWidget* qRef = new QWidget();
+    QBoxLayout* layout = new QHBoxLayout(qRef);
+    layout->setContentsMargins(0,0,0,0);
+    layout->addWidget(new QLabel("Reference"));
+    layout->addWidget(static_cast<FFuQtOptionMenu*>(myRefMenu));
+    layout = new QVBoxLayout(this);
+    layout->addWidget(qRef);
+    layout->addWidget(qPoint);
+  }
 }

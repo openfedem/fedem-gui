@@ -37,7 +37,6 @@ class FuiSNCurveSelector {};
 #include "FFuLib/FFuRadioButton.H"
 #include "FFuLib/FFuToolButton.H"
 #include "FFuLib/FFuTabbedWidgetStack.H"
-#include "FFuLib/FFuFrame.H"
 #include "FFuLib/FFuMemo.H"
 #include "FFuLib/FFuTable.H"
 #include "FFuLib/FFuScale.H"
@@ -287,7 +286,6 @@ void FuiProperties::initWidgets()
   mySubassCoGFrame->setLabel("Center of Gravity");
   mySubassCoGFrame->popDown();
   mySubassCoGField->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onCoGRefChanged,bool));
-  mySubassCoGField->setLook(FFuFrame::FLAT);
   mySubassCoGField->setSensitivity(false);
   mySubassCoGField->popDown();
 
@@ -929,7 +927,7 @@ void FuiProperties::initWidgets()
 
   // Create the UA class to communicate with the application
 
-  this->invokeCreateUACB(this);
+  FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
 

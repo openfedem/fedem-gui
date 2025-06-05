@@ -5,27 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQT3DPOINT_H
-#define FUIQT3DPOINT_H
+#ifndef FUI_QT_3D_POINT_H
+#define FUI_QT_3D_POINT_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/Fui3DPoint.H"
 
 
-class FuiQt3DPoint : public virtual FFuQtMultUIComponent, public Fui3DPoint
+class FuiQt3DPoint : public FFuQtWidget, public Fui3DPoint
 {
 public:
-  FuiQt3DPoint(QWidget* parent = 0,
-	       int xpos=100,
-	       int ypos=100,
-	       int width=40,
-	       int height=60,
-	       const char* name="D3Point",
-	       bool refMenu=true);
-  virtual ~FuiQt3DPoint() {}
+  FuiQt3DPoint(QWidget* parent = NULL, const char* name = "D3Point",
+               bool refMenu = true);
 
   virtual void setSensitivity(bool sensitive)
-  {Fui3DPoint::setSensitivity(sensitive);}
+  {
+    this->Fui3DPoint::setSensitivity(sensitive);
+  }
 };
 
 #endif
