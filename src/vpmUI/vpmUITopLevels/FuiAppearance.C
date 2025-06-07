@@ -91,7 +91,7 @@ void FuiAppearance::initWidgets(void)
   myShininessScale->setDragCB(FFaDynCB1M(FuiAppearance,this,
 					 onShininessSliderChanged,int));
   myColorSelector->setColorChangedCB(FFaDynCB1M(FuiAppearance,this,
-						colorValueChanged,FFuColor));
+                                                colorValueChanged,const FFuColor&));
 
   myPolygonOptions->setOptionSelectedCB(FFaDynCB1M(FuiAppearance,this, 
 						   onPolygonOptionChanged,int));

@@ -32,5 +32,5 @@ FFuQtColorDialog::FFuQtColorDialog(int xpos, int ypos, int width, int height,
 void FFuQtColorDialog::closeEvent(QCloseEvent*)
 {
   myOkButtonClickedCB.invoke(myColorSelector->getColor());
-  myOkButtonClickedWPtrCB.invoke(myColorSelector->getColor(),this);
+  myOkButtonClickedCB2.invoke(myColorSelector->getColor(),this);
 }

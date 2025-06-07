@@ -76,16 +76,7 @@ void FFuColorSelector::setColor(const FFuColor& aColor, bool notify)
   this->updateSampleFrame();
 
   if (notify)
-    myColorChangedCB.invoke(myColor);
-}
-
-
-/*!
-  Set the callback to be called when the color changes
-*/
-void FFuColorSelector::setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB)
-{
-  myColorChangedCB = aDynCB;
+    myCB.invoke(myColor);
 }
 
 
@@ -138,7 +129,7 @@ void FFuColorSelector::sliderRedValue(int val)
 {
   myRedValue->setValue(val);
   myColor[RED] = val;
-  myColorChangedCB.invoke(myColor);
+  myCB.invoke(myColor);
   this->updateSampleFrame();
 }
 
@@ -146,7 +137,7 @@ void FFuColorSelector::sliderGreenValue(int val)
 {
   myGreenValue->setValue(val);
   myColor[GREEN] = val;
-  myColorChangedCB.invoke(myColor);
+  myCB.invoke(myColor);
   this->updateSampleFrame();
 }
 
@@ -154,6 +145,6 @@ void FFuColorSelector::sliderBlueValue(int val)
 {
   myBlueValue->setValue(val);
   myColor[BLUE] = val;
-  myColorChangedCB.invoke(myColor);
+  myCB.invoke(myColor);
   this->updateSampleFrame();
 }

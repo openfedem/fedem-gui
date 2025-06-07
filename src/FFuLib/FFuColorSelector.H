@@ -25,7 +25,7 @@ public:
   const FFuColor& getColor() const { return myColor; }
   void setInitialColor(const FFuColor& aColor);
   void setColor(const FFuColor& aColor, bool notify = true);
-  void setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB);
+  void setColorChangedCB(const FFaDynCB1<const FFuColor&>& cb) { myCB = cb; }
 
 protected:
   // Initialisation to be called by UILib dep. subclass
@@ -41,7 +41,7 @@ protected:
   FFuIOField* myGreenValue;
   FFuIOField* myBlueValue;
 
-  FFaDynCB1<FFuColor> myColorChangedCB;
+  FFaDynCB1<const FFuColor&> myCB;
 
   FFuColor myColor;
   FFuColor myInitialColor;

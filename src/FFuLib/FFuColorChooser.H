@@ -28,9 +28,6 @@
 class FFuColorChooser : virtual public FFuComponentBase
 {
 public:
-  FFuColorChooser() {}
-  virtual ~FFuColorChooser() {}
-
   //! Sets current color to \a rgb. If \a rgb is not in list inserts it.
   virtual void setCurrentCol(const FFuColor& rgb) = 0;
   //! Inserts color \a rbg into list, and displays \a name next to it, at index \a index.
@@ -41,13 +38,13 @@ public:
   //! labeled "more...". Pressing this will pop up a more elaborate color select menu.
   virtual void enableColorDialog(bool enable) = 0;
 
-  void setSelectionChangedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& cb) { mySelectionChangedCB = cb; }
+  void setSelectionChangedCB(const FFaDynCB1<const FFuColor&>& cb) { mySelectionChangedCB = cb; }
 
 protected:
-  void callSelectionChangedCB(const FFuColor& newCol) { mySelectionChangedCB.invoke(newCol,this); }
+  void callSelectionChangedCB(const FFuColor& newCol) { mySelectionChangedCB.invoke(newCol); }
 
 private:
-  FFaDynCB2<FFuColor,FFuComponentBase*> mySelectionChangedCB;
+  FFaDynCB1<const FFuColor&> mySelectionChangedCB;
 };
 
 #endif

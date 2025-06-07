@@ -50,11 +50,11 @@ public:
 
   // callbacks
   void onDialogButtonClicked(int button);
-  void onTranspSliderChanged(int)     { isTransparencyChanged = true; this->updateDBValues(); isTransparencyChanged = false;}
-  void onShininessSliderChanged(int)  { isShininessChanged    = true; this->updateDBValues(); isShininessChanged    = false;}
-  void onPolygonOptionChanged(int)    { isPolygonsChanged     = true; this->updateDBValues(); isPolygonsChanged     = false;}
-  void onLinesOptionChanged(int)      { isLinesChanged        = true; this->updateDBValues(); isLinesChanged        = false;}
-  void colorValueChanged(FFuColor)    { isColorChanged        = true; this->updateDBValues(); isColorChanged        = false;}
+  void onTranspSliderChanged(int)    { isTransparencyChanged = true; this->updateDBValues(); isTransparencyChanged = false; }
+  void onShininessSliderChanged(int) { isShininessChanged    = true; this->updateDBValues(); isShininessChanged    = false; }
+  void onPolygonOptionChanged(int)   { isPolygonsChanged     = true; this->updateDBValues(); isPolygonsChanged     = false; }
+  void onLinesOptionChanged(int)     { isLinesChanged        = true; this->updateDBValues(); isLinesChanged        = false; }
+  void colorValueChanged(const FFuColor&) { isColorChanged   = true; this->updateDBValues(); isColorChanged        = false; }
 
   // detail changes
   void disableAdvancedOptions(bool trueOrFalse);
