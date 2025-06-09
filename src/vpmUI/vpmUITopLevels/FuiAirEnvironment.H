@@ -17,9 +17,9 @@
 class FFuOptionMenu;
 class FFuToggleButton;
 class FFuPushButton;
-class FFuLabel;
 class FFuLabelFrame;
 class FFuLabelField;
+class FFuIOField;
 class FFuFileBrowseField;
 class FFuDialogButtons;
 
@@ -33,7 +33,6 @@ class FuiAirEnvironment : virtual public FFuTopLevelShell,
 
 public:
   FuiAirEnvironment();
-  virtual ~FuiAirEnvironment() {}
 
   static FuiAirEnvironment* create(int xpos = 100, int ypos = 100,
 				   int width = 100, int height = 100,
@@ -47,7 +46,6 @@ protected:
   virtual bool onClose();
 
 private:
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUp();
 
   void onStallChanged(int);
@@ -66,17 +64,12 @@ private:
   virtual void getUIValues(FFuaUIValues* values);
 
 protected:
-  FFuLabel*           stallModLabel;
   FFuOptionMenu*      stallModMenu;
   FFuToggleButton*    useCMToggle;
-  FFuLabel*           infModLabel;
   FFuOptionMenu*      infModMenu;
-  FFuLabel*           indModLabel;
   FFuOptionMenu*      indModMenu;
-  FFuLabelField*      aTolerField;
-  FFuLabel*           tipLossLabel;
+  FFuIOField*         aTolerField;
   FFuOptionMenu*      tipLossMenu;
-  FFuLabel*           hubLossLabel;
   FFuOptionMenu*      hubLossMenu;
   FFuLabelFrame*      windFrame;
   FFuToggleButton*    windToggle;
@@ -102,56 +95,36 @@ private:
   double windTurbTimeInc;
   std::string windTurbOutputPath;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 
 class FuaAirEnvironmentValues : public FFuaUIValues
 {
 public:
-  FuaAirEnvironmentValues() {
-    this->stallMod = 0;
-    this->useCM = false;
-    this->infMod = this->indMod = 0;
-    this->aToler = 0.0;
-    this->tlMod = this->hlMod = 0;
-    this->constWnd = false;
-    this->windVel = this->windDir = 0.0;
-    this->twrPot = this->twrShad = false;
-    this->airDens = this->kinVisc = this->dtAero = 0.0;
-    this->useDSdt = false;
-    this->isSensitive = true;
-    this->windTurbHubHeight = 0.0;
-    this->windTurbGridSize = 0.0;
-    this->windTurbDuration = 0.0;
-    this->windTurbTimeInc = 0.0;
-  }
-  virtual ~FuaAirEnvironmentValues() {}
-
-  int         stallMod; //!< Dynamic stall model
-  bool        useCM;    //!< Use aerodynamic pitching moment model?
-  int         infMod;   //!< Inflow model
-  int         indMod;   //!< Induction-factor model
-  double      aToler;   //!< Induction-factor tolerance
-  int         tlMod;    //!< Tip-loss model (EQUIL only)
-  int         hlMod;    //!< Hub-loss model (EQUIL only)
-  bool        constWnd; //!< Use constant wind?
-  double      windVel;  //!< Constant wind speed
-  double      windDir;  //!< Constant wind direction
-  std::string windFile; //!< Name of wind data file
-  double      windTurbHubHeight;  //!< Used by TurbWind.exe
-  double      windTurbGridSize;   //!< Used by TurbWind.exe
-  double      windTurbDuration;   //!< Used by TurbWind.exe
-  double      windTurbTimeInc;    //!< Used by TurbWind.exe
-  bool        twrPot;   //!< Calculate tower potential flow?
-  bool        twrShad;  //!< Calculate tower shadow?
-  std::string twrFile;  //!< Name of tower drag file
-  double      airDens;  //!< Air density (kg/m^3)
-  double      kinVisc;  //!< Kinematic air viscosity
-  double      dtAero;   //!< Time interval for aerodynamic calculations
-  bool        useDSdt;  //!< Use dynamics solver time interval?
+  int         stallMod = 0;  //!< Dynamic stall model
+  bool        useCM = false; //!< Use aerodynamic pitching moment model?
+  int         infMod = 0;    //!< Inflow model
+  int         indMod = 0;    //!< Induction-factor model
+  double      aToler = 0.0;  //!< Induction-factor tolerance
+  int         tlMod = 0;     //!< Tip-loss model (EQUIL only)
+  int         hlMod = 0;     //!< Hub-loss model (EQUIL only)
+  bool        constWnd = false; //!< Use constant wind?
+  double      windVel = 0.0; //!< Constant wind speed
+  double      windDir = 0.0; //!< Constant wind direction
+  std::string windFile;      //!< Name of wind data file
+  double      windTurbHubHeight = 0.0; //!< Used by TurbWind.exe
+  double      windTurbGridSize  = 0.0; //!< Used by TurbWind.exe
+  double      windTurbDuration  = 0.0; //!< Used by TurbWind.exe
+  double      windTurbTimeInc   = 0.0; //!< Used by TurbWind.exe
+  bool        twrPot  = false; //!< Calculate tower potential flow?
+  bool        twrShad = false; //!< Calculate tower shadow?
+  std::string twrFile;         //!< Name of tower drag file
+  double      airDens = 0.0;   //!< Air density (kg/m^3)
+  double      kinVisc = 0.0;   //!< Kinematic air viscosity
+  double      dtAero  = 0.0;   //!< Time interval for aerodynamic calculations
+  bool        useDSdt = false; //!< Use dynamics solver time interval?
 
   std::string modelFilePath; //!< Path to current model file
-  bool        isSensitive;
+  bool        isSensitive = true;
 };
-////////////////////////////////////////////////////////////////////////////////
 
 #endif

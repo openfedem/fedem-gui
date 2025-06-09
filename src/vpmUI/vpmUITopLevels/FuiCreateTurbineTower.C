@@ -11,8 +11,6 @@
 #include "vpmUI/Pixmaps/turbineTower.xpm"
 #include "vpmUI/Pixmaps/turbineModelT.xpm"
 
-extern const char* info_xpm[];
-
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabelField.H"
@@ -82,9 +80,9 @@ void FuiCreateTurbineTower::initWidgets()
   this->towerGeometryH2Field->myField->setDoubleDisplayPrecision(6);
   this->towerGeometryH2Field->setSensitivity(false);
 
-  this->towerGeometryWallThicknessField->setLabel("Wall thickness");
-  this->towerGeometryWallThicknessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->towerGeometryWallThicknessField->myField->setDoubleDisplayPrecision(6);
+  this->towerWallThicknField->setLabel("Wall thickness");
+  this->towerWallThicknField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  this->towerWallThicknField->myField->setDoubleDisplayPrecision(6);
 
   this->towerMeshFrame->setLabel("Beam mesh");
 
@@ -99,7 +97,7 @@ void FuiCreateTurbineTower::initWidgets()
   this->towerMaterialMenu->setBehaviour(FuiQueryInputField::REF_NONE);
   this->towerMaterialMenu->setButtonMeaning(FuiQueryInputField::EDIT);
 
-  this->towerMaterialRhoField->setLabel("Rho");
+  this->towerMaterialRhoField->setLabel("<font face='Symbol'><font size='+1'>n</font></font>");
   this->towerMaterialRhoField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->towerMaterialRhoField->myField->setDoubleDisplayPrecision(6);
   this->towerMaterialRhoField->setSensitivity(false);
@@ -119,11 +117,8 @@ void FuiCreateTurbineTower::initWidgets()
   this->towerMaterialGField->myField->setDoubleDisplayPrecision(6);
   this->towerMaterialGField->setSensitivity(false);
 
-  this->notesImage->setPixMap(info_xpm);
-  this->notesLabel->setLabel("<b>Notes</b>");
-  this->notesText->setLabel("You can update the tower definition of the current wind turbine model here.\n"
-                            "Click 'Update tower' to update the existing model.");
-  this->placeWidgets(this->getWidth(),this->getHeight());
+  this->notesText->setLabel("You can update the tower definition of the current wind turbine\n"
+                            "model here. Click 'Update tower' to update the existing model.");
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
@@ -133,110 +128,10 @@ void FuiCreateTurbineTower::setCB(const FFaDynCB1<FmModelMemberBase*>& aDynCB)
 {
   this->towerMaterialMenu->setRefSelectedCB(aDynCB);
 }
-//----------------------------------------------------------------------------
-
-void FuiCreateTurbineTower::placeWidgets(int, int height)
-{
-  int border = this->getBorder();
-  int buttonsTop = height - this->dialogButtons->getHeightHint();
-
-  int fontHeight = this->getFontHeigth();
-  int fieldHeight = 20; // hard coded field height?!
-
-  int v1 = border;
-  int y  = border + 170;
-
-  // images
-
-  this->headerImage->setEdgeGeometry(0, 827, 0, 169);
-
-  this->modelImage->setEdgeGeometry(431, 672, 174, 494);
-
-  // geometry
-
-  int y1 = y;
-  this->towerGeometryFrame->setEdgeGeometry(v1, v1+190, y, y+155);
-  y += fontHeight+7;
-
-  this->towerGeometryD1Field->setEdgeGeometry(v1+10, v1+155, y, y+fieldHeight);
-  this->towerGeometryD1Field->setLabelWidth(75);
-  y += fieldHeight+2;
-
-  this->towerGeometryD2Field->setEdgeGeometry(v1+10, v1+155, y, y+fieldHeight);
-  this->towerGeometryD2Field->setLabelWidth(75);
-  y += fieldHeight+2;
-
-  this->towerGeometryM1Field->setEdgeGeometry(v1+10, v1+155, y, y+fieldHeight);
-  this->towerGeometryM1Field->setLabelWidth(75);
-  y += fieldHeight+2;
-
-  this->towerGeometryH1Field->setEdgeGeometry(v1+10, v1+155, y, y+fieldHeight);
-  this->towerGeometryH1Field->setLabelWidth(75);
-  y += fieldHeight+2;
-
-  this->towerGeometryH2Field->setEdgeGeometry(v1+10, v1+155, y, y+fieldHeight);
-  this->towerGeometryH2Field->setLabelWidth(75);
-  y += fieldHeight+2;
-
-  this->towerGeometryWallThicknessField->setEdgeGeometry(v1+10, v1+155, y, y+fieldHeight);
-  this->towerGeometryWallThicknessField->setLabelWidth(75);
-  y += fieldHeight+10;
-
-  // material
-
-  y = y1;
-  this->towerMaterialFrame->setEdgeGeometry(v1+200, v1+390, y, y+138);
-  y += fontHeight+7;
-
-  this->towerMaterialMenu->setEdgeGeometry(v1+210, v1+210+145, y, y+fieldHeight);
-  y += fieldHeight+5;
-
-  this->towerMaterialRhoField->setEdgeGeometry(v1+210, v1+210+125, y, y+fieldHeight);
-  this->towerMaterialRhoField->setLabelWidth(50);
-  y += fieldHeight+2;
-
-  this->towerMaterialEField->setEdgeGeometry(v1+210, v1+210+125, y, y+fieldHeight);
-  this->towerMaterialEField->setLabelWidth(50);
-  y += fieldHeight+2;
-
-  this->towerMaterialNuField->setEdgeGeometry(v1+210, v1+210+125, y, y+fieldHeight);
-  this->towerMaterialNuField->setLabelWidth(50);
-  y += fieldHeight+2;
-
-  this->towerMaterialGField->setEdgeGeometry(v1+210, v1+210+125, y, y+fieldHeight);
-  this->towerMaterialGField->setLabelWidth(50);
-  y += fieldHeight+10;
-
-  // beam mesh
-
-  this->towerMeshFrame->setEdgeGeometry(v1+200, v1+390, y, y+67);
-  y += fontHeight+7;
-
-  this->towerMeshN1Field->setEdgeGeometry(v1+210, v1+210+125, y, y+fieldHeight);
-  this->towerMeshN1Field->setLabelWidth(50);
-  y += fieldHeight+2;
-
-  this->towerMeshN2Field->setEdgeGeometry(v1+210, v1+210+125, y, y+fieldHeight);
-  this->towerMeshN2Field->setLabelWidth(50);
-  y += fieldHeight+2;
-
-  // notes
-
-  y += 7;
-  this->notesImage->setEdgeGeometry(v1, v1+16, y-5, y+11);
-  this->notesSeparator->setEdgeGeometry(v1+20, v1+390, y+10, y+12);
-  this->notesLabel->setEdgeGeometry(v1+20, v1+390, y-5, y+11);
-  this->notesText->setEdgeGeometry(v1, v1+390, y+12, y+54);
-
-  // dialog buttons
-
-  this->dialogButtons->setEdgeGeometry(0,409,buttonsTop,height);
-}
 //-----------------------------------------------------------------------------
 
 void FuiCreateTurbineTower::onPoppedUp()
 {
-  this->placeWidgets(this->getWidth(),this->getHeight());
   this->updateUIValues();
 }
 //----------------------------------------------------------------------------
@@ -307,7 +202,7 @@ void FuiCreateTurbineTower::setUIValues(const FFuaUIValues* values)
   this->towerGeometryM1Field->setValue(twrValues->M1);
   this->towerGeometryH1Field->setValue(twrValues->H1);
   this->onHeightChanged(twrValues->M1);
-  this->towerGeometryWallThicknessField->setValue(twrValues->wallThickness);
+  this->towerWallThicknField->setValue(twrValues->wallThickness);
   this->towerMaterialMenu->setQuery(twrValues->materialQuery);
   this->towerMaterialMenu->setSelectedRef(twrValues->materialObject);
   this->towerMaterialMenu->setButtonCB(twrValues->editCB);
@@ -325,6 +220,6 @@ void FuiCreateTurbineTower::getUIValues(FFuaUIValues* values)
   twrValues->D2 = this->towerGeometryD2Field->getValue();
   twrValues->M1 = this->towerGeometryM1Field->getValue();
   twrValues->H1 = this->towerGeometryH1Field->getValue();
-  twrValues->wallThickness = this->towerGeometryWallThicknessField->getValue();
+  twrValues->wallThickness = this->towerWallThicknField->getValue();
   twrValues->materialObject = this->towerMaterialMenu->getSelectedRef();
 }

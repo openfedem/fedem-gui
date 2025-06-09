@@ -5,7 +5,13 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FuiQtCreateTurbineAssembly.H"
+#include <QApplication>
+#include <QClipboard>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QLabel>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtQueryInputField.H"
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
@@ -18,12 +24,11 @@
 #include "FFuLib/FFuQtComponents/FFuQtFileBrowseField.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 
-#include <QApplication>
-#include <QClipboard>
+#include "FuiQtCreateTurbineAssembly.H"
 
 
 FuiCreateTurbineAssembly* FuiCreateTurbineAssembly::create(int xpos, int ypos,
-							   int width, int height,
+							   int width,int height,
 							   const char* title,
 							   const char* name)
 {
@@ -32,52 +37,136 @@ FuiCreateTurbineAssembly* FuiCreateTurbineAssembly::create(int xpos, int ypos,
 
 
 FuiQtCreateTurbineAssembly::FuiQtCreateTurbineAssembly(int xpos, int ypos,
-						       int width, int height,
+						       int width,int height,
 						       const char* title,
 						       const char* name)
-  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name,Qt::MSWindowsFixedSizeDialogHint)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,
+                       title,name,Qt::MSWindowsFixedSizeDialogHint)
 {
-  this->headerImage         = new FFuQtLabel(this);
-  this->modelImage          = new FFuQtLabel(this);
-  this->drivelineTypeLabel  = new FFuQtLabel(this);
-  this->drivelineTypeMenu   = new FFuQtOptionMenu(this);
-  this->bearingsLabel       = new FFuQtLabel(this);
-  this->bearingsMenu        = new FFuQtOptionMenu(this);
-  this->nameLabel           = new FFuQtLabel(this);
-  this->towerBaseFrame      = new FFuQtLabelFrame(this);
-  this->hubFrame            = new FFuQtLabelFrame(this);
-  this->drivelineFrame      = new FFuQtLabelFrame(this);
-  this->nacelleFrame        = new FFuQtLabelFrame(this);
-  this->nameField           = new FFuQtLabelField(this);
-  for (FFuLabelField*& field : myFields) field = new FFuQtLabelField(this);
-  this->copyButton          = new FFuQtPushButton(this);
-  this->pasteButton         = new FFuQtPushButton(this);
-  this->bladesNumLabel      = new FFuQtLabel(this);
-  this->bladesNumField      = new FFuQtSpinBox(this);
-  this->bladesDesignLabel   = new FFuQtLabel(this);
-  this->bladesDesignField   = new FFuQtFileBrowseField(this);
-  this->incCtrlSysToggle    = new FFuQtToggleButton(this);
-  this->notesImage          = new FFuQtLabel(this);
-  this->notesLabel          = new FFuQtLabel(this);
-  this->notesSeparator      = new FFuQtLabelFrame(this);
-  this->notesText           = new FFuQtLabel(this);
-  this->dialogButtons       = new FFuQtDialogButtons(this);
+  headerImage = new FFuQtLabel();
+  modelImage  = new FFuQtLabel();
+  notesText   = new FFuQtLabel();
+
+  towerBaseFrame = new FFuQtLabelFrame();
+  hubFrame       = new FFuQtLabelFrame();
+  drivelineFrame = new FFuQtLabelFrame();
+  nacelleFrame   = new FFuQtLabelFrame();
+
+  drivelineTypeMenu = new FFuQtOptionMenu();
+  bearingsMenu      = new FFuQtOptionMenu();
+  nameField         = new FFuQtIOField();
+  for (FFuLabelField*& field : myFields)
+    field = new FFuQtLabelField();
+
+  copyButton  = new FFuQtPushButton();
+  pasteButton = new FFuQtPushButton();
+
+  bladesNumField    = new FFuQtSpinBox();
+  bladesDesignField = new FFuQtFileBrowseField(NULL);
+  incCtrlSysToggle  = new FFuQtToggleButton();
+
+  dialogButtons = new FFuQtDialogButtons();
 
   this->initWidgets();
+
+  for (FFuLabelField*& field : myFields)
+  {
+    field->setLabelWidth(15);
+    static_cast<FFuQtLabelField*>(field)->setFixedHeight(20);
+  }
+
+  QBoxLayout* layout = NULL;
+  QGridLayout* gl = NULL;
+  int i, row = 0;
+
+  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(towerBaseFrame));
+  for (i = FWP::TOWER_X; i <= FWP::TOWER_T; i++)
+    layout->addWidget(static_cast<FFuQtLabelField*>(myFields[i]));
+
+  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(hubFrame));
+  layout->setContentsMargins(10,2,10,10);
+  layout->setSpacing(2);
+  for (i = FWP::H1; i <= FWP::BETA; i++)
+    layout->addWidget(static_cast<FFuQtLabelField*>(myFields[i]));
+
+  gl = new QGridLayout(static_cast<FFuQtLabelFrame*>(drivelineFrame));
+  gl->setContentsMargins(10,2,10,10);
+  gl->setHorizontalSpacing(20);
+  gl->setVerticalSpacing(2);
+  for (i = FWP::D1, row = 0; i <= FWP::D5; i++)
+    gl->addWidget(static_cast<FFuQtLabelField*>(myFields[i]),row++,0);
+  for (i = FWP::D6, row = 0; i <= FWP::THETA; i++)
+    gl->addWidget(static_cast<FFuQtLabelField*>(myFields[i]),row++,1);
+
+  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(nacelleFrame));
+  for (i = FWP::COG_X; i <= FWP::COG_Z; i++)
+  {
+    myFields[i]->setLabelWidth(30);
+    layout->addWidget(static_cast<FFuQtLabelField*>(myFields[i]));
+  }
+  
+  QWidget* qCopyPaste = new QWidget();
+  layout = new QVBoxLayout(qCopyPaste);
+  layout->setContentsMargins(10,10,0,0);
+  layout->addStretch();
+  layout->addWidget(dynamic_cast<FFuQtPushButton*>(copyButton));
+  layout->addWidget(dynamic_cast<FFuQtPushButton*>(pasteButton));
+
+  QWidget* qNumBlades = new QWidget();
+  layout = new QHBoxLayout(qNumBlades);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(new QLabel("Number of blades"));
+  layout->addWidget(static_cast<FFuQtSpinBox*>(bladesNumField));
+  layout->addSpacing(20);
+  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(incCtrlSysToggle));
+
+  QWidget* qLeft = new QWidget();
+  gl = new QGridLayout(qLeft);
+  gl->setContentsMargins(0,0,0,0);
+  for (int col = 0; col < 3; col++)
+    gl->setColumnStretch(col,1);
+  gl->addWidget(new QLabel("Driveline type"), row=0,0);
+  gl->addWidget(new QLabel("Bearings"), row,1);
+  gl->addWidget(new QLabel("Name"), row++,2);
+  gl->addWidget(static_cast<FFuQtOptionMenu*>(drivelineTypeMenu), row,0);
+  gl->addWidget(static_cast<FFuQtOptionMenu*>(bearingsMenu), row,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(nameField), row++,2);
+  gl->addWidget(static_cast<FFuQtLabelFrame*>(towerBaseFrame), row,0);
+  gl->addWidget(static_cast<FFuQtLabelFrame*>(drivelineFrame), row++,1,1,-1);
+  gl->addWidget(static_cast<FFuQtLabelFrame*>(hubFrame), row,0);
+  gl->addWidget(static_cast<FFuQtLabelFrame*>(nacelleFrame), row,1);
+  gl->addWidget(qCopyPaste, row++,2);
+  gl->addWidget(static_cast<FFuQtFileBrowseField*>(bladesDesignField),
+		row++,0,1,-1);
+  gl->addWidget(qNumBlades, row++,0,1,-1);
+  gl->addWidget(new FFuQtNotesLabel(), row++,0);
+  gl->addWidget(static_cast<FFuQtLabel*>(notesText), row++,0,1,-1);
+  gl->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons), row++,0,1,-1);
+
+  QWidget* qMain = new QWidget();
+  layout = new QHBoxLayout(qMain);
+  layout->setSpacing(0);
+  layout->setContentsMargins(10,0,0,10);
+  layout->addWidget(qLeft);
+  layout->addWidget(static_cast<FFuQtLabel*>(modelImage));
+
+  layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(static_cast<FFuQtLabel*>(headerImage));
+  layout->addWidget(qMain);
 }
 //----------------------------------------------------------------------------
 
 void FuiQtCreateTurbineAssembly::onCopyButtonClicked()
 {
-  QString text = QString::number(drivelineTypeMenu->getSelectedOption());
-  text.append("\n");
-  text.append(QString::number(bearingsMenu->getSelectedOption()));
-  text.append("\n");
-  text.append((nameField->getText()+"\n").c_str());
+  std::string text = std::to_string(drivelineTypeMenu->getSelectedOption());
+  text.append("\n" + std::to_string(bearingsMenu->getSelectedOption()));
+  text.append("\n" + nameField->getValue());
   for (FFuLabelField* field : myFields)
-    text.append((field->getText()+"\n").c_str());
+    text.append("\n" + field->getText());
+  text.append("\n");
 
-  QApplication::clipboard()->setText(text);
+  QApplication::clipboard()->setText(text.c_str());
 }
 //----------------------------------------------------------------------------
 
@@ -85,25 +174,26 @@ void FuiQtCreateTurbineAssembly::onPasteButtonClicked()
 {
   QString text = QApplication::clipboard()->text();
   QStringList list = text.split('\n');
+  const size_t len = list.size();
 
-  if (list.size() > 0 && drivelineTypeMenu->getSensitivity())
+  if (len > 0 && drivelineTypeMenu->getSensitivity())
   {
     int n = list.at(0).toLong();
     drivelineTypeMenu->selectOption(n);
     this->onDrivelineTypeChanged(n);
   }
 
-  if (list.size() > 1 && bearingsMenu->getSensitivity())
+  if (len > 1 && bearingsMenu->getSensitivity())
   {
     int n = list.at(1).toLong();
     bearingsMenu->selectOption(n);
     this->onBearingsChanged(n);
   }
 
-  if (list.size() > 2 && nameField->getSensitivity())
+  if (len > 2 && nameField->getSensitivity())
     nameField->setValue(list.at(2).toStdString());
 
-  for (size_t i = 3; (int)i < list.size() && i-3 < myFields.size(); i++)
+  for (size_t i = 3; i < len && i-3 < myFields.size(); i++)
     if (myFields[i-3]->getSensitivity())
       myFields[i-3]->setValue(list.at(i).toStdString());
 }
