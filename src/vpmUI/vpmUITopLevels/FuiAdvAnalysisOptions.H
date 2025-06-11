@@ -23,7 +23,6 @@ class FFuOptionMenu;
 class FFuFileBrowseField;
 class FFuTabbedWidgetStack;
 class FuaAdvAnalysisOptionsValues;
-class FuiAdvAnalysisOptionsSheet;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
 class FmModelMemberBase;
@@ -53,22 +52,15 @@ typedef IOFieldMap::iterator IOFieldIter;
 typedef std::map<int,FFuLabel*> LabelMap;
 typedef LabelMap::iterator LabelIter;
 
-typedef std::map<int,FFuOptionMenu*> OptionMenuMap;
-typedef OptionMenuMap::iterator OptionMenuIter;
-
 
 class FuiAdvAnalysisOptions : public FuiTopLevelDialog
 {
   Fmd_HEADER_INIT();
 
-  friend class FuiAdvAnalysisOptionsSheet;
-
 protected:
   FuiAdvAnalysisOptions(bool basicMode);
 
 public:
-  virtual ~FuiAdvAnalysisOptions() {}
-
   // Static create method to use instead of constructor
   // Implementation in GUILib-dependent implementation file
   static FuiAdvAnalysisOptions* create(int xpos = 100, int ypos  = 100,
@@ -225,9 +217,6 @@ public:
     OVERWRITE
   };
 
-  virtual int getWidthHint();
-  virtual int getHeightHint();
-
   //Field Settings
   //see FFuIOField for mode and policy
   void setAllFieldAcceptPolicy(int policy);
@@ -238,7 +227,7 @@ public:
 
 protected:
   virtual void initWidgets();
-  virtual void placeWidgets(int width, int height);
+  void placeAdvancedButton(int width, int height);
   virtual void onAdvBtnClicked();
 
 private:
@@ -327,34 +316,24 @@ private:
   void onQRadio1Toggled(bool onOrOff);
   void onQRadio2Toggled(bool onOrOff);
 
-  // Layout
-  void placeOptionWidgets(FuiAdvAnalysisOptionsSheet* w, int width, int height);
-  void getOptionHorGridlines(int iOpt, int height, IntegerMap& gridlines);
-
-  int getOptionWidthHint(int iOpt);
-  int getOptionHeightHint(int iOpt);
-
 protected:
   FFuLabel* labImgTop;
-  FFuLabel* labNotesImage;
-  FFuLabel* labNotesLabel;
   FFuLabel* labNotesText;
+  FFuComponentBase* notesLabel;
   FFuPushButton* btnAdvanced;
   FFuPushButton* btnRunCloud;
   FFuPushButton* btnHelp;
   FFuIOField* addOptions;
 
   FFuTabbedWidgetStack* tabStack;
-  std::array<FuiAdvAnalysisOptionsSheet*,NOPTIONS> options;
-
-  std::array<RadioButtonMap ,NOPTIONS> radioButtons;
-  std::array<ToggleButtonMap,NOPTIONS> toggleButtons;
-  std::array<IOFieldMap     ,NOPTIONS> doubleFields;
-  std::array<IOFieldMap     ,NOPTIONS> integerFields;
-  std::array<LabelMap       ,NOPTIONS> labels;
-  std::array<LabelFrameMap  ,NOPTIONS> labelFrames;
-  std::array<BoolMap        ,NOPTIONS> isTopOfRadioLabel;
-  std::array<OptionMenuMap  ,NOPTIONS> optionMenus;
+  std::array<FFuComponentBase*,NOPTIONS> options;
+  std::array<RadioButtonMap   ,NOPTIONS> radioButtons;
+  std::array<ToggleButtonMap  ,NOPTIONS> toggleButtons;
+  std::array<IOFieldMap       ,NOPTIONS> doubleFields;
+  std::array<IOFieldMap       ,NOPTIONS> integerFields;
+  std::array<LabelMap         ,NOPTIONS> labels;
+  std::array<LabelFrameMap    ,NOPTIONS> labelFrames;
+  std::array<BoolMap          ,NOPTIONS> isTopOfRadioLabel;
 
   FuiQueryInputField* myAdvTimeIncQueryField;
   FuiQueryInputField* myBasTimeIncQueryField;
@@ -363,6 +342,7 @@ protected:
   FFuLogicButtonGroup toleranceButtonGroup;
   FFuLogicButtonGroup matrixUpdateButtonGroup;
 
+  FFuOptionMenu*      shadowPosAlgMenu;
   FFuPushButton*      degradeSoilButton;
 
   FFuFileBrowseField* autoCurveExportField;
@@ -375,22 +355,11 @@ private:
   int myCurrentTab; //!< For remembering the last selected tab
   bool hasVTFfield; //!< If \e true, automatic VTF export is licensed
 };
-/////////////////////////////////////////////////////////////////////////////
+
 
 class FuaAdvAnalysisOptionsValues : public FFuaUIValues
 {
 public:
-  FuaAdvAnalysisOptionsValues() {
-    this->myTimeIncValue = 0.0;
-    this->myTimeIncQuery = NULL;
-    this->mySelectedTimeEngine = NULL;
-    this->haveFreqDomainLoads = false;
-    this->curveFileFormat = RPC_LITTLE_ENDIAN;
-    this->autoVTFFileType = 0;
-  }
-
-  virtual ~FuaAdvAnalysisOptionsValues() {}
-
   // These members correspond with the ui widgets with similar names.
   // Since they use maps they have a special rule:
   // When used in the ui code, the ui widgets have control,
@@ -402,18 +371,17 @@ public:
   std::array<BoolMap   ,FuiAdvAnalysisOptions::NOPTIONS> toggleValues;
   std::array<IntegerMap,FuiAdvAnalysisOptions::NOPTIONS> optionMenuValues;
 
-  double myTimeIncValue;
-  FFuaQueryBase* myTimeIncQuery;
-  FmModelMemberBase* mySelectedTimeEngine;
+  double myTimeIncValue = 0.0;
+  FFuaQueryBase* myTimeIncQuery = NULL;
+  FmModelMemberBase* mySelectedTimeEngine = NULL;
   FFaDynCB1<FuiQueryInputFieldValues&> myEditTimeIncEngineCB;
 
-  bool haveFreqDomainLoads;
+  bool haveFreqDomainLoads = false;
 
   std::string addOptions;
 
   std::string modelFilePath;
   std::string autoCurveExportFileName;
-  int         curveFileFormat;
 
   enum {
     RPC_LITTLE_ENDIAN,
@@ -421,22 +389,9 @@ public:
     ASCII_MULTI_COLUMN
   };
 
+  int         curveFileFormat = RPC_LITTLE_ENDIAN;
+  int         autoVTFFileType = 0;
   std::string autoVTFFileName;
-  int         autoVTFFileType;
-};
-/////////////////////////////////////////////////////////////////////////////
-
-class FuiAdvAnalysisOptionsSheet : virtual public FFuMultUIComponent
-{
-public:
-  FuiAdvAnalysisOptionsSheet(FuiAdvAnalysisOptions* ptr) : myOpts(ptr) {}
-  virtual ~FuiAdvAnalysisOptionsSheet() {}
-
-protected:
-  virtual void placeWidgets(int w, int h) { myOpts->placeOptionWidgets(this,w,h); }
-
-private:
-  FuiAdvAnalysisOptions* myOpts;
 };
 
 #endif

@@ -11,8 +11,6 @@
 #include "vpmUI/Fui.H"
 #include "vpmUI/Pixmaps/solverSetup.xpm"
 
-extern const char* info_xpm[];
-
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuLabelFrame.H"
@@ -45,7 +43,8 @@ FuiAdvAnalysisOptions::FuiAdvAnalysisOptions(bool basicMode)
   Fmd_CONSTRUCTOR_INIT(FuiAdvAnalysisOptions);
 
   this->labImgTop = NULL;
-  this->labNotesImage = this->labNotesLabel = this->labNotesText = NULL;
+  this->notesLabel = NULL;
+  this->labNotesText = NULL;
   this->btnAdvanced = this->btnRunCloud = this->btnHelp = NULL;
 
   this->tabStack = NULL;
@@ -86,8 +85,6 @@ void FuiAdvAnalysisOptions::initWidgets()
   this->labImgTop->setPixMap(solverSetup_xpm);
   this->labImgTop->setEdgeGeometry(0,421,0,106);
 
-  this->labNotesImage->setPixMap(info_xpm);
-  this->labNotesLabel->setLabel("<b>Notes</b>");
   this->labNotesText->setLabel("Click \"Advanced\" for more settings");
 
   if (this->myBasicMode) {
@@ -98,8 +95,7 @@ void FuiAdvAnalysisOptions::initWidgets()
     this->btnAdvanced->setLabel("Basic");
     this->btnAdvanced->setToolTip("Go to Basic dynamics solver settings");
     this->labImgTop->popDown();
-    this->labNotesImage->popDown();
-    this->labNotesLabel->popDown();
+    this->notesLabel->popDown();
     this->labNotesText->popDown();
   }
 
@@ -124,9 +120,7 @@ void FuiAdvAnalysisOptions::initWidgets()
   this->dialogButtons->setButtonLabel(FFuDialogButtons::LEFTBUTTON,"Run!");
   this->dialogButtons->setButtonLabel(FFuDialogButtons::MIDBUTTON,"Apply");
   this->dialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON,"Cancel");
-#ifdef FT_HAS_SOLVERS
-  this->addOptions->popDown();
-#else
+#ifndef FT_HAS_SOLVERS
   // Deactivate the Run button if no solver available
   this->dialogButtons->setButtonSensitivity(FFuDialogButtons::LEFTBUTTON,false);
 #endif
@@ -280,11 +274,11 @@ void FuiAdvAnalysisOptions::initWidgets()
   this->labels[INTOPTIONS][TOL_MATRIX_UPDATE]->setLabel("Convergence tolerance factor for matrix updates");
   this->labels[INTOPTIONS][SHADOW_POS_ALG_LABEL]->setLabel("Default positioning algorithm for co-rotated reference coordinate systems");
 
-  this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Max triangle (with unit offset, depreciated)");
-  this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Max triangle (with scaled offset if needed)");
-  this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Mass-based nodal average");
-  this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Max triangle for Parts, mass-based nodal average for Beams");
-  this->optionMenus[INTOPTIONS][SHADOW_POS_ALG]->addOption("Mass-based nodal average for Parts only");
+  shadowPosAlgMenu->addOption("Max triangle (with unit offset, depreciated)");
+  shadowPosAlgMenu->addOption("Max triangle (with scaled offset if needed)");
+  shadowPosAlgMenu->addOption("Mass-based nodal average");
+  shadowPosAlgMenu->addOption("Max triangle for Parts, mass-based nodal average for Beams");
+  shadowPosAlgMenu->addOption("Mass-based nodal average for Parts only");
 
   this->degradeSoilButton->setLabel("Degrade soil springs at current stop time");
   this->degradeSoilButton->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onDegradeSoilActivated));
@@ -427,6 +421,12 @@ void FuiAdvAnalysisOptions::initWidgets()
                                                                         onOverwriteToggled,bool));
 #endif
 
+  // Set minimum TLS size to avoid hiding info
+  Fui::Geo myGeo = Fui::getGeo(Fui::ADVANALYSISOPTIONS_GEO);
+  this->setMinWidth(myGeo.width);
+  this->setMinHeight(myGeo.height);
+  this->placeAdvancedButton(myGeo.width,myGeo.height);
+
   // Set value accept policy
   this->setAllFieldAcceptPolicy(FFuIOField::ENTERONLY);
 
@@ -443,35 +443,6 @@ void FuiAdvAnalysisOptions::setAlphaLabel(int iop, const char* subs, double a1, 
   this->labels[INTOPTIONS][iop]->setLabel("<font face='Symbol' size='+1'>a</font><sub><i>" +
                                           std::string(subs) + "</i></sub> -factor  [" +
                                           FFaNumStr(a1,-1,3) + "," + FFaNumStr(a2,-1,3) + "]");
-}
-
-
-int FuiAdvAnalysisOptions::getWidthHint()
-{
-  int widthHint = this->tabStack->getWidthHint();
-  if (this->dialogButtons->getWidthHint() > widthHint)
-    widthHint = this->dialogButtons->getWidthHint();
-
-  int optWidth;
-  for (int iOpt = 0; iOpt < NOPTIONS; iOpt++)
-    if ((optWidth = this->getOptionWidthHint(iOpt)) > widthHint)
-      widthHint = optWidth;
-
-  return widthHint + 2*this->getBorder();
-}
-//----------------------------------------------------------------------------
-
-int FuiAdvAnalysisOptions::getHeightHint()
-{
-  int heightHint = this->tabStack->getHeightHint() + this->getBorder();
-  heightHint += this->dialogButtons->getHeightHint();
-
-  int optHeight, maxHeight = 0;
-  for (int iOpt = 0; iOpt < NOPTIONS; iOpt++)
-    if ((optHeight = this->getOptionHeightHint(iOpt)) > maxHeight)
-      maxHeight = optHeight;
-
-  return heightHint + maxHeight;
 }
 //----------------------------------------------------------------------------
 
@@ -519,415 +490,16 @@ void FuiAdvAnalysisOptions::setSensitivity(bool sens)
 }
 //----------------------------------------------------------------------------
 
-void FuiAdvAnalysisOptions::placeWidgets(int width, int height)
+void FuiAdvAnalysisOptions::placeAdvancedButton(int width, int height)
 {
-  int border = this->getBorder();
-
-  // place tabstack and dialog buttons
-  // vertical borders
-  int glbl  = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_START);
-  int glbr  = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_END);
-  // horisontal borders
-  int glbt  = this->getGridLinePos(height,border,FFuMultUIComponent::FROM_START);
-  // separator between tabstack and dialog buttons
-  int glsep = this->getGridLinePos(height,this->dialogButtons->getHeightHint(),FFuMultUIComponent::FROM_END);
-  if (myBasicMode)
-    glbt += 106; // move tabStack down (beneath the header image)
-  this->tabStack->setEdgeGeometry(glbl,glbr,glbt,glsep);
-  int glb5 = (glbr-glbl)/5;
-  this->dialogButtons->setEdgeGeometry(0,glbl+3*glb5,glsep,height);
-  this->btnRunCloud->setEdgeGeometry(3*glb5+border,4*glb5,glsep+2*border,height-border);
-  this->btnHelp->setEdgeGeometry(4*glb5+border,glbr,glsep+2*border,height-border);
-
-  glsep -= border;
-  int glNotes = glsep-glbt-35;
-  this->labNotesImage->setEdgeGeometry(15,  31, glNotes, glNotes+16);
-  this->labNotesLabel->setEdgeGeometry(35, 305, glNotes, glNotes+16);
-  glNotes += 19;
-  this->labNotesText->setEdgeGeometry( 15, 305, glNotes, glNotes+16);
-  this->btnAdvanced->setEdgeGeometry(4*glb5+border, glbr, glsep-this->btnAdvanced->getHeightHint(), glsep);
-
-  // lock tls size to avoid hiding info in the tab
-  this->setMinWidth(this->getWidthHint());
-  this->setMaxWidth(this->getWidthHint());
-  this->setMinHeight(this->getHeightHint());
-  this->setMaxHeight(this->getHeightHint());
-
-#ifdef FT_HAS_SOLVERS
-  if (this->hasVTFfield) {
-    this->toggleButtons[OUTPUTOPTIONS][AUTO_VTF_EXPORT]->popUp();
-    this->autoVTFField->popUp();
-  }
-  else {
-    this->toggleButtons[OUTPUTOPTIONS][AUTO_VTF_EXPORT]->popDown();
-    this->autoVTFField->popDown();
-  }
-#endif
-}
-//----------------------------------------------------------------------------
-
-void FuiAdvAnalysisOptions::placeOptionWidgets(FuiAdvAnalysisOptionsSheet* w,
-                                               int width, int height)
-{
-  // Determine which tab you're on
-  int iOpt = 0;
-  while (this->options[iOpt] != w)
-    if (++iOpt == NOPTIONS) return;
-
-  int border = this->getBorder()/2;
-  int labh = this->labels[INTOPTIONS].begin()->second->getHeightHint();
-  int linefieldh = this->doubleFields[TIMEOPTIONS].begin()->second->getHeightHint();
-  int radioh = this->radioButtons[INTOPTIONS].begin()->second->getHeightHint();
-  int toggleh = this->toggleButtons[INTOPTIONS].begin()->second->getHeightHint();
-  int doublefieldw = this->doubleFields[TIMEOPTIONS].begin()->second->getRecommendedDoubleFieldWidth();
-  int intfieldw = this->doubleFields[TIMEOPTIONS].begin()->second->getRecommendedIntegerFieldWidth();
-
-  //vertical borders
-  int glbl = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_START);
-  int glbr = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_END);
-
-  //vertical gridLines
-  int glvdouble = glbr - doublefieldw;
-  int glvint    = glbr - intfieldw;
-
-  //horizontal gridLines
-  IntegerMap glh;
-  this->getOptionHorGridlines(iOpt,height,glh);
-
-  int glvlabel     = glbl;
-  int glvradio     = glbl;
-  int glvtoggle    = glbl;
-  int glvOptMenu   = glbl;
-  int radioSpacing = 0;
-  int nRadioInRow  = 1;
-  int radioCounter = 0;
-  int optionMenuW  = intfieldw;
-
-  if (iOpt == INTOPTIONS || iOpt == TIMEOPTIONS || iOpt == BASICOPTIONS) {
-    glvlabel   += radioh;
-    glvradio   += radioh;
-    glvtoggle  += iOpt == INTOPTIONS ? 2*border-glbl : radioh;
-    glvOptMenu += iOpt == INTOPTIONS ? border-glbl : radioh;
-    optionMenuW = glbr - radioh - glvOptMenu;
-    if (iOpt == INTOPTIONS)
-      doublefieldw = 3*intfieldw/2;
-    else if (iOpt == BASICOPTIONS) {
-      glvlabel += 30;
-      glvradio += 30;
-    }
-    glvint       = glbr - intfieldw    - radioh;
-    glvdouble    = glbr - doublefieldw - radioh;
-  }
-  else if (iOpt == CONVOPTIONS) {
-    glvlabel    += radioh;
-    glvdouble    = glvlabel  + radioh + this->labels[CONVOPTIONS][SV_DIS]->getWidth();
-    glvradio     = glvdouble + radioh + doublefieldw;
-    radioSpacing = (glbr-3*radioh/2-glvradio)/2;
-    nRadioInRow  = 3;
-  }
-
-  // Lambda function returning horizontal position for radio button
-  auto&& radioPos = [glvradio,nRadioInRow,radioSpacing](int count)
-  {
-    return glvradio + (count%nRadioInRow)*radioSpacing;
-  };
-
-  // Place widgets
-
-  for (const std::pair<const int,int>& ip : glh)
-  {
-    RadioIter ri = this->radioButtons[iOpt].find(ip.first);
-    if (ri != this->radioButtons[iOpt].end())
-      ri->second->setCenterYGeometry(radioPos(radioCounter++),ip.second,ri->second->getWidthHint(),radioh);
-
-    ToggleIter ti = this->toggleButtons[iOpt].find(ip.first);
-    if (ti != this->toggleButtons[iOpt].end()) {
-      int pos = iOpt == BASICOPTIONS && ip.first == STOP ? glvtoggle+12 : glvtoggle;
-      ti->second->setCenterYGeometry(pos,ip.second,ti->second->getWidthHint(),toggleh);
-    }
-
-    IOFieldIter di = this->doubleFields[iOpt].find(ip.first);
-    if (di != this->doubleFields[iOpt].end())
-      di->second->setCenterYGeometry(glvdouble,ip.second,doublefieldw,linefieldh);
-
-    IOFieldIter ii = this->integerFields[iOpt].find(ip.first);
-    if (ii != this->integerFields[iOpt].end())
-      ii->second->setCenterYGeometry(glvint,ip.second,intfieldw,linefieldh);
-
-    OptionMenuIter oi = this->optionMenus[iOpt].find(ip.first);
-    if (oi != this->optionMenus[iOpt].end())
-      oi->second->setCenterYGeometry(glvOptMenu,ip.second,optionMenuW,linefieldh);
-
-    LabelIter li = this->labels[iOpt].find(ip.first);
-    if (li != this->labels[iOpt].end()) {
-      int pos = glvlabel;
-      if (this->isTopOfRadioLabel[iOpt][ip.first])
-	pos = radioPos(radioCounter++) + radioh/5;
-      else if (iOpt == INTOPTIONS && this->radioButtons[iOpt].find(ip.first) != this->radioButtons[iOpt].end())
-	pos = glvdouble - radioh/2 - li->second->getWidthHint();
-      else if (iOpt == INTOPTIONS && ip.first == SHADOW_POS_ALG_LABEL)
-	pos = border;
-      li->second->setCenterYGeometry(pos,ip.second,li->second->getWidthHint()+radioh/2,labh);
-    }
-
-    LabelFrameIter fi = this->labelFrames[iOpt].find(ip.first);
-    if (fi != this->labelFrames[iOpt].end())
-      fi->second->setEdgeGeometry(glbl,glbr,ip.second,glh[ip.first+1]);
-  }
-
-  if (iOpt == TIMEOPTIONS && sizeof(glh) > INCREMENT)
-    this->myAdvTimeIncQueryField->setCenterYGeometry(glvdouble,glh[INCREMENT],doublefieldw,linefieldh);
-  else if (iOpt == BASICOPTIONS && sizeof(glh) > INCREMENT)
-    this->myBasTimeIncQueryField->setCenterYGeometry(glvdouble,glh[INCREMENT],doublefieldw,linefieldh);
-#ifdef FT_HAS_SOLVERS
-  else if (iOpt == OUTPUTOPTIONS) {
-    int ypos = 2*border;
-    this->toggleButtons[OUTPUTOPTIONS][AUTO_CURVE_EXPORT]->setEdgeGeometry(glvtoggle, glbr, ypos, ypos+toggleh);
-    ypos += toggleh;
-    this->autoCurveExportField->setEdgeGeometry(glvlabel, glbr, ypos, ypos+linefieldh);
-    ypos += linefieldh + border;
-    this->labels[OUTPUTOPTIONS][AUTO_CURVE_EXPORT]->setEdgeGeometry(glvlabel, glbr, ypos, ypos+labh);
-
-    ypos += labh + 2*border;
-    this->toggleButtons[OUTPUTOPTIONS][AUTO_VTF_EXPORT]->setEdgeGeometry(glvtoggle, glbr, ypos, ypos+toggleh);
-    ypos += toggleh;
-    this->autoVTFField->setEdgeGeometry(glvlabel, glbr, ypos, ypos+linefieldh);
-
-    ypos += 2*linefieldh + 4*border; // some extra space for this one...
-    this->toggleButtons[OUTPUTOPTIONS][AUTO_ANIM]->setEdgeGeometry(glvtoggle, glbr, ypos, ypos+toggleh);
-    ypos += linefieldh + 2*border;
-    this->toggleButtons[OUTPUTOPTIONS][OVERWRITE]->setEdgeGeometry(glvtoggle, glbr, ypos, ypos+toggleh);
-  }
-#endif
-
-  if (iOpt == TIMEOPTIONS) {
-    this->addOptions->setCenterYGeometry(glbl+2*border, glh[ADDITIONAL], glbr-glbl-4*border, linefieldh);
-    int ypos = 2*border;
-#ifdef FT_HAS_SOLVERS
-    ypos += glh[RESTART_FRAME_END];
-#else
-    ypos += glh[ADDITIONAL_FRAME_END];
-#endif
-    this->degradeSoilButton->setEdgeGeometry(border, width-border, ypos, ypos+linefieldh+border);
-  }
-}
-//-----------------------------------------------------------------------------
-
-int FuiAdvAnalysisOptions::getOptionWidthHint(int iOpt)
-{
-  int radioh = this->radioButtons[INTOPTIONS].begin()->second->getHeightHint();
-  int maxintfieldw = this->integerFields[TIMEOPTIONS].begin()->second->getRecommendedIntegerFieldWidth();
-  int maxdoublefieldw = this->doubleFields[TIMEOPTIONS].begin()->second->getRecommendedDoubleFieldWidth();
-  if (iOpt == CONVOPTIONS) maxdoublefieldw += 7*radioh;
-  int labeloffset = this->getBorder()/2;
-  if (iOpt == BASICOPTIONS)
-    labeloffset += radioh + 30;
-  else if (iOpt == TIMEOPTIONS || iOpt == INTOPTIONS || iOpt == CONVOPTIONS)
-    labeloffset += radioh;
-
-  int maxw = 0;
-  LabelIter li;
-
-  for (const IOFieldMap::value_type& io : this->doubleFields[iOpt])
-    if ((li = this->labels[iOpt].find(io.first)) != this->labels[iOpt].end()) {
-      int curw = li->second->getWidthHint() + maxdoublefieldw;
-      if (curw > maxw) maxw = curw;
-    }
-
-  for (const IOFieldMap::value_type& io : this->integerFields[iOpt])
-    if ((li = this->labels[iOpt].find(io.first)) != this->labels[iOpt].end()) {
-      int curw = li->second->getWidthHint() + maxintfieldw;
-      if (curw > maxw) maxw = curw;
-    }
-
-  for (const LabelMap::value_type& il : this->labels[iOpt]) {
-    int curw = labeloffset + il.second->getWidthHint();
-    if (curw > maxw) curw = maxw;
-  }
-
-  for (const RadioButtonMap::value_type& ir : this->radioButtons[iOpt])
-    if (ir.second->getWidthHint() > maxw)
-      maxw = ir.second->getWidthHint();
-
-  for (const ToggleButtonMap::value_type& it : this->toggleButtons[iOpt])
-    if (it.second->getWidthHint() > maxw)
-      maxw = it.second->getWidthHint();
-
-  return maxw + this->getBorder()*3/2;
-}
-//-----------------------------------------------------------------------------
-
-int FuiAdvAnalysisOptions::getOptionHeightHint(int iOpt)
-{
-  int maxh = 0;
-  IntegerMap glh;
-  this->getOptionHorGridlines(iOpt,0,glh);
-  for (const std::pair<const int,int>& ip : glh)
-    if (ip.second > maxh)
-      maxh = ip.second;
-
-  // Adding a bit on the end, besides, maxh is to the center of the last widget
-  return maxh + 2*this->getBorder();
-}
-//-----------------------------------------------------------------------------
-
-void FuiAdvAnalysisOptions::getOptionHorGridlines(int iOpt, int, IntegerMap& gridlines)
-{
-  int border = this->getBorder();
-  int sep = 6;
-  int labh = this->labels[TIMEOPTIONS].begin()->second->getHeightHint();
-
-  int linefieldh = this->doubleFields[TIMEOPTIONS].begin()->second->getHeightHint();
-  if (linefieldh < labh) linefieldh = labh;
-  int radioh = this->radioButtons[INTOPTIONS].begin()->second->getHeightHint();
-  if (radioh < labh) radioh = labh;
-  int toggleh = this->toggleButtons[INTOPTIONS].begin()->second->getHeightHint();
-  if (toggleh < labh) toggleh = labh;
-
-  switch (iOpt) {
-  case TIMEOPTIONS:
-    gridlines[TIME_FRAME] = border;
-    gridlines[START] = gridlines[TIME_FRAME] + 3*linefieldh/2;
-    gridlines[STOP] = gridlines[START] + sep+linefieldh;
-    gridlines[INCREMENT] = gridlines[STOP] + sep+linefieldh;
-    gridlines[MIN_TIME_INCR] = gridlines[INCREMENT] + sep+linefieldh;
-    gridlines[TIME_FRAME_END] = gridlines[MIN_TIME_INCR] + linefieldh;
-
-    gridlines[CUTBACK_FRAME] = gridlines[TIME_FRAME_END] + 7*linefieldh/10;
-    gridlines[CUTBACK] = gridlines[CUTBACK_FRAME] + 3*linefieldh/2;
-    gridlines[CUTBACK_FACTOR] = gridlines[CUTBACK] + linefieldh;
-    gridlines[CUTBACK_STEPS] = gridlines[CUTBACK_FACTOR] + sep+linefieldh;
-    gridlines[CUTBACK_FRAME_END] = gridlines[CUTBACK_STEPS] + linefieldh;
-
-    gridlines[RESTART_FRAME] = gridlines[CUTBACK_FRAME_END] + 7*linefieldh/10;
-    gridlines[RESTART] = gridlines[RESTART_FRAME] + 3*linefieldh/2;
-    gridlines[RESTART_TIME] = gridlines[RESTART] + linefieldh;
-    gridlines[RESTART_FRAME_END] = gridlines[RESTART_TIME] + linefieldh;
-
-    gridlines[ADDITIONAL_FRAME] = gridlines[RESTART_FRAME_END] + 7*linefieldh/10;
-    gridlines[ADDITIONAL] = gridlines[ADDITIONAL_FRAME] + 3*linefieldh/2;
-    gridlines[ADDITIONAL_FRAME_END] = gridlines[ADDITIONAL] + linefieldh;
-    break;
-
-  case INTOPTIONS:
-    gridlines[INT_ALG_FRAME] = border;
-    gridlines[NEWMARK] = gridlines[INT_ALG_FRAME] + 3*linefieldh/2;
-    gridlines[HHT_ALPHA] = gridlines[NEWMARK] + linefieldh;
-    gridlines[GENERALIZED_ALPHA] = gridlines[HHT_ALPHA] + linefieldh;
-    gridlines[INT_ALG_FRAME_END] = gridlines[GENERALIZED_ALPHA] + linefieldh;
-
-    gridlines[ITERATION_FRAME] = gridlines[INT_ALG_FRAME_END] + 7*linefieldh/10;
-    gridlines[RADIO_USE_TOL] = gridlines[ITERATION_FRAME] + 3*linefieldh/2;
-    gridlines[RADIO_IGNORE_TOL] = gridlines[RADIO_USE_TOL] + linefieldh;
-    gridlines[NUM_ITERS] = gridlines[RADIO_IGNORE_TOL]+toggleh/2+linefieldh/2;
-    gridlines[MAX_NUM_ITERS] = gridlines[NUM_ITERS]+linefieldh;
-    gridlines[MIN_NUM_ITERS] = gridlines[MAX_NUM_ITERS]+linefieldh;
-    gridlines[ITERATION_FRAME_END] = gridlines[MIN_NUM_ITERS] + linefieldh;
-
-    gridlines[MATRIX_UPDATE_FRAME] = gridlines[ITERATION_FRAME_END] + 7*linefieldh/10;
-    gridlines[RADIO_FIXED_MATRIX_UPDATE] = gridlines[MATRIX_UPDATE_FRAME]+ 3*linefieldh/2;
-    gridlines[RADIO_VAR_MATRIX_UPDATE] = gridlines[RADIO_FIXED_MATRIX_UPDATE]+ linefieldh;
-    gridlines[MIN_MATRIX_UPDATE] = gridlines[RADIO_VAR_MATRIX_UPDATE]+ 3*linefieldh/2;
-    gridlines[MAX_NO_MATRIX_UPDATE] = gridlines[MIN_MATRIX_UPDATE] + linefieldh;
-    gridlines[TOL_MATRIX_UPDATE] = gridlines[MAX_NO_MATRIX_UPDATE]+ linefieldh;
-    gridlines[MATRIX_UPDATE_FRAME_END] = gridlines[TOL_MATRIX_UPDATE] + linefieldh;
-
-    gridlines[SHADOW_POS_ALG_LABEL] = gridlines[MATRIX_UPDATE_FRAME_END]+linefieldh;
-    gridlines[SHADOW_POS_ALG]    = gridlines[SHADOW_POS_ALG_LABEL]+linefieldh;
-
-    gridlines[DYN_STRESS_STIFF] =  gridlines[SHADOW_POS_ALG]+3*linefieldh/2;
-    gridlines[MOMENT_CORRECTION] = gridlines[DYN_STRESS_STIFF]+toggleh;
-    break;
-
-  case CONVOPTIONS:
-    gridlines[DIS_FRAME]     = border;
-    gridlines[AOI_DIS_1]     = gridlines[AOI_DIS_2] = gridlines[AOI_DIS_3] = gridlines[DIS_FRAME] + linefieldh;
-    gridlines[SV_DIS]        = gridlines[DIS_FRAME] + 2*linefieldh;
-    gridlines[MT_DIS]        = gridlines[SV_DIS]    + linefieldh;
-    gridlines[MR_DIS]        = gridlines[MT_DIS]    + linefieldh;
-    gridlines[SV_DIS_1]      = gridlines[SV_DIS_2]  = gridlines[SV_DIS_3] = gridlines[SV_DIS];
-    gridlines[MT_DIS_1]      = gridlines[MT_DIS_2]  = gridlines[MT_DIS_3] = gridlines[MT_DIS];
-    gridlines[MR_DIS_1]      = gridlines[MR_DIS_2]  = gridlines[MR_DIS_3] = gridlines[MR_DIS];
-    gridlines[DIS_FRAME_END] = gridlines[MR_DIS]    + linefieldh;
-
-    gridlines[VEL_FRAME]     = gridlines[DIS_FRAME_END] + linefieldh/2;
-    gridlines[AOI_VEL_1]     = gridlines[AOI_VEL_2] = gridlines[AOI_VEL_3] = gridlines[VEL_FRAME] + linefieldh;
-    gridlines[SV_VEL]        = gridlines[VEL_FRAME] + 2*linefieldh;
-    gridlines[SV_VEL_1]      = gridlines[SV_VEL_2]  = gridlines[SV_VEL_3] = gridlines[SV_VEL];
-    gridlines[VEL_FRAME_END] = gridlines[SV_VEL]    + linefieldh;
-
-    gridlines[RES_FRAME]     = gridlines[VEL_FRAME_END] + linefieldh/2;
-    gridlines[AOI_RES_1]     = gridlines[AOI_RES_2] = gridlines[AOI_RES_3] = gridlines[RES_FRAME] + linefieldh;
-    gridlines[SV_RES]        = gridlines[RES_FRAME] + 2*linefieldh;
-    gridlines[MT_RES]        = gridlines[SV_RES]    + linefieldh;
-    gridlines[MR_RES]        = gridlines[MT_RES]    + linefieldh;
-    gridlines[SV_RES_1]      = gridlines[SV_RES_2]  = gridlines[SV_RES_3] = gridlines[SV_RES];
-    gridlines[MT_RES_1]      = gridlines[MT_RES_2]  = gridlines[MT_RES_3] = gridlines[MT_RES];
-    gridlines[MR_RES_1]      = gridlines[MR_RES_2]  = gridlines[MR_RES_3] = gridlines[MR_RES];
-    gridlines[RES_FRAME_END] = gridlines[MR_RES]    + linefieldh;
-
-    gridlines[ENERGY_FRAME]  = gridlines[RES_FRAME_END]+ linefieldh/2;
-    gridlines[AOI_EN_1]      = gridlines[AOI_EN_2]  = gridlines[AOI_EN_3] = gridlines[ENERGY_FRAME] + linefieldh;
-    gridlines[AVG_EN]        = gridlines[ENERGY_FRAME] + 2*linefieldh;
-    gridlines[MAX_EN]        = gridlines[AVG_EN]       + linefieldh;
-    gridlines[AVG_EN_1]      = gridlines[AVG_EN_2]     = gridlines[AVG_EN_3] = gridlines[AVG_EN];
-    gridlines[MAX_EN_1]      = gridlines[MAX_EN_2]     = gridlines[MAX_EN_3] = gridlines[MAX_EN];
-    gridlines[ENERGY_FRAME_END] = gridlines[MAX_EN]    + linefieldh;
-    gridlines[A_DESCR]       = gridlines[ENERGY_FRAME_END] + linefieldh;
-    gridlines[O_DESCR]       = gridlines[A_DESCR]          + linefieldh;
-    gridlines[I_DESCR]       = gridlines[O_DESCR]          + linefieldh;
-    break;
-
-  case EIGENOPTIONS:
-    gridlines[EMODE_SOL] = border+toggleh/2;
-    gridlines[NUM_EMODES] = gridlines[EMODE_SOL] + sep*2+toggleh/2+linefieldh/2;
-    gridlines[EMODE_INTV] = gridlines[NUM_EMODES] + sep+linefieldh;
-    gridlines[EMODE_SHIFT_FACT] = gridlines[EMODE_INTV] + sep+linefieldh;
-    gridlines[EMODE_BC] = gridlines[EMODE_SHIFT_FACT] + sep+linefieldh/2+toggleh/2;
-    gridlines[EMODE_DAMPED] = gridlines[EMODE_BC] + sep+toggleh;
-    gridlines[EMODE_STRESS_STIFF] = gridlines[EMODE_DAMPED] + sep+toggleh;
-    break;
-
-  case EQOPTIONS:
-    gridlines[EQL_ITER] = border+toggleh/2;
-    gridlines[EQL_ITER_TOL] = gridlines[EQL_ITER] + sep*2+toggleh/2+linefieldh/2;
-    gridlines[ITER_STEP_SIZE] = gridlines[EQL_ITER_TOL] + sep+linefieldh;
-    gridlines[INFO_FIELD] = gridlines[ITER_STEP_SIZE] + sep+linefieldh;
-    gridlines[EQL_STRESS_STIFF] = gridlines[INFO_FIELD] + sep+toggleh;
-
-    gridlines[RAMP_UP] = gridlines[EQL_STRESS_STIFF] + sep*5+toggleh;
-    gridlines[RAMP_GRAV] = gridlines[RAMP_UP] + sep+toggleh;
-    gridlines[RAMP_STEPS] = gridlines[RAMP_GRAV] + sep*2+toggleh/2+linefieldh/2;
-    gridlines[RAMP_VMAX] = gridlines[RAMP_STEPS] + sep+linefieldh;
-    gridlines[RAMP_LENGTH] = gridlines[RAMP_VMAX] + sep+linefieldh;
-    gridlines[RAMP_DELAY] = gridlines[RAMP_LENGTH] + sep+linefieldh;
-    break;
-
-  case BASICOPTIONS:
-    gridlines[IEQ_FRAME]     = 0;
-    gridlines[IEQ_TOGGLE]    = gridlines[IEQ_FRAME]  + 5*linefieldh/4;
-    gridlines[IEQ_FRAME_END] = gridlines[IEQ_TOGGLE] + 3*linefieldh/4;
-
-    gridlines[TIME_FRAME]    = gridlines[IEQ_FRAME_END] + linefieldh/2;
-    gridlines[TIME_TOGGLE]   = gridlines[TIME_FRAME]  + 5*linefieldh/4;
-    gridlines[START]         = gridlines[TIME_TOGGLE] + sep/2+linefieldh;
-    gridlines[STOP]          = gridlines[START] + sep/2+linefieldh;
-    gridlines[INCREMENT]     = gridlines[STOP]  + sep/2+linefieldh;
-    gridlines[QS_TOGGLE]     = gridlines[INCREMENT] + sep+linefieldh;
-    gridlines[QS_COMPLETE]   = gridlines[QS_TOGGLE] + sep/2+linefieldh;
-    gridlines[QS_UPTOTIME]   = gridlines[QS_COMPLETE] + sep/2+linefieldh;
-    gridlines[TIME_FRAME_END] = gridlines[QS_UPTOTIME] + linefieldh;
-
-    gridlines[MODES_FRAME] = gridlines[TIME_FRAME_END] + linefieldh/2;
-    gridlines[MODES_TOGGLE] = gridlines[MODES_FRAME] + 5*linefieldh/4;
-    gridlines[MODES_COUNT] = gridlines[MODES_TOGGLE] + sep/2+linefieldh;
-    gridlines[MODES_FRAME_END] = gridlines[MODES_COUNT]+linefieldh;
-
-    gridlines[FRA_FRAME] = gridlines[MODES_FRAME_END] + linefieldh/2;
-    gridlines[FRA_TOGGLE] = gridlines[FRA_FRAME]    + 5*linefieldh/4;
-    gridlines[FRA_FRAME_END] = gridlines[FRA_TOGGLE]  + linefieldh;
-    break;
-  }
+  // The Advanced/Basic button still needs to be positioned explicitly,
+  // since we want it to appear "inside" frame of the tabbed sheet
+  int w = btnHelp->getWidthHint();
+  int h = btnHelp->getHeightHint();
+  int x = width - w - 10;
+  int y = height - dialogButtons->getHeightHint() - h - 30;
+  btnAdvanced->setSizeGeometry(x,y,w,h);
+  btnAdvanced->toFront();
 }
 //-----------------------------------------------------------------------------
 
@@ -1357,8 +929,7 @@ void FuiAdvAnalysisOptions::onAdvBtnClicked()
     this->tabStack->addTabPage(this->options[BASICOPTIONS],"Basic");
     this->tabStack->setCurrentTab(myBasicTab);
     this->labImgTop->popUp();
-    this->labNotesImage->popUp();
-    this->labNotesLabel->popUp();
+    this->notesLabel->popUp();
     this->labNotesText->popUp();
     this->btnAdvanced->setLabel("Advanced");
     this->btnAdvanced->setToolTip("Go to Advanced dynamics solver settings");
@@ -1367,15 +938,13 @@ void FuiAdvAnalysisOptions::onAdvBtnClicked()
     this->tabStack->removeTabPage(this->options[BASICOPTIONS]);
     this->tabStack->setCurrentTab(myCurrentTab);
     this->labImgTop->popDown();
-    this->labNotesImage->popDown();
-    this->labNotesLabel->popDown();
+    this->notesLabel->popDown();
     this->labNotesText->popDown();
     this->btnAdvanced->setLabel("Basic");
     this->btnAdvanced->setToolTip("Return to Basic dynamics solver settings");
   }
 
-  // Place all widgets
-  this->placeWidgets(this->getWidth(), this->getHeight());
+  this->placeAdvancedButton(this->getWidth(), this->getHeight());
 }
 
 void FuiAdvAnalysisOptions::onHelpBtnClicked()
@@ -1428,12 +997,11 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
       if (vi != advValues->toggleValues[iOpt].end())
         t.second->setValue(vi->second);
     }
-    for (OptionMenuMap::value_type& o : this->optionMenus[iOpt]) {
-      IntegerIter vi = advValues->optionMenuValues[iOpt].find(o.first);
-      if (vi != advValues->optionMenuValues[iOpt].end())
-        o.second->selectOption(vi->second);
-    }
   }
+
+  IntegerIter vi = advValues->optionMenuValues[INTOPTIONS].find(SHADOW_POS_ALG);
+  if (vi != advValues->optionMenuValues[INTOPTIONS].end())
+    shadowPosAlgMenu->selectOption(vi->second);
 
   this->myAdvTimeIncQueryField->setValue(advValues->myTimeIncValue);
   this->myAdvTimeIncQueryField->setQuery(advValues->myTimeIncQuery);
@@ -1445,7 +1013,8 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
   else
     this->doubleFields[TIMEOPTIONS][MIN_TIME_INCR]->setSensitivity(false);
 
-  this->addOptions->setValue(advValues->addOptions);
+  if (addOptions)
+    addOptions->setValue(advValues->addOptions);
 
   if (this->autoCurveExportField) {
     this->autoCurveExportField->setAbsToRelPath(advValues->modelFilePath);
@@ -1462,6 +1031,17 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
     this->autoVTFField->setSensitivity(advValues->toggleValues[OUTPUTOPTIONS][AUTO_VTF_EXPORT]);
     this->onAutoVTFFileChanged(advValues->autoVTFFileName,advValues->autoVTFFileType);
   }
+
+#ifdef FT_HAS_SOLVERS
+  if (this->hasVTFfield) {
+    this->toggleButtons[OUTPUTOPTIONS][AUTO_VTF_EXPORT]->popUp();
+    this->autoVTFField->popUp();
+  }
+  else {
+    this->toggleButtons[OUTPUTOPTIONS][AUTO_VTF_EXPORT]->popDown();
+    this->autoVTFField->popDown();
+  }
+#endif
 
   // tab
   this->tabStack->setCurrentTab(this->myBasicMode ? myBasicTab : myCurrentTab);
@@ -1546,11 +1126,12 @@ bool FuiAdvAnalysisOptions::getMyUIValues(FuaAdvAnalysisOptionsValues* values)
       values->toggleValues[iOpt][r.first] = r.second->getValue();
     for (const ToggleButtonMap::value_type& t : this->toggleButtons[iOpt])
       values->toggleValues[iOpt][t.first] = t.second->getValue();
-    for (const OptionMenuMap::value_type& o : this->optionMenus[iOpt])
-      values->optionMenuValues[iOpt][o.first] = o.second->getSelectedOption();
   }
 
-  values->addOptions = this->addOptions->getValue();
+  values->optionMenuValues[INTOPTIONS][SHADOW_POS_ALG] = shadowPosAlgMenu->getSelectedOption();
+
+  if (addOptions)
+    values->addOptions = addOptions->getValue();
 
   if (this->myBasicMode)
     values->myTimeIncValue = this->myBasTimeIncQueryField->getValue();

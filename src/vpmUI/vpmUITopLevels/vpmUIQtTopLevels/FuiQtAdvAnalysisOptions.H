@@ -12,32 +12,25 @@
 #include "vpmUI/vpmUITopLevels/FuiAdvAnalysisOptions.H"
 
 
-class FuiQtAdvAnalysisOptionsSheet : public FFuQtMultUIComponent, public FuiAdvAnalysisOptionsSheet
+class FuiQtAdvAnalysisOptions : public FFuQtTopLevelShell,
+                                public FuiAdvAnalysisOptions
 {
 public:
-  FuiQtAdvAnalysisOptionsSheet(FuiAdvAnalysisOptions* owner)
-  : FFuQtMultUIComponent(NULL,"FuiQtAdvAnalysisOptionsSheet"),
-    FuiAdvAnalysisOptionsSheet(owner) {}
-  virtual ~FuiQtAdvAnalysisOptionsSheet() {}
-};
-
-
-class FuiQtAdvAnalysisOptions : public FFuQtTopLevelShell, public FuiAdvAnalysisOptions
-{
-public:
-  FuiQtAdvAnalysisOptions(QWidget* parent,
-			  int xpos = 100, int ypos  = 100,
-			  int width= 100, int height= 100, bool basicMode=false,
-			  const char* title= "Fedem",
-			  const char* name = "FuiQtAdvAnalysisOptions");
-  virtual ~FuiQtAdvAnalysisOptions() {}
+  FuiQtAdvAnalysisOptions(int xpos, int ypos, int width, int height,
+                          bool basicMode, const char* title, const char* name);
 
 private:
+  void initLayout(QWidget* parentSheet, int iOpt);
+
   virtual void setSensitivity(bool sens)
-  { this->FuiAdvAnalysisOptions::setSensitivity(sens); }
+  {
+    this->FuiAdvAnalysisOptions::setSensitivity(sens);
+  }
 
 protected:
   virtual void onAdvBtnClicked();
+
+  virtual void resizeEvent(QResizeEvent* e);
 };
 
 #endif
