@@ -8,7 +8,9 @@
 #ifndef FFU_TOP_LEVEL_SHELL_H
 #define FFU_TOP_LEVEL_SHELL_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include "FFaLib/FFaTypeCheck/FFaTypeCheck.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <vector>
 
 
@@ -21,9 +23,9 @@
   \date Jan 14 1999
 */
 
-class FFuTopLevelShell : virtual public FFuMultUIComponent
+class FFuTopLevelShell : virtual public FFuComponentBase
 {
-  Fmd_HEADER_INIT();
+  Fmd_BASE_HEADER_INIT();
 
 public:
   FFuTopLevelShell();
@@ -31,12 +33,6 @@ public:
 
   void manage(bool onScreen, bool inMem);
 
-  // Window related methods.
-  // Must be reimplemented in UILib dependent subclass :
-
-  virtual void refresh() {}
-  virtual void iconify() {}
-  virtual void deiconify() {}
   virtual void setTitle(const char*) = 0;
 
   // SKE: I suspect there is a bug or misunderstood functionality
@@ -50,22 +46,30 @@ public:
   // Virtual mode handling methods to be reimplemented on each spesific
   // TopLevelShell, to make it handle mode and state change on its own.
   // Called when the application changes mode or state, or cancels current mode.
-
   virtual void updateMode() {}
   virtual void updateState(int) {}
   virtual void cancel() {}
 
   // Static instance interface
-
   static FFuTopLevelShell* getInstanceByType(int classType);
+
+  // Distributing popped up/down to/from memory
+  void setAppearanceOnScreenCB(const FFaDynCB1<bool>& cb) { appearanceCB = cb; }
 
 protected:
 
-  // Called on windowmanager closeWindow
-  // By default it just pops down the window
-  // Reimplement to do something more intelligent
+  // These methods are called every time a UI-component pops up/down,
+  // also from an iconized position.
+  // Override if you want to do something on that event.
+  virtual void onPoppedUp() {}
+  virtual void onPoppedDown() {}
 
+  // Called on windowmanager closeWindow.
+  // By default it just pops down the window.
+  // Override to do something more intelligent.
   virtual bool onClose();
+
+  FFaDynCB1<bool> appearanceCB;
 
 private:
   static std::vector<FFuTopLevelShell*> ourTopLevelDialogs;

@@ -18,12 +18,6 @@ FFuModalDialog::FFuModalDialog()
 }
 
 
-void FFuModalDialog::onPoppedUp()
-{
-  this->placeWidgets(this->getWidth(),this->getHeight());
-}
-
-
 bool FFuModalDialog::onClose()
 {
   this->onDialogButtonClicked(FFuDialogButtons::RIGHTBUTTON);

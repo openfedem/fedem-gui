@@ -12,36 +12,19 @@
 
 FFuQtTopLevelShell::FFuQtTopLevelShell(QWidget* parent,
 				       int xpos, int ypos,
-				       int width,int height,
+				       int width, int height,
 				       const char* title,
 				       const char* name,
 				       Qt::WindowFlags f)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name,f)
+  : FFuQtWidget(parent,name)
 {
+  this->setGeometry(xpos,ypos,width,height);
   this->setWindowTitle(title);
+  this->setWindowFlags(f);
 }
 
 
 void FFuQtTopLevelShell::popUp()
-{
-  this->show();
-  this->raise();
-}
-
-
-void FFuQtTopLevelShell::refresh()
-{
-  if (this->isVisible()) this->repaint();
-}
-
-
-void FFuQtTopLevelShell::iconify()
-{
-  this->iconify();
-}
-
-
-void FFuQtTopLevelShell::deiconify()
 {
   this->show();
   this->raise();
@@ -58,6 +41,30 @@ void FFuQtTopLevelShell::showTLSNormal()
 void FFuQtTopLevelShell::setTitle(const char* title)
 {
   this->setWindowTitle(title);
+}
+
+
+void FFuQtTopLevelShell::setVisible(bool visible)
+{
+  bool wasvisible = this->isVisible();
+  this->QWidget::setVisible(visible);
+
+  if (visible != wasvisible)
+    appearanceCB.invoke(visible);
+}
+
+
+void FFuQtTopLevelShell::showEvent(QShowEvent* e)
+{
+  this->QWidget::showEvent(e);
+  this->onPoppedUp();
+}
+
+
+void FFuQtTopLevelShell::hideEvent(QHideEvent* e)
+{
+  this->QWidget::hideEvent(e);
+  this->onPoppedDown();
 }
 
 
