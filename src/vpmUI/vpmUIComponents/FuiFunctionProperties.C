@@ -228,8 +228,7 @@ void FuiFunctionProperties::initWidgets()
 
   myFileRefQueryField->setChangedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onFileQIChanged,FuiQueryInputField*));
-  myFileRefQueryField->turnButtonOff(true);
-  myFileRefQueryField->setBehaviour(FuiQueryInputField::REF_TEXT);
+  myFileRefQueryField->setBehaviour(FuiQueryInputField::REF_TEXT,true);
   myFileRefQueryField->setEditSensitivity(false);
 
   myActualFileInfoLabel->setLabel("Actual file");
@@ -335,7 +334,7 @@ void FuiFunctionProperties::initWidgets()
   myJonswapTLowField->popDown();
   myJonswapTHighField->popDown();
 
-  this->invokeCreateUACB(this);
+  FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
 

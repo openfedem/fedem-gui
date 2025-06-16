@@ -772,8 +772,7 @@ void FuiCurveDefSheet::buildDynamicWidgets(const FuaCurveDefineValues* v)
 
   std::string label("A:");
   for (int i = 0; i < numComp; i++) {
-    this->curveComps[i]->turnButtonOff(true);
-    this->curveComps[i]->setBehaviour(FuiQueryInputField::REF_NONE);
+    this->curveComps[i]->setBehaviour(FuiQueryInputField::REF_NONE,true);
     this->curveComps[i]->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,onRefSelected,int));
     this->curveComps[i]->setQuery(v->curveQuery);
     if (i >= numRows)
@@ -871,8 +870,7 @@ void FuiCurveDefSheet::initWidgets()
 						  onButtonToggled,bool));
 
   this->functionLabel->setLabel("Function");
-  this->functionMenu->turnButtonOff(true);
-  this->functionMenu->setBehaviour(FuiQueryInputField::REF_NONE);
+  this->functionMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
   this->functionMenu->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,
 						  onRefSelected,int));
 

@@ -50,8 +50,7 @@ void FuiAnimationControl::setSensitivity(bool isSensitive)
 void FuiAnimationControl::initWidgets()
 {
   this->cameraMenu->setRefSelectedCB(FFaDynCB1M(FuiAnimationControl,this,onMenuSelected,int));
-  this->cameraMenu->turnButtonOff(true);
-  this->cameraMenu->setBehaviour(FuiQueryInputField::REF_NONE);
+  this->cameraMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
 
   this->linkMotionToggle->setToggleCB(FFaDynCB1M(FuiAnimationControl,this,onButtonToggled,bool));
   this->triadMotionToggle->setToggleCB(FFaDynCB1M(FuiAnimationControl,this,onButtonToggled,bool));

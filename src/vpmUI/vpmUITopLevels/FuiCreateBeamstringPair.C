@@ -36,17 +36,9 @@ void FuiCreateBeamstringPair::initWidgets()
 {
   this->headerImage->setPixMap(beamstringPair_xpm);
 
-  this->beamstringMenu1->setBehaviour(FuiQueryInputField::REF_NONE);
-  this->beamstringMenu1->setButtonMeaning(FuiQueryInputField::EDIT);
-  this->beamstringMenu1->turnButtonOff(true);
-
-  this->beamstringMenu2->setBehaviour(FuiQueryInputField::REF_NONE);
-  this->beamstringMenu2->setButtonMeaning(FuiQueryInputField::EDIT);
-  this->beamstringMenu2->turnButtonOff(true);
-
-  this->stiffnessFunctionMenu->setBehaviour(FuiQueryInputField::REF_NONE);
-  this->stiffnessFunctionMenu->setButtonMeaning(FuiQueryInputField::EDIT);
-  this->stiffnessFunctionMenu->turnButtonOff(true);
+  this->beamstringMenu1->setBehaviour(FuiQueryInputField::REF_NONE,true);
+  this->beamstringMenu2->setBehaviour(FuiQueryInputField::REF_NONE,true);
+  this->stiffnessFunctionMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
 
   this->useRadialSpringsToggle->setLabel("Use radial springs");
 

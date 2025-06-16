@@ -8,7 +8,7 @@
 #ifndef FUI_QUERY_INPUT_FIELD_H
 #define FUI_QUERY_INPUT_FIELD_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
@@ -24,29 +24,27 @@ class FFuOptionMenu;
 class FFuPushButton;
 
 
-class FuiQueryInputField : public virtual FFuMultUIComponent,
+class FuiQueryInputField : public virtual FFuComponentBase,
                            public FFuUAExistenceHandler,
                            public FFuUADataHandler
 {
 public:
   FuiQueryInputField();
-  virtual ~FuiQueryInputField() {}
 
   // Setting up
 
   enum Policy { REF_NUMBER, REF_TEXT, REF_NONE, REF };
-  virtual void setBehaviour(Policy behaviour);
+  virtual void setBehaviour(Policy behaviour, bool noButton = false);
 
-  enum ButtonMeaning { SELECT, EDIT, EDIT_CREATE };
+  enum ButtonMeaning { NONE, SELECT, EDIT, EDIT_CREATE };
   void setButtonMeaning(ButtonMeaning meaning) { myButtonMeaning = meaning; }
-  void turnButtonOff(bool yesOrNo);
 
-  virtual void setToolTip(const char* tip = 0) { myToolTip = tip ? tip : ""; }
+  virtual void setToolTip(const char* t = NULL) { myToolTip = t ? t : ""; }
 
   virtual void setSensitivity(bool makeSensitive);
   void setEditSensitivity(bool isSensitive); // true if allowed to edit the input field
 
-  void setTextForNoRefSelected(const std::string& text) { myNoRefSelectedText = text; }
+  void setTextForNoRefSelected(const char* text) { myNoRefSelectedText = text; }
 
   bool useAddedConstValue; // true if the field adds the const value to the function value
 
@@ -94,9 +92,6 @@ public:
   FmModelMemberBase* getSelectedRef() const;
 
 protected:
-  virtual void placeWidgets(int width, int height);
-
-  // Initialisation to be called by UILib dep. subclass
 
   void initWidgets();
 
@@ -131,7 +126,6 @@ private:
   Policy        myBehaviour;
   ButtonMeaning myButtonMeaning;
 
-  bool IAmShowingButton;
   bool IAmAConstant;
   bool IAmSensitive;
   bool IAmEditSensitive;
@@ -172,33 +166,21 @@ private:
 class FuiQueryInputFieldValues
 {
 public:
-  FuiQueryInputFieldValues() {
-    constant = 0.0;
-    selectedRefIdx = -1;
-    selectedRef = 0;
-  }
-
-  double constant;
+  double constant = 0.0;
   std::string constantText;
-  int    selectedRefIdx;
-  FmModelMemberBase* selectedRef;
+  int    selectedRefIdx = -1;
+  FmModelMemberBase* selectedRef = NULL;
 };
 
 
 class FuaQueryInputFieldValues : public FFuaUIValues
 {
 public:
-  FuaQueryInputFieldValues(){
-    query = 0;
-    selectedIdx = -1;
-    matchToLookupIndexFor = 0;
-  }
-
-  FFuaQueryBase*               query;
+  FFuaQueryBase*               query = NULL;
   std::vector<FFuaQueryMatch*> matches;
 
-  int                selectedIdx;
-  FmModelMemberBase* matchToLookupIndexFor;
+  int                selectedIdx = -1;
+  FmModelMemberBase* matchToLookupIndexFor = NULL;
 };
 
 #endif
