@@ -11,7 +11,6 @@
 #include "vpmUI/vpmUITopLevels/FuiCreateTurbineAssembly.H"
 #endif
 #include "vpmUI/vpmUITopLevels/FuiProperties.H"
-#include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
 #include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
 #include "FFuLib/FFuIOField.H"
@@ -465,7 +464,7 @@ void FuiPositionData::onFieldAccepted(double)
       static_cast<FmIsRenderedBase*>(myEditedObj)->draw();
     else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID())) {
       FmDB::displayAll(*static_cast<FmAssemblyBase*>(myEditedObj)->getHeadMap());
-      Fui::getMainWindow()->getProperties()->updateSubassCoG();
+      Fui::getProperties()->updateSubassCoG();
     }
 
 #ifdef FT_HAS_WND

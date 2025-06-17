@@ -77,8 +77,9 @@ static int uiScreenHeight = 0;
 static int uiScreenWidth = 0;
 static int uiBorderWidth = 0;
 
-FuiMainWindow* Fui::mainWindow = NULL;
-bool           Fui::haveAeroDyn = false;
+static FuiMainWindow* mainWindow = NULL;
+
+bool Fui::haveAeroDyn = false;
 
 
 void Fui::init(int& argc, char** argv)
@@ -109,14 +110,14 @@ void Fui::init(int& argc, char** argv)
   uiScreenWidth  = FFuaApplication::getScreenWidth();
 
   // Create the main window
-  UIgeo geo  = Fui::getUIgeo(FUI_MAINWINDOW_GEO);
+  Fui::Geo geo = Fui::getGeo(MAINWINDOW_GEO);
   mainWindow = FuiMainWindow::create(geo.xPos, geo.yPos, geo.width, geo.height);
 }
 
 
 void Fui::start()
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   // Get decoration properties from project UI
   // FIXME - find these values somehow.
@@ -131,14 +132,14 @@ void Fui::start()
 
 void Fui::mainUI()
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   // Set basic mode
   FuiModes::setMode(FuiModes::EXAM_MODE);
 
   // Pop up the different ui's
 
-  Fui::mainWindow->popUp();
+  mainWindow->popUp();
   Fui::updateUICommands();
   Fui::modellerUI();
 
@@ -147,6 +148,12 @@ void Fui::mainUI()
   FFuaApplication::handlePendingEvents();
 
   FFaMsg::setStatus("Ready");
+}
+
+
+bool Fui::hasGUI()
+{
+  return mainWindow != NULL;
 }
 
 
@@ -170,7 +177,8 @@ void Fui::list(const char* text)
 
 void Fui::tip(const char* value)
 {
-  if (Fui::mainWindow) Fui::mainWindow->setStatusBarMessage(value);
+  if (mainWindow)
+    mainWindow->setStatusBarMessage(value);
 }
 
 
@@ -179,19 +187,20 @@ void Fui::setTitle(const char* title)
   char newTitle[BUFSIZ];
   sprintf(newTitle, "FEDEM %s - %s", FpPM::getVpmVersion(), title);
 
-  if (Fui::mainWindow) Fui::mainWindow->setTitle(newTitle);
+  if (mainWindow)
+    mainWindow->setTitle(newTitle);
 
   sprintf(newTitle, "Output List: %s", title);
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiOutputList::getClassTypeID());
   if (uic)
-    dynamic_cast<FuiOutputList*>(uic)->setTitle(newTitle);
+    uic->setTitle(newTitle);
 }
 
 
 bool Fui::okCancelDialog(const char* msg, int type)
 {
-  if (!Fui::mainWindow) return true;
+  if (!mainWindow) return true;
 
   const char* texts[2] = {"OK","Cancel"};
   FFuUserDialog* dialog = FFuUserDialog::create(msg,type,texts,2);
@@ -204,7 +213,7 @@ bool Fui::okCancelDialog(const char* msg, int type)
 
 bool Fui::yesNoDialog(const char* msg, int type)
 {
-  if (!Fui::mainWindow) return true;
+  if (!mainWindow) return true;
 
   const char* texts[2] = {"Yes","No"};
   FFuUserDialog* dialog = FFuUserDialog::create(msg,type,texts,2);
@@ -217,7 +226,7 @@ bool Fui::yesNoDialog(const char* msg, int type)
 
 void Fui::okDialog(const char* msg, int type)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   const char* texts[1] = {"OK"};
   FFuUserDialog* dialog = FFuUserDialog::create(msg,type,texts,1);
@@ -228,7 +237,7 @@ void Fui::okDialog(const char* msg, int type)
 
 void Fui::dismissDialog(const char* msg, int type)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   const char* texts[1] = {"Dismiss"};
   FFuUserDialog::create(msg,type,texts,1,false);
@@ -237,7 +246,7 @@ void Fui::dismissDialog(const char* msg, int type)
 
 int Fui::genericDialog(const char* msg, const char** texts, int nButtons, int type)
 {
-  if (!Fui::mainWindow) return -1;
+  if (!mainWindow) return -1;
 
   FFuUserDialog* dialog = FFuUserDialog::create(msg,type,texts,nButtons);
   int answer = dialog->execute();
@@ -249,7 +258,7 @@ int Fui::genericDialog(const char* msg, const char** texts, int nButtons, int ty
 
 void Fui::noUserInputPlease()
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuaApplication::blockUserEvents(true);
 }
@@ -257,7 +266,7 @@ void Fui::noUserInputPlease()
 
 void Fui::okToGetUserInput()
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuaApplication::blockUserEvents(false);
 }
@@ -266,7 +275,8 @@ void Fui::okToGetUserInput()
 void Fui::lockModel(bool yesOrNo)
 {
   // Make properties non-editable
-  Fui::mainWindow->getProperties()->setSensitivity(!yesOrNo);
+  FuiProperties* props = Fui::getProperties();
+  if (props) props->setSensitivity(!yesOrNo);
 
   // Lock/unlock control modeller
   if (FuiCtrlModes::isCtrlModellerOpen())
@@ -318,6 +328,18 @@ void Fui::lockModel(bool yesOrNo)
 
   tls = FFuTopLevelShell::getInstanceByType(FuiModelExport::getClassTypeID());
   if (tls) tls->setSensitivity(!yesOrNo);
+}
+
+
+FuiMainWindow* Fui::getMainWindow()
+{
+  return mainWindow;
+}
+
+
+FuiProperties* Fui::getProperties()
+{
+  return mainWindow ? mainWindow->getProperties() : NULL;
 }
 
 
@@ -386,7 +408,7 @@ void Fui::cancel()
 }
 
 
-UIgeo Fui::getUIgeo(int fuiType)
+Fui::Geo Fui::getGeo(UIgeom fuiType)
 {
   const int mainWidth = 1020;
   const int mainHeight = 820;
@@ -394,195 +416,195 @@ UIgeo Fui::getUIgeo(int fuiType)
   const int modellerWidth = mainWidth*755/1000; // 75.5% of main window width
   const int modellerHeight = mainHeight*63/100; // 63.0% of main window height
 
-  UIgeo geo;
+  Geo geo;
 
   switch (fuiType)
     {
-    case FUI_MAINWINDOW_GEO:
+    case MAINWINDOW_GEO:
       geo.xPos   = 280;
       geo.yPos   = 180;
       geo.width  = mainWidth;
       geo.height = mainHeight;
       break;
-    case FUI_GRAPHVIEW_GEO:
+    case GRAPHVIEW_GEO:
       geo.width  = 300;
       geo.height = 300;
       break;
-    case FUI_MODELLER_GEO:
+    case MODELLER_GEO:
       geo.width  = modellerWidth;
       geo.height = modellerHeight;
       break;
-    case FUI_CTRLMODELLER_GEO:
+    case CTRLMODELLER_GEO:
       geo.width  = modellerWidth;
       geo.height = modellerHeight - 25;
       break;
-    case FUI_PROPERTIES_GEO:
+    case PROPERTIES_GEO:
       geo.width  = mainWidth;
       geo.height = mainHeight - modellerHeight;
       break;
-    case FUI_OUTPUTLIST_GEO:
+    case OUTPUTLIST_GEO:
       geo.width  = 600;
       geo.height = 150;
       geo.xPos   = uiScreenWidth - geo.width - 3;
       geo.yPos   = uiScreenHeight - geo.height - 40; // Room for Windows task bar
       break;
-    case FUI_APPEARANCE_GEO:
+    case APPEARANCE_GEO:
       geo.xPos   = 4*modellerWidth/5;
       geo.yPos   = modellerHeight/5;
       geo.width  = 385;
       geo.height = 430;
       break;
-    case FUI_ADVANALYSISOPTIONS_GEO:
+    case ADVANALYSISOPTIONS_GEO:
       geo.xPos   = modellerWidth/2 + 30;
       geo.yPos   = modellerHeight/5;
       geo.width  = 420;
       geo.height = 570;
       break;
-    case FUI_STRESSOPTIONS_GEO:
+    case STRESSOPTIONS_GEO:
       geo.xPos   = 2*modellerWidth/9;
       geo.yPos   = modellerHeight - (275-uiBorderWidth-uiTitleBarHeight);
       geo.width  = 375;
       geo.height = 550;
       break;
-    case FUI_EIGENMODEOPTIONS_GEO:
+    case EIGENMODEOPTIONS_GEO:
       geo.width  = 350;
       geo.height = 460;
       geo.xPos   = modellerWidth - geo.width;
       geo.yPos   = modellerHeight - 275 - 210 - uiBorderWidth;
       break;
-    case FUI_GAGEOPTIONS_GEO:
+    case GAGEOPTIONS_GEO:
       geo.xPos   = 100;
       geo.yPos   = 350;
       geo.width  = 325;
       geo.height = 400;
       break;
-    case FUI_FPPOPTIONS_GEO:
+    case FPPOPTIONS_GEO:
       geo.xPos   = 100;
       geo.yPos   = 350;
       geo.width  = 370;
       geo.height = 590;
       break;
 #ifdef FT_HAS_NCODE
-    case FUI_DUTYCYCLEOPTIONS_GEO:
+    case DUTYCYCLEOPTIONS_GEO:
       geo.width  = 650;
       geo.height = 400;
       geo.xPos   = modellerWidth - geo.width;
       geo.yPos   = modellerHeight - 275 - 210 - uiBorderWidth;
       break;
 #endif
-    case FUI_ANIMATIONCONTROL_GEO:
+    case ANIMATIONCONTROL_GEO:
       geo.xPos   = 100;
       geo.yPos   = 350;
       geo.width  = 260;
       geo.height = 565;
       break;
-    case FUI_VIEWSETTINGS_GEO:
+    case VIEWSETTINGS_GEO:
       geo.xPos   = uiScreenWidth - 300;
       geo.yPos   = 2*uiTitleBarHeight + uiBorderWidth;
       geo.width  = 300;
       geo.height = 900;
       break;
-    case FUI_MODELMANAGER_GEO:
+    case MODELMANAGER_GEO:
       geo.width  = 200;
       geo.height = modellerHeight - 2*uiBorderWidth - uiTitleBarHeight;
       break;
-    case FUI_RDBSELECTOR_GEO:
+    case RDBSELECTOR_GEO:
       geo.width  = 300;
       geo.height = modellerHeight - 2*uiBorderWidth - uiTitleBarHeight;
       geo.xPos   = 10;
       geo.yPos   = 20;
       break;
-    case FUI_RDBMEFATIGUE_GEO:
+    case RDBMEFATIGUE_GEO:
       geo.width  = 400;
       geo.height = 450;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_PREFERENCES_GEO:
+    case PREFERENCES_GEO:
       geo.width  = 430;
       geo.height = 650;
       geo.xPos   = uiScreenWidth - geo.width;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_RESULTFILEBROWSER_GEO:
+    case RESULTFILEBROWSER_GEO:
       geo.width  = 800;
       geo.height = 500;
       geo.xPos   = 100;
       geo.yPos   = 100;
       break;
-    case FUI_LINKRAMSETTINGS_GEO:
+    case LINKRAMSETTINGS_GEO:
       geo.xPos   = 100;
       geo.yPos   = 350;
       geo.width  = 370;
       geo.height = 590;
       break;
-    case FUI_MODELPREFERENCES_GEO:
+    case MODELPREFERENCES_GEO:
       geo.width  = 400;
       geo.height = 600;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_SEAENVIRONMENT_GEO:
+    case SEAENVIRONMENT_GEO:
       geo.width  = 400;
       geo.height = 470;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_AIRENVIRONMENT_GEO:
+    case AIRENVIRONMENT_GEO:
       geo.width  = 400;
       geo.height = 550;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_BLADEDEFINITION_GEO:
+    case BLADEDEFINITION_GEO:
       geo.width  = 885;
       geo.height = 660;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_AIRFOILDEFINITION_GEO:
+    case AIRFOILDEFINITION_GEO:
       geo.width  = 827;
       geo.height = 710;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_EVENTDEFINITION_GEO:
+    case EVENTDEFINITION_GEO:
       geo.width  = 827;
       geo.height = 620;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_TURBINEASSEMBLY_GEO:
+    case TURBINEASSEMBLY_GEO:
       geo.width  = 827;
       geo.height = 670;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_TURBINETOWER_GEO:
+    case TURBINETOWER_GEO:
       geo.width  = 672;
       geo.height = 494;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_BEAMSTRINGPAIR_GEO:
+    case BEAMSTRINGPAIR_GEO:
       geo.width  = 827;
       geo.height = 350;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_OBJECTBROWSER_GEO:
+    case OBJECTBROWSER_GEO:
       geo.width  = 827;
       geo.height = 650;
       geo.xPos   = (uiScreenWidth - geo.width)/2;
       geo.yPos   = modellerHeight/3;
       break;
-    case FUI_BEAMCSSELECTOR_GEO:
+    case BEAMCSSELECTOR_GEO:
       geo.width  = 350;
       geo.height = 900;
       geo.xPos   = 200;
       geo.yPos   = 200;
       break;
-    case FUI_MODELEXPORT_GEO:
+    case MODELEXPORT_GEO:
       geo.width  = 1000;
       geo.height = 550;
       geo.xPos   = (uiScreenWidth - geo.width) / 2;
@@ -602,7 +624,7 @@ UIgeo Fui::getUIgeo(int fuiType)
 
 void Fui::animationUI(bool onScreen, bool)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiModeller::getClassTypeID());
 
@@ -612,7 +634,7 @@ void Fui::animationUI(bool onScreen, bool)
 
 void Fui::appearanceUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   inMem = true; // Always keep FuiAppearance in memory,
   // because the Done button has not finished when this function is called.
@@ -622,7 +644,7 @@ void Fui::appearanceUI(bool onScreen, bool inMem)
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_APPEARANCE_GEO);
+      Fui::Geo geo = Fui::getGeo(APPEARANCE_GEO);
       uic = FuiAppearance::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -632,13 +654,13 @@ void Fui::appearanceUI(bool onScreen, bool inMem)
 
 void Fui::viewSettingsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiViewSettings::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_VIEWSETTINGS_GEO);
+      Fui::Geo geo = Fui::getGeo(VIEWSETTINGS_GEO);
       uic = FuiViewSettings::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -648,13 +670,13 @@ void Fui::viewSettingsUI(bool onScreen, bool inMem)
 
 void Fui::analysisOptionsUI(bool onScreen, bool inMem, bool basicMode)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAdvAnalysisOptions::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
   {
-    UIgeo geo = Fui::getUIgeo(FUI_ADVANALYSISOPTIONS_GEO);
+    Fui::Geo geo = Fui::getGeo(ADVANALYSISOPTIONS_GEO);
     uic = FuiAdvAnalysisOptions::create(geo.xPos, geo.yPos, geo.width, geo.height, basicMode);
   }
   else if (onScreen && uic)
@@ -666,13 +688,13 @@ void Fui::analysisOptionsUI(bool onScreen, bool inMem, bool basicMode)
 
 void Fui::stressOptionsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiStressOptions::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_STRESSOPTIONS_GEO);
+      Fui::Geo geo = Fui::getGeo(STRESSOPTIONS_GEO);
       uic = FuiStressOptions::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -682,13 +704,13 @@ void Fui::stressOptionsUI(bool onScreen, bool inMem)
 
 void Fui::eigenmodeOptionsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiEigenOptions::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_EIGENMODEOPTIONS_GEO);
+      Fui::Geo geo = Fui::getGeo(EIGENMODEOPTIONS_GEO);
       uic = FuiEigenOptions::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -698,13 +720,13 @@ void Fui::eigenmodeOptionsUI(bool onScreen, bool inMem)
 
 void Fui::gageOptionsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiGageOptions::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_GAGEOPTIONS_GEO);
+      Fui::Geo geo = Fui::getGeo(GAGEOPTIONS_GEO);
       uic = FuiGageOptions::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -714,13 +736,13 @@ void Fui::gageOptionsUI(bool onScreen, bool inMem)
 
 void Fui::fppOptionsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiFppOptions::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_FPPOPTIONS_GEO);
+      Fui::Geo geo = Fui::getGeo(FPPOPTIONS_GEO);
       uic = FuiFppOptions::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -731,13 +753,13 @@ void Fui::fppOptionsUI(bool onScreen, bool inMem)
 #ifdef FT_HAS_NCODE
 void Fui::dutyCycleOptionsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiDutyCycleOptions::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_DUTYCYCLEOPTIONS_GEO);
+      Fui::Geo geo = Fui::getGeo(DUTYCYCLEOPTIONS_GEO);
       uic = FuiDutyCycleOptions::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -748,13 +770,13 @@ void Fui::dutyCycleOptionsUI(bool onScreen, bool inMem)
 
 void Fui::preferencesUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiPreferences::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_PREFERENCES_GEO);
+      Fui::Geo geo = Fui::getGeo(PREFERENCES_GEO);
       uic = FuiPreferences::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -764,13 +786,13 @@ void Fui::preferencesUI(bool onScreen, bool inMem)
 
 void Fui::modelPreferencesUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiModelPreferences::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_MODELPREFERENCES_GEO);
+      Fui::Geo geo = Fui::getGeo(MODELPREFERENCES_GEO);
       uic = FuiModelPreferences::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -780,13 +802,13 @@ void Fui::modelPreferencesUI(bool onScreen, bool inMem)
 
 void Fui::linkRamSettingsUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiLinkRamSettings::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_LINKRAMSETTINGS_GEO);
+      Fui::Geo geo = Fui::getGeo(LINKRAMSETTINGS_GEO);
       uic = FuiLinkRamSettings::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -796,13 +818,13 @@ void Fui::linkRamSettingsUI(bool onScreen, bool inMem)
 
 void Fui::animationControlUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAnimationControl::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_ANIMATIONCONTROL_GEO);
+      Fui::Geo geo = Fui::getGeo(ANIMATIONCONTROL_GEO);
       uic = FuiAnimationControl::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -812,13 +834,13 @@ void Fui::animationControlUI(bool onScreen, bool inMem)
 
 void Fui::rdbSelectorUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiRDBSelector::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_RDBSELECTOR_GEO);
+      Fui::Geo geo = Fui::getGeo(RDBSELECTOR_GEO);
       uic = FuiRDBSelector::create(geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -828,14 +850,14 @@ void Fui::rdbSelectorUI(bool onScreen, bool inMem)
 
 void Fui::rdbMEFatigueUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
 #ifdef FT_HAS_GRAPHVIEW
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiRDBMEFatigue::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
   {
-    UIgeo geo = Fui::getUIgeo(FUI_RDBMEFATIGUE_GEO);
+    Fui::Geo geo = Fui::getGeo(RDBMEFATIGUE_GEO);
     uic = FuiRDBMEFatigue::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 #else
@@ -848,14 +870,14 @@ void Fui::rdbMEFatigueUI(bool onScreen, bool inMem)
 
 void Fui::modellerUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiModeller::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_MODELLER_GEO);
-      FFuComponentBase* parent = Fui::mainWindow->getWorkSpace();
+      Fui::Geo geo = Fui::getGeo(MODELLER_GEO);
+      FFuComponentBase* parent = mainWindow->getWorkSpace();
       FuiModeller* modeller = FuiModeller::create(parent,geo.xPos, geo.yPos, geo.width, geo.height);
       uic = modeller;
 
@@ -892,14 +914,14 @@ void Fui::modellerUI(bool onScreen, bool inMem)
 
 void Fui::ctrlModellerUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCtrlModeller::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
     {
-      UIgeo geo = Fui::getUIgeo(FUI_CTRLMODELLER_GEO);
-      FFuComponentBase* parent = Fui::mainWindow->getWorkSpace();
+      Fui::Geo geo = Fui::getGeo(CTRLMODELLER_GEO);
+      FFuComponentBase* parent = mainWindow->getWorkSpace();
       uic = FuiCtrlModeller::create(parent,geo.xPos, geo.yPos, geo.width, geo.height);
     }
 
@@ -913,7 +935,7 @@ void Fui::ctrlModellerUI(bool onScreen, bool inMem)
 
 void Fui::ctrlGridSnapUI(bool onScreen)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCtrlModeller::getClassTypeID());
 
@@ -923,15 +945,14 @@ void Fui::ctrlGridSnapUI(bool onScreen)
 
 void Fui::outputListUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiOutputList::getClassTypeID());
 
-  if ((onScreen || inMem) && uic == NULL)
-    {
-      UIgeo geo = Fui::getUIgeo(FUI_OUTPUTLIST_GEO);
-      uic = FuiOutputList::create(NULL ,geo.xPos, geo.yPos, geo.width, geo.height);
-    }
+  if ((onScreen || inMem) && uic == NULL) {
+    Fui::Geo geo = Fui::getGeo(OUTPUTLIST_GEO);
+    uic = FuiOutputList::create(NULL, geo.xPos, geo.yPos, geo.width, geo.height);
+  }
 
   if (uic) uic->manage(onScreen,inMem);
 }
@@ -939,12 +960,12 @@ void Fui::outputListUI(bool onScreen, bool inMem)
 
 void Fui::resultFileBrowserUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiMiniFileBrowser::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL) {
-    UIgeo geo = Fui::getUIgeo(FUI_RESULTFILEBROWSER_GEO);
+    Fui::Geo geo = Fui::getGeo(RESULTFILEBROWSER_GEO);
     uic = FuiMiniFileBrowser::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -954,11 +975,11 @@ void Fui::resultFileBrowserUI(bool onScreen, bool inMem)
 
 void Fui::seaEnvironmentUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiSeaEnvironment::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL) {
-    UIgeo geo = Fui::getUIgeo(FUI_SEAENVIRONMENT_GEO);
+    Fui::Geo geo = Fui::getGeo(SEAENVIRONMENT_GEO);
     uic = FuiSeaEnvironment::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -968,12 +989,12 @@ void Fui::seaEnvironmentUI(bool onScreen, bool inMem)
 
 void Fui::airEnvironmentUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAirEnvironment::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
-    UIgeo geo = Fui::getUIgeo(FUI_AIRENVIRONMENT_GEO);
+    Fui::Geo geo = Fui::getGeo(AIRENVIRONMENT_GEO);
     uic = FuiAirEnvironment::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 #else
@@ -986,7 +1007,7 @@ void Fui::airEnvironmentUI(bool onScreen, bool inMem)
 
 FuiTurbWind* Fui::turbWindUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return NULL;
+  if (!mainWindow) return NULL;
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiTurbWind::getClassTypeID());
@@ -1003,12 +1024,12 @@ FuiTurbWind* Fui::turbWindUI(bool onScreen, bool inMem)
 
 void Fui::bladeDefinitionUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiBladeDefinition::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
-    UIgeo geo = Fui::getUIgeo(FUI_BLADEDEFINITION_GEO);
+    Fui::Geo geo = Fui::getGeo(BLADEDEFINITION_GEO);
     uic = FuiBladeDefinition::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 #else
@@ -1021,12 +1042,12 @@ void Fui::bladeDefinitionUI(bool onScreen, bool inMem)
 
 void Fui::airfoilDefinitionUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAirfoilDefinition::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
-    UIgeo geo = Fui::getUIgeo(FUI_AIRFOILDEFINITION_GEO);
+    Fui::Geo geo = Fui::getGeo(AIRFOILDEFINITION_GEO);
     uic = FuiAirfoilDefinition::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 #else
@@ -1039,12 +1060,12 @@ void Fui::airfoilDefinitionUI(bool onScreen, bool inMem)
 
 void Fui::turbineAssemblyUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
-    UIgeo geo = Fui::getUIgeo(FUI_TURBINEASSEMBLY_GEO);
+    Fui::Geo geo = Fui::getGeo(TURBINEASSEMBLY_GEO);
     uic = FuiCreateTurbineAssembly::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 #else
@@ -1057,12 +1078,12 @@ void Fui::turbineAssemblyUI(bool onScreen, bool inMem)
 
 void Fui::turbineTowerUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
 #ifdef FT_HAS_WND
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineTower::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL && Fui::haveAeroDyn) {
-    UIgeo geo = Fui::getUIgeo(FUI_TURBINETOWER_GEO);
+    Fui::Geo geo = Fui::getGeo(TURBINETOWER_GEO);
     uic = FuiCreateTurbineTower::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 #else
@@ -1075,11 +1096,11 @@ void Fui::turbineTowerUI(bool onScreen, bool inMem)
 
 void Fui::beamstringPairUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCreateBeamstringPair::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL) {
-    UIgeo geo = Fui::getUIgeo(FUI_BEAMSTRINGPAIR_GEO);
+    Fui::Geo geo = Fui::getGeo(BEAMSTRINGPAIR_GEO);
     uic = FuiCreateBeamstringPair::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -1089,11 +1110,11 @@ void Fui::beamstringPairUI(bool onScreen, bool inMem)
 
 void Fui::objectBrowserUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiObjectBrowser::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL) {
-    UIgeo geo = Fui::getUIgeo(FUI_OBJECTBROWSER_GEO);
+    Fui::Geo geo = Fui::getGeo(OBJECTBROWSER_GEO);
     uic = FuiObjectBrowser::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -1103,11 +1124,11 @@ void Fui::objectBrowserUI(bool onScreen, bool inMem)
 
 void Fui::eventDefinitionUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiEventDefinition::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL) {
-    UIgeo geo = Fui::getUIgeo(FUI_EVENTDEFINITION_GEO);
+    Fui::Geo geo = Fui::getGeo(EVENTDEFINITION_GEO);
     uic = FuiEventDefinition::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -1116,13 +1137,13 @@ void Fui::eventDefinitionUI(bool onScreen, bool inMem)
 
 void Fui::modelExportUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiModelExport::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
   {
-    UIgeo geo = Fui::getUIgeo(FUI_MODELEXPORT_GEO);
+    Fui::Geo geo = Fui::getGeo(MODELEXPORT_GEO);
     uic = FuiModelExport::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -1131,11 +1152,11 @@ void Fui::modelExportUI(bool onScreen, bool inMem)
 
 void Fui::beamCSSelectorUI(bool onScreen, bool inMem)
 {
-  if (!Fui::mainWindow) return;
+  if (!mainWindow) return;
 
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiCSSelector::getClassTypeID());
   if ((onScreen || inMem) && uic == NULL) {
-    UIgeo geo = Fui::getUIgeo(FUI_BEAMCSSELECTOR_GEO);
+    Fui::Geo geo = Fui::getGeo(BEAMCSSELECTOR_GEO);
     uic = FuiCSSelector::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
@@ -1151,11 +1172,11 @@ void Fui::pluginsUI()
 
 FuiGraphView* Fui::newGraphViewUI(const char* title)
 {
-  if (!Fui::mainWindow) return NULL;
+  if (!mainWindow) return NULL;
 
 #ifdef FT_HAS_GRAPHVIEW
-  UIgeo geo = Fui::getUIgeo(FUI_GRAPHVIEW_GEO);
-  return FuiGraphViewTLS::create(Fui::mainWindow->getWorkSpace(),
+  Fui::Geo geo = Fui::getGeo(GRAPHVIEW_GEO);
+  return FuiGraphViewTLS::create(mainWindow->getWorkSpace(),
                                  geo.xPos,geo.yPos,geo.width,geo.height,title);
 #else
   // Dummy statement to avoid compiler warning
