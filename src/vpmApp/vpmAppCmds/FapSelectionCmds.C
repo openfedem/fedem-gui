@@ -13,7 +13,6 @@
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include "vpmDB/FmRingStart.H"
 #include "vpmDB/FmEngine.H"
-#include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
 #include "vpmUI/vpmUITopLevels/FuiProperties.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
 #include "vpmUI/Fui.H"
@@ -134,7 +133,7 @@ void FapSelectionCmds::help()
   // Get topic name from selected object
   const char* topic = mySelection->getItemName();
   if (tabbedObjs.find(topic) != std::string::npos) {
-    const char* tab = Fui::getMainWindow()->getProperties()->getSelectedTab(topic);
+    const char* tab = Fui::getProperties()->getSelectedTab(topic);
     Fui::showCHM((std::string("properties/") + topic).c_str(),tab);
   }
   else if (basicObjs.find(topic) != std::string::npos)

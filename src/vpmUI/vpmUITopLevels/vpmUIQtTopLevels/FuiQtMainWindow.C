@@ -108,7 +108,7 @@ FuiQtMainWindow::FuiQtMainWindow()
   FFuQtSplitter* items__ws       = new FFuQtSplitter(Qt::Horizontal,items_ws__props);
   FFuQtSplitter* leftColumn      = new FFuQtSplitter(Qt::Vertical,items__ws);
 
-  UIgeo geo = Fui::getUIgeo(Fui::FUI_PROPERTIES_GEO);
+  Fui::Geo geo = Fui::getGeo(Fui::PROPERTIES_GEO);
   FuiQtProperties* qtproperties = new FuiQtProperties(items_ws__props,geo.xPos,geo.yPos,geo.width,geo.height);
   this->properties = qtproperties;
 
@@ -146,7 +146,7 @@ FuiQtMainWindow::FuiQtMainWindow()
 
   hintLayout->addItem(new QSpacerItem(50, 10, QSizePolicy::Preferred, QSizePolicy::Fixed), 3,0, 1,4);
 
-  geo = Fui::getUIgeo(Fui::FUI_MODELMANAGER_GEO);
+  geo = Fui::getGeo(Fui::MODELMANAGER_GEO);
   this->modelManager = new FuiQtModelManager(leftColumn, geo.xPos,geo.yPos,geo.width,geo.height);
   this->workSpace = new FuiQtWorkSpace(items__ws);
 
