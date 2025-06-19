@@ -13,10 +13,11 @@
 #include "vpmUI/vpmUITopLevels/FuiProperties.H"
 #include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
+
+#include "FFuLib/FFuLabelFrame.H"
+#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuOptionMenu.H"
-#include "FFuLib/FFuLabel.H"
-#include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuToggleButton.H"
 
 #include "vpmDB/FmDB.H"
@@ -70,34 +71,32 @@ FuiPositionData::FuiPositionData() : signalConnector(this)
 
 void FuiPositionData::initWidgets()
 {
-  myPosRefCSField->popUp();
   myPosRefCSField->setBehaviour(FuiQueryInputField::REF_NONE);
   myPosRefCSField->setRefSelectedCB(FFaDynCB1M(FuiPositionData,this,
-                                               onPosRefChanged, FmModelMemberBase*));
-  myPosRefCSField->setButtonCB(FFaDynCB0M(FuiPositionData,this, onPosRefButtonPressed));
+                                               onPosRefChanged,FmModelMemberBase*));
+  myPosRefCSField->setButtonCB(FFaDynCB0M(FuiPositionData,this,
+                                          onPosRefButtonPressed));
   myPosRefCSField->setButtonMeaning(FuiQueryInputField::SELECT);
   myPosRefCSField->setTextForNoRefSelected("Global");
 
-  myRotRefCSField->popUp();
   myRotRefCSField->setBehaviour(FuiQueryInputField::REF_NONE);
   myRotRefCSField->setRefSelectedCB(FFaDynCB1M(FuiPositionData,this,
-                                               onRotRefChanged, FmModelMemberBase*));
-  myRotRefCSField->setButtonCB(FFaDynCB0M(FuiPositionData,this, onRotRefButtonPressed));
+                                               onRotRefChanged,FmModelMemberBase*));
+  myRotRefCSField->setButtonCB(FFaDynCB0M(FuiPositionData,this,
+                                          onRotRefButtonPressed));
   myRotRefCSField->setButtonMeaning(FuiQueryInputField::SELECT);
   myRotRefCSField->setTextForNoRefSelected("Global");
 
   size_t i;
   for (i = 0; i < PosTypeMapping::map().size(); i++)
     myPosViewTypeMenu->addOption(PosTypeMapping::map()[i].second, i);
-
-  myPosViewTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiPositionData,this,onPosTypeChanged, int));
-  myPosViewTypeMenu->popUp();
+  myPosViewTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiPositionData,this,
+                                                    onPosTypeChanged,int));
 
   for (i = 0; i < RotTypeMapping::map().size(); i++)
     myRotViewTypeMenu->addOption(RotTypeMapping::map()[i].second, i);
-
-  myRotViewTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiPositionData,this,onRotTypeChanged, int));
-  myRotViewTypeMenu->popUp();
+  myRotViewTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiPositionData,this,
+                                                    onRotTypeChanged,int));
 
   for (FFuIOField* fld : myFields) {
     fld->popUp();
@@ -105,34 +104,38 @@ void FuiPositionData::initWidgets()
     fld->setAcceptedCB(FFaDynCB1M(FuiPositionData,this,onFieldAccepted,double));
   }
 
-  for (FFuLabel* lab : myLabels) {
-    lab->popUp();
-    lab->toFront();
-  }
-
-  myMasterFollowToggle->setToggleCB(FFaDynCB1M(FuiPositionData,this,onTriadsFollowToggled,bool));
-  mySlaveFollowToggle->setToggleCB(FFaDynCB1M(FuiPositionData,this,onTriadsFollowToggled,bool));
+  myMasterFollowToggle->setToggleCB(FFaDynCB1M(FuiPositionData,this,
+                                               onTriadsFollowToggled,bool));
+  mySlaveFollowToggle->setToggleCB(FFaDynCB1M(FuiPositionData,this,
+                                              onTriadsFollowToggled,bool));
 }
 
 
-bool FuiPositionData::isUsing6RotParams()
+void FuiPositionData::setPosLabel(const char* text)
 {
-  if (!myEditedObj) return false;
+  myTranslationFrame->setLabel(text);
+}
 
-  if (IAmEditingLinkCG)
-    return (static_cast<FmPart*>(myEditedObj)->getLocationCG().getNumFields() == 9);
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    return (static_cast<FmIsPositionedBase*>(myEditedObj)->getLocation().getNumFields() == 9);
-  else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
-    return (static_cast<FmAssemblyBase*>(myEditedObj)->getLocation().getNumFields() == 9);
-
-  return false;
+void FuiPositionData::setRotLabel(const char* text)
+{
+  myRotationFrame->setLabel(text);
 }
 
 
-void FuiPositionData::editLinkCG(bool pleaseDo)
+void FuiPositionData::popUpPosUI(bool onOff)
 {
-  IAmEditingLinkCG = pleaseDo;
+  if (onOff)
+    myTranslationFrame->popUp();
+  else
+    myTranslationFrame->popDown();
+}
+
+void FuiPositionData::popUpRotUI(bool onOff)
+{
+  if (onOff)
+    myRotationFrame->popUp();
+  else
+    myRotationFrame->popDown();
 }
 
 
@@ -155,10 +158,19 @@ void FuiPositionData::updateUI()
   if (!myEditedObj) return;
 
   FFa3DLocation loc;
-  if (IAmEditingLinkCG)
-    loc = static_cast<FmPart*>(myEditedObj)->getLocationCG();
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    loc = static_cast<FmIsPositionedBase*>(myEditedObj)->getLocation();
+  FmIsPositionedBase* posRef = NULL;
+  FmIsPositionedBase* rotRef = NULL;
+
+  if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
+  {
+    FmIsPositionedBase* obj = static_cast<FmIsPositionedBase*>(myEditedObj);
+    posRef = obj->getPosRef();
+    rotRef = obj->getRotRef();
+    if (IAmEditingLinkCG)
+      loc = static_cast<FmPart*>(myEditedObj)->getLocationCG();
+    else
+      loc = obj->getLocation();
+  }
   else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
     loc = static_cast<FmAssemblyBase*>(myEditedObj)->getLocation();
   else
@@ -177,21 +189,9 @@ void FuiPositionData::updateUI()
     for (j = 0; j < 3; j++)
       myFields[3*i+j]->setValue(loc[i][j]);
 
-  FmIsPositionedBase* posRef = NULL;
-  FmIsPositionedBase* rotRef = NULL;
-
-  if (IAmEditingLinkCG) {
-    posRef = static_cast<FmPart*>(myEditedObj)->getCGPosRef();
-    rotRef = static_cast<FmPart*>(myEditedObj)->getCGRotRef();
-  }
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID())) {
-    posRef = static_cast<FmIsPositionedBase*>(myEditedObj)->getPosRef();
-    rotRef = static_cast<FmIsPositionedBase*>(myEditedObj)->getRotRef();
-  }
-
   static FapUAQuery query1;
   if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    query1.typesToFind.insert(std::make_pair(FmIsPositionedBase::getClassTypeID(),true));
+    query1.typesToFind.emplace(FmIsPositionedBase::getClassTypeID(),true);
   myPosRefCSField->setQuery(&query1);
   myRotRefCSField->setQuery(&query1);
 
@@ -210,9 +210,9 @@ void FuiPositionData::updateUI()
       break;
     }
 
-  this->updateSensitivity();
+  this->setSensitivity(IAmEditable);
 
-  if (this->isUsing6RotParams())
+  if (loc.getNumFields() == 9)
     for (i = 6; i < 9; i++) {
       myFields[i]->popUp();
       myLabels[i]->popUp();
@@ -301,47 +301,30 @@ void FuiPositionData::updateUI()
 }
 
 
-void FuiPositionData::setPosSensitivity(bool isSensitive)
+void FuiPositionData::setSensitivity(bool onOff)
 {
-  myFields[0]->setSensitivity(isSensitive);
-  myFields[1]->setSensitivity(isSensitive);
-  myFields[2]->setSensitivity(isSensitive);
-}
+  IAmEditable = onOff;
+  bool canTra = onOff;
+  bool canRot = onOff;
 
+  if (!myEditedObj)
+    canTra = canRot = false;
+  else if (!IAmEditingLinkCG)
+  {
+    if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
+    {
+      canTra = static_cast<FmIsPositionedBase*>(myEditedObj)->isTranslatable();
+      canRot = static_cast<FmIsPositionedBase*>(myEditedObj)->isRotatable();
+    }
+    else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
+      canTra = canRot = static_cast<FmAssemblyBase*>(myEditedObj)->isMovable();
+  }
 
-void FuiPositionData::setRotSensitivity(bool isSensitive)
-{
-  myFields[3]->setSensitivity(isSensitive);
-  myFields[4]->setSensitivity(isSensitive);
-  myFields[5]->setSensitivity(isSensitive);
-  myFields[6]->setSensitivity(isSensitive);
-  myFields[7]->setSensitivity(isSensitive);
-  myFields[8]->setSensitivity(isSensitive);
-}
+  for (int i = 0; i < 9; i++)
+    myFields[i]->setSensitivity(i < 3 ? canTra : canRot);
 
-
-void FuiPositionData::updateSensitivity()
-{
   myMasterFollowToggle->setSensitivity(IAmEditable);
   mySlaveFollowToggle->setSensitivity(IAmEditable);
-
-  if (!IAmEditable || !myEditedObj) {
-    this->setRotSensitivity(false);
-    this->setPosSensitivity(false);
-  }
-  else if (IAmEditingLinkCG) {
-    this->setRotSensitivity(true);
-    this->setPosSensitivity(true);
-  }
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID())) {
-    this->setRotSensitivity(static_cast<FmIsPositionedBase*>(myEditedObj)->isRotatable());
-    this->setPosSensitivity(static_cast<FmIsPositionedBase*>(myEditedObj)->isTranslatable());
-  }
-  else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID())) {
-    bool canMove = static_cast<FmAssemblyBase*>(myEditedObj)->isMovable();
-    this->setRotSensitivity(canMove);
-    this->setPosSensitivity(canMove);
-  }
 }
 
 

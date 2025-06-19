@@ -10,51 +10,51 @@
 
 #include "FFuLib/FFuBase/FFuMultUIComponent.H"
 #include "vpmApp/FapEventManager.H"
-#include <string>
+#include <array>
 #include <vector>
 
-class FuiQueryInputField;
-class FFuOptionMenu;
-class FFuIOField;
-class FFuLabel;
-class FFaViewItem;
-class FmModelMemberBase;
 class FFuLabelFrame;
+class FFuLabel;
+class FFuIOField;
+class FFuOptionMenu;
 class FFuToggleButton;
+class FFaViewItem;
+class FuiQueryInputField;
+class FmModelMemberBase;
 
 
 class FuiPositionData : public virtual FFuMultUIComponent
 {
 public:
   FuiPositionData();
-  virtual ~FuiPositionData() {}
 
   void setEditedObj(FmModelMemberBase* obj);
   FmModelMemberBase* getEditedObj() { return myEditedObj; }
+  void editLinkCG(bool onOff) { IAmEditingLinkCG = onOff; }
 
   static void cancelActiveUI();
 
   void updateUI();
-  void editLinkCG(bool yep);
+  void setSensitivity(bool onOff);
 
-  void setSensitivity(bool onOff) { IAmEditable = onOff; this->updateSensitivity(); }
+  void setPosLabel(const char* text);
+  void setRotLabel(const char* text);
 
-  virtual void setPosLabel(const std::string& text) = 0;
-  virtual void setRotLabel(const std::string& text) = 0;
-
-  virtual void popUpRotUI(bool onOff) = 0;
-  virtual void popUpPosUI(bool onOff) = 0;
+  void popUpRotUI(bool onOff);
+  void popUpPosUI(bool onOff);
 
   void finishRefCSSelection();
 
   FuiQueryInputField* myPosRefCSField;
   FuiQueryInputField* myRotRefCSField;
 
+  FFuLabelFrame* myTranslationFrame;
+  FFuLabelFrame* myRotationFrame;
   FFuOptionMenu* myPosViewTypeMenu;
   FFuOptionMenu* myRotViewTypeMenu;
 
-  std::vector<FFuIOField*> myFields;
-  std::vector<FFuLabel*>   myLabels;
+  std::array<FFuLabel*,9>   myLabels;
+  std::array<FFuIOField*,9> myFields;
 
   FFuLabelFrame*   myTriadPosFollowFrame;
   FFuToggleButton* myMasterFollowToggle;
@@ -62,22 +62,8 @@ public:
 
 protected:
   void initWidgets();
-  void setRotSensitivity(bool isSensitive);
-  void setPosSensitivity(bool isSensitive);
-
-  bool isUsing6RotParams();
 
   FmModelMemberBase* myEditedObj;
-
-  void onPosTypeChanged(int option);
-  void onRotTypeChanged(int option);
-  void onFieldAccepted(double d);
-  void onPosRefChanged(FmModelMemberBase* obj);
-  void onRotRefChanged(FmModelMemberBase* obj);
-  void onRotRefButtonPressed();
-  void onPosRefButtonPressed();
-  void onTriadsFollowToggled(bool val);
-  void updateSensitivity();
 
   virtual void onPoppedUp();
   virtual void onPoppedDown();
@@ -90,9 +76,18 @@ private:
 
   void prepareRefCSSelection();
 
+  void onPosTypeChanged(int option);
+  void onRotTypeChanged(int option);
+  void onFieldAccepted(double d);
+  void onPosRefChanged(FmModelMemberBase* obj);
+  void onRotRefChanged(FmModelMemberBase* obj);
+  void onRotRefButtonPressed();
+  void onPosRefButtonPressed();
+  void onTriadsFollowToggled(bool val);
+
   void onPermSelectionChanged(const std::vector<FFaViewItem*>& totalSelection,
-                              const std::vector<FFaViewItem*>& selectedSinceLast,
-                              const std::vector<FFaViewItem*>& unselectedSinceLast);
+                              const std::vector<FFaViewItem*>&,
+                              const std::vector<FFaViewItem*>&);
 
   FapPermSelChangedReceiver<FuiPositionData> signalConnector;
   friend class FapPermSelChangedReceiver<FuiPositionData>;
