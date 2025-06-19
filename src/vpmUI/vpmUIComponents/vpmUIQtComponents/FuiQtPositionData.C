@@ -18,9 +18,8 @@
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtPositionData.H"
 
 
-FuiQtPositionData::FuiQtPositionData(QWidget* parent, int xpos, int ypos,
-                                     int width, int height, const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQtPositionData::FuiQtPositionData(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
 {
   FFuQtLabel*   qLabel;
   FFuQtIOField* qField;

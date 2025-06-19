@@ -8,7 +8,7 @@
 #ifndef FUI_POSITION_DATA_H
 #define FUI_POSITION_DATA_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "vpmApp/FapEventManager.H"
 #include <array>
 #include <vector>
@@ -23,12 +23,14 @@ class FuiQueryInputField;
 class FmModelMemberBase;
 
 
-class FuiPositionData : public virtual FFuMultUIComponent
+class FuiPositionData : public virtual FFuComponentBase
 {
   using ObjectVec = std::vector<FmModelMemberBase*>;
 
 public:
   FuiPositionData();
+
+  const char* getTypeIDName() const { return "FuiPositionData"; }
 
   void setEditedObjs(const ObjectVec& objs = {});
   void editLinkCG(bool onOff) { IAmEditingLinkCG = onOff; }
