@@ -460,17 +460,16 @@ void FdDB::updateGDirection(const FaVec3& gDir)
 
 cameraData FdDB::getView()
 {
-  cameraData cd;
-
   SbMatrix mx;
-  FdDB::viewer->getOrient(mx);
-  mx.setTranslate(FdDB::viewer->getPos());
-  cd.itsCameraOrientation = FdConverter::toFaMat34(mx);
-  cd.itsFocalDistance = FdDB::viewer->getFocalDistance();
-  cd.itsHeight = FdDB::viewer->getOHeightOrHAngle();
-  cd.itsIsOrthographicFlag = FdDB::viewer->isOrthographicView();
+  viewer->getOrient(mx);
+  FaMat34 myOrientation = FdConverter::toFaMat34(mx);
+  myOrientation[VW] = FdConverter::toFaVec3(viewer->getPos());
 
-  return cd;
+  return { myOrientation,
+      viewer->getFocalDistance(),
+      viewer->getOHeightOrHAngle(),
+      viewer->isOrthographicView()
+    };
 }
 
 
