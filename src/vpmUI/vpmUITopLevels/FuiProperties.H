@@ -45,6 +45,7 @@ class FFuToolButton;
 class FFuPushButton;
 class FFuMemo;
 class FuaQueryBase;
+class FmAssemblyBase;
 class FmModelMemberBase;
 
 
@@ -373,7 +374,7 @@ protected:
 
   FFuFileBrowseField* mySubassFileField;
   FuiPositionData*    mySubassPosition;
-  FmModelMemberBase*  mySelectedSubass;
+  FmAssemblyBase*     mySelectedSubass;
   FFuLabelField*      mySubassMassField;
   FFuLabelFrame*      mySubassCoGFrame;
   Fui3DPoint*         mySubassCoGField;
@@ -585,7 +586,6 @@ public:
     myAttackPointIsGlobal = false;
     myFromPointIsGlobal   = false;
     myToPointIsGlobal     = false;
-    myObjToPosition       = NULL;
     selectedTab           = 0;
   }
 
@@ -741,7 +741,8 @@ public:
   FFaDynCB0 mySwapTriadCB;
   FFaDynCB0 myAddMasterCB;
   FFaDynCB0 myRevMasterCB;
-  FmModelMemberBase* myObjToPosition;
+
+  std::vector<FmModelMemberBase*> objsToPosition;
 
   FFaDynCB0 myDofSetAllFreeCB;
   FFaDynCB0 myDofSetAllFixedCB;

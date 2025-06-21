@@ -61,11 +61,9 @@ FFaEnumMapping(RotType){
 
 FuiPositionData::FuiPositionData() : signalConnector(this)
 {
-  myEditedObj = NULL;
-  IAmEditingLinkCG = false;
-  ImAwareOfPosRefSelections = false;
-  ImAwareOfRotRefSelections = false;
   IAmEditable = true;
+  IAmEditingLinkCG = false;
+  IAmDoingRefCSSelection = false;
 }
 
 
@@ -87,21 +85,22 @@ void FuiPositionData::initWidgets()
   myRotRefCSField->setButtonMeaning(FuiQueryInputField::SELECT);
   myRotRefCSField->setTextForNoRefSelected("Global");
 
-  size_t i;
-  for (i = 0; i < PosTypeMapping::map().size(); i++)
+  for (size_t i = 0; i < PosTypeMapping::map().size(); i++)
     myPosViewTypeMenu->addOption(PosTypeMapping::map()[i].second, i);
   myPosViewTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiPositionData,this,
                                                     onPosTypeChanged,int));
 
-  for (i = 0; i < RotTypeMapping::map().size(); i++)
+  for (size_t i = 0; i < RotTypeMapping::map().size(); i++)
     myRotViewTypeMenu->addOption(RotTypeMapping::map()[i].second, i);
   myRotViewTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiPositionData,this,
                                                     onRotTypeChanged,int));
 
-  for (FFuIOField* fld : myFields) {
-    fld->popUp();
-    fld->setInputCheckMode(FFuIOField::DOUBLECHECK);
-    fld->setAcceptedCB(FFaDynCB1M(FuiPositionData,this,onFieldAccepted,double));
+  for (int i = 0; i < 9; i++)
+  {
+    myFieldCB[i] = { this, i/3, i%3 };
+    myFields[i]->setInputCheckMode(FFuIOField::DOUBLECHECK);
+    myFields[i]->setAcceptedCB(FFaDynCB1M(FieldChangedCB,&myFieldCB[i],
+                                          onFieldAccepted,double));
   }
 
   myMasterFollowToggle->setToggleCB(FFaDynCB1M(FuiPositionData,this,
@@ -139,15 +138,18 @@ void FuiPositionData::popUpRotUI(bool onOff)
 }
 
 
-void FuiPositionData::setEditedObj(FmModelMemberBase* obj)
+void FuiPositionData::setEditedObjs(const ObjectVec& objs)
 {
-  if (IAmEditingLinkCG && obj)
-    if (obj->isOfType(FmPart::getClassTypeID()))
-      myEditedObj = obj;
-    else
-      myEditedObj = NULL;
+  if (IAmEditingLinkCG)
+  {
+    myEditedObjs.clear();
+    myEditedObjs.reserve(objs.size());
+    for (FmModelMemberBase* obj : objs)
+      if (obj->isOfType(FmPart::getClassTypeID()))
+        myEditedObjs.push_back(obj);
+  }
   else
-    myEditedObj = obj;
+    myEditedObjs = objs;
 
   this->updateUI();
 }
@@ -155,7 +157,8 @@ void FuiPositionData::setEditedObj(FmModelMemberBase* obj)
 
 void FuiPositionData::updateUI()
 {
-  if (!myEditedObj) return;
+  if (myEditedObjs.empty()) return;
+  FmModelMemberBase* myEditedObj = myEditedObjs.front();
 
   FFa3DLocation loc;
   FmIsPositionedBase* posRef = NULL;
@@ -178,7 +181,7 @@ void FuiPositionData::updateUI()
 
 #ifdef FUI_DEBUG
   std::cout <<"FuiPositionData::updateUI: Location for "
-	    << myEditedObj->getIdString() << loc << std::endl;
+            << myEditedObj->getIdString() << loc << std::endl;
 #endif
 
   PosType posType = loc.getPosType();
@@ -307,10 +310,11 @@ void FuiPositionData::setSensitivity(bool onOff)
   bool canTra = onOff;
   bool canRot = onOff;
 
-  if (!myEditedObj)
+  if (myEditedObjs.empty())
     canTra = canRot = false;
   else if (!IAmEditingLinkCG)
   {
+    FmModelMemberBase* myEditedObj = myEditedObjs.front();
     if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
     {
       canTra = static_cast<FmIsPositionedBase*>(myEditedObj)->isTranslatable();
@@ -330,212 +334,227 @@ void FuiPositionData::setSensitivity(bool onOff)
 
 void FuiPositionData::onPosTypeChanged(int option)
 {
-  if (!myEditedObj) return;
-
   FFa3DLocation loc;
-  if (IAmEditingLinkCG)
-    loc = static_cast<FmPart*>(myEditedObj)->getLocationCG();
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    loc = static_cast<FmIsPositionedBase*>(myEditedObj)->getLocation();
-  else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
-    loc = static_cast<FmAssemblyBase*>(myEditedObj)->getLocation();
-  else
-    return;
+  bool changed = false;
+  for (FmModelMemberBase* obj : myEditedObjs)
+  {
+    if (IAmEditingLinkCG)
+      loc = static_cast<FmPart*>(obj)->getLocationCG();
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      loc = static_cast<FmIsPositionedBase*>(obj)->getLocation();
+    else if (obj->isOfType(FmAssemblyBase::getClassTypeID()))
+      loc = static_cast<FmAssemblyBase*>(obj)->getLocation();
+    else
+      continue;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::onPosTypeChanged: Location for "
-	    << myEditedObj->getIdString() << loc << std::endl;
+    std::cout <<"FuiPositionData::onPosTypeChanged: Location for "
+              << obj->getIdString() << loc << std::endl;
 #endif
-  loc.changePosType(PosTypeMapping::map()[option].first);
+
+    if (!loc.changePosType(PosTypeMapping::map()[option].first))
+      continue; // not changed
+
 #ifdef FUI_DEBUG
-  std::cout <<"- updated to"<< loc << std::endl;
+    std::cout <<"- updated to"<< loc << std::endl;
 #endif
 
-  if (IAmEditingLinkCG)
-    static_cast<FmPart*>(myEditedObj)->setLocationCG(loc);
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    static_cast<FmIsPositionedBase*>(myEditedObj)->setLocation(loc);
-  else
-    static_cast<FmAssemblyBase*>(myEditedObj)->setLocation(loc);
+    if (IAmEditingLinkCG)
+      static_cast<FmPart*>(obj)->setLocationCG(loc);
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      static_cast<FmIsPositionedBase*>(obj)->setLocation(loc);
+    else
+      static_cast<FmAssemblyBase*>(obj)->setLocation(loc);
 
-  FpPM::touchModel();
-  if (myEditedObj->isOfType(FmIsRenderedBase::getClassTypeID()))
-    static_cast<FmIsRenderedBase*>(myEditedObj)->updateDisplayCS();
+    changed = true;
+    if (obj->isOfType(FmIsRenderedBase::getClassTypeID()))
+      static_cast<FmIsRenderedBase*>(obj)->updateDisplayCS();
+  }
+
+  if (changed)
+    FpPM::touchModel();
+
   this->updateUI();
 }
 
 
 void FuiPositionData::onRotTypeChanged(int option)
 {
-  if (!myEditedObj) return;
-
   FFa3DLocation loc;
-  if (IAmEditingLinkCG)
-    loc = static_cast<FmPart*>(myEditedObj)->getLocationCG();
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    loc = static_cast<FmIsPositionedBase*>(myEditedObj)->getLocation();
-  else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
-    loc = static_cast<FmAssemblyBase*>(myEditedObj)->getLocation();
-  else
-    return;
+  bool changed = false;
+  for (FmModelMemberBase* obj : myEditedObjs)
+  {
+    if (IAmEditingLinkCG)
+      loc = static_cast<FmPart*>(obj)->getLocationCG();
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      loc = static_cast<FmIsPositionedBase*>(obj)->getLocation();
+    else if (obj->isOfType(FmAssemblyBase::getClassTypeID()))
+      loc = static_cast<FmAssemblyBase*>(obj)->getLocation();
+    else
+      continue;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::onRotTypeChanged: Location for "
-	    << myEditedObj->getIdString() << loc << std::endl;
+    std::cout <<"FuiPositionData::onRotTypeChanged: Location for "
+              << obj->getIdString() << loc << std::endl;
 #endif
-  loc.changeRotType(RotTypeMapping::map()[option].first);
+
+    if (!loc.changeRotType(RotTypeMapping::map()[option].first))
+      continue;
+
 #ifdef FUI_DEBUG
-  std::cout <<"- updated to"<< loc << std::endl;
+    std::cout <<"- updated to"<< loc << std::endl;
 #endif
 
-  if (IAmEditingLinkCG)
-    static_cast<FmPart*>(myEditedObj)->setLocationCG(loc);
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    static_cast<FmIsPositionedBase*>(myEditedObj)->setLocation(loc);
-  else
-    static_cast<FmAssemblyBase*>(myEditedObj)->setLocation(loc);
+    if (IAmEditingLinkCG)
+      static_cast<FmPart*>(obj)->setLocationCG(loc);
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      static_cast<FmIsPositionedBase*>(obj)->setLocation(loc);
+    else
+      static_cast<FmAssemblyBase*>(obj)->setLocation(loc);
 
-  FpPM::touchModel();
-  if (myEditedObj->isOfType(FmIsRenderedBase::getClassTypeID()))
-    static_cast<FmIsRenderedBase*>(myEditedObj)->updateDisplayCS();
+    changed = true;
+    if (obj->isOfType(FmIsRenderedBase::getClassTypeID()))
+      static_cast<FmIsRenderedBase*>(obj)->updateDisplayCS();
+  }
+
+  if (changed)
+    FpPM::touchModel();
+
   this->updateUI();
 }
 
 
-void FuiPositionData::onFieldAccepted(double)
+void FuiPositionData::FieldChangedCB::onFieldAccepted(double value)
 {
-  if (!myEditedObj) return;
-
   FpPM::vpmSetUndoPoint("Position data");
 
   FFa3DLocation loc;
-  if (IAmEditingLinkCG)
-    loc = static_cast<FmPart*>(myEditedObj)->getLocationCG();
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-    loc = static_cast<FmIsPositionedBase*>(myEditedObj)->getLocation();
-  else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
-    loc = static_cast<FmAssemblyBase*>(myEditedObj)->getLocation();
-  else
-    return;
+  bool changed = false;
+  for (FmModelMemberBase* obj : owner->myEditedObjs)
+  {
+    if (owner->IAmEditingLinkCG)
+      loc = static_cast<FmPart*>(obj)->getLocationCG();
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      loc = static_cast<FmIsPositionedBase*>(obj)->getLocation();
+    else if (obj->isOfType(FmAssemblyBase::getClassTypeID()))
+      loc = static_cast<FmAssemblyBase*>(obj)->getLocation();
+    else
+      continue;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::onFieldAccepted: Location for "
-	    << myEditedObj->getIdString() << loc << std::endl;
+    std::cout <<"FuiPositionData::onFieldAccepted: Location for "
+              << obj->getIdString() << loc << std::endl;
 #endif
 
-  size_t i, j;
-  for (i = 0; i < 3; i++)
-    for (j = 0; j < 3; j++)
-      loc[i][j] = myFields[3*i+j]->getDouble();
+    if (loc[i][j] == value)
+      continue; // not changed
 
-  if (loc.isValid()) // ignore invalid input
-  {
+    loc[i][j] = value;
+    if (!loc.isValid())
+      continue; // ignore invalid input
+
 #ifdef FUI_DEBUG
     std::cout <<"- updated to"<< loc << std::endl;
 #endif
-    if (IAmEditingLinkCG)
-      static_cast<FmPart*>(myEditedObj)->setLocationCG(loc);
-    else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
-      static_cast<FmIsPositionedBase*>(myEditedObj)->setLocation(loc);
-    else
-      static_cast<FmAssemblyBase*>(myEditedObj)->setLocation(loc);
 
-    FpPM::touchModel();
-    if (myEditedObj->isOfType(FmPart::getClassTypeID()))
-      static_cast<FmPart*>(myEditedObj)->updateDisplayTopology(); // Bugfix #493
-    else if (myEditedObj->isOfType(FmIsRenderedBase::getClassTypeID()))
-      static_cast<FmIsRenderedBase*>(myEditedObj)->draw();
-    else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID())) {
-      FmDB::displayAll(*static_cast<FmAssemblyBase*>(myEditedObj)->getHeadMap());
-      Fui::getProperties()->updateSubassCoG();
+    if (owner->IAmEditingLinkCG)
+      static_cast<FmPart*>(obj)->setLocationCG(loc);
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      static_cast<FmIsPositionedBase*>(obj)->setLocation(loc);
+    else
+      static_cast<FmAssemblyBase*>(obj)->setLocation(loc);
+
+    if (obj->isOfType(FmPart::getClassTypeID()))
+      static_cast<FmPart*>(obj)->updateDisplayTopology(); // Bugfix #493
+    else if (obj->isOfType(FmIsRenderedBase::getClassTypeID()))
+      static_cast<FmIsRenderedBase*>(obj)->draw();
+    else if (obj->isOfType(FmAssemblyBase::getClassTypeID()))
+    {
+      FmDB::displayAll(*static_cast<FmAssemblyBase*>(obj)->getHeadMap());
+      if (obj == owner->myEditedObjs.front())
+        Fui::getProperties()->updateSubassCoG();
     }
 
 #ifdef FT_HAS_WND
+    FmNacelle* nac = NULL;
     FFuTopLevelShell* cta = NULL;
-    if (static_cast<FmTurbine*>(myEditedObj) == FmDB::getTurbineObject())
+    if (static_cast<FmTurbine*>(obj) == FmDB::getTurbineObject())
       cta = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
-    else if (IAmEditingLinkCG && dynamic_cast<FmNacelle*>(myEditedObj->getParentAssembly())) {
+    else if (owner->IAmEditingLinkCG &&
+             (nac = dynamic_cast<FmNacelle*>(obj->getParentAssembly())))
+    {
       // Update the nacelle CoG field in the wind turbine definition dialog
-      FmNacelle* nac = static_cast<FmNacelle*>(myEditedObj->getParentAssembly());
       nac->CoG.setValue(nac->toLocal(nac->getGlobalCoG(false)));
       cta = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
     }
     if (cta) dynamic_cast<FuiCreateTurbineAssembly*>(cta)->updateUIValues();
 #endif
   }
-  this->updateUI();
+
+  if (changed)
+    FpPM::touchModel();
+
+  owner->updateUI();
 }
 
 
 void FuiPositionData::onPosRefChanged(FmModelMemberBase* obj)
 {
-  if (!myEditedObj) return;
+  FmIsPositionedBase* posRefObj = dynamic_cast<FmIsPositionedBase*>(obj);
 
-  if (IAmEditingLinkCG) {
-    FmPart* part = static_cast<FmPart*>(myEditedObj);
-    part->setCGPosRef(dynamic_cast<FmIsPositionedBase*>(obj));
-  }
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID())) {
-    FmIsPositionedBase* editedObj = static_cast<FmIsPositionedBase*>(myEditedObj);
-    editedObj->setPosRef(dynamic_cast<FmIsPositionedBase*>(obj));
-  }
-  else
-    return;
+  bool changed = false;
+  for (FmModelMemberBase* eobj : myEditedObjs)
+    if (IAmEditingLinkCG)
+      changed |= static_cast<FmPart*>(eobj)->setCGPosRef(posRefObj);
+    else if (eobj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      changed |= static_cast<FmIsPositionedBase*>(eobj)->setPosRef(posRefObj);
 
-  FpPM::touchModel();
+  if (changed)
+    FpPM::touchModel();
+
   this->updateUI();
 }
 
 
 void FuiPositionData::onRotRefChanged(FmModelMemberBase* obj)
 {
-  if (!myEditedObj) return;
+  FmIsPositionedBase* rotRefObj = dynamic_cast<FmIsPositionedBase*>(obj);
 
-  if (IAmEditingLinkCG) {
-    FmPart* part = static_cast<FmPart*>(myEditedObj);
-    part->setCGRotRef(dynamic_cast<FmIsPositionedBase*>(obj));
-  }
-  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID())) {
-    FmIsPositionedBase* editedObj = static_cast<FmIsPositionedBase*>(myEditedObj);
-    editedObj->setRotRef(dynamic_cast<FmIsPositionedBase*>(obj));
-  }
-  else
-    return;
+  bool changed = false;
+  for (FmModelMemberBase* eobj : myEditedObjs)
+    if (IAmEditingLinkCG)
+      changed |= static_cast<FmPart*>(eobj)->setCGRotRef(rotRefObj);
+    else if (eobj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      changed |= static_cast<FmIsPositionedBase*>(eobj)->setRotRef(rotRefObj);
 
-  FpPM::touchModel();
+  if (changed)
+    FpPM::touchModel();
+
   this->updateUI();
 }
 
-
-void FuiPositionData::onRotRefButtonPressed()
-{
-  ImAwareOfRotRefSelections = true;
-  this->prepareRefCSSelection();
-}
-
-
-void FuiPositionData::onPosRefButtonPressed()
-{
-  ImAwareOfPosRefSelections = true;
-  this->prepareRefCSSelection();
-}
 
 void FuiPositionData::onTriadsFollowToggled(bool)
 {
-  if (!myEditedObj) return;
+  FmSMJointBase* joint = NULL;
+  bool changed = false;
+  for (FmModelMemberBase* obj : myEditedObjs)
+    if ((joint = dynamic_cast<FmSMJointBase*>(obj)))
+      if (joint->setMasterMovedAlong(myMasterFollowToggle->getValue()) ||
+          joint->setSlaveMovedAlong(mySlaveFollowToggle->getValue()))
+      changed = true;
 
-  FmSMJointBase* joint = dynamic_cast<FmSMJointBase*>(myEditedObj);
-  if (joint) {
-    joint->setMasterMovedAlong(myMasterFollowToggle->getValue());
-    joint->setSlaveMovedAlong(mySlaveFollowToggle->getValue());
+  if (changed)
     FpPM::touchModel();
-  }
+
   this->updateUI();
 }
 
 
-void FuiPositionData::prepareRefCSSelection()
+void FuiPositionData::prepareRefCSSelection(char posOrRot)
 {
+  IAmDoingRefCSSelection = posOrRot;
+
   FapUAProperties* uap = FapUAProperties::getPropertiesHandler();
   if (uap) uap->setIgnorePickNotify(true);
 
@@ -550,7 +569,7 @@ void FuiPositionData::onPermSelectionChanged(const std::vector<FFaViewItem*>& to
                                              const std::vector<FFaViewItem*>&,
                                              const std::vector<FFaViewItem*>&)
 {
-  if (!ImAwareOfPosRefSelections && !ImAwareOfRotRefSelections) return;
+  if (!IAmDoingRefCSSelection) return;
 
   FmIsPositionedBase* candidate = NULL;
   for (FFaViewItem* item : totalSelection)
@@ -559,18 +578,16 @@ void FuiPositionData::onPermSelectionChanged(const std::vector<FFaViewItem*>& to
 
   if (!candidate) return;
 
-  if (ImAwareOfRotRefSelections)
-    this->onRotRefChanged(candidate);
-
-  if (ImAwareOfPosRefSelections)
+  if (IAmDoingRefCSSelection == 'p')
     this->onPosRefChanged(candidate);
+  else if (IAmDoingRefCSSelection == 'r')
+    this->onRotRefChanged(candidate);
 }
 
 
 void FuiPositionData::finishRefCSSelection()
 {
-  ImAwareOfPosRefSelections = false;
-  ImAwareOfRotRefSelections = false;
+  IAmDoingRefCSSelection = false;
 
   FapEventManager::popPermSelection();
 
@@ -582,7 +599,8 @@ void FuiPositionData::finishRefCSSelection()
 void FuiPositionData::onPoppedUp()
 {
 #ifdef USE_INVENTOR
-  if (!myEditedObj) return;
+  if (myEditedObjs.empty()) return;
+  FmModelMemberBase* myEditedObj = myEditedObjs.front();
 
   FFa3DLocation       loc;
   FmIsPositionedBase* posRef = NULL;
@@ -607,7 +625,7 @@ void FuiPositionData::onPoppedUp()
 
 #ifdef FUI_DEBUG
   std::cout <<"FuiPositionData::onPoppedUp: Location for "
-	    << myEditedObj->getIdString() << loc << std::endl;
+            << myEditedObj->getIdString() << loc << std::endl;
 #endif
   FaMat34 posCS = posRef ? posRef->getGlobalCS() : FaMat34();
   FaMat34 rotCS = rotRef ? rotRef->getGlobalCS() : FaMat34();

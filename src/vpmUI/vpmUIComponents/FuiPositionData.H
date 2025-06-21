@@ -25,11 +25,12 @@ class FmModelMemberBase;
 
 class FuiPositionData : public virtual FFuMultUIComponent
 {
+  using ObjectVec = std::vector<FmModelMemberBase*>;
+
 public:
   FuiPositionData();
 
-  void setEditedObj(FmModelMemberBase* obj);
-  FmModelMemberBase* getEditedObj() { return myEditedObj; }
+  void setEditedObjs(const ObjectVec& objs = {});
   void editLinkCG(bool onOff) { IAmEditingLinkCG = onOff; }
 
   static void cancelActiveUI();
@@ -45,6 +46,7 @@ public:
 
   void finishRefCSSelection();
 
+protected:
   FuiQueryInputField* myPosRefCSField;
   FuiQueryInputField* myRotRefCSField;
 
@@ -60,29 +62,27 @@ public:
   FFuToggleButton* myMasterFollowToggle;
   FFuToggleButton* mySlaveFollowToggle;
 
-protected:
   void initWidgets();
-
-  FmModelMemberBase* myEditedObj;
 
   virtual void onPoppedUp();
   virtual void onPoppedDown();
 
 private:
-  bool IAmEditingLinkCG;
-  bool IAmEditable;
-  bool ImAwareOfPosRefSelections;
-  bool ImAwareOfRotRefSelections;
+  ObjectVec myEditedObjs;
 
-  void prepareRefCSSelection();
+  bool IAmEditable;
+  bool IAmEditingLinkCG;
+  char IAmDoingRefCSSelection;
+
+  static FuiPositionData* ourActiveUI;
 
   void onPosTypeChanged(int option);
   void onRotTypeChanged(int option);
-  void onFieldAccepted(double d);
   void onPosRefChanged(FmModelMemberBase* obj);
   void onRotRefChanged(FmModelMemberBase* obj);
-  void onRotRefButtonPressed();
-  void onPosRefButtonPressed();
+  void onPosRefButtonPressed() { this->prepareRefCSSelection('p'); }
+  void onRotRefButtonPressed() { this->prepareRefCSSelection('r'); }
+  void prepareRefCSSelection(char posOrRot);
   void onTriadsFollowToggled(bool val);
 
   void onPermSelectionChanged(const std::vector<FFaViewItem*>& totalSelection,
@@ -92,7 +92,16 @@ private:
   FapPermSelChangedReceiver<FuiPositionData> signalConnector;
   friend class FapPermSelChangedReceiver<FuiPositionData>;
 
-  static FuiPositionData* ourActiveUI;
+  struct FieldChangedCB
+  {
+    FuiPositionData* owner = NULL;
+    int i = 0;
+    int j = 0;
+    void onFieldAccepted(double value);
+  };
+
+  std::array<FieldChangedCB,9> myFieldCB;
+  friend struct FieldChangedCB;
 };
 
 #endif
