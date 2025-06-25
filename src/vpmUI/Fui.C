@@ -438,10 +438,6 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       geo.width  = modellerWidth;
       geo.height = modellerHeight - 25;
       break;
-    case PROPERTIES_GEO:
-      geo.width  = mainWidth;
-      geo.height = mainHeight - modellerHeight;
-      break;
     case OUTPUTLIST_GEO:
       geo.width  = 600;
       geo.height = 150;
@@ -507,10 +503,6 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       geo.yPos   = 2*uiTitleBarHeight + uiBorderWidth;
       geo.width  = 300;
       geo.height = 900;
-      break;
-    case MODELMANAGER_GEO:
-      geo.width  = 200;
-      geo.height = modellerHeight - 2*uiBorderWidth - uiTitleBarHeight;
       break;
     case RDBSELECTOR_GEO:
       geo.width  = 300;
