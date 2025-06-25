@@ -125,3 +125,14 @@ bool FuiMainWindow::isToolBarShown(int toolBar)
   return this->toolBars[toolBar]->isPoppedUp();
 }
 //----------------------------------------------------------------------------
+
+FuiSimModelListView* FuiMainWindow::getModelManager()
+{
+  return modelManager->modelManager;
+}
+//----------------------------------------------------------------------------
+
+FuiResultListView* FuiMainWindow::getResultManager()
+{
+  return modelManager->resultManager;
+}

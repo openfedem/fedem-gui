@@ -49,7 +49,6 @@
 
 #include "vpmUI/Fui.H"
 #include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
-#include "vpmUI/vpmUITopLevels/FuiModelManager.H"
 #include "vpmUI/vpmUITopLevels/FuiMooringLine.H"
 #include "vpmUI/vpmUIComponents/FuiItemsListViews.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
@@ -258,7 +257,7 @@ static void selectResultItem(FFaViewItem* item)
   FapEventManager::permTotalSelect(item);
 
   // Ensuring it is visible in the Results manager view
-  FuiResultListView* rlv = Fui::getMainWindow()->getModelManager()->getResultManager();
+  FuiResultListView* rlv = Fui::getMainWindow()->getResultManager();
   static_cast<FapUAItemsListView*>(rlv->getUA())->ensureItemVisible(item);
 }
 //----------------------------------------------------------------------------

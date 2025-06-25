@@ -24,7 +24,7 @@ set ( COMPONENT_FILE_LIST  FuiAdvAnalysisOptions FuiAnimationControl FuiAnimExpo
                            FuiEigenOptions FuiFppOptions FuiGageOptions
                            FuiLinkRamSettings
                            FuiMainWindow FuiMiniFileBrowser FuiModeller
-                           FuiModelManager FuiModelPreferences FuiOutputList
+                           FuiModelPreferences FuiOutputList
                            FuiPlugins FuiPreferences FuiProperties FuiRDBSelector
                            FuiRepeatCurve FuiStressOptions FuiViewSettings
                            FuiSeaEnvironment FuiEventDefinition
@@ -45,7 +45,7 @@ if ( USE_NCODE_INTERFACE )
 endif ( USE_NCODE_INTERFACE )
 
 ## Pure header files, i.e., header files without a corresponding source file
-set ( HEADER_FILE_LIST )
+set ( HEADER_FILE_LIST FuiModelManager )
 ## Pure implementation files, i.e., source files without corresponding header
 set ( SOURCE_FILE_LIST )
 

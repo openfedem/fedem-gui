@@ -16,8 +16,10 @@
 #include "FFuLib/FFuBase/FFuUACommandHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 
-class FuiProperties;
+class FuiSimModelListView;
+class FuiResultListView;
 class FuiModelManager;
+class FuiProperties;
 class FuiWorkSpace;
 class FFuMenuBar;
 class FFuToolBar;
@@ -69,7 +71,8 @@ public:
   virtual void setTitle(const char* title) = 0;
   virtual const char* getTitle() const = 0;
 
-  FuiModelManager* getModelManager() { return this->modelManager; }
+  FuiSimModelListView* getModelManager();
+  FuiResultListView* getResultManager();
   FuiProperties* getProperties() { return this->properties; }
   FuiWorkSpace* getWorkSpace() { return this->workSpace; }
 

@@ -10,7 +10,6 @@
 
 #include "vpmUI/Fui.H"
 #include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
-#include "vpmUI/vpmUITopLevels/FuiModelManager.H"
 #include "vpmUI/vpmUIComponents/FuiItemsListView.H"
 #include "vpmUI/vpmUIComponents/FuiItemsListViews.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
@@ -62,12 +61,12 @@ void FapListViewCmds::ensureListViewSelectedVisible()
 
 FapUAItemsListView* FapListViewCmds::getPoppedUpLV()
 {
-  FuiItemsListView* lv = Fui::getMainWindow()->getModelManager()->getSimModelManager();
+  FuiItemsListView* lv = Fui::getMainWindow()->getModelManager();
   if (!lv) return NULL;
 
   if (!lv->isPoppedUp()) {
     // Sorting is implemented for model manager list views only
-    lv = Fui::getMainWindow()->getModelManager()->getResultManager();
+    lv = Fui::getMainWindow()->getResultManager();
     if (!lv->isPoppedUp()) return NULL;
   }
   return (FapUAItemsListView*) lv->getUA();

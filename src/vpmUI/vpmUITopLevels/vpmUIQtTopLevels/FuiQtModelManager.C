@@ -5,20 +5,28 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FFuLib/FFuQtComponents/FFuQtTabbedWidgetStack.H"
+#include <QTabWidget>
+#include <QVBoxLayout>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtItemsListViews.H"
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtModelManager.H"
+#include "vpmUI/Icons/FuiIconPixmaps.H"
 
 
-FuiQtModelManager::FuiQtModelManager(QWidget* parent,
-				     int xpos, int ypos,
-				     int width,int height,
-				     const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQtModelManager::FuiQtModelManager(QWidget* parent)
+  : FFuQtWidget(parent,"FuiQtModelManager")
 {
-  this->tabStack = new FFuQtTabbedWidgetStack(this);
-  this->simModelManager = new FuiQtSimModelListView(this);
-  this->resultManager = new FuiQtResultListView(this);
+  FuiQtSimModelListView* qModel = new FuiQtSimModelListView(NULL);
+  FuiQtResultListView* qResult = new FuiQtResultListView(NULL);
 
-  this->initWidgets();
+  QTabWidget* qTabs = new QTabWidget();
+  qTabs->addTab(qModel,QIcon(QPixmap(treeObjects_xpm)),"Objects");
+  qTabs->addTab(qResult,QIcon(QPixmap(treeResults_xpm)),"Results");
+
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(5,5,2,0);
+  layout->addWidget(qTabs);
+
+  modelManager  = qModel;
+  resultManager = qResult;
 }

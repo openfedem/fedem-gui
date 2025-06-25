@@ -8,33 +8,19 @@
 #ifndef FUI_MODEL_MANAGER_H
 #define FUI_MODEL_MANAGER_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 
-class FFuTabbedWidgetStack;
 class FuiSimModelListView;
 class FuiResultListView;
 
 
-class FuiModelManager : virtual public FFuMultUIComponent
+class FuiModelManager : virtual public FFuComponentBase
 {
-public:
-  FuiModelManager();
-  virtual ~FuiModelManager() {}
-
-  FuiSimModelListView* getSimModelManager() { return this->simModelManager; }
-  FuiResultListView* getResultManager() { return this->resultManager; }
-
 protected:
-  void initWidgets();
-  virtual void placeWidgets(int width, int height);
+  FuiSimModelListView* modelManager = NULL;
+  FuiResultListView* resultManager = NULL;
 
-private:
-  void onTabSelected(int newTab);
-
-protected:
-  FFuTabbedWidgetStack* tabStack;
-  FuiSimModelListView* simModelManager;
-  FuiResultListView* resultManager;
+  friend class FuiMainWindow;
 };
 
 #endif
