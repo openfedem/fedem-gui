@@ -230,9 +230,29 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
   FuaPropertiesValues* pv = dynamic_cast<FuaPropertiesValues*> (values);
   if (!pv) return;
 
-  pv->showStartGuide = (mySelectedFmItem == NULL);
-  if (!mySelectedFmItem)
+  if ((pv->showStartGuide = (mySelectedFmItem == NULL)))
     return;
+
+  // Lambda function filtering out non-positioned objects.
+  auto&& isPositioned = [](FmModelMemberBase* obj)
+  {
+    if (obj->isOfType(FmAssemblyBase::getClassTypeID())) return true;
+    if (!obj->isOfType(FmIsPositionedBase::getClassTypeID())) return false;
+    return !obj->isOfType(FmMMJointBase::getClassTypeID());
+  };
+
+  if (isPositioned(mySelectedFmItem))
+  {
+    // Find all selected positioned objects
+    pv->objsToPosition.reserve(mySelectedFmItems.size());
+    pv->objsToPosition = { mySelectedFmItem };
+    for (FmModelMemberBase* item : mySelectedFmItems)
+      if (item && item != mySelectedFmItem)
+        if (isPositioned(item))
+          pv->objsToPosition.push_back(item);
+  }
+  else
+    pv->objsToPosition.clear();
 
   myTopologyViewList.clear();
 
@@ -460,7 +480,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showTriadData = true;
 
-      pv->myObjToPosition = item;
       pv->isSlave = item->isSlaveTriad(true);
       pv->isMaster = item->isMasterTriad();
       pv->myTriadIsAttached = item->isAttached();
@@ -641,9 +660,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
     {
       FmJointBase* item = (FmJointBase*)mySelectedFmItem;
 
-      if (item->isOfType(FmSMJointBase::getClassTypeID()))
-        pv->myObjToPosition = item;
-
       if (item->getValidFrictionType() > 0)
         {
           pv->showFriction = (item->isOfType(FmBallJoint::getClassTypeID()) ||
@@ -805,8 +821,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showLinkData = true;
 
-      pv->myObjToPosition = item;
-
       pv->myLinkValues.locked = item->lockLevel.getValue() == FmPart::FM_DENY_ALL_LINK_MOD;
 
       pv->myLinkValues.reducedVersionNumber = FapLinkReducer::isReduced(item) ? item->myRSD.getValue().getTaskVer() : 0;
@@ -966,7 +980,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showRefPlane = true;
 
-      pv->myObjToPosition  = ref;
       pv->myRefPlaneWidth  = ref->getWidth();
       pv->myRefPlaneHeight = ref->getHeight();
 
@@ -1531,7 +1544,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showTurbineData = true;
       pv->showSubassPos = true;
-      pv->myObjToPosition = item;
 
       // Get mass properties
       pv->myTotalMass = item->getMass(pv->myCoG);
@@ -1557,7 +1569,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       FmTower* item = (FmTower*)mySelectedFmItem;
 
       pv->showTowerData = true;
-      pv->myObjToPosition = item;
 
       // Get mass properties
       pv->myTotalMass = item->getMass(pv->myCoG);
@@ -1578,7 +1589,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       FmNacelle* item = (FmNacelle*)mySelectedFmItem;
 
       pv->showNacelleData = true;
-      pv->myObjToPosition = item;
 
       // Get mass properties
       pv->myTotalMass = item->getMass(pv->myCoG);
@@ -1591,7 +1601,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       FmGenerator* item = (FmGenerator*)mySelectedFmItem;
 
       pv->showGeneratorData = true;
-      pv->myObjToPosition = item;
 
       // Get mass properties
       pv->myTotalMass = item->getMass(pv->myCoG);
@@ -1642,7 +1651,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       FmGearBox* item = (FmGearBox*)mySelectedFmItem;
 
       pv->showGearboxData = true;
-      pv->myObjToPosition = item;
 
       // Get mass properties
       pv->myTotalMass = item->getMass(pv->myCoG);
@@ -1655,7 +1663,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       FmRotor* item = (FmRotor*)mySelectedFmItem;
 
       pv->showRotorData = true;
-      pv->myObjToPosition = item;
 
       // Get mass properties
       pv->myTotalMass = item->getMass(pv->myCoG);
@@ -1737,7 +1744,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showRiserData = true;
       pv->showSubassPos = true;
-      pv->myObjToPosition = item;
 
       pv->mySubAssemblyFile = item->myModelFile.getValue();
       pv->myModelFilePath = FmDB::getMechanismObject()->getAbsModelFilePath() + FFaFilePath::getPathSeparator();
@@ -1793,7 +1799,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showJacketData = true;
       pv->showSubassPos = true;
-      pv->myObjToPosition = item;
 
       pv->mySubAssemblyFile = item->myModelFile.getValue();
       pv->myModelFilePath = FmDB::getMechanismObject()->getAbsModelFilePath() + FFaFilePath::getPathSeparator();
@@ -1841,7 +1846,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showSoilPileData = true;
       pv->showSubassPos = true;
-      pv->myObjToPosition = item;
 
       pv->mySubAssemblyFile = item->myModelFile.getValue();
       pv->myModelFilePath = FmDB::getMechanismObject()->getAbsModelFilePath() + FFaFilePath::getPathSeparator();
@@ -1896,7 +1900,6 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->showSubassemblyData = true;
       pv->showSubassPos = dynamic_cast<FmAssemblyBase*>(mySelectedFmItem);
-      pv->myObjToPosition = item;
 
       pv->mySubAssemblyFile = item->myModelFile.getValue();
       pv->myModelFilePath = FmDB::getMechanismObject()->getAbsModelFilePath() + FFaFilePath::getPathSeparator();
@@ -2609,10 +2612,10 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 	FapUAProperties::setDBJointVariables(item, pv->myJointVals);
       else if (selectedTab > 0)
       {
-	int dofToUpdate = selectedTab - 1;
-	if (pv->myObjToPosition) --dofToUpdate;
-	if (dofToUpdate >= 0)
-	  FapUAProperties::setDBJointVariables(item, pv->myJointVals, dofToUpdate);
+        int dofTab = selectedTab -
+          (fmItem->isOfType(FmSMJointBase::getClassTypeID()) ? 2 : 1);
+        if (dofTab >= 0)
+          FapUAProperties::setDBJointVariables(item, pv->myJointVals, dofTab);
       }
 
       if (selectedTab <= 0) {

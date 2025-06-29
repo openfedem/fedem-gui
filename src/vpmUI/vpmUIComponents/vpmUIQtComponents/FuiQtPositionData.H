@@ -8,12 +8,8 @@
 #ifndef FUI_QT_POSITION_DATA_H
 #define FUI_QT_POSITION_DATA_H
 
-#include <string>
-
 #include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
 #include "vpmUI/vpmUIComponents/FuiPositionData.H"
-
-class QGroupBox;
 
 
 class FuiQtPositionData : public virtual FFuQtMultUIComponent, 
@@ -26,19 +22,10 @@ public:
 		    const char* name="PositionData");
   virtual ~FuiQtPositionData() {}
 
-  virtual int getHeightHint();
-  virtual int getWidthHint();
-
-  virtual void setPosLabel(const std::string& text); 
-  virtual void setRotLabel(const std::string& text);
-
-  virtual void popUpRotUI(bool onOff);
-  virtual void popUpPosUI(bool onOff);
-
-  QGroupBox* myRotationFrame;
-  QGroupBox* myTranslationFrame;
-
-  virtual void setSensitivity(bool onOff) { this->FuiPositionData::setSensitivity(onOff); }
+  virtual void setSensitivity(bool onOff)
+  {
+    this->FuiPositionData::setSensitivity(onOff);
+  }
 };
 
 #endif

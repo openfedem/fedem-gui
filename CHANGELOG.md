@@ -8,6 +8,32 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.0.9.7] (2025-01-01)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/41:
+  Multi-selection update for the position property fields.
+- Issue https://github.com/openfedem/fedem-gui/issues/66:
+  Button for switching between prismatic and cylindric joint.
+- SET1 Nastran bulk data entries are now processes for definition of element groups.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/68:
+  When changing the FE model of an existing Part, any description field command
+  defined with the '#'-character is erased.
+- Issue https://github.com/openfedem/fedem-gui/issues/70:
+  The GUI crashes on creating a prismatic- or cylindric joint between triads,
+  unless a third triad for the follower also is picked.
+- Issue https://github.com/openfedem/fedem-gui/issues/72:
+  The Dismiss dialog is blocking the rest of the GUI. It is supposed to be non-modal.
+- Issue https://github.com/openfedem/fedem-gui/issues/74:
+  The GUI crashes when run batch (using command-line options `-f` and either `-solve` or `-prepareBatch`).
+- Nastran bulk data files with a non-blank offset flag field for CBAR and CBEAM entries are not parsed properly.
+- Extraction of element group names from NX property comments and Hypermesh comments in Nastran bulk data files does not work.
+- Parsing RBE2 Nastran bulk data entries with a float value as its last field does not work.
+
 ## [fedem-8.0.9] (2025-03-20)
 
 ### :rocket: Added
@@ -213,3 +239,4 @@
 [fedem-8.0.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.6...fedem-8.0.7
 [fedem-8.0.8]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.7...fedem-8.0.8
 [fedem-8.0.9]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.8...fedem-8.0.9
+[fedem-8.0.9.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9.2...fedem-8.0.9.7

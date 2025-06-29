@@ -7,14 +7,12 @@
 
 #include <QGridLayout>
 #include <QVBoxLayout>
-#include <QGroupBox>
 #include <QLabel>
-#include <array>
 
 #include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
-#include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
-#include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
+#include "FFuLib/FFuQtComponents/FFuQtIOField.H"
+#include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtQueryInputField.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtPositionData.H"
@@ -24,174 +22,106 @@ FuiQtPositionData::FuiQtPositionData(QWidget* parent, int xpos, int ypos,
                                      int width, int height, const char* name)
   : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
 {
-  FuiQtQueryInputField* myQtRotRefCSField;
-  FuiQtQueryInputField* myQtPosRefCSField;
+  FFuQtLabel*   qLabel;
+  FFuQtIOField* qField;
 
-  FFuQtLabel*  qLabel;
   QGridLayout* gLayout;
   QVBoxLayout* vLayout;
 
-  std::array<FFuQtIOField*,9> lineEdit;
-  int i;
-
-  this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-  QGridLayout* myLayout = new QGridLayout(this);
-  myLayout->setContentsMargins(2,2,2,2);
-  myLayout->setSpacing(2);
-
   // The translation frame
-  myTranslationFrame = new QGroupBox(this);
-  myTranslationFrame->setTitle("Position");
-  myTranslationFrame->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-  vLayout = new QVBoxLayout();
-  vLayout->setContentsMargins(3,3,3,3);
-  vLayout->setSpacing(0);
-  vLayout->setAlignment(Qt::AlignTop);
+  FFuQtLabelFrame* translationFrame = new FFuQtLabelFrame();
+  translationFrame->setTitle("Position");
+
+  vLayout = new QVBoxLayout(translationFrame);
+  vLayout->setContentsMargins(5,3,5,5);
+  vLayout->setSpacing(2);
+
+  FFuQtOptionMenu* posViewTypeMenu = new FFuQtOptionMenu();
+  FuiQtQueryInputField* posRefCSField = new FuiQtQueryInputField(NULL);
+  posRefCSField->setMinimumHeight(posViewTypeMenu->getHeightHint());
 
   gLayout = new QGridLayout();
-  gLayout->addWidget(new QLabel("Reference CS", myTranslationFrame), 0, 0);
-  gLayout->addWidget(new QLabel("Coordinate type", myTranslationFrame), 0, 1);
-
-  myQtPosRefCSField = new FuiQtQueryInputField(myTranslationFrame);
-  myQtPosRefCSField->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  gLayout->addWidget(myQtPosRefCSField, 1, 0);
-
-  FFuQtOptionMenu* myQtPosViewTypeMenu = new FFuQtOptionMenu(myTranslationFrame);
-  myQtPosViewTypeMenu->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  gLayout->addWidget(myQtPosViewTypeMenu, 1, 1);
-
+  gLayout->setHorizontalSpacing(2);
+  gLayout->addWidget(new QLabel("Reference CS"), 0, 0);
+  gLayout->addWidget(new QLabel("Coordinate type"), 0, 1);
+  gLayout->addWidget(posRefCSField, 1, 0);
+  gLayout->addWidget(posViewTypeMenu, 1, 1);
   vLayout->addLayout(gLayout);
 
   gLayout = new QGridLayout();
-  gLayout->setSpacing(2);
-
-  for (i = 0; i < 3; i++) {
-    lineEdit[i] = new FFuQtIOField(myTranslationFrame);
-    gLayout->addWidget(lineEdit[i], 1, i);
-    myLabels.push_back(qLabel = new FFuQtLabel(myTranslationFrame));
+  gLayout->setHorizontalSpacing(2);
+  for (int i = 0; i < 3; i++) {
+    myLabels[i] = qLabel = new FFuQtLabel();
+    myFields[i] = qField = new FFuQtIOField();
     gLayout->addWidget(qLabel, 0, i);
+    gLayout->addWidget(qField, 1, i);
   }
   vLayout->addLayout(gLayout);
-  myTranslationFrame->setLayout(vLayout);
-  myLayout->addWidget(myTranslationFrame, 0, 0, 2, 1, Qt::AlignTop);
 
   // The rotation frame
-  myRotationFrame = new QGroupBox(this);
-  myRotationFrame->setTitle("Orientation");
-  myRotationFrame->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-  vLayout = new QVBoxLayout();
-  vLayout->setContentsMargins(3,3,3,3);
-  vLayout->setSpacing(0);
-  vLayout->setAlignment(Qt::AlignTop);
+  FFuQtLabelFrame* rotationFrame = new FFuQtLabelFrame();
+  rotationFrame->setTitle("Orientation");
+
+  vLayout = new QVBoxLayout(rotationFrame);
+  vLayout->setContentsMargins(5,3,5,5);
+  vLayout->setSpacing(2);
+
+  FFuQtOptionMenu* rotViewTypeMenu = new FFuQtOptionMenu();
+  FuiQtQueryInputField* rotRefCSField = new FuiQtQueryInputField(NULL);
+  rotRefCSField->setMinimumHeight(rotViewTypeMenu->getHeightHint());
 
   gLayout = new QGridLayout();
-  gLayout->addWidget(new QLabel("Reference CS", myRotationFrame), 0, 0);
-  gLayout->addWidget(new QLabel("Coordinate type", myRotationFrame), 0, 1);
-
-  myQtRotRefCSField = new FuiQtQueryInputField(myRotationFrame);
-  myQtRotRefCSField->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  gLayout->addWidget(myQtRotRefCSField, 1, 0);
-
-  FFuQtOptionMenu* myQtRotViewTypeMenu = new FFuQtOptionMenu(myRotationFrame);
-  myQtRotViewTypeMenu->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  gLayout->addWidget(myQtRotViewTypeMenu, 1, 1);
-
+  gLayout->setHorizontalSpacing(2);
+  gLayout->addWidget(new QLabel("Reference CS"), 0, 0);
+  gLayout->addWidget(new QLabel("Coordinate type"), 0, 1);
+  gLayout->addWidget(rotRefCSField, 1, 0);
+  gLayout->addWidget(rotViewTypeMenu, 1, 1);
   vLayout->addLayout(gLayout);
 
   gLayout = new QGridLayout();
-  gLayout->setSpacing(2);
-
-  for (i = 3; i < 9; i++)
-    lineEdit[i] = new FFuQtIOField(myRotationFrame);
-  for (i = 3; i < 6; i++)
-    gLayout->addWidget(lineEdit[i], 1, i-3);
-  for (i = 6; i < 9; i++)
-    gLayout->addWidget(lineEdit[i], 3, i-6);
-  for (i = 3; i < 9; i++) {
-    myLabels.push_back(qLabel = new FFuQtLabel(myRotationFrame));
-    if (i < 6)
-      gLayout->addWidget(qLabel, 0, i-3);
-    else
-      gLayout->addWidget(qLabel, 2, i-6);
+  gLayout->setHorizontalSpacing(2);
+  for (int i = 3; i < 9; i++) {
+    myLabels[i] = qLabel = new FFuQtLabel();
+    myFields[i] = qField = new FFuQtIOField();
+    gLayout->addWidget(qLabel, i < 6 ? 0 : 2, i%3);
+    gLayout->addWidget(qField, i < 6 ? 1 : 3, i%3);
   }
   vLayout->addLayout(gLayout);
-  myRotationFrame->setLayout(vLayout);
-  myLayout->addWidget(myRotationFrame, 0, 1, Qt::AlignTop);
 
-  // Position follow toggle group:
-  FFuQtLabelFrame* followFrame = new FFuQtLabelFrame(this);
+  // Position follow toggle group
+  FFuQtLabelFrame* followFrame = new FFuQtLabelFrame();
   followFrame->setLabel("Relative positioning of Triads");
-  followFrame->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-  vLayout = new QVBoxLayout();
-  vLayout->setContentsMargins(3,3,3,3);
-  vLayout->setSpacing(2);
-  vLayout->setAlignment(Qt::AlignTop);
-
   FFuQtToggleButton* masterToggle = new FFuQtToggleButton();
   masterToggle->setText("Master triad follows joint");
-  vLayout->addWidget(masterToggle);
-
   FFuQtToggleButton* slaveToggle = new FFuQtToggleButton();
   slaveToggle->setText("Slave triad follows joint");
-  vLayout->addWidget(slaveToggle);
 
-  followFrame->setLayout(vLayout);
-  myLayout->addWidget(followFrame, 1, 1, Qt::AlignTop);
+  myTranslationFrame = translationFrame;
+  myRotationFrame = rotationFrame;
 
-  myQtPosRefCSField->setMinimumHeight(myQtRotViewTypeMenu->getHeightHint());
-  myQtRotRefCSField->setMinimumHeight(myQtRotViewTypeMenu->getHeightHint());
+  myPosRefCSField = posRefCSField;
+  myRotRefCSField = rotRefCSField;
 
-  myPosRefCSField = myQtPosRefCSField;
-  myRotRefCSField = myQtRotRefCSField;
-
-  myPosViewTypeMenu = myQtPosViewTypeMenu;
-  myRotViewTypeMenu = myQtRotViewTypeMenu;
-
-  for (FFuQtIOField* field : lineEdit)
-    myFields.push_back(field);
+  myPosViewTypeMenu = posViewTypeMenu;
+  myRotViewTypeMenu = rotViewTypeMenu;
 
   myTriadPosFollowFrame = followFrame;
   myMasterFollowToggle = masterToggle;
   mySlaveFollowToggle = slaveToggle;
 
   this->initWidgets();
-}
 
+  // Layout for the position follow frame
+  vLayout = new QVBoxLayout(followFrame);
+  vLayout->setContentsMargins(10,3,10,3);
+  vLayout->setSpacing(2);
+  vLayout->addWidget(masterToggle);
+  vLayout->addWidget(slaveToggle);
 
-int FuiQtPositionData::getHeightHint()
-{
-  return this->sizeHint().height();
-}
-
-int FuiQtPositionData::getWidthHint()
-{
-  return this->sizeHint().width();
-}
-
-
-void FuiQtPositionData::setPosLabel(const std::string& text)
-{
-  myTranslationFrame->setTitle(text.c_str());
-}
-
-void FuiQtPositionData::setRotLabel(const std::string& text)
-{
-  myRotationFrame->setTitle(text.c_str());
-}
-
-
-void FuiQtPositionData::popUpRotUI(bool onOff)
-{
-  if (onOff)
-    myRotationFrame->show();
-  else
-    myRotationFrame->hide();
-}
-
-void FuiQtPositionData::popUpPosUI(bool onOff)
-{
-  if (onOff)
-    myTranslationFrame->show();
-  else
-    myTranslationFrame->hide();
+  // The main layout
+  gLayout = new QGridLayout(this);
+  gLayout->setContentsMargins(2,2,2,2);
+  gLayout->addWidget(translationFrame, 0, 0, 2, 1, Qt::AlignTop);
+  gLayout->addWidget(rotationFrame, 0, 1, Qt::AlignTop);
+  gLayout->addWidget(followFrame, 1, 1, Qt::AlignTop);
 }
