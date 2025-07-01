@@ -8,7 +8,7 @@
 
 # Open FEDEM Changelog
 
-## [fedem-8.0.9.7] (2025-01-01)
+## [fedem-8.0.9.7] (2025-07-01)
 
 ### :rocket: Added
 
