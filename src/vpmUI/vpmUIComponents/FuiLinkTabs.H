@@ -110,7 +110,7 @@ public:
   FuiLinkOriginSheet() {}
   virtual ~FuiLinkOriginSheet() {}
 
-  void setEditedObj(FmIsPositionedBase* editedLink);
+  void setEditedObjs(const std::vector<FmModelMemberBase*>& objs = {});
 
   virtual void setSensitivity(bool sensitivity);
 
@@ -235,7 +235,7 @@ public:
 
   void getValues(FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
-  void setEditedObj(FmIsPositionedBase* editedLink);
+  void setEditedObjs(const std::vector<FmModelMemberBase*>& objs = {});
 
   void setValuesChangedCB(const FFaDynCB0& aDynCB);
 

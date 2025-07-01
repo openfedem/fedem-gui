@@ -11,9 +11,8 @@
 #include <string>
 
 
-class FuiModes
+namespace FuiModes
 {
-public:
   enum ModeType { EXAM_MODE,
 		  APPEARANCE_MODE,
 		  PTPMOVE_MODE,
@@ -60,28 +59,20 @@ public:
 		  MEASURE_DISTANCE_MODE,
 		  MEASURE_ANGLE_MODE};
 
-  static void     setMode(ModeType newMode);
-  static ModeType getMode() { return mode; }
+  void     setMode(ModeType newMode);
+  ModeType getMode();
 
-  static void setState(int newState);
-  static int  getState() { return state; }
+  void setState(int newState);
+  int  getState();
 
-  static void done();
-  static void cancel();
+  void notifyCreatePointChange();
 
-  static void notifyCreatePointChange() { createPositionIsChangedByGUI = true; }
+  void done();
+  void cancel();
 
-protected:
-  static void setTip();
+  void setTip();
 
-public:
-  static std::string tipComPicking;
-
-private:
-  static ModeType mode;
-  static int      state;
-
-  static bool createPositionIsChangedByGUI;
+  extern std::string tipComPicking;
 };
 
 #endif

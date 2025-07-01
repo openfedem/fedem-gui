@@ -16,22 +16,28 @@
 #include "vpmDisplay/FdCtrlDB.H"
 #endif
 
-int  FuiCtrlModes::mode = 0;
-int  FuiCtrlModes::state = 0;
-int  FuiCtrlModes::neutralType = 0;
-int  FuiCtrlModes::neutralState = 0;
-bool FuiCtrlModes::ctrlModellerOpen = false;
+
+namespace
+{
+  int mode = 0;
+  int state = 0;
+
+  int neutralType = 0;
+  int neutralState = 0;
+
+  bool ctrlModellerOpen = false;
+}
 
 
 void FuiCtrlModes::setCtrlModellerState(bool isOpen)
 {
-  FuiCtrlModes::ctrlModellerOpen = isOpen;
+  ctrlModellerOpen = isOpen;
 }
 
 
 bool FuiCtrlModes::isCtrlModellerOpen()
 {
-  return FuiCtrlModes::ctrlModellerOpen;
+  return ctrlModellerOpen;
 }
 
 
@@ -43,11 +49,11 @@ void FuiCtrlModes::setMode(int newMode)
   if (FpPM::getResultFlag())
     return;
 
-  FuiCtrlModes::mode = newMode;
-  FuiCtrlModes::state = 0;
+  mode = newMode;
+  state = 0;
 
 #ifdef USE_INVENTOR
-  FdCtrlDB::updateMode(newMode,FuiCtrlModes::NEUTRAL_MODE);
+  FdCtrlDB::updateMode(newMode,NEUTRAL_MODE);
 #endif
 
   FFuTopLevelShell* ui = FFuTopLevelShell::getInstanceByType(FuiCtrlModeller::getClassTypeID());
@@ -57,27 +63,36 @@ void FuiCtrlModes::setMode(int newMode)
 }
 
 
+int FuiCtrlModes::getMode()
+{
+  return mode;
+}
+
+
 void FuiCtrlModes::setState(int newState)
 {
-  FuiCtrlModes::state = newState;
+  state = newState;
 
   FuiCtrlModes::setTip();
 }
 
 
+int FuiCtrlModes::getState()
+{
+  return state;
+}
+
+
 void FuiCtrlModes::setNeutralType(int newType)
 {
-  if (FpPM::getResultFlag())
-    return;
-
-  if (FuiCtrlModes::mode != FuiCtrlModes::NEUTRAL_MODE)
+  if (FpPM::getResultFlag() || mode != NEUTRAL_MODE)
     return;
 
 #ifdef USE_INVENTOR
-  int oldNeutralType = FuiCtrlModes::neutralType;
+  int oldNeutralType = neutralType;
 #endif
-  FuiCtrlModes::neutralType  = newType;
-  FuiCtrlModes::neutralState = 0;
+  neutralType  = newType;
+  neutralState = 0;
 
 #ifdef USE_INVENTOR
   FdCtrlDB::updateNeutralType(newType,oldNeutralType);
@@ -88,43 +103,111 @@ void FuiCtrlModes::setNeutralType(int newType)
 }
 
 
+int FuiCtrlModes::getNeutralType()
+{
+  return neutralType;
+}
+
+
 void FuiCtrlModes::setNeutralState(int newState)
 {
-  FuiCtrlModes::neutralState = newState;
+  neutralState = newState;
 
   FuiCtrlModes::setTip();
 }
 
 
+int FuiCtrlModes::getNeutralState()
+{
+  return neutralState;
+}
+
+
 void FuiCtrlModes::done()
 {
-  if (FuiModes::getMode() != FuiModes::EXAM_MODE) {
-    //FuiModes::done();
+  if (FuiModes::getMode() != FuiModes::EXAM_MODE)
     return;
-  }
 
-  switch (FuiCtrlModes::mode)
+  switch (mode)
     {
     case NEUTRAL_MODE:
-      FuiCtrlModes::neutralModeDone();
-      break;
+      if (neutralType != EXAM_NEUTRAL)
+        break;
+
     case CREATE_MODE:
-      FuiCtrlModes::createModeDone();
-      break;
-    case ROTATE_MODE:
-      FuiCtrlModes::rotateModeDone();
-      break;		
-    case DELETE_MODE:
-      FuiCtrlModes::deleteModeDone();
-      break;
     case ADDLINEPOINT_MODE:
-      FuiCtrlModes::addLinePointModeDone();
+      switch (state)
+        {
+        case 0:
+          FuiCtrlModes::cancel();
+          break;
+        }
       break;
+
+    case ROTATE_MODE:
+      switch (state)
+      {
+        case 0:
+          FuiCtrlModes::cancel();
+          break;
+        case 1:
+          FuiCtrlModes::setState(2);
+          break;
+        default:
+          FuiCtrlModes::cancel();
+          break;
+      }
+      break;
+
+    case DELETE_MODE:
+      switch (state)
+        {
+        case 0:
+          FuiCtrlModes::cancel();
+          break;
+        case 1:
+          FuiCtrlModes::setState(2);
+          break;
+        default:
+          FuiCtrlModes::cancel();
+          break;
+        }
+      break;
+
     case REMOVELINEPOINT_MODE:
-      FuiCtrlModes::removeLinePointModeDone();
+      switch (state)
+        {
+        case 0:
+          FuiCtrlModes::cancel();
+          break;
+        case 1:
+          FuiCtrlModes::setState(4);
+          break;
+        case 2:
+          FuiCtrlModes::setState(0);
+          break;
+        case 3:
+          FuiCtrlModes::setState(0);
+          break;
+        default:
+          FuiCtrlModes::setState(0);
+          break;
+        }
       break;
+
     case MOVEGROUP_MODE:
-      FuiCtrlModes::moveGroupModeDone();
+      switch (state)
+        {
+        case 0:
+          FuiCtrlModes::setState(1);
+          break;
+        case 1:
+          FuiCtrlModes::setState(2);
+          break;
+        default:
+          FuiCtrlModes::cancel();
+          break;
+        }
       break;
     }
 }
@@ -134,34 +217,28 @@ void FuiCtrlModes::cancel()
 {
   static bool isDoingCancelAlready = false;
 
-  if (isDoingCancelAlready)
+  if (isDoingCancelAlready || !ctrlModellerOpen)
     return;
 
-  if (!ctrlModellerOpen)
+  if (FuiModes::getMode() == FuiModes::EXAM_MODE)
+    isDoingCancelAlready = true;
+  else
     return;
-
-  isDoingCancelAlready = true;
-
-  if (FuiModes::getMode() != FuiModes::EXAM_MODE) {
-    // FuiModes::cancel();
-    isDoingCancelAlready = false;
-    return;
-  }
 
 #ifdef USE_INVENTOR
-  int oldNeutralType = FuiCtrlModes::neutralType;
-  int oldMode = FuiCtrlModes::mode;
+  int oldNeutralType = neutralType;
+  int oldMode = mode;
 #endif
 
-  FuiCtrlModes::mode = NEUTRAL_MODE;
-  FuiCtrlModes::state = 0;
+  mode = NEUTRAL_MODE;
+  state = 0;
 
-  FuiCtrlModes::neutralType = EXAM_NEUTRAL;
-  FuiCtrlModes::neutralState = 0;
+  neutralType = EXAM_NEUTRAL;
+  neutralState = 0;
 
 #ifdef USE_INVENTOR
-  FdCtrlDB::updateMode(FuiCtrlModes::mode, oldMode);
-  FdCtrlDB::updateNeutralType(FuiCtrlModes::neutralType, oldNeutralType);
+  FdCtrlDB::updateMode(mode, oldMode);
+  FdCtrlDB::updateNeutralType(neutralType, oldNeutralType);
 #endif
 
   FuiCtrlModes::setTip();
@@ -187,7 +264,7 @@ void FuiCtrlModes::setTip()
 	  Fui::tip("Move the mouse");
 	  break;
 	case DRAW_NEUTRAL:
-	  switch (FuiCtrlModes::neutralState)
+	  switch (neutralState)
 	    {
 	    case 0:
 	      Fui::tip("Drag the line to an element input port");
@@ -201,7 +278,7 @@ void FuiCtrlModes::setTip()
 	    }
 	  break;
 	case MOVELINE_NEUTRAL:
-	  switch (FuiCtrlModes::neutralState)
+	  switch (neutralState)
 	    {
 	    case 0:
 	      Fui::tip("Move the mouse");
@@ -218,7 +295,7 @@ void FuiCtrlModes::setTip()
       break;
 
     case ROTATE_MODE:
-      switch (FuiCtrlModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick the element you want to rotate");
@@ -230,7 +307,7 @@ void FuiCtrlModes::setTip()
       break;
 
     case DELETE_MODE:
-      switch (FuiCtrlModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick control object to erase");
@@ -242,7 +319,7 @@ void FuiCtrlModes::setTip()
       break;
 
     case ADDLINEPOINT_MODE:
-      switch (FuiCtrlModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick and drag a line segment to insert a new Breakpoint");
@@ -256,7 +333,7 @@ void FuiCtrlModes::setTip()
       break;
 
     case REMOVELINEPOINT_MODE:
-      switch (FuiCtrlModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick the Breakpoint you want to remove");
@@ -274,7 +351,7 @@ void FuiCtrlModes::setTip()
       break;
 
     case MOVEGROUP_MODE:
-      switch (FuiCtrlModes::state)
+      switch (state)
 	{
 	case 0:
 	case 1:
@@ -282,116 +359,6 @@ void FuiCtrlModes::setTip()
 	  Fui::tip("Pick elements to move, then drag them to a new position. Keep the <Ctrl>-key pressed until you are finished.");
 	  break;
 	}
-      break;
-    }
-}
-
-
-void FuiCtrlModes::neutralModeDone()
-{
-  if (FuiCtrlModes::neutralType != FuiCtrlModes::EXAM_NEUTRAL)
-    return;
-
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::cancel();
-      break;
-    }
-}
-
-
-void FuiCtrlModes::createModeDone()
-{
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::cancel();
-      break;
-    }
-}
-
-
-void FuiCtrlModes::deleteModeDone()
-{
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::cancel();
-      break;
-    case 1:
-      FuiCtrlModes::setState(2);
-      break;
-    default:
-      FuiCtrlModes::cancel();
-      break;
-    }
-}
-
-
-void FuiCtrlModes::rotateModeDone()
-{
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::cancel();
-      break;
-    case 1:
-      FuiCtrlModes::setState(2);
-      break;
-    default:
-      FuiCtrlModes::cancel();
-      break;
-    }
-}
-
-
-void FuiCtrlModes::addLinePointModeDone()
-{
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::cancel();
-      break;
-    }
-}
-
-
-void FuiCtrlModes::removeLinePointModeDone()
-{
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::cancel();
-      break;
-    case 1:
-      FuiCtrlModes::setState(4);
-      break;
-    case 2:
-      FuiCtrlModes::setState(0);
-      break;
-    case 3:
-      FuiCtrlModes::setState(0);
-      break;
-    default:
-      FuiCtrlModes::setState(0);
-      break;
-    }
-}
-
-
-void FuiCtrlModes::moveGroupModeDone()
-{
-  switch (FuiCtrlModes::state)
-    {
-    case 0:
-      FuiCtrlModes::setState(1);
-      break;
-    case 1:
-      FuiCtrlModes::setState(2);
-      break;
-    default:
-      FuiCtrlModes::cancel();
       break;
     }
 }

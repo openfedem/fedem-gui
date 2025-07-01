@@ -391,9 +391,9 @@ void FuiLinkOriginSheet::placeWidgets(int width, int height)
 }
 
 
-void FuiLinkOriginSheet::setEditedObj(FmIsPositionedBase* editedLink)
+void FuiLinkOriginSheet::setEditedObjs(const std::vector<FmModelMemberBase*>& objs)
 {
-  posData->setEditedObj(editedLink);
+  posData->setEditedObjs(objs);
 }
 
 
@@ -1182,9 +1182,9 @@ void FuiGenericPartCGSheet::placeWidgets(int width, int heigth)
 }
 
 
-void FuiGenericPartCGSheet::setEditedObj(FmIsPositionedBase* editedLink)
+void FuiGenericPartCGSheet::setEditedObjs(const std::vector<FmModelMemberBase*>& objs)
 {
-  this->posData->setEditedObj(editedLink);
+  this->posData->setEditedObjs(objs);
 }
 
 

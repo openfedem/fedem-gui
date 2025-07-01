@@ -26,9 +26,14 @@
 
 
 // Initializing static variables
-FuiModes::ModeType FuiModes::mode = FuiModes::EXAM_MODE;
-int FuiModes::state = 0;
-bool FuiModes::createPositionIsChangedByGUI = false;
+
+namespace
+{
+  FuiModes::ModeType mode = FuiModes::EXAM_MODE;
+  int state = 0;
+  bool createPositionIsChangedByGUI = false;
+}
+
 std::string FuiModes::tipComPicking;
 
 
@@ -80,8 +85,43 @@ void FuiModes::setMode(ModeType newMode)
   FapUAModeller::updateMode();
 
   FuiModes::setTip();
+
   // To make the default create position work
   // when we enter a mode for the first time
+  createPositionIsChangedByGUI = true;
+}
+
+
+FuiModes::ModeType FuiModes::getMode()
+{
+  return mode;
+}
+
+
+void FuiModes::setState(int newState)
+{
+#ifdef USE_INVENTOR
+  FdDB::updateState(newState);
+#endif
+  Fui::updateState(newState);
+  FapUAModeller::updateState(newState);
+
+  state = newState;
+
+  FuiModes::setTip();
+
+  createPositionIsChangedByGUI = false;
+}
+
+
+int FuiModes::getState()
+{
+  return state;
+}
+
+
+void FuiModes::notifyCreatePointChange()
+{
   createPositionIsChangedByGUI = true;
 }
 
@@ -131,25 +171,10 @@ void FuiModes::cancel()
   Fui::cancel();
   FapUAModeller::cancel();
 
-  FuiModes::mode = EXAM_MODE;
-  FuiModes::state = 0;
+  mode = EXAM_MODE;
+  state = 0;
 
   FuiModes::setTip();
-}
-
-
-void FuiModes::setState(int newState)
-{
-#ifdef USE_INVENTOR
-  FdDB::updateState(newState);
-#endif
-  Fui::updateState(newState);
-  FapUAModeller::updateState(newState);
-
-  FuiModes::state = newState;
-
-  FuiModes::setTip();
-  FuiModes::createPositionIsChangedByGUI = false;
 }
 
 
@@ -212,7 +237,7 @@ void FuiModes::done()
       // One-pick create done
       switch (state) {
       case 0:
-        if (!FuiModes::createPositionIsChangedByGUI) {
+        if (!createPositionIsChangedByGUI) {
           FuiModes::cancel();
           break;
         }
@@ -233,7 +258,7 @@ void FuiModes::done()
       // Two-pick create done
       switch (state) {
       case 0:
-        if (FuiModes::createPositionIsChangedByGUI)
+        if (createPositionIsChangedByGUI)
           FuiModes::setState(2);
         else
           FuiModes::cancel();
@@ -256,7 +281,7 @@ void FuiModes::done()
       // Three-pick create done
       switch (state) {
       case 0: // Pick first master
-        if (FuiModes::createPositionIsChangedByGUI)
+        if (createPositionIsChangedByGUI)
           FuiModes::setState(3);
         else
           FuiModes::cancel();
@@ -288,7 +313,7 @@ void FuiModes::done()
     case MAKEFREEJOINTBETWEENTRIADS_MODE:
       switch (state) {
       case 0:
-        if (FuiModes::createPositionIsChangedByGUI)
+        if (createPositionIsChangedByGUI)
           FuiModes::setState(4);
         else
           FuiModes::cancel();
@@ -317,7 +342,7 @@ void FuiModes::done()
     case MAKECAMJOINT_MODE:
       switch (state) {
       case 0:
-        if (FuiModes::createPositionIsChangedByGUI)
+        if (createPositionIsChangedByGUI)
           FuiModes::setState(2);
         else
           FuiModes::cancel();
@@ -326,7 +351,7 @@ void FuiModes::done()
         FuiModes::setState(2);
         break;
       case 2:
-        if (FuiModes::createPositionIsChangedByGUI) {
+        if (createPositionIsChangedByGUI) {
           FuiModes::setState(4);
           FuiModes::setState(2);
         }
@@ -419,7 +444,7 @@ void FuiModes::setTip()
       break;
 
     case APPEARANCE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select a Part or the Reference Plane");
@@ -431,7 +456,7 @@ void FuiModes::setTip()
       break;
 
     case PTPMOVE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick point to move from, on object to move");
@@ -448,7 +473,7 @@ void FuiModes::setTip()
       break;
 
     case ERASE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select an object to erase");
@@ -460,7 +485,7 @@ void FuiModes::setTip()
       break;
 
     case ATTACH_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select object to attach");
@@ -478,7 +503,7 @@ void FuiModes::setTip()
       break;
 
     case DETACH_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select object to detach");
@@ -490,7 +515,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEFORCE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to apply Force (Done when ready)");
@@ -505,7 +530,7 @@ void FuiModes::setTip()
       break;
 
     case MAKETORQUE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to apply Torque (Done when ready)");
@@ -520,7 +545,7 @@ void FuiModes::setTip()
       break;
 
     case MAKETRIAD_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put Triad (Done when ready)");
@@ -535,7 +560,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEREVJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put Revolute Joint (Done when ready)");
@@ -550,7 +575,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEBALLJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put Ball Joint (Done when ready)");
@@ -565,7 +590,7 @@ void FuiModes::setTip()
       break;
 
     case MAKERIGIDJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put Rigid Joint (Done when ready)");
@@ -580,7 +605,7 @@ void FuiModes::setTip()
       break;
 
     case MAKESPRING_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put start of Axial Spring (Done when ready)");
@@ -601,7 +626,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEDAMPER_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put start of Axial Damper (Done when ready)");
@@ -622,7 +647,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEFREEJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put the Master triad of Free Joint (Done when ready)");
@@ -643,7 +668,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEFREEJOINTBETWEENTRIADS_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick a Triad to use as Master in the Free Joint, or the Reference Plane to create a grounded Free Joint (Done when ready)");
@@ -680,7 +705,7 @@ void FuiModes::setTip()
 
     case MAKECYLJOINT_MODE:
     case MAKEPRISMJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write where to put start of glider (Done when ready)");
@@ -705,7 +730,7 @@ void FuiModes::setTip()
 
     case MAKECYLJOINTBETWEENTRIADS_MODE:
     case MAKEPRISMJOINTBETWEENTRIADS_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick the first Triad of the glider (Done when ready)");
@@ -741,7 +766,7 @@ void FuiModes::setTip()
       break;
 
     case MAKECAMJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick or write the position for the follower Triad (Done when ready)");
@@ -765,7 +790,7 @@ void FuiModes::setTip()
       break;
 
     case MAKESTICKER_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick what to apply Sticker to (Done when ready)");
@@ -780,7 +805,7 @@ void FuiModes::setTip()
       break;
 
     case MAKEGEAR_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select input Revolute Joint (Done when ready)");
@@ -801,7 +826,7 @@ void FuiModes::setTip()
       break;
 
     case MAKERACKPIN_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select input Revolute Joint (Done when ready)");
@@ -822,7 +847,7 @@ void FuiModes::setTip()
       break;
 
     case MAKESIMPLESENSOR_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select object to attach Sensor to");
@@ -837,7 +862,7 @@ void FuiModes::setTip()
       break;
 
     case MAKETIRE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select Revolute Joint to attach Tire to");
@@ -852,7 +877,7 @@ void FuiModes::setTip()
       break;
 
     case MAKERELATIVESENSOR_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Select first Triad");
@@ -873,7 +898,7 @@ void FuiModes::setTip()
       break;
 
     case PICKLOADFROMPOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick first point of Load direction (Done when ready)");
@@ -885,7 +910,7 @@ void FuiModes::setTip()
       break;
 
     case PICKLOADTOPOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick second point of Load direction (Done when ready)");
@@ -897,7 +922,7 @@ void FuiModes::setTip()
       break;
 
     case PICKLOADATTACKPOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	case 1:
@@ -907,7 +932,7 @@ void FuiModes::setTip()
       break;
 
     case ADDMASTERINLINJOINT_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick where to add a Master to the Linear Joint");
@@ -929,7 +954,7 @@ void FuiModes::setTip()
       break;
 
     case MEASURE_DISTANCE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick first point to measure distance between");
@@ -941,7 +966,7 @@ void FuiModes::setTip()
       break;
 
     case MEASURE_ANGLE_MODE:
-      switch (FuiModes::state)
+      switch (state)
 	{
 	case 0:
 	  Fui::tip("Pick first point to measure angle between");

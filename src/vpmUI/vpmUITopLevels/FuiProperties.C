@@ -1024,7 +1024,7 @@ void FuiProperties::placeWidgets(int width, int height)
       myRefPlanePosition->setEdgeGeometry(v1,v5,h0,height);
 
       int labelWidth = myRefPlaneHeightField->myLabel->getWidthHint();
-      int fieldHeigt = myRefPlanePosition->myFields.front()->getHeightHint();
+      int fieldHeigt = myRefPlaneHeightField->myField->getHeightHint();
 
       int h1 = h0 + 3*textHeight + 2*fieldHeigt + 10*vBorder;
       int h2 = h1 + textHeight + 2*vBorder;
@@ -2075,7 +2075,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (pv->showRefPlane)
   {
-    myRefPlanePosition->setEditedObj(pv->myObjToPosition);
+    myRefPlanePosition->setEditedObjs(pv->objsToPosition);
     myRefPlanePosition->popUp();
     myRefPlaneSizeFrame->popUp();
     myRefPlaneHeightField->popUp();
@@ -2083,7 +2083,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   }
   else
   {
-    myRefPlanePosition->setEditedObj(NULL);
+    myRefPlanePosition->setEditedObjs();
     myRefPlanePosition->popDown();
     myRefPlaneSizeFrame->popDown();
     myRefPlaneHeightField->popDown();
@@ -2145,8 +2145,8 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   }
   else
   {
-    myLinkOriginSheet->setEditedObj(NULL);
-    myGenericPartCGSheet->setEditedObj(NULL);
+    myLinkOriginSheet->setEditedObjs();
+    myGenericPartCGSheet->setEditedObjs();
     myLinkTabs->popDown();
   }
 
@@ -2484,10 +2484,10 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myJointSummary->myAddBCLabel->popDown();
     myJointSummary->myDefDamperLabel->popDown();
 
-    myJointPosition->setEditedObj(pv->myObjToPosition);
+    myJointPosition->setEditedObjs(pv->objsToPosition);
 
     myJointTabs->popDown();
-    if (pv->myObjToPosition) {
+    if (!pv->objsToPosition.empty()) {
       myJointTabs->addTabPage(myJointPosition, "Origin", NULL, 1);
       IAmShowingJointData = 2;
     }
@@ -2530,7 +2530,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     if (myJointTabs->isPoppedUp())
       mySelectedJointTab = myJointTabs->getCurrentTabName();
     myJointTabs->popDown();
-    myJointPosition->setEditedObj(NULL);
+    myJointPosition->setEditedObjs();
   }
 
   // Pipe Surface
@@ -2547,7 +2547,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myTriadSummary->mySummaryTable->setNumberRows(pv->myTriadVals.size());
     myTriadSummary->myAddBCLabel->popDown();
 
-    myTriadPosition->setEditedObj(pv->myObjToPosition);
+    myTriadPosition->setEditedObjs(pv->objsToPosition);
 
     if (pv->myTriadVals.empty()) {
       myTriadSummary->myMassFrame->popDown();
@@ -2609,7 +2609,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     if (myTriadTabs->isPoppedUp())
       this->onTriadTabSelected(0);
     myTriadTabs->popDown();
-    myTriadPosition->setEditedObj(NULL);
+    myTriadPosition->setEditedObjs();
   }
 
   // Load
@@ -2906,12 +2906,12 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (pv->showSubassPos)
   {
-    mySubassPosition->setEditedObj(pv->myObjToPosition);
+    mySubassPosition->setEditedObjs(pv->objsToPosition);
     mySubassPosition->popUp();
   }
   else
   {
-    mySubassPosition->setEditedObj(NULL);
+    mySubassPosition->setEditedObjs();
     mySubassPosition->popDown();
   }
 
@@ -3104,12 +3104,12 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myLinkTabs->setCurrentTab(tmpSel);
     this->onLinkTabSelected(0);
     myLinkModelSheet->setValues(pv->myLinkValues);
-    myLinkOriginSheet->setEditedObj(dynamic_cast<FmIsPositionedBase*>(pv->myObjToPosition));
-    myLinkFEnodeSheet->setViewedObj(dynamic_cast<FmIsPositionedBase*>(pv->myObjToPosition));
+    myLinkOriginSheet->setEditedObjs(pv->objsToPosition);
+    myLinkFEnodeSheet->setViewedObj(dynamic_cast<FmIsPositionedBase*>(pv->objsToPosition.front()));
     myLinkFEnodeSheet->setValues(pv->myLinkValues);
     myLinkRedOptSheet->setValues(pv->myLinkValues);
     myLinkLoadSheet->setValues(pv->myLinkValues);
-    myGenericPartCGSheet->setEditedObj(dynamic_cast<FmIsPositionedBase*>(pv->myObjToPosition));
+    myGenericPartCGSheet->setEditedObjs(pv->objsToPosition);
     myGenericPartCGSheet->setValues(pv->myLinkValues);
     myGenericPartMassSheet->setValues(pv->myLinkValues);
     myGenericPartStiffSheet->setValues(pv->myLinkValues);
@@ -3174,14 +3174,23 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myVisualize3DButton->setSensitivity(pv->myVisualize3DEnabled);
   }
 
+  // Lambda function returning the (first) sub-assembly among pv->objsToPosition.
+  auto&& selectedSubAss = [pv]()
+  {
+    FmAssemblyBase* subass = NULL;
+    for (FmModelMemberBase* obj : pv->objsToPosition)
+      if ((subass = dynamic_cast<FmAssemblyBase*>(obj))) break;
+    return subass;
+  };
+
   // Turbine :
 
   if (pv->showTurbineData)
   {
+    mySelectedSubass = selectedSubAss();
     mySubassMassField->setValue(pv->myTotalMass);
     mySubassCoGField->setValue(pv->myCoG);
     mySubassCoGField->setGlobal();
-    mySelectedSubass = pv->myObjToPosition;
 
     myTurbineWindRefTriadDefField->setQuery(pv->myTurbineWindRefTriadDefQuery);
     myTurbineWindRefTriadDefField->setSelectedRef(pv->myTurbineWindRefTriadDefSelected);
@@ -3202,20 +3211,20 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
 
   if (pv->showTowerData || pv->showNacelleData || pv->showGearboxData || pv->showRotorData)
   {
+    mySelectedSubass = selectedSubAss();
     mySubassMassField->setValue(pv->myTotalMass);
     mySubassCoGField->setValue(pv->myCoG);
     mySubassCoGField->setGlobal();
-    mySelectedSubass = pv->myObjToPosition;
   }
 
   // Generator :
 
   if (pv->showGeneratorData)
   {
+    mySelectedSubass = selectedSubAss();
     mySubassMassField->setValue(pv->myTotalMass);
     mySubassCoGField->setValue(pv->myCoG);
     mySubassCoGField->setGlobal();
-    mySelectedSubass = pv->myObjToPosition;
 
     if (pv->myGeneratorTorqueControl) {
       myGeneratorTorqueRadioBtn->setValue(true);
@@ -3280,7 +3289,7 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
 
   if (pv->showRiserData || pv->showJacketData || pv->showSoilPileData)
   {
-    mySelectedSubass = pv->myObjToPosition;
+    mySelectedSubass = selectedSubAss();
     mySubassMassField->setValue(pv->myTotalMass);
     if (pv->showJacketData) {
       mySubassCoGField->setValue(pv->myCoG);
@@ -3661,10 +3670,10 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
   }
   if (pv->showSubassemblyData && pv->showSubassPos)
   {
+    mySelectedSubass = selectedSubAss();
     mySubassMassField->setValue(pv->myTotalMass);
     mySubassCoGField->setValue(pv->myCoG);
     mySubassCoGField->setGlobal();
-    mySelectedSubass = pv->myObjToPosition;
   }
 
   this->placeWidgets(this->getWidth(), this->getHeight());
@@ -3867,7 +3876,6 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   if (IAmShowingJointData)
     {
       pv->selectedTab = mySelectedTabIndex;
-      pv->myObjToPosition = myJointPosition->getEditedObj();
 
       pv->myJointVals.reserve(6);
       for (FuiJointDOF* jdof : myJointDofs)
@@ -4549,14 +4557,13 @@ void FuiProperties::onEventActivated()
 
 void FuiProperties::onCoGRefChanged(bool toGlobal)
 {
-  FmAssemblyBase* subass = dynamic_cast<FmAssemblyBase*>(mySelectedSubass);
-  if (subass)
+  if (mySelectedSubass)
   {
-    FaVec3 CoG(subass->getGlobalCoG());
+    FaVec3 CoG(mySelectedSubass->getGlobalCoG());
     if (toGlobal)
       mySubassCoGField->setValue(CoG);
     else
-      mySubassCoGField->setValue(subass->toLocal(CoG));
+      mySubassCoGField->setValue(mySelectedSubass->toLocal(CoG));
   }
 }
 
