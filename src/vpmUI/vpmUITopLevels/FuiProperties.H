@@ -512,11 +512,12 @@ public:
   std::string myDescription;
   std::string myTag;
 
-  std::vector<FuiTopologyItem> myTopology;
+  // Topology view :
 
-  FFaDynCB2<int,bool> myTopologyHighlightCB;
-  FFaDynCB1<int>      myTopologyActivatedCB;
-  FFaDynCB2<const std::vector<int>&,std::vector<FFuaCmdItem*>&> myTopologyRightClickedCB;
+  FuiTopologyItems            myTopology;
+  FFaDynCB2<int,bool>         myTopologyHighlightCB;
+  FFaDynCB1<int>              myTopologyActivatedCB;
+  FFaDynCB2<int,FFuCmdItems&> myTopologyRightClickedCB;
 
   // Reference Plane :
 

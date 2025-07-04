@@ -8,17 +8,14 @@
 #ifndef FUI_QT_TOPOLOGY_VIEW_H
 #define FUI_QT_TOPOLOGY_VIEW_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiTopologyView.H"
 
 
-class FuiQtTopologyView : public virtual FFuQtMultUIComponent,
-                          public FuiTopologyView
+class FuiQtTopologyView : public FFuQtWidget, public FuiTopologyView
 {
 public:
-  FuiQtTopologyView(QWidget* parent,
-                    const char* name = "FuiTopologyView");
-  virtual ~FuiQtTopologyView() {}
+  FuiQtTopologyView(QWidget* parent, const char* name = "FuiTopologyView");
 };
 
 #endif

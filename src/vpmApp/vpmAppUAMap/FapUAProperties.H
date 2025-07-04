@@ -61,10 +61,9 @@ private:
 
   // Callbacks distributed to the creating ui :
 
-  void topologyHighlightCB(int, bool);
-  void topologyActivatedCB(int);
-  void onTopViewRightClick(const std::vector<int>& selectedIDs,
-			   std::vector<FFuaCmdItem*>& cmds);
+  void topologyHighlightCB(int i, bool onOrOff);
+  void topologyActivatedCB(int i);
+  void onTopViewRightClick(int i, std::vector<FFuaCmdItem*>& cmds);
 
   void linkMeshCB(bool);
   void linkChangeCB();

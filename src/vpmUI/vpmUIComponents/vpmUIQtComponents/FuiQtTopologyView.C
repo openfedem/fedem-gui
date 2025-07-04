@@ -6,23 +6,24 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QStyleFactory>
+#include <QVBoxLayout>
 
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
-#include "FFuLib/FFuQtComponents/FFuQtFrame.H"
-#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtTopologyView.H"
+
+#include "FuiQtTopologyView.H"
 
 
 FuiQtTopologyView::FuiQtTopologyView(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent,name)
+  : FFuQtWidget(parent,name)
 {
-  FFuQtFrame* qfr;
-  myFrame = qfr = new FFuQtFrame(this);
-  qfr->setFrameStyle(QFrame::NoFrame);
-
-  FFuQtListView* qlv;
-  myView = qlv = new FFuQtListView(qfr,3);
+  FFuQtListView* qlv = new FFuQtListView(NULL,3);
   qlv->setFocusPolicy(Qt::NoFocus);
   qlv->setStyle(QStyleFactory::create("windows")); // enable connector lines
+  myView = qlv;
 
   this->initWidgets();
+
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qlv);
 }
