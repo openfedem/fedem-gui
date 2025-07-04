@@ -56,7 +56,8 @@ class FuiProperties : virtual public FFuMultUIComponent,
 {
 public:
   FuiProperties();
-  virtual ~FuiProperties() {}
+
+  FuiTopologyView* getTopologyView() { return myTopologyView; }
 
   // from FFuUADataHandler
   virtual FFuaUIValues* createValuesObject();
@@ -498,96 +499,6 @@ private:
 class FuaPropertiesValues : public FFuaUIValues
 {
 public:
-  FuaPropertiesValues()
-  {
-    showHeading           = false;
-    showFriction          = false;
-    showRotFormulation    = false;
-    showDOF_TZ_Toggle     = false;
-    showRotSpringCpl      = false;
-    showTranSpringCpl     = false;
-    showRefPlane          = false;
-    showScrew             = false;
-    showSwapTriadButton   = false;
-    showAddMasterButton   = false;
-    showReverseMasterButton = false;
-    showCamData           = false;
-    showHPRatio           = false;
-    showAxialDamper       = false;
-    showAxialSpring       = false;
-    showSpringChar        = false;
-    showLinkData          = false;
-    showUDEData           = false;
-    showBeamData          = false;
-    showShaftData         = false;
-    showTurbineData       = false;
-    showTowerData         = false;
-    showNacelleData       = false;
-    showGeneratorData     = false;
-    showGearboxData       = false;
-    showRotorData         = false;
-    showBladeData         = false;
-    showRiserData         = false;
-    showJacketData        = false;
-    showSoilPileData      = false;
-    showTriadData         = false;
-    showLoadData          = false;
-    showJointData         = false;
-    showGenDBObj          = false;
-    showFileReference     = false;
-    showTireData          = false;
-    showRoadData          = false;
-    showMatPropData       = false;
-    showSeaStateData      = false;
-    showBeamPropData      = false;
-    showStrainRosetteData = false;
-    showPipeSurfaceData   = false;
-    showGroupData         = false;
-    showRAOData           = false;
-    showSimEventData      = false;
-    showActiveEvent       = false;
-    showSubassemblyData   = false;
-    showSubassPos         = false;
-
-    showFunctionData      = false;
-    showCtrlData          = false;
-    showCtrlInOut         = false;
-    showExtCtrlSysData    = false;
-    showAnimationData     = false;
-    showGraphData         = false;
-    showCurveData         = false;
-
-    showStartGuide        = false;
-
-    myId                  = 0;
-    myRefPlaneWidth       = 0.0;
-    myRefPlaneHeight      = 0.0;
-    myHPRatio             = 0.0;
-    myTotalLength         = 0.0;
-    myTotalMass           = 0.0;
-    myCrossSectionQuery   = NULL;
-    mySelectedCS          = NULL;
-    myHideCrossSection    = true;
-    myVisualize3DEnabled  = true;
-    myVisualize3D         = true;
-    myVisualize3Dts       = 0;
-    myVisualize3DAngles   = { 0, 0 };
-    myMassPropDamp        = 0.0;
-    myStifPropDamp        = 0.0;
-    myScaleMass           = 0.0;
-    myScaleStiff          = 0.0;
-    myBlankFieldsFlags    = 0;
-
-    isSlave = isMaster    = false;
-    myTriadIsAttached     = false;
-    myTriadConnector      = 0;
-    mySysDir              = 0;
-
-    myAttackPointIsGlobal = false;
-    myFromPointIsGlobal   = false;
-    myToPointIsGlobal     = false;
-    selectedTab           = 0;
-  }
 
   // General Callbacks :
 
@@ -595,9 +506,9 @@ public:
 
   // Heading :
 
-  bool        showHeading;
+  bool        showHeading = false;
   std::string myType;
-  int         myId;
+  int         myId = 0;
   std::string myDescription;
   std::string myTag;
 
@@ -609,121 +520,121 @@ public:
 
   // Reference Plane :
 
-  bool   showRefPlane;
-  double myRefPlaneWidth;
-  double myRefPlaneHeight;
+  bool   showRefPlane = false;
+  double myRefPlaneWidth = 0.0;
+  double myRefPlaneHeight = 0.0;
 
   // Higher Pair :
 
-  bool   showHPRatio;
-  double myHPRatio;
+  bool   showHPRatio = false;
+  double myHPRatio = 0.0;
 
   // Axial Damper :
 
-  bool                 showAxialDamper;
-  FuiSprDaForceValues  myAxialDaForceValues;
+  bool                showAxialDamper = false;
+  FuiSprDaForceValues myAxialDaForceValues;
 
   // Axial Spring :
 
-  bool                   showAxialSpring;
+  bool                   showAxialSpring = false;
   FuiSprDaForceValues    myAxialSprForceValues;
   FuiSpringDefCalcValues myAxialSpringDefCalcValues;
 
   // Spring characteristics :
 
-  bool                showSpringChar;
+  bool                showSpringChar = false;
   FuiSpringCharValues mySpringCharValues;
 
   // Part :
 
-  bool          showLinkData;
-  unsigned char selectedTab;
+  bool          showLinkData = false;
+  unsigned char selectedTab = 0;
   FuiLinkValues myLinkValues;
 
   // User-defined element and Beam :
 
-  bool                  showUDEData;
-  bool                  showBeamData;
-  double                myTotalLength; // read-only
-  double                myTotalMass; // read-only
-  FFuaQueryBase*        myCrossSectionQuery;
-  FmModelMemberBase*    mySelectedCS;
-  bool                  myHideCrossSection;
-  bool                  myVisualize3DEnabled;
-  bool                  myVisualize3D;
-  int                   myVisualize3Dts;
-  std::pair<int,int>    myVisualize3DAngles;
-  double                myMassPropDamp;
-  double                myStifPropDamp;
-  double                myScaleMass;
-  double                myScaleStiff;
-  FaVec3                myOrientation;
-  int                   myBlankFieldsFlags; // specifies what fields are blank
+  bool               showUDEData = false;
+  bool               showBeamData = false;
+  double             myTotalLength = 0.0;
+  double             myTotalMass = 0.0;
+  FFuaQueryBase*     myCrossSectionQuery = NULL;
+  FmModelMemberBase* mySelectedCS = NULL;
+  bool               myHideCrossSection = false;
+  bool               myVisualize3DEnabled = false;
+  bool               myVisualize3D = false;
+  int                myVisualize3Dts = 0;
+  std::pair<int,int> myVisualize3DAngles = { 0, 0 };
+  double             myMassPropDamp = 0.0;
+  double             myStifPropDamp = 0.0;
+  double             myScaleMass = 0.0;
+  double             myScaleStiff = 0.0;
+  FaVec3             myOrientation;
+  int                myBlankFieldsFlags = 0;
 
   // Wind turbine :
 
-  bool showTurbineData;
-  bool showTowerData;
-  bool showNacelleData;
-  bool showShaftData;
-  bool showGearboxData;
-  bool showGeneratorData;
-  bool showRotorData;
-  bool showBladeData;
+  bool showTurbineData = false;
+  bool showTowerData = false;
+  bool showNacelleData = false;
+  bool showShaftData = false;
+  bool showGearboxData = false;
+  bool showGeneratorData = false;
+  bool showRotorData = false;
+  bool showBladeData = false;
 
-  FFuaQueryBase*      myTurbineWindRefTriadDefQuery;
-  FmModelMemberBase*  myTurbineWindRefTriadDefSelected;
-  double              myTurbineWindVertOffset;
-  FFuaQueryBase*      myTurbineYawPointTriadDefQuery;
-  FmModelMemberBase*  myTurbineYawPointTriadDefSelected;
-  FFuaQueryBase*      myTurbineHubApexTriadDefQuery;
-  FmModelMemberBase*  myTurbineHubApexTriadDefSelected;
-  FFuaQueryBase*      myTurbineHubPartDefQuery;
-  FmModelMemberBase*  myTurbineHubPartDefSelected;
-  FFuaQueryBase*      myTurbineFirstBearingDefQuery;
-  FmModelMemberBase*  myTurbineFirstBearingDefSelected;
+  FFuaQueryBase*     myTurbineWindRefTriadDefQuery = NULL;
+  FmModelMemberBase* myTurbineWindRefTriadDefSelected = NULL;
+  double             myTurbineWindVertOffset = 0.0;
+  FFuaQueryBase*     myTurbineYawPointTriadDefQuery = NULL;
+  FmModelMemberBase* myTurbineYawPointTriadDefSelected = NULL;
+  FFuaQueryBase*     myTurbineHubApexTriadDefQuery = NULL;
+  FmModelMemberBase* myTurbineHubApexTriadDefSelected = NULL;
+  FFuaQueryBase*     myTurbineHubPartDefQuery = NULL;
+  FmModelMemberBase* myTurbineHubPartDefSelected = NULL;
+  FFuaQueryBase*     myTurbineFirstBearingDefQuery = NULL;
+  FmModelMemberBase* myTurbineFirstBearingDefSelected = NULL;
 
   // Generator :
 
-  bool                myGeneratorTorqueControl;
-  bool                myGeneratorTorqueControlIsConstant;
-  double              myGeneratorTorqueControlConstValue;
-  FFuaQueryBase*      myGeneratorTorqueControlEngineQuery;
-  FmModelMemberBase*  myGeneratorTorqueControlSelectedEngine;
-  bool                myGeneratorVelocityControlIsConstant;
-  double              myGeneratorVelocityControlConstValue;
-  FFuaQueryBase*      myGeneratorVelocityControlEngineQuery;
-  FmModelMemberBase*  myGeneratorVelocityControlSelectedEngine;
+  bool               myGeneratorTorqueControl = false;
+  bool               myGeneratorTorqueControlIsConstant = false;
+  double             myGeneratorTorqueControlConstValue = 0.0;
+  FFuaQueryBase*     myGeneratorTorqueControlEngineQuery = NULL;
+  FmModelMemberBase* myGeneratorTorqueControlSelectedEngine = NULL;
+  bool               myGeneratorVelocityControlIsConstant = false;
+  double             myGeneratorVelocityControlConstValue = 0.0;
+  FFuaQueryBase*     myGeneratorVelocityControlEngineQuery = NULL;
+  FmModelMemberBase* myGeneratorVelocityControlSelectedEngine = NULL;
 
   // Blade :
 
-  bool                myBladeIceLayer;
-  double              myBladeIceThickness;
-  bool                myBladePitchIsFixed;
-  bool                myBladePitchControlIsConstant;
-  double              myBladePitchControlConstValue;
-  FFuaQueryBase*      myBladePitchControlEngineQuery;
-  FmModelMemberBase*  myBladePitchControlSelectedEngine;
+  bool               myBladeIceLayer = false;
+  double             myBladeIceThickness = 0.0;
+  bool               myBladePitchIsFixed = false;
+  bool               myBladePitchControlIsConstant = false;
+  double             myBladePitchControlConstValue = 0.0;
+  FFuaQueryBase*     myBladePitchControlEngineQuery = NULL;
+  FmModelMemberBase* myBladePitchControlSelectedEngine = NULL;
 
   // Riser, Jacket and Soil Pile :
 
-  bool                showRiserData;
-  bool                showJacketData;
-  bool                showSoilPileData;
-  bool                myIntFluid;
-  double              myIntFluidDensity;
-  double              myIntFluidLevel;
+  bool   showRiserData = false;
+  bool   showJacketData = false;
+  bool   showSoilPileData = false;
+  bool   myIntFluid = false;
+  double myIntFluidDensity = 0.0;
+  double myIntFluidLevel = 0.0;
 
   // Triad :
 
-  bool   showTriadData;
-  bool   isSlave;
-  bool   isMaster;
-  bool   myTriadIsAttached;
-  char   myTriadConnector;
-  char   mySysDir;
+  bool showTriadData = false;
+  bool isSlave = false;
+  bool isMaster = false;
+  bool myTriadIsAttached = false;
+  char myTriadConnector = 0;
+  char mySysDir = 0;
   std::string myFENodeIdx;
-  std::array<double,4> myMass;
+  std::array<double,4> myMass{};
 
   FFaDynCB2<int,int> myDofStatusCB;
 
@@ -732,12 +643,12 @@ public:
 
   // Joint :
 
-  char   showJointData;
+  char showJointData = false;
   std::vector<FuiJointDOFValues> myJointVals;
 
-  bool   showSwapTriadButton;
-  bool   showAddMasterButton;
-  bool   showReverseMasterButton;
+  bool showSwapTriadButton = false;
+  bool showAddMasterButton = false;
+  bool showReverseMasterButton = false;
   FFaDynCB0 mySwapTriadCB;
   FFaDynCB0 myAddMasterCB;
   FFaDynCB0 myRevMasterCB;
@@ -749,54 +660,54 @@ public:
   FFaDynCB0 mySwapJointCB;
 
   // Pipe Surface
-  bool   showPipeSurfaceData;
-  double pipeSurfaceRadius;
+  bool   showPipeSurfaceData = false;
+  double pipeSurfaceRadius = 0.0;
 
   // Cam
-  bool   showCamData;
-  double myCamThickness;
-  double myCamWidth;
-  bool   IAmRadialContact;
+  bool   showCamData = false;
+  double myCamThickness = 0.0;
+  double myCamWidth = 0.0;
+  bool   IAmRadialContact = false;
 
   // Screw
-  bool   showScrew;
-  bool   myIsScrewConnection;
-  double myScrewRatio;
+  bool   showScrew = false;
+  bool   myIsScrewConnection = false;
+  double myScrewRatio = 0.0;
 
   // Rotational formulation
-  bool showRotFormulation;
-  int  mySelectedRotFormulation;
-  int  mySelectedRotSequence;
+  bool showRotFormulation = false;
+  int  mySelectedRotFormulation = 0;
+  int  mySelectedRotSequence = 0;
   std::vector<std::string> myRotFormulationTypes;
   std::vector<std::string> myRotSequenceTypes;
 
   // Spring coupling
-  bool showRotSpringCpl;
-  bool showTranSpringCpl;
-  int  mySelectedRotSpringCpl;
-  int  mySelectedTranSpringCpl;
+  bool showRotSpringCpl = false;
+  bool showTranSpringCpl = false;
+  int  mySelectedRotSpringCpl = 0;
+  int  mySelectedTranSpringCpl = 0;
   std::vector<std::string> mySpringCplTypes;
 
   // Rev joint optional TZ DOF
-  bool showDOF_TZ_Toggle;
-  bool myIsDOF_TZ_legal;
+  bool showDOF_TZ_Toggle = false;
+  bool myIsDOF_TZ_legal = false;
 
   // Friction :
 
-  char               showFriction;
-  FFuaQueryBase*     myFrictionQuery;
-  FmModelMemberBase* mySelectedFriction;
-  int                myFrictionDof;
+  char               showFriction = false;
+  FFuaQueryBase*     myFrictionQuery = NULL;
+  FmModelMemberBase* mySelectedFriction = NULL;
+  int                myFrictionDof = 0;
 
   // Load :
 
-  bool               showLoadData;
-  double             myLoadMagnitude;
-  FFuaQueryBase*     myLoadEngineQuery;
-  FmModelMemberBase* mySelectedLoadMagnitudeEngine;
+  bool               showLoadData = false;
+  double             myLoadMagnitude = 0.0;
+  FFuaQueryBase*     myLoadEngineQuery = NULL;
+  FmModelMemberBase* mySelectedLoadMagnitudeEngine = NULL;
 
   FaVec3      myAttackPoint;
-  bool        myAttackPointIsGlobal;
+  bool        myAttackPointIsGlobal = false;
   std::string myAttackObjectText;
 
   FFaDynCB1<bool>        myLoadViewAttackPointCB;
@@ -805,7 +716,7 @@ public:
   FFaDynCB2<bool,FaVec3> myLoadApplyCB;
 
   FaVec3      myFromPoint;
-  bool        myFromPointIsGlobal;
+  bool        myFromPointIsGlobal = false;
   std::string myFromPointObjectText;
 
   FFaDynCB1<bool> myLoadViewFromPointCB;
@@ -813,7 +724,7 @@ public:
   FFaDynCB0       myLoadPickFromPointCB;
 
   FaVec3      myToPoint;
-  bool        myToPointIsGlobal;
+  bool        myToPointIsGlobal = false;
   std::string myToPointObjectText;
 
   FFaDynCB1<bool> myLoadViewToPointCB;
@@ -822,151 +733,151 @@ public:
 
   // Generic DB Object
 
-  bool           showGenDBObj;
-  std::string    myGenDBObjType;
-  std::string    myGenDBObjDef;
+  bool        showGenDBObj = false;
+  std::string myGenDBObjType;
+  std::string myGenDBObjDef;
 
   // File Reference
 
-  bool           showFileReference;
-  std::string    myFileReferenceName;
-  std::string    myModelFilePath;
+  bool        showFileReference = false;
+  std::string myFileReferenceName;
+  std::string myModelFilePath;
 
   // Tire
 
-  bool                  showTireData;
-  FFaDynCB0             myBrowseTireFileCB;
-  FFuaQueryBase       * myTireDataFileRefQuery;
-  FFuaQueryBase       * myRoadQuery;
+  bool                     showTireData = false;
+  FFaDynCB0                myBrowseTireFileCB;
+  FFuaQueryBase*           myTireDataFileRefQuery = NULL;
+  FFuaQueryBase*           myRoadQuery = NULL;
   std::vector<std::string> myTireTypes;
-  double                mySpindelTriadOffset;
-  std::string           mySelectedTireModelType;
-  FmModelMemberBase   * mySelectedRoad;
-  FmModelMemberBase   * mySelectedTireDataFileRef;
-  std::string           myTireDataFileName;
+  double                   mySpindelTriadOffset;
+  std::string              mySelectedTireModelType;
+  FmModelMemberBase*       mySelectedRoad = NULL;
+  FmModelMemberBase*       mySelectedTireDataFileRef = NULL;
+  std::string              myTireDataFileName;
 
   // Road
 
-  bool                  showRoadData;
-  bool                  iAmUsingExtRoadData;
-  FFuaQueryBase       * myRoadFunctionQuery;
-  FmModelMemberBase   * mySelectedRoadFunc;
-  double                myRoadZShift;
-  double                myRoadXOffset;
-  double                myRoadZRotation;
-  FFaDynCB0             myBrowseRoadFileCB;
-  FFuaQueryBase       * myRoadDataFileRefQuery;
-  FmModelMemberBase   * mySelectedRoadDataFileRef;
-  std::string           myRoadDataFileName;
+  bool               showRoadData = false;
+  bool               iAmUsingExtRoadData;
+  FFuaQueryBase*     myRoadFunctionQuery = NULL;
+  FmModelMemberBase* mySelectedRoadFunc = NULL;
+  double             myRoadZShift = 0.0;
+  double             myRoadXOffset = 0.0;
+  double             myRoadZRotation = 0.0;
+  FFaDynCB0          myBrowseRoadFileCB;
+  FFuaQueryBase*     myRoadDataFileRefQuery = NULL;
+  FmModelMemberBase* mySelectedRoadDataFileRef = NULL;
+  std::string        myRoadDataFileName;
 
   // Material properties
 
-  bool                  showMatPropData;
-  double                myMatPropRho;
-  double                myMatPropE;
-  double                myMatPropNu;
-  double                myMatPropG;
+  bool   showMatPropData = false;
+  double myMatPropRho = 0.0;
+  double myMatPropE = 0.0;
+  double myMatPropNu = 0.0;
+  double myMatPropG = 0.0;
 
   // Beam properties
 
-  bool                  showBeamPropData;
-  int                   myBeamCrossSectionType;
-  FFuaQueryBase*        myMaterialQuery;
-  FmModelMemberBase*    mySelectedMaterial;
-  bool                  myBeamBreakDependence;
-  bool                  myBeamHydroToggle;
-  std::array<double,18> myBeamProp;
-  std::array<double,10> myHydroProp;
+  bool                  showBeamPropData = false;
+  int                   myBeamCrossSectionType = 0;
+  FFuaQueryBase*        myMaterialQuery = NULL;
+  FmModelMemberBase*    mySelectedMaterial = NULL;
+  bool                  myBeamBreakDependence = false;
+  bool                  myBeamHydroToggle = false;
+  std::array<double,18> myBeamProp{};
+  std::array<double,10> myHydroProp{};
 
   // Strain rosette
 
-  bool                   showStrainRosetteData;
-  bool                   myStrRosIsEditable;
-  std::vector<int>       myStrRosNodes;
-  FFaDynCB0              myEditNodesCB;
-  double                 myStrRosAngle;
-  FFaDynCB0              myEditDirectionCB;
-  FFaDynCB0              myFlipZCB;
+  bool                     showStrainRosetteData = false;
+  bool                     myStrRosIsEditable = false;
+  std::vector<int>         myStrRosNodes;
+  FFaDynCB0                myEditNodesCB;
+  double                   myStrRosAngle = 0.0;
+  FFaDynCB0                myEditDirectionCB;
+  FFaDynCB0                myFlipZCB;
   std::vector<std::string> myStrainRosetteTypes;
-  std::string            mySelectedRosetteType;
-  double                 myStrRosHeight;
-  bool                   IAmUsingFEHeight;
-  double                 myStrRosEMod;
-  double                 myStrRosNu;
-  bool                   IAmUsingFEMaterial;
-  bool                   IAmResettingStartStrains;
+  std::string              mySelectedRosetteType;
+  double                   myStrRosHeight = 0.0;
+  bool                     IAmUsingFEHeight = false;
+  double                   myStrRosEMod = 0.0;
+  double                   myStrRosNu = 0.0;
+  bool                     IAmUsingFEMaterial = false;
+  bool                     IAmResettingStartStrains = false;
 
   // Element group
 
-  bool   showGroupData;
-  bool   doFatigue;
-  int    mySNCurve;
-  int    mySNStd;
-  double mySCF;
+  bool   showGroupData = false;
+  bool   doFatigue = false;
+  int    mySNCurve = 0;
+  int    mySNStd = 0;
+  double mySCF = 0.0;
 
   // RAO vessel motion
 
-  bool               showRAOData;
+  bool               showRAOData = false;
   FFaDynCB0          myBrowseRAOFileCB;
-  FFuaQueryBase*     myRAOFileRefQuery;
-  FmModelMemberBase* mySelectedRAOFileRef;
+  FFuaQueryBase*     myRAOFileRefQuery = NULL;
+  FmModelMemberBase* mySelectedRAOFileRef = NULL;
   std::string        myRAOFileName;
-  FFuaQueryBase*     myWaveFunctionQuery;
-  FmModelMemberBase* mySelectedWaveFunc;
+  FFuaQueryBase*     myWaveFunctionQuery = NULL;
+  FmModelMemberBase* mySelectedWaveFunc = NULL;
   std::vector<int>   myWaveDirections;
-  int                mySelectedWaveDir;
-  FFuaQueryBase*     myMotionScaleQuery;
-  FmModelMemberBase* mySelectedScale;
+  int                mySelectedWaveDir = 0;
+  FFuaQueryBase*     myMotionScaleQuery = NULL;
+  FmModelMemberBase* mySelectedScale = NULL;
 
   // Sea state
 
-  bool   showSeaStateData;
-  double mySeaStateWidth;
-  double mySeaStateHeight;
-  double mySeaStateWidthPos;
-  double mySeaStateHeightPos;
-  int    mySeaStateNumPoints;
-  bool   mySeaStateShowGrid;
-  bool   mySeaStateShowSolid;
+  bool   showSeaStateData = false;
+  double mySeaStateWidth = 0.0;
+  double mySeaStateHeight = 0.0;
+  double mySeaStateWidthPos = 0.0;
+  double mySeaStateHeightPos = 0.0;
+  int    mySeaStateNumPoints = 0;
+  bool   mySeaStateShowGrid = false;
+  bool   mySeaStateShowSolid = false;
 
   // Simulation event
 
-  bool      showSimEventData;
-  bool      showActiveEvent;
-  bool      allowSimEventChange;
-  double    mySimEventProbability;
+  bool      showSimEventData = false;
+  bool      showActiveEvent = false;
+  bool      allowSimEventChange = false;
+  double    mySimEventProbability = 0.0;
   FFaDynCB0 mySimEventCB;
 
   // Subassembly
 
-  bool        showSubassemblyData;
-  bool        showSubassPos;
+  bool        showSubassemblyData = false;
+  bool        showSubassPos = false;
   FaVec3      myCoG;
   std::string mySubAssemblyFile;
 
   // Function properties
   // (The FunctionProperties ui communicates with db by itself)
 
-  bool showFunctionData;
+  bool showFunctionData = false;
 
   // Control system properties
   // (The CtrlElementProperties ui communicates with db by itself)
 
-  bool showCtrlData;
-  bool showCtrlInOut;
-  bool showExtCtrlSysData;
+  bool showCtrlData = false;
+  bool showCtrlInOut = false;
+  bool showExtCtrlSysData = false;
 
   // Animation and graph properties
   // (The animationdefine, graphdefine & curvedefine ui's communicate
   // with db by themselves)
 
-  bool showAnimationData;
-  bool showGraphData;
-  bool showCurveData;
+  bool showAnimationData = false;
+  bool showGraphData = false;
+  bool showCurveData = false;
 
   // Start guide
 
-  bool showStartGuide;
+  bool showStartGuide = false;
 };
 
 #endif

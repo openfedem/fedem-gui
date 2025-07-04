@@ -21,7 +21,7 @@
 #include "vpmUI/vpmUITopLevels/FuiModeller.H"
 #include "vpmUI/vpmUITopLevels/FuiCtrlModeller.H"
 #include "vpmUI/vpmUITopLevels/FuiSplitBeam.H"
-#include "vpmUI/vpmUIComponents/FuiTopologyView.H"
+#include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
 #include "vpmUI/FuiCtrlModes.H"
 
@@ -487,14 +487,12 @@ void FapEditCmds::selectTempSelection()
 
 void FapEditCmds::selectTempSelectionAll()
 {
-  // Get the topology view
-  FuiTopologyView* topologyView = FuiTopologyView::getTopologyView();
-  if (!topologyView) return;
-
   // Get a list of all top-level items
   // Note: The top-level child(ren) might not have ids, which means that
   //       we need to get the children (of that group).
-  FFuListView* listView = topologyView->getListView();
+  FFuListView* listView = Fui::getTopologyList();
+  if (!listView) return;
+
   FFuListViewItem* firstItem = listView->getFirstChildItem();
   if (!firstItem) return;
 

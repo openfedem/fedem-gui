@@ -343,6 +343,16 @@ FuiProperties* Fui::getProperties()
 }
 
 
+FFuListView* Fui::getTopologyList()
+{
+  FuiProperties* props = Fui::getProperties();
+  if (!props) return NULL;
+
+  FuiTopologyView* topology = props->getTopologyView();
+  return topology ? topology->getListView() : NULL;
+}
+
+
 FFuComponentBase* Fui::getViewer()
 {
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiModeller::getClassTypeID());

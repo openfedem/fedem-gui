@@ -13,6 +13,7 @@
 
 class FFuTopLevelShell;
 class FFuComponentBase;
+class FFuListView;
 class FuiMainWindow;
 class FuiProperties;
 class FuiGraphView;
@@ -63,6 +64,7 @@ namespace Fui
   FuiProperties*    getProperties(); // Get the property editor view
   FFuComponentBase* getViewer();     // Get the 3D viewer
   FFuComponentBase* getCtrlViewer(); // Get the control viewer
+  FFuListView*      getTopologyList(); // Get the topology list view
 
 
   //////////////////////////////////////
