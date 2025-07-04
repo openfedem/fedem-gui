@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource>
+    <file alias="open.svg">icons/open-open-a-file-svgrepo-com.svg</file>
+    <file alias="save.svg">icons/save-save-the-document-svgrepo-com.svg</file>
+  </qresource>
+</RCC>

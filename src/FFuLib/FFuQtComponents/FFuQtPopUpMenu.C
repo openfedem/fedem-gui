@@ -65,11 +65,8 @@ int FFuQtPopUpMenu::basicNewItem(FFuaCmdItem* item, FFuPopUpMenu* menu)
   {
     // px + text
     QIcon* ic;
-    if (item->getBigIcon()) {
-      ic = new QIcon(FFuaQtPixmapCache::getPixmap(item->getBigIcon()));
-      if (item->getSmallIcon())
-        ic->addPixmap(FFuaQtPixmapCache::getPixmap(item->getSmallIcon()));
-    }
+    if (item->getSvgIcon())
+      ic = new QIcon(item->getSvgIcon());
     else if (item->getSmallIcon())
       ic = new QIcon(FFuaQtPixmapCache::getPixmap(item->getSmallIcon()));
     else

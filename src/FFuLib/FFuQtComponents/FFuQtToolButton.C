@@ -5,8 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QPixmap>
-
 #include "FFuLib/FFuAuxClasses/FFuQtAuxClasses/FFuaQtPixmapCache.H"
 #include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
@@ -76,18 +74,10 @@ void FFuQtToolButton::setActiveCmdItem(FFuaCmdItem* cmd)
 {
   this->activeCmdItem = cmd;
 
-  if (cmd->getBigIcon()) {
-    QIcon ic(FFuaQtPixmapCache::getPixmap(cmd->getBigIcon()));
-    if (cmd->getSmallIcon())
-      ic.addPixmap(FFuaQtPixmapCache::getPixmap(cmd->getSmallIcon()));
-    this->setIcon(ic);
-  }
-  else if (cmd->getSmallIcon()) {
-    QIcon ic(FFuaQtPixmapCache::getPixmap(cmd->getSmallIcon()));
-    if (cmd->getBigIcon())
-      ic.addPixmap(FFuaQtPixmapCache::getPixmap(cmd->getBigIcon()));
-    this->setIcon(ic);
-  }
+  if (cmd->getSvgIcon())
+    this->setIcon(QIcon(cmd->getSvgIcon()));
+  else if (cmd->getSmallIcon())
+    this->setIcon(QIcon(FFuaQtPixmapCache::getPixmap(cmd->getSmallIcon())));
   else
     this->setIcon(QIcon());
 

@@ -92,6 +92,7 @@ proceed as follows:
       copy lib\QtNetwork4.* C:\Qt-4.8.7\lib
       copy lib\QtOpenGL4.* C:\Qt-4.8.7\lib
       copy lib\QtSql4.* C:\Qt-4.8.7\lib
+      copy lib\QtSvg4.* C:\Qt-4.8.7\lib
       copy lib\QtXml4.* C:\Qt-4.8.7\lib
 
 - Install the Qt header files required for building FEDEM.
