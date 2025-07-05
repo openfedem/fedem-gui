@@ -491,7 +491,7 @@ bool FuiQtProperties::initStartGuide()
 
   QString strData;
   if (!fileOk)
-    strData = "Welcome to <i>FEDEM 8.0</i>";
+    strData = "Welcome to <i>FEDEM 8.1</i>";
   else while (!file.atEnd())
     strData.append(file.readLine().data());
   file.close();
@@ -499,7 +499,7 @@ bool FuiQtProperties::initStartGuide()
   strData.replace(" src='", " src='" + appPath);
   // Set fields
   mySGLogoImage->setPixMap(startGuideLogo_xpm,true);
-  mySGHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.0</b></i></font>");
+  mySGHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.1</b></i></font>");
   mySGContentLabel->setLabel(strData.toStdString());
   mySGContentLabel->setLinkActivatedCB(FFaDynCB1S(onURLActivated,const std::string&));
   mySGLogoBorderRight->setPixMap(startGuideBorderRight_xpm,true);

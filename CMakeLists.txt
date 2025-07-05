@@ -91,7 +91,7 @@ endif ( USE_WINDPOW )
 
 # Download and install the latest documentation
 
-set ( DOC_VER fedem-8.0.9 )
+set ( DOC_VER fedem-8.1.0 )
 set ( DOC_URL https://github.com/openfedem/fedem-docs/releases/download/${DOC_VER} )
 set ( DOC_DIR "${CMAKE_CURRENT_BINARY_DIR}/Doc" )
 set ( DOC_FILES Fedem.chm FedemUsersGuide.pdf FedemTheoryGuide.pdf )
@@ -110,7 +110,7 @@ install ( FILES ${FEDEM_DOCS} DESTINATION "${BINARY_DIR}/Doc" )
 
 # Download and install the FMU libraries
 
-set ( FMU_VER fmu-8.0.6 )
+set ( FMU_VER fmu-8.1.0 )
 set ( FMU_URL https://github.com/openfedem/fedem-solvers/releases/download/${FMU_VER} )
 set ( FMU_DIR "${CMAKE_CURRENT_BINARY_DIR}" )
 set ( FMU_FILES libfedem_fmu.so fedem_fmu.dll )
