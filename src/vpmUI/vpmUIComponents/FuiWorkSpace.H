@@ -9,39 +9,22 @@
 #define FUI_WORK_SPACE_H
 
 #include "FFuLib/FFuBase/FFuComponentBase.H"
-#include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
-#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuMDIWindow;
 
 
-class FuiWorkSpace : virtual public FFuComponentBase, public FFuUAExistenceHandler
+class FuiWorkSpace : virtual public FFuComponentBase
 {
 public:
-  FuiWorkSpace() {}
-  virtual ~FuiWorkSpace() {}
+  void sendWindowActivated();
 
-// Operations  
-public:  
-  void setWindowActivatedCB(const FFaDynCB1<FFuMDIWindow*>& aDynCB)
-    {this->windowActivatedCB = aDynCB;} 
-
-  // Functionallity
-  virtual void cascadeWins() {}
-  virtual void tileWins() {}
-  virtual void tabWins() {}
-  virtual void subWins() {}
+  virtual void cascadeWins() = 0;
+  virtual void tileWins() = 0;
+  virtual void tabWins() = 0;
+  virtual void subWins() = 0;
  
-  virtual FFuMDIWindow* getActiveWindow() {return 0;}
-  virtual void sendWindowActivated() {}
-
 protected:
-  void initWidgets() { FFuUAExistenceHandler::invokeCreateUACB(this); }
-  void invokeWindowActivatedCB(FFuMDIWindow* win)
-    {this->windowActivatedCB.invoke(win);}
-  
-private:
-  FFaDynCB1<FFuMDIWindow*> windowActivatedCB;
+  virtual FFuMDIWindow* getActiveWindow() = 0;
 };
 
 #endif

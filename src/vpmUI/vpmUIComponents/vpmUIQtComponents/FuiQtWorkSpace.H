@@ -20,18 +20,17 @@ class FuiQtWorkSpace : public QMdiArea,
 
 public:
   FuiQtWorkSpace(QWidget* parent, const char* name="FuiQtWorkSpace");
-  virtual ~FuiQtWorkSpace() {}
 
   virtual void cascadeWins();
   virtual void tileWins();
   virtual void tabWins();
   virtual void subWins();
 
+protected:
   virtual FFuMDIWindow* getActiveWindow();
-  virtual void sendWindowActivated();
 
-public slots:
-  void fwdWindowActivated(QMdiSubWindow* ignoreme = NULL);
+private slots:
+  void fwdWindowActivated(QMdiSubWindow*) { this->sendWindowActivated(); }
 };
 
 #endif

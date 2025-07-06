@@ -84,7 +84,6 @@
 #include "vpmApp/vpmAppUAMap/FapUAGraphViewTLS.H"
 #endif
 #include "vpmApp/vpmAppUAMap/FapUAMainWindow.H"
-#include "vpmApp/vpmAppUAMap/FapUAWorkSpace.H"
 #include "vpmApp/vpmAppUAMap/FapUAQueryInputField.H"
 #include "vpmApp/vpmAppUAMap/FapUAFunctionProperties.H"
 #include "vpmApp/vpmAppUAMap/FapUASimModelListView.H"
@@ -105,7 +104,6 @@
 #include "vpmApp/vpmAppUAMap/FapUAModelExport.H"
 
 #include "vpmUI/vpmUIComponents/FuiCtrlElemProperties.H"
-#include "vpmUI/vpmUIComponents/FuiWorkSpace.H"
 #ifdef FT_HAS_GRAPHVIEW
 #include "vpmUI/vpmUIComponents/FuiCurveDefine.H"
 #include "vpmUI/vpmUIComponents/FuiGraphDefine.H"
@@ -242,7 +240,6 @@ void FapUAExistenceHandler::createUA(FFuUAExistenceHandler* ui)
   FuiRDBMEFatigue* rdbMEFatigue;
 #endif
   FuiMainWindow* mainWindow;
-  FuiWorkSpace* workSpace;
   FuiProperties* properties;
   FuiQueryInputField* engField;
   FuiFunctionProperties* funcProp;
@@ -336,9 +333,6 @@ void FapUAExistenceHandler::createUA(FFuUAExistenceHandler* ui)
 
   else if ((mainWindow = dynamic_cast<FuiMainWindow*>(ui)))
     new FapUAMainWindow(mainWindow);
-
-  else if ((workSpace = dynamic_cast<FuiWorkSpace*>(ui)))
-    new FapUAWorkSpace(workSpace);
 
   else if ((properties = dynamic_cast<FuiProperties*>(ui)))
     new FapUAProperties(properties);
