@@ -264,17 +264,13 @@ void FuiQtModelExport::getUIValues(FFuaUIValues* values)
 
 void FuiQtModelExport::showEvent(QShowEvent*)
 {
-  QStringList inputHeaders;
-  inputHeaders << "Name" << "Description";
   inputTable->clear();
-  inputTable->setHorizontalHeaderLabels(inputHeaders);
-  inputTable->horizontalHeader()->setResizeMode(QHeaderView::ResizeMode::Stretch);
+  inputTable->setHorizontalHeaderLabels({ "Name", "Description" });
+  inputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 
-  QStringList outputHeaders;
-  outputHeaders << "Name" << "Description" << "Threshold";
   outputTable->clear();
-  outputTable->setHorizontalHeaderLabels(outputHeaders);
-  outputTable->horizontalHeader()->setResizeMode(QHeaderView::ResizeMode::Stretch);
+  outputTable->setHorizontalHeaderLabels({ "Name", "Description", "Threshold" });
+  outputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 }
 
 

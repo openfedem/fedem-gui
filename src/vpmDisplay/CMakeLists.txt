@@ -9,8 +9,7 @@ set ( LIB_ID vpmDisplay )
 
 # Dependencies and system libraries
 
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
+find_package ( Qt5 REQUIRED COMPONENTS Widgets Core OpenGL )
 
 if ( WIN )
   set ( SDK_ROOT "C:/Program Files (x86)/Windows Kits/10/Lib" )
@@ -30,7 +29,7 @@ else ( WIN )
   find_library ( Simage_library simage )
 endif ( WIN )
 
-set ( EXTERNAL_LIBRARIES ${Coin_library} ${SoQt_library} ${DSO_LIBGL} )
+set ( EXTERNAL_LIBRARIES ${Coin_library} ${SoQt_library} Qt5::OpenGL ${DSO_LIBGL} )
 
 if ( WIN )
   string ( APPEND CMAKE_CXX_FLAGS " -Dwin32 -DCOIN_DLL -DSOQT_DLL" )
@@ -59,6 +58,9 @@ if ( Simage_library )
   list ( APPEND EXTERNAL_LIBRARIES ${Simage_library} )
 else ( Simage_library )
   message ( STATUS "Simage library not available, configuring without it" )
+  if ( FTENV_WARNINGS AND LINUX )
+    string ( APPEND CMAKE_CXX_FLAGS " -Wno-unused-parameter" )
+  endif ( FTENV_WARNINGS AND LINUX )
 endif ( Simage_library )
 
 if ( USE_MEMPOOL )
@@ -126,7 +128,12 @@ target_link_libraries ( ${LIB_ID} ${DEPENDENCY_LIST} )
 
 list ( REMOVE_ITEM EXTERNAL_LIBRARIES ${DSO_LIBGL} )
 foreach ( LIB ${EXTERNAL_LIBRARIES} )
-  string ( REPLACE "/lib/" "/bin/" DLL_PATH ${LIB} )
+  if ( TARGET ${LIB} )
+    get_target_property ( LIB_PATH ${LIB} LOCATION )
+  else ( TARGET ${LIB} )
+    set ( LIB_PATH ${LIB} )
+  endif ( TARGET ${LIB} )
+  string ( REPLACE "/lib/" "/bin/" DLL_PATH ${LIB_PATH} )
   if ( WIN )
     string ( REPLACE ".lib" ".dll" DLL_PATH ${DLL_PATH} )
     if ( FTENV_VERBOSE )

@@ -7,6 +7,8 @@
 # Builds the LIB_ID library
 set ( LIB_ID FFuQtComponents )
 
+find_package ( Qt5 REQUIRED COMPONENTS Core )
+
 
 ## Files with header and source with same name
 set ( COMPONENT_FILE_LIST  FFuQtButton
@@ -44,11 +46,7 @@ set ( COMPONENT_FILE_LIST  FFuQtButton
                            FFuQtToolButton
                            FFuQtUserDialog
                            FFuQtDropDownBox
-                           FFuQ3ScrolledList
-)
-if ( Qwt_LIBRARY )
-  list ( APPEND COMPONENT_FILE_LIST FFuQt2DPlotter )
-endif ( Qwt_LIBRARY )
+    )
 
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST )
@@ -75,8 +73,7 @@ set ( QT_MOC_HEADER_FILE_LIST  FFuQtColorComboBox
                                FFuQtToggleButton
                                FFuQtToolButton
                                FFuQtLabel
-                               FFuQ3ScrolledList
-     )
+    )
 
 if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FFuQt2DPlotter )
@@ -91,7 +88,7 @@ endforeach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
 
 include_directories ( ${CMAKE_CURRENT_BINARY_DIR} )
 # Named moc_<filename>.cxx where input is filname.H
-QT4_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
+QT5_WRAP_CPP ( QT_MOC_SOURCE_FILES ${QT_MOC_HEADER_FILES} )
 
 
 foreach ( FILE ${COMPONENT_FILE_LIST} )
@@ -113,12 +110,14 @@ endforeach ( FILE ${SOURCE_FILE_LIST} )
 set ( HEADER_FILES ${HPP_HEADER_FILES} )
 set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 
+if ( WIN )
+  string ( APPEND CMAKE_CXX_FLAGS " -D_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING" )
+endif ( WIN )
+
 
 #
 # Dependencies and system libraries
 #
-find_package ( Qt4 REQUIRED )
-include ( ${QT_USE_FILE} )
 
 set ( DEPENDENCY_LIST FFuLib )
 if ( TARGET Qwt )
@@ -126,8 +125,15 @@ if ( TARGET Qwt )
 elseif ( Qwt_LIBRARY )
   list ( APPEND DEPENDENCY_LIST ${Qwt_LIBRARY} )
   if ( WIN )
+    string ( REPLACE ".lib" ".dll" QWT_LIBRARY ${Qwt_LIBRARY} )
     string ( APPEND CMAKE_CXX_FLAGS " -DQWT_DLL" )
+  else ( WIN )
+    set ( QWT_LIBRARY ${Qwt_LIBRARY} )
   endif ( WIN )
+  if ( FTENV_VERBOSE )
+    message ( STATUS "Installing ${QWT_LIBRARY} to ${CMAKE_INSTALL_PREFIX}" )
+  endif ( FTENV_VERBOSE )
+  install ( FILES ${QWT_LIBRARY} DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" )
 endif ( TARGET Qwt )
 
 message ( STATUS "Building library ${LIB_ID}" )

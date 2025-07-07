@@ -5,8 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <cstring>
-
 #include "vpmApp/vpmAppUAMap/FapUAMainWindow.H"
 #include "vpmApp/vpmAppCmds/FapFileCmds.H"
 #include "vpmApp/vpmAppCmds/FapToolsCmds.H"
@@ -84,7 +82,7 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   cmds->menuBar.push_back(&this->solveMainHeader);
   cmds->menuBar.push_back(&this->resultHeader);
 
-  bool haveAddOns = FapToolsCmds::getAddonExe();
+  bool haveAddOns = FapToolsCmds::haveAddons();
   if (haveAddOns)
     cmds->menuBar.push_back(&this->addonsHeader);
 
@@ -251,12 +249,12 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   //addons
   this->addonsHeader.clear();
   if (haveAddOns) {
-    char szName[512];
-    for (i = 0; FapToolsCmds::getAddonExe(i,NULL,szName); i++)
+    std::string addon;
+    for (i = 0; FapToolsCmds::getAddonExe(i,addon); i++)
       if ((pCmdItem = FFuaCmdItem::getCmdItem("cmdId_tools_addon" + std::to_string(i))))
       {
-        pCmdItem->setToolTip(szName);
-        pCmdItem->setText(strcat(szName,"..."));
+        pCmdItem->setToolTip(addon);
+        pCmdItem->setText(addon + "...");
         this->addonsHeader.push_back(pCmdItem);
       }
   }

@@ -21,7 +21,7 @@
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
-#include "FFuLib/FFuQtComponents/FFuQ3ScrolledList.H"
+#include "FFuLib/FFuQtComponents/FFuQtScrolledList.H"
 #include "FFuLib/FFuQtComponents/FFuQtScrolledListDialog.H"
 #include "FFuLib/FFuQtComponents/FFuQtTabbedWidgetStack.H"
 
@@ -42,7 +42,7 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   myThreshold2 = new FuiQtThreshold(this);
 
   myParameterFrame = new FFuQtLabelFrame(this);
-  myParameterList = new FFuQ3ScrolledList(this);
+  myParameterList = new FFuQtScrolledList(this);
   myExpandButton = new FFuQtPushButton(this);
 
   myExtrapolationLabel = new FFuQtLabel(this);

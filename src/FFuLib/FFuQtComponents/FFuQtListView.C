@@ -91,7 +91,7 @@ void FFuQtListView::setListSorting(int column, bool ascnd)
 
 void FFuQtListView::setHeaderClickEnabled(int, bool enable)
 {
-  this->header()->setClickable(enable);
+  this->header()->setSectionsClickable(enable);
 }
 //----------------------------------------------------------------------------
 
@@ -265,7 +265,7 @@ FFuListViewItem* FFuQtListView::createListItem(const char* label,
 
 void FFuQtListView::setColors(FFuaPalette aPalette)
 {
-  int r,g,b;
+  int r, g, b;
 
   aPalette.getStdBackground(r, g, b);
   QColor StdBackground(r, g, b);
@@ -291,43 +291,45 @@ void FFuQtListView::setColors(FFuaPalette aPalette)
   aPalette.getLightShadow(r, g, b);
   QColor LightShadow(r, g, b);
 
-  QColorGroup textFieldNormal   (TextOnFieldBackground,
-				 StdBackground,
-				 LightShadow,
-				 DarkShadow,
-				 MidShadow,
-				 TextOnFieldBackground,
-				 FieldBackground);
-
-  QColorGroup textFieldDisabled (textFieldNormal.foreground().dark(125),
-				 textFieldNormal.background(),
-				 textFieldNormal.light     (),
-				 textFieldNormal.dark      (),
-				 textFieldNormal.mid       (),
-				 textFieldNormal.text      ().light(80),
-				 textFieldNormal.base      ().dark(80));
-
-  QPalette textFieldPalette(textFieldNormal, textFieldDisabled, textFieldNormal);
+  QPalette textFieldPalette;
+  textFieldPalette.setColorGroup(QPalette::Active,
+                                 TextOnFieldBackground, FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground, TextOnFieldBackground,
+                                 FieldBackground, StdBackground);
+  textFieldPalette.setColorGroup(QPalette::Disabled,
+                                 TextOnFieldBackground.darker(125),
+                                 FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground.lighter(80),
+                                 TextOnStdBackground.darker(125),
+                                 FieldBackground, StdBackground.darker(80));
+  textFieldPalette.setColorGroup(QPalette::Active,
+                                 TextOnFieldBackground,
+                                 FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground, TextOnFieldBackground,
+                                 FieldBackground, StdBackground);
 
   this->setPalette(textFieldPalette);
 
-  QColorGroup stdNormal   (TextOnStdBackground,
-			   StdBackground,
-			   LightShadow,
-			   DarkShadow,
-			   MidShadow,
-			   TextOnStdBackground,
-			   FieldBackground);
-
-  QColorGroup stdDisabled (stdNormal.foreground().dark(125),
-			   stdNormal.background(),
-			   stdNormal.light     (),
-			   stdNormal.dark      (),
-			   stdNormal.mid       (),
-			   stdNormal.text      ().dark(125),
-			   stdNormal.base      ().dark(80));
-
-  QPalette stdPalette(stdNormal, stdDisabled, stdNormal);
+  QPalette stdPalette;
+  stdPalette.setColorGroup(QPalette::Active,
+                           TextOnStdBackground, FieldBackground,
+                           LightShadow, DarkShadow, MidShadow,
+                           TextOnStdBackground, TextOnStdBackground,
+                           FieldBackground, StdBackground);
+  stdPalette.setColorGroup(QPalette::Disabled,
+                           TextOnStdBackground.darker(125), FieldBackground,
+                           LightShadow, DarkShadow, MidShadow,
+                           TextOnStdBackground.lighter(80),
+                           TextOnStdBackground.darker(125),
+                           FieldBackground, StdBackground.darker(80));
+  stdPalette.setColorGroup(QPalette::Active,
+                           TextOnStdBackground, FieldBackground,
+                           LightShadow, DarkShadow, MidShadow,
+                           TextOnStdBackground, TextOnStdBackground,
+                           FieldBackground, StdBackground);
 
   this->header()->setPalette(stdPalette);
 }

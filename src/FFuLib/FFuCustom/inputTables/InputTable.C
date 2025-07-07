@@ -91,16 +91,16 @@ InputTable::InputTable(int rows, int columns, TableOrdering orderingType, QWidge
 			apTableView->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 			QObject::connect(apTableView->horizontalHeader(), SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuHorizontalHeader(const QPoint &)));
 
-			apTableView->verticalHeader()->setClickable(false);
-			apTableView->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+			apTableView->verticalHeader()->setSectionsClickable(false);
+			apTableView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 			break;
 		case ROW_DOMINANT:
 			// Context menu for vertical header
 			apTableView->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 			QObject::connect(apTableView->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuVerticalHeader(const QPoint &)));
 
-			apTableView->horizontalHeader()->setClickable(false);
-			apTableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+			apTableView->horizontalHeader()->setSectionsClickable(false);
+			apTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 			break;
 	}
 	

@@ -222,7 +222,7 @@ int FFuQtOptionMenu::getBasicWidthHint()
 
 void FFuQtOptionMenu::setColors(FFuaPalette aPalette)
 {
-  int r,g,b;
+  int r, g, b;
 
   aPalette.getStdBackground(r, g, b);
   QColor   StdBackground   (r, g, b);
@@ -248,23 +248,25 @@ void FFuQtOptionMenu::setColors(FFuaPalette aPalette)
   aPalette.getLightShadow(r, g, b);
   QColor   LightShadow   (r, g, b);
 
-  QColorGroup Normal(TextOnStdBackground,
-		     StdBackground,
-		     LightShadow,
-		     DarkShadow,
-		     MidShadow,
-		     TextOnStdBackground,
-		     StdBackground);
+  QPalette textFieldPalette;
 
-  QColorGroup Disabled(Normal.foreground().dark(125),
-		       Normal.background(),
-		       Normal.light     (),
-		       Normal.dark      (),
-		       Normal.mid       (),
-		       Normal.text      ().dark(125),
-		       Normal.base      ().dark(80));
+  textFieldPalette.setColorGroup(QPalette::Active,
+                                 TextOnStdBackground, FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground, TextOnStdBackground,
+                                 FieldBackground, StdBackground);
+  textFieldPalette.setColorGroup(QPalette::Disabled,
+                                 TextOnStdBackground.darker(125),
+                                 FieldBackground.darker(80),
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground.darker(125),
+                                 TextOnStdBackground.darker(125),
+                                 FieldBackground.darker(125), StdBackground);
+  textFieldPalette.setColorGroup(QPalette::Inactive,
+                                 TextOnStdBackground, FieldBackground,
+                                 LightShadow, DarkShadow, MidShadow,
+                                 TextOnStdBackground, TextOnStdBackground,
+                                 FieldBackground, StdBackground);
 
-  QPalette Palette(Normal, Disabled, Normal);
-
-  this->setPalette(Palette);
+  this->setPalette(textFieldPalette);
 }

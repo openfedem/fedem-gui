@@ -35,7 +35,6 @@ FuiQtRDBSelector::FuiQtRDBSelector(int xpos, int ypos,
   this->notesLabel = new FFuQtLabel(this);
   this->notesText = new FFuQtLabel(this);
   this->dialogButtons = new FFuQtDialogButtons(this);
-  this->closeButton = new FFuQtPushButton(this);
 
   this->initWidgets();
 }
