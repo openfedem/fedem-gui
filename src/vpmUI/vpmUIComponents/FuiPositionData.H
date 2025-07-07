@@ -32,6 +32,8 @@ public:
 
   const char* getTypeIDName() const { return "FuiPositionData"; }
 
+  int getLeftHeightHint() const;
+
   void setEditedObjs(const ObjectVec& objs = {});
   void editLinkCG(bool onOff) { IAmEditingLinkCG = onOff; }
 

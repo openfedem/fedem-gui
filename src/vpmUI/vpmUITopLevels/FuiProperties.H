@@ -110,8 +110,8 @@ protected:
 
   FuiPositionData* myRefPlanePosition;
   FFuLabelFrame*   myRefPlaneSizeFrame;
-  FFuLabelField*   myRefPlaneHeightField;
-  FFuLabelField*   myRefPlaneWidthField;
+  FFuIOField*      myRefPlaneHeightField;
+  FFuIOField*      myRefPlaneWidthField;
 
   // Higher Pairs
 

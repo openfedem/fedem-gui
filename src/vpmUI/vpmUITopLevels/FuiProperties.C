@@ -134,14 +134,10 @@ void FuiProperties::initWidgets()
   myRefPlanePosition->popDown();
   myRefPlaneSizeFrame->setLabel("Size");
   myRefPlaneSizeFrame->popDown();
-  myRefPlaneHeightField->setLabel("Height");
-  myRefPlaneHeightField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myRefPlaneHeightField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myRefPlaneHeightField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myRefPlaneHeightField->popDown();
-  myRefPlaneWidthField->setLabel("Width");
-  myRefPlaneWidthField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myRefPlaneWidthField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myRefPlaneWidthField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myRefPlaneWidthField->popDown();
 
   // Higher Pairs
 
@@ -989,29 +985,17 @@ void FuiProperties::placeWidgets(int width, int height)
   if (IAmShowingRefPlane)
     {
       int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + 2*hBorder;
       int v4 = leftPartSeparator + aThreePart - hBorder;
-      int v3 = v4 - 2*hBorder;
       int v5 = width - 2*hBorder;
       int h0 = headingBottom + 2*vBorder;
       myRefPlanePosition->setEdgeGeometry(v1,v5,h0,height);
 
-      int labelWidth = myRefPlaneHeightField->myLabel->getWidthHint();
-      int fieldHeigt = myRefPlaneHeightField->myField->getHeightHint();
-
-      int h1 = h0 + 3*textHeight + 2*fieldHeigt + 10*vBorder;
-      int h2 = h1 + textHeight + 2*vBorder;
-      int h3 = h2 + fieldHeight;
-      int h4 = h3 + 2*vBorder;
-      int h5 = h4 + fieldHeight;
-      int h6 = h5 + 2*vBorder;
-
-      myRefPlaneHeightField->setLabelWidth(labelWidth);
-      myRefPlaneWidthField->setLabelWidth(labelWidth);
+      v1 += 2;
+      int h1 = h0 + myRefPlanePosition->getLeftHeightHint() + 2*vBorder;
+      int h6 = h1 + myRefPlaneSizeFrame->getHeightHint();
+      if (h6 > height) h6 = height;
 
       myRefPlaneSizeFrame->setEdgeGeometry(v1,v4,h1,h6);
-      myRefPlaneHeightField->setEdgeGeometry(v2,v3,h2,h3);
-      myRefPlaneWidthField->setEdgeGeometry(v2,v3,h4,h5);
     }
 
   // Higher Pair
@@ -3673,10 +3657,10 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   // Reference Plane
 
   if (IAmShowingRefPlane)
-    {
-      pv->myRefPlaneHeight = myRefPlaneHeightField->getValue();
-      pv->myRefPlaneWidth  = myRefPlaneWidthField->getValue();
-    }
+  {
+    pv->myRefPlaneHeight = myRefPlaneHeightField->getDouble();
+    pv->myRefPlaneWidth  = myRefPlaneWidthField->getDouble();
+  }
 
   // Higher Pair
 
