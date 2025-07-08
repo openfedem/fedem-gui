@@ -74,7 +74,7 @@ FFuQtSelectionDialog::FFuQtSelectionDialog(const std::string& msgText, int dialo
   mySeparator->hide();
 
   QButtonGroup* buttonGroup = new QButtonGroup(this);
-  this->connect(buttonGroup, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
+  this->connect(buttonGroup, SIGNAL(idClicked(int)), this, SLOT(onButtonClicked(int)));
   column->addLayout(buttonRow);
   int id = 0;
   for (const std::string& btext : buttonTexts)

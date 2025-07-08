@@ -13,7 +13,7 @@
 //
 /////////////////
 
-#include <QtOpenGL/qgl.h>
+#include <QtOpenGL>
 #include <QApplication>
 #include <Inventor/actions/SoGLRenderAction.h>
 #include <Inventor/elements/SoElement.h>
@@ -103,7 +103,7 @@ void FdAnimationInfo::GLRender(SoGLRenderAction* action)
     // Find text field dimensions.
     QFontMetrics fm(qApp->font());
     fieldHeight = fm.height();
-    fieldWidth  = fm.width(timeStr);
+    fieldWidth  = fm.horizontalAdvance(timeStr);
   }
 
   // Store GL state information for the variables that we might modify.

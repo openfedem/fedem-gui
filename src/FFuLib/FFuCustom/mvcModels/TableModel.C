@@ -11,7 +11,10 @@
  *      Author: runarhr
  */
 #include <QMimeData>
+#include <QRegularExpressionValidator>
+
 #include "FFuLib/FFuCustom/mvcModels/TableModel.H"
+
 
 TableModel::TableModel(int rows, int columns, TableOrdering order, QObject *parent)
     : QAbstractTableModel(parent)
@@ -356,9 +359,9 @@ bool TableModel::dropMimeData(const QMimeData* data, Qt::DropAction, int row, in
 	if (parent.isValid() && data->hasFormat("text/plain") && aEditable) {
 		QString plainText = data->text();
 
-		QStringList rowList = plainText.split("\n",QString::SkipEmptyParts);
+		QStringList rowList = plainText.split("\n",Qt::SkipEmptyParts);
 		for(int i = 0; i <  rowList.size(); i++)  {
-			QStringList columnList = (rowList.at(i)).split(QRegExp("\\s+"));
+			QStringList columnList = (rowList.at(i)).split(QRegularExpression("\\s+"));
 				for(int j= 0; j < columnList.size(); j++)
 				{
 					if( (j+column) < columnCount(parent) && (i+row) < rowCount(parent) ){
@@ -408,7 +411,7 @@ bool TableModel::addValidator(int index, QString regExp){
 			return false;
 	}
 
-	validators.insert(std::make_pair(index,new QRegExpValidator(QRegExp(regExp),this)));
+	validators.insert(std::make_pair(index,new QRegularExpressionValidator(QRegularExpression(regExp),this)));
 	return true;
 }
 

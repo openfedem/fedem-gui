@@ -9,6 +9,7 @@
 #include "CaTriad.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmPart.H"
 #include "vpmDB/FmTriad.H"
@@ -224,8 +225,7 @@ void CaPart::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pGenPart);
 
-  m_pGenPart->setUserDescription(val);
-
+  m_pGenPart->setUserDescription(CaConvert(val));
   m_pGenPart->onChanged();
 }
 
@@ -327,8 +327,8 @@ void CaPart::SetMass(double Mass, double Ix, double Iy, double Iz)
 {
   CA_CHECK(m_pGenPart);
 
-  if (m_pGenPart->mass.setValue(Mass) |
-      m_pGenPart->inertia.setValue(FFaTensor3(Ix,Iy,Iz)))
+  if ((m_pGenPart->mass.setValue(Mass) |
+       m_pGenPart->inertia.setValue(FFaTensor3(Ix,Iy,Iz))) > 0)
     m_pGenPart->onChanged();
 }
 
@@ -392,8 +392,8 @@ void CaPart::SetStructuralDamping(double MassProp, double StiffProp)
 {
   CA_CHECK(m_pGenPart);
 
-  if (m_pGenPart->alpha1.setValue(MassProp) |
-      m_pGenPart->alpha2.setValue(StiffProp))
+  if ((m_pGenPart->alpha1.setValue(MassProp) |
+       m_pGenPart->alpha2.setValue(StiffProp)) > 0)
     m_pGenPart->onChanged();
 }
 
@@ -409,8 +409,8 @@ void CaPart::SetScaling(double StiffScale, double MassScale)
 {
   CA_CHECK(m_pGenPart);
 
-  if (m_pGenPart->stiffnessScale.setValue(StiffScale) |
-      m_pGenPart->massScale.setValue(MassScale))
+  if ((m_pGenPart->stiffnessScale.setValue(StiffScale) |
+       m_pGenPart->massScale.setValue(MassScale)) > 0)
     m_pGenPart->onChanged();
 }
 
@@ -564,8 +564,8 @@ void CaPart::SetTranslationalStiffness(double TransStiffness)
 {
   CA_CHECK(m_pGenPart);
 
-  if (m_pGenPart->kt.setValue(TransStiffness) |
-      m_pGenPart->myGenericPartStiffType.setValue(FmPart::NODE_STIFFNESS))
+  if ((m_pGenPart->kt.setValue(TransStiffness) |
+       m_pGenPart->myGenericPartStiffType.setValue(FmPart::NODE_STIFFNESS)) > 0)
     m_pGenPart->onChanged();
 }
 
@@ -573,8 +573,8 @@ void CaPart::SetRotationalStiffness(double RotStiffness)
 {
   CA_CHECK(m_pGenPart);
 
-  if (m_pGenPart->kr.setValue(RotStiffness) |
-      m_pGenPart->myGenericPartStiffType.setValue(FmPart::NODE_STIFFNESS))
+  if ((m_pGenPart->kr.setValue(RotStiffness) |
+       m_pGenPart->myGenericPartStiffType.setValue(FmPart::NODE_STIFFNESS)) > 0)
     m_pGenPart->onChanged();
 }
 
@@ -582,7 +582,7 @@ void CaPart::SetVisualizationFile(LPCTSTR FileName)
 {
   CA_CHECK(m_pGenPart);
 
-  if (m_pGenPart->setVisualizationFile(std::string(FileName)))
+  if (m_pGenPart->setVisualizationFile(CaConvert(FileName)))
     m_pGenPart->onChanged();
 }
 
@@ -894,7 +894,7 @@ STDMETHODIMP CaPart::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaPart, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -1377,7 +1377,7 @@ STDMETHODIMP CaPart::XLocalClass::SetVisualizationFile(BSTR FileName)
   METHOD_PROLOGUE(CaPart, LocalClass);
   TRY
   {
-    pThis->SetVisualizationFile(CW2A(FileName));
+    pThis->SetVisualizationFile(FileName);
   }
   CATCH_ALL(e)
   {

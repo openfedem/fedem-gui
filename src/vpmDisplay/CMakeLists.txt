@@ -9,7 +9,7 @@ set ( LIB_ID vpmDisplay )
 
 # Dependencies and system libraries
 
-find_package ( Qt5 REQUIRED COMPONENTS Widgets Core OpenGL )
+find_package ( Qt6 REQUIRED COMPONENTS Widgets Core OpenGL )
 
 if ( WIN )
   set ( SDK_ROOT "C:/Program Files (x86)/Windows Kits/10/Lib" )
@@ -29,7 +29,7 @@ else ( WIN )
   find_library ( Simage_library simage )
 endif ( WIN )
 
-set ( EXTERNAL_LIBRARIES ${Coin_library} ${SoQt_library} Qt5::OpenGL ${DSO_LIBGL} )
+set ( EXTERNAL_LIBRARIES ${Coin_library} ${SoQt_library} Qt6::OpenGL ${DSO_LIBGL} )
 
 if ( WIN )
   string ( APPEND CMAKE_CXX_FLAGS " -Dwin32 -DCOIN_DLL -DSOQT_DLL" )

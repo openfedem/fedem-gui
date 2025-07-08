@@ -82,7 +82,7 @@ public:
 
   virtual int getFontHeigth() const;
   virtual int getFontMaxWidth() const;
-  virtual int getFontWidth(const char* aString, int len = -1) const;
+  virtual int getFontWidth(const char* aString) const;
 
   //! \brief Returns the top-level widget for this widget.
   //! \details If this widget is a top-level, the widget itself is returned.

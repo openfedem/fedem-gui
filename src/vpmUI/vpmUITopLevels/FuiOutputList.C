@@ -5,38 +5,29 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-/*! 
+/*!
   \class FuiOutputList FuiOutputList.H
 
   \brief A scrolled text window with hide and clear
- 
+
   \author Jacob Storen
 
   This is a window used to display text output to the user.
-  
 
-  \date 
-      \b 13.08.99 Created (\e JL) 
-  
-*/////////////////////////////////////////////////////////////////////
+  \date 13.08.99
+*/
+
 #include "vpmUI/vpmUITopLevels/FuiOutputList.H"
 #include "FFuLib/FFuMemo.H"
-#include "FFuLib/FFuPushButton.H"
 
-Fmd_SOURCE_INIT(FUI_OUTPUTLIST, FuiOutputList, FFuTopLevelShell);//FFuMDIWindow);
+
+Fmd_SOURCE_INIT(FUI_OUTPUTLIST, FuiOutputList, FFuTopLevelShell);
 
 
 FuiOutputList::FuiOutputList()
 {
   Fmd_CONSTRUCTOR_INIT(FuiOutputList);
-
 }
-
-FuiOutputList::~FuiOutputList()
-{
-
-}
-
 
 
 void FuiOutputList::initWidgets()
@@ -91,16 +82,4 @@ bool FuiOutputList::hasText()
 bool FuiOutputList::hasSelectedText()
 {
   return myMemo->hasSelection();
-}
-
-void FuiOutputList::setUICommands(const FFuaUICommands* commands)
-{
-  FuaOutputListCommands* cmds = (FuaOutputListCommands*) commands;
-  myMemo->setPopUpMenuCmds(cmds->popUpMenu);
-}
-
-void FuiOutputList::updateUICommandsSensitivity(const FFuaUICommands* commands)
-{
-  FuaOutputListCommands* cmds = (FuaOutputListCommands*) commands;
-  myMemo->setPopUpMenuCmds(cmds->popUpMenu);
 }

@@ -413,8 +413,8 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
   const int mainWidth = 1020;
   const int mainHeight = 820;
 
-  const int modellerWidth = mainWidth*755/1000; // 75.5% of main window width
-  const int modellerHeight = mainHeight*63/100; // 63.0% of main window height
+  const int modellerWidth  = mainWidth *783/1000; // 78.3% of main window width
+  const int modellerHeight = mainHeight*648/1000; // 64.8% of main window height
 
   Geo geo;
 
@@ -458,7 +458,11 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       geo.xPos   = modellerWidth/2 + 30;
       geo.yPos   = modellerHeight/5;
       geo.width  = 420;
+#if defined(win32) || defined(win64)
       geo.height = 570;
+#else
+      geo.height = 660;
+#endif
       break;
     case STRESSOPTIONS_GEO:
       geo.xPos   = 2*modellerWidth/9;
@@ -951,7 +955,7 @@ void Fui::outputListUI(bool onScreen, bool inMem)
 
   if ((onScreen || inMem) && uic == NULL) {
     Fui::Geo geo = Fui::getGeo(OUTPUTLIST_GEO);
-    uic = FuiOutputList::create(NULL, geo.xPos, geo.yPos, geo.width, geo.height);
+    uic = FuiOutputList::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
   if (uic) uic->manage(onScreen,inMem);

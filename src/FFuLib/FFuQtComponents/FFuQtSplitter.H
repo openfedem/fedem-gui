@@ -18,8 +18,6 @@ class FFuQtSplitter : public QSplitter, public FFuQtComponentBase
 public:
   FFuQtSplitter(Qt::Orientation o, QWidget* parent = NULL);
   virtual ~FFuQtSplitter() {}
-
-  void setWidgetSizes(const std::vector<int>& sizes);
 };
 
 #endif

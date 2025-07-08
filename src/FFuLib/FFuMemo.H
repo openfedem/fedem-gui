@@ -10,10 +10,8 @@
 
 #include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
-#include <vector>
 #include <string>
 
-class FFuaCmdItem;
 class FFuaFont;
 
 
@@ -38,9 +36,6 @@ class FFuaFont;
 class FFuMemo : virtual public FFuComponentBase
 {
 public:
-  FFuMemo() {}
-  virtual ~FFuMemo() {}
-
   //! Cursor actions (use with setCursorPos())
   enum {MOVE_BACK,         //!< Move one char backward
 	MOVE_FORWARD,      //!< Move one char forward
@@ -92,16 +87,10 @@ public:
   virtual void setEditable(bool yesOrNo) = 0;
   virtual void setTextFont(const FFuaFont& aFont) = 0;
 
-  //! \brief Sets commands in the pop-up menu.
-  //! \details If none are set, use QTextEdit default menu (Copy, Select All).
-  void setPopUpMenuCmds(const std::vector<FFuaCmdItem*>& cmds) { commands = cmds; }
-
   void setTextChangedCB(const FFaDynCB0& cb) { myTextChangedCB = cb; }
 
 protected:
   FFaDynCB0 myTextChangedCB;
-
-  std::vector<FFuaCmdItem*> commands;
 };
 
 #endif

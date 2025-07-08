@@ -12,10 +12,3 @@ FFuQtSplitter::FFuQtSplitter(Qt::Orientation o, QWidget* parent) : QSplitter(o, 
 {
   this->setWidget(this);
 }
-
-void FFuQtSplitter::setWidgetSizes(const std::vector<int>& sizes)
-{
-  QList<int> l; l.reserve(sizes.size());
-  for (int i : sizes) l.push_back(i);
-  this->setSizes(l);
-}

@@ -10,13 +10,11 @@
 
 #include "vpmApp/vpmAppUAMap/vpmAppUAMapHandlers/FapUAExistenceHandler.H"
 #include "vpmApp/vpmAppUAMap/vpmAppUAMapHandlers/FapUAFinishHandler.H"
-#include "vpmApp/vpmAppUAMap/vpmAppUAMapHandlers/FapUACommandHandler.H"
 
 class FuiOutputList;
 
 
-class FapUAOutputList : public FapUAExistenceHandler, public FapUAFinishHandler,
-			public FapUACommandHandler
+class FapUAOutputList : public FapUAExistenceHandler, public FapUAFinishHandler
 {
   Fmd_HEADER_INIT();
 
@@ -25,12 +23,10 @@ public:
   virtual ~FapUAOutputList() {}
 
 private:
-  virtual void finishUI(); 
-  virtual FFuaUICommands* getCommands();
+  virtual void finishUI();
 
 private:
   FuiOutputList* ui;
 };
 
 #endif
-

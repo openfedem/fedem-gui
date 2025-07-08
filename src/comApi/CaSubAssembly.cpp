@@ -8,6 +8,7 @@
 #include "CaSubAssembly.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmAssemblyBase.H"
 #include "vpmDB/FmDB.H"
@@ -162,8 +163,7 @@ void CaSubAssembly::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pSubAssembly);
 
-  m_pSubAssembly->setUserDescription(val);
-
+  m_pSubAssembly->setUserDescription(CaConvert(val));
   m_pSubAssembly->onChanged();
 }
 
@@ -205,7 +205,7 @@ void CaSubAssembly::put_ModelFileName(LPCTSTR val)
 {
   CA_CHECK(m_pSubAssembly);
 
-  m_pSubAssembly->myModelFile.setValue(val);
+  m_pSubAssembly->myModelFile.setValue(CaConvert(val));
 }
 
 long CaSubAssembly::get_Count()
@@ -233,8 +233,7 @@ void CaSubAssembly::put_Tag(LPCTSTR val)
 {
   CA_CHECK(m_pSubAssembly);
 
-  m_pSubAssembly->setTag(val);
-
+  m_pSubAssembly->setTag(CaConvert(val));
   m_pSubAssembly->onChanged();
 }
 
@@ -596,7 +595,7 @@ STDMETHODIMP CaSubAssembly::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaSubAssembly, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -686,7 +685,7 @@ STDMETHODIMP CaSubAssembly::XLocalClass::put_ModelFileName(BSTR val)
   METHOD_PROLOGUE(CaSubAssembly, LocalClass);
   TRY
   {
-    pThis->put_ModelFileName(CW2A(val));
+    pThis->put_ModelFileName(val);
   }
   CATCH_ALL(e)
   {
@@ -731,7 +730,7 @@ STDMETHODIMP CaSubAssembly::XLocalClass::put_Tag(BSTR val)
   METHOD_PROLOGUE(CaSubAssembly, LocalClass);
   TRY
   {
-    pThis->put_Tag(CW2A(val));
+    pThis->put_Tag(val);
   }
   CATCH_ALL(e)
   {

@@ -18,19 +18,21 @@
 
 #include <QScrollBar>
 #include <QTextStream>
+#include <QContextMenuEvent>
 #include <QMenu>
 #include <QFile>
 #include <QFont>
 #include <QKeyEvent>
 
-#include "FFuLib/FFuQtComponents/FFuQtPopUpMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtMemo.H"
 
 
 //! Constructor
-FFuQtMemo::FFuQtMemo(QWidget* parent) : QTextEdit(parent)
+FFuQtMemo::FFuQtMemo(QWidget* parent, bool withClearCmd) : QTextEdit(parent)
 {
   this->setWidget(this);
+
+  haveClearCmd = withClearCmd;
 }
 
 
@@ -377,65 +379,17 @@ void FFuQtMemo::keyPressEvent(QKeyEvent* event)
 }
 
 
-/*!
-  Creates a pop up menu, accoring to what user have set
-*/
-
-QMenu* FFuQtMemo::createPopupMenu(const QPoint& pos)
+//! Customize the right-click menu adding the clear command if wanted
+void FFuQtMemo::contextMenuEvent(QContextMenuEvent* event)
 {
-  // This was a shortcut to custom pop up
-  // quite usable, and you will avoid
-  // CBs here and there. Works directly on the QTextEdit
-  // This is where it ends up anyway...
-  // oh well...
-//   if (popUpCmds == -1)
-//     return 0;
-
-//   if (popUpCmds == 0)
-//     return QTextEdit::createPopupMenu(pos);
-
-//   QPopupMenu* p = new QPopupMenu(this);
-//   int id = -1;
-
-//   // Inserting items
-//   if (popUpCmds & FFuMemo::CUT) {
-//     id = p->insertItem("Cut", this, SLOT(cut), CTRL+Key_X);
-//     p->setItemEnabled(id , this->hasSelection() && !this->readOnly());
-//   }
-//   if (popUpCmds & FFuMemo::COPY) {
-//     id = p->insertItem("Copy", this, SLOT(copy()), CTRL+Key_C);
-//     p->setItemEnabled(id, this->hasSelection());
-//   }
-//   if (popUpCmds & FFuMemo::PASTE) {
-//     id = p->insertItem("Paste", this, SLOT(paste()), CTRL+Key_V);
-//     p->setItemEnabled(id, !this->readOnly());
-//   }
-//   if (popUpCmds & FFuMemo::SELECT_ALL) {
-//     id = p->insertItem("Select All", this, SLOT(selectAll()), CTRL+Key_A);
-//     p->setItemEnabled(id, !this->getText().empty());
-//   }
-//   if (popUpCmds & FFuMemo::CLEAR) {
-//     if (id > -1) p->insertSeparator();
-//     id = p->insertItem("Clear", this, SLOT(clear()));
-//     p->setItemEnabled(id, !this->getText().empty());
-//   }
-
-//   return p;
-
-  /*
-    NOTE from SKE may-2003:
-    Sometime in the future, combine the above commented out with
-    FFuaCmdItems, so that the commands that can be handled directly in
-    this widget will be, without anymore hassle, and commands that
-    need to be processed elsewhere can also be included.
-  */
-
-  if (commands.empty())
-    return this->createStandardContextMenu(pos);
-
-  FFuQtPopUpMenu* popUp = new FFuQtPopUpMenu(this);
-  for (FFuaCmdItem* cmd : commands)
-    popUp->insertCmdItem(cmd);
-
-  return popUp;
+  QMenu* menu = this->createStandardContextMenu();
+  if (haveClearCmd)
+  {
+    menu->addSeparator();
+    QAction* action = menu->addAction("Clear");
+    action->setEnabled(!this->document()->isEmpty());
+    QObject::connect(action, SIGNAL(triggered()), this, SLOT(clear()));
+  }
+  menu->exec(event->globalPos());
+  delete menu;
 }

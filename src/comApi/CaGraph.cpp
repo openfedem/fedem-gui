@@ -8,6 +8,7 @@
 #include "CaGraph.h"
 #include "CaCurve.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmCurveSet.H"
 #include "vpmDB/FmGraph.H"
@@ -93,8 +94,7 @@ void CaGraph::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
-
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -116,8 +116,7 @@ void CaGraph::put_Title(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setTitle(val);
-
+  m_ptr->setTitle(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -132,8 +131,7 @@ void CaGraph::put_SubTitle(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setSubTitle(val);
-
+  m_ptr->setSubTitle(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -148,8 +146,7 @@ void CaGraph::put_XAxisLabel(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setXaxisLabel(val);
-
+  m_ptr->setXaxisLabel(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -164,8 +161,7 @@ void CaGraph::put_YAxisLabel(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setYaxisLabel(val);
-
+  m_ptr->setYaxisLabel(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -510,7 +506,7 @@ STDMETHODIMP CaGraph::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaGraph, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
@@ -555,7 +551,7 @@ STDMETHODIMP CaGraph::XLocalClass::put_Title(BSTR val)
   METHOD_PROLOGUE(CaGraph, LocalClass);
   TRY
   {
-    pThis->put_Title(CW2A(val));
+    pThis->put_Title(val);
   }
   CATCH_ALL(e)
   {
@@ -585,7 +581,7 @@ STDMETHODIMP CaGraph::XLocalClass::put_SubTitle(BSTR val)
   METHOD_PROLOGUE(CaGraph, LocalClass);
   TRY
   {
-    pThis->put_SubTitle(CW2A(val));
+    pThis->put_SubTitle(val);
   }
   CATCH_ALL(e)
   {
@@ -615,7 +611,7 @@ STDMETHODIMP CaGraph::XLocalClass::put_XAxisLabel(BSTR val)
   METHOD_PROLOGUE(CaGraph, LocalClass);
   TRY
   {
-    pThis->put_XAxisLabel(CW2A(val));
+    pThis->put_XAxisLabel(val);
   }
   CATCH_ALL(e)
   {
@@ -645,7 +641,7 @@ STDMETHODIMP CaGraph::XLocalClass::put_YAxisLabel(BSTR val)
   METHOD_PROLOGUE(CaGraph, LocalClass);
   TRY
   {
-    pThis->put_YAxisLabel(CW2A(val));
+    pThis->put_YAxisLabel(val);
   }
   CATCH_ALL(e)
   {

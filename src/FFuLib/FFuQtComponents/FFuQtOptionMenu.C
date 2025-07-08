@@ -18,7 +18,7 @@ FFuQtOptionMenu::FFuQtOptionMenu(QWidget* parent) : QComboBox(parent)
 
   QObject::connect(this,SIGNAL(activated(int)),
                    this,SLOT(activatedFwd(int)));
-  QObject::connect(this,SIGNAL(activated(const QString&)),
+  QObject::connect(this,SIGNAL(textActivated(const QString&)),
                    this,SLOT(activatedFwd(const QString&)));
   QObject::connect(this,SIGNAL(highlighted(int)),
                    this,SLOT(highlightedFwd(int)));
@@ -211,7 +211,7 @@ int FFuQtOptionMenu::getBasicWidthHint()
   int w = 0, newW = 0;
 
   for (int i = 0; i < this->count(); i++)
-    if ((newW = fm.width(this->itemText(i))) > w)
+    if ((newW = fm.horizontalAdvance(this->itemText(i))) > w)
       w = newW;
 
   w += 30; //down arrow

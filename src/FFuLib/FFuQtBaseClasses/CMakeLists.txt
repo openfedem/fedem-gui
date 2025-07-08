@@ -7,7 +7,10 @@
 # Builds the LIB_ID library
 set ( LIB_ID FFuQtBaseClasses )
 
-find_package ( Qt5 REQUIRED COMPONENTS Core )
+find_package ( Qt6 REQUIRED COMPONENTS Core )
+if ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
+  qt_standard_project_setup ()
+endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
 
 
 ## Files with header and source with same name

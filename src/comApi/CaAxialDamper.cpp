@@ -10,6 +10,7 @@
 #include "CaFunction.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmAxialDamper.H"
 
@@ -79,8 +80,7 @@ void CaAxialDamper::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pAxialDamper);
 
-  m_pAxialDamper->setUserDescription(val);
-
+  m_pAxialDamper->setUserDescription(CaConvert(val));
   m_pAxialDamper->onChanged();
 }
 
@@ -414,7 +414,7 @@ STDMETHODIMP CaAxialDamper::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaAxialDamper, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

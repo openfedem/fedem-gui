@@ -10,6 +10,7 @@
 #include "CaFunction.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmAxialSpring.H"
 
@@ -81,8 +82,7 @@ void CaAxialSpring::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pAxialSpring);
 
-  m_pAxialSpring->setUserDescription(val);
-
+  m_pAxialSpring->setUserDescription(CaConvert(val));
   m_pAxialSpring->onChanged();
 }
 
@@ -466,7 +466,7 @@ STDMETHODIMP CaAxialSpring::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaAxialSpring, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

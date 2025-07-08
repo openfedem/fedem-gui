@@ -10,6 +10,7 @@
 #include "CaDOF.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmCylJoint.H"
 #include "vpmDB/FmDB.H"
@@ -138,8 +139,7 @@ void CaCylindricJoint::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_pCylJoint);
 
-  m_pCylJoint->setUserDescription(val);
-
+  m_pCylJoint->setUserDescription(CaConvert(val));
   m_pCylJoint->onChanged();
 }
 
@@ -541,7 +541,7 @@ STDMETHODIMP CaCylindricJoint::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaCylindricJoint, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {

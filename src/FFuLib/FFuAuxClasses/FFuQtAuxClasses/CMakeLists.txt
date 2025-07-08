@@ -7,7 +7,7 @@
 # Builds the LIB_ID library
 set ( LIB_ID FFuQtAuxClasses )
 
-find_package ( Qt5 REQUIRED COMPONENTS Widgets Core )
+find_package ( Qt6 REQUIRED COMPONENTS Widgets Core )
 
 
 ## Files with header and source with same name
@@ -37,4 +37,4 @@ endforeach ( FILE ${SOURCE_FILE_LIST} )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${CPP_SOURCE_FILES} ${HPP_HEADER_FILES} )
-target_link_libraries ( ${LIB_ID} FFuAuxClasses Qt5::Widgets Qt5::Core )
+target_link_libraries ( ${LIB_ID} FFuAuxClasses Qt6::Widgets Qt6::Core )

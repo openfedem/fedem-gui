@@ -39,7 +39,7 @@ FuiQtMiniFileBrowser::FuiQtMiniFileBrowser(int xpos, int ypos,
   this->listView = qListView;
   this->infoView = qInfoView;
 
-  qSplitter->setWidgetSizes({360,400});
+  qSplitter->setSizes({360,400});
   qSplitter->setStretchFactor(0,0);
   qSplitter->setStretchFactor(1,1);
   qSplitter->refresh();

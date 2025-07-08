@@ -8,6 +8,7 @@
 #include "CaMaterial.h"
 #include "CaApplication.h"
 #include "CaMacros.h"
+#include "CaStrConv.h"
 
 #include "vpmDB/FmMaterialProperty.H"
 
@@ -67,7 +68,7 @@ void CaMaterial::put_Description(LPCTSTR val)
 {
   CA_CHECK(m_ptr);
 
-  m_ptr->setUserDescription(val);
+  m_ptr->setUserDescription(CaConvert(val));
   m_ptr->onChanged();
 }
 
@@ -201,7 +202,7 @@ STDMETHODIMP CaMaterial::XLocalClass::put_Description(BSTR val)
   METHOD_PROLOGUE(CaMaterial, LocalClass);
   TRY
   {
-    pThis->put_Description(CW2A(val));
+    pThis->put_Description(val);
   }
   CATCH_ALL(e)
   {
