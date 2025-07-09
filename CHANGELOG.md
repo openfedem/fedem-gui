@@ -8,6 +8,43 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.0] (2025-07-10)
+
+### :rocket: Initial release of FEDEM R8.1
+
+The FEDEM GUI is now built with the open-source
+[Qt 6.8](https://www.qt.io/product/framework) framework.
+This involves a lot of code changes to port the FEDEM sources from Qt 4 to Qt 6,
+while maintaining all existing functionality.
+The porting effort has been performed incrementally.
+That is, first the necessary changes to build with Qt 5 were added in
+a separate PR (https://github.com/openfedem/fedem-gui/pull/77),
+followed by another PR (https://github.com/openfedem/fedem-gui/pull/78)
+with the changes required to build with Qt 6.
+Finally, through https://github.com/openfedem/fedem-gui/pull/79,
+further modifications where done to make the Qt-based widgets more portable
+using layout managers instead of the elaborate explicit geometry calculations.
+
+If there is a need for continuing working with either Qt 4 or Qt 5, this can be
+done if you checkout branch `fedem-8.0-qt4` or `fedem-8.1-qt5`, respectively.
+These branches will not receive any significant updates in the future,
+except perhaps for smaller bug-fixes which are not related to Qt 6.
+All new features and major changes will be added to the main branch only.
+
+This release also contains the first installation package for Linux platform
+(built with gcc 11 and Qt 6.2 on Ubuntu 22.04).
+To try out this package, just unpack the file
+[Fedem-R8.1.0_Ubuntu-22.04.tar.gz](https://github.com/openfedem/fedem-gui/releases/download/fedem-8.1.0/Fedem-R8.1.0_Ubuntu-22.04.tar.gz)
+in some arbitrary location `<installation-folder>`,
+and launch FEDEM through the command:
+
+        $ <installation-folder>/Fedem-8.1.0/fedem [<options>]
+
+You will need to install the Qt 6 runtime libraries through the package manager
+before doing this, as they are not included in the FEDEM distribution:
+
+        $ sudo apt install libqt6core6 libqt6gui6 libqt6widgets6 libqt6opengl6
+
 ## [fedem-8.0.9.7] (2025-07-01)
 
 ### :rocket: Added
@@ -29,9 +66,12 @@
 - Issue https://github.com/openfedem/fedem-gui/issues/72:
   The Dismiss dialog is blocking the rest of the GUI. It is supposed to be non-modal.
 - Issue https://github.com/openfedem/fedem-gui/issues/74:
-  The GUI crashes when run batch (using command-line options `-f` and either `-solve` or `-prepareBatch`).
-- Nastran bulk data files with a non-blank offset flag field for CBAR and CBEAM entries are not parsed properly.
-- Extraction of element group names from NX property comments and Hypermesh comments in Nastran bulk data files does not work.
+  The GUI crashes when run batch
+  (using command-line options `-f` and either `-solve` or `-prepareBatch`).
+- Nastran bulk data files with a non-blank offset flag field for CBAR and CBEAM
+  entries are not parsed properly.
+- Extraction of element group names from NX property comments and Hypermesh
+  comments in Nastran bulk data files does not work.
 - Parsing RBE2 Nastran bulk data entries with a float value as its last field does not work.
 
 ## [fedem-8.0.9] (2025-03-20)
@@ -134,7 +174,7 @@
   poly-line-from-file functions, also if the file used is a two-colum file.
   If the file have no headings, "n/a" is displayed in the Channel field.
 - The built GUI will now enable the Windpower features, if the installation
-  contains the AeroDyn binary and associated dynamis solver (not part of the package)
+  contains the AeroDyn binary with associated dynamics solver (not part of the package).
 - The Users Guide now contains chapters on Windpower and Marine modeling.
 
 ### :bug: Fixed
@@ -225,9 +265,9 @@
 
 ## fedem-8.0.0 (2023-12-21)
 
-### :rocket: Added
+### :rocket: FEDEM R8.0
 
-- This is the first open source version of FEDEM,
+- This is the first open-source version of FEDEM,
   including binaries for GUI and solvers on Windows platform.
 
 [fedem-8.0.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.0...fedem-8.0.1
@@ -240,3 +280,4 @@
 [fedem-8.0.8]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.7...fedem-8.0.8
 [fedem-8.0.9]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.8...fedem-8.0.9
 [fedem-8.0.9.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9.2...fedem-8.0.9.7
+[fedem-8.1.0]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9...fedem-8.1.0
