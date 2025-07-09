@@ -5,22 +5,21 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTCTRLMODELLER_H
-#define FUIQTCTRLMODELLER_H
+#ifndef FUI_QT_CTRL_MODELLER_H
+#define FUI_QT_CTRL_MODELLER_H
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtMDIWindow.H"
 #include "vpmUI/vpmUITopLevels/FuiCtrlModeller.H"
 
-class FuiQtCtrlModeller: public FFuQtMDIWindow, public FuiCtrlModeller
+
+class FuiQtCtrlModeller : public FFuQtMDIWindow, public FuiCtrlModeller
 {
 public:
-  FuiQtCtrlModeller(QWidget* parent=0,int xpos  = 100, int ypos   = 100,
-		    int width = 100, int height = 100,
-		    const char *title="Control System",
-		    const char* name="FuiCtrlModeller");
+  FuiQtCtrlModeller(QWidget* parent, int xpos, int ypos, int width, int height,
+                    const char* title, const char* name);
 
-  virtual ~FuiQtCtrlModeller(){}
-
+protected:
+  virtual void resizeEvent(QResizeEvent* e);
 };
 
 #endif

@@ -22,11 +22,8 @@ FFuQtSeparator::FFuQtSeparator (QWidget* parent) : QFrame(parent)
 
 FFuQtDialogButtons::FFuQtDialogButtons(QWidget* parent, bool addSeparator,
                                        const char* name)
-  : QWidget(parent)
+  : FFuQtWidget(parent,name)
 {
-  this->setObjectName(name);
-  this->setWidget(this);
-
   QWidget* qButtons = addSeparator ? new QWidget() : this;
   QBoxLayout* layout = new QHBoxLayout(qButtons);
   layout->setContentsMargins(0,0,0,0);

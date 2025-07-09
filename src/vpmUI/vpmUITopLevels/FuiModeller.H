@@ -37,12 +37,12 @@ public:
   static FuiModeller* create(FFuComponentBase* parent,
 			     int xpos  = 100, int ypos   = 100,
 			     int width = 100, int height = 100,
-			     const char* title="Modeler",
-			     const char* name="FuiModeller");
+			     const char* title = "Modeler",
+			     const char* name  = "FuiModeller");
 
   // Member UI Interface :
 
-  Fui3DPoint*       getPickedPointUIC() { return my3Dpoint; }
+  Fui3DPoint*       getPickedPointUIC() { return my3DpointUI; }
   FFuComponentBase* activeViewer()      { return myViewer; }
 
   // Direct interface :
@@ -75,13 +75,12 @@ protected:
   // Reimplemented methods :
 
   virtual bool onClose();
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedDownToMem();
 
   // Widgets :
 
   FuiPlayPanel*     myPlayPanel;
-  Fui3DPoint*       my3Dpoint;
+  Fui3DPoint*       my3DpointUI;
   FFuComponentBase* myViewer;
 };
 

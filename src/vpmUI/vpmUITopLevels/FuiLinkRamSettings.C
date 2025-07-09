@@ -46,15 +46,6 @@ void FuiLinkRamSettings::initWidgets()
 }
 
 
-void FuiLinkRamSettings::placeWidgets(int width, int height)
-{
-  myTable->setEdgeGeometry(3, width-3, 3, height-this->getDialogButtonsHeightHint());
-  myTable->updateColumnWidths();
-
-  this->FuiTopLevelDialog::placeWidgets(width,height);
-}
-
-
 FFuaUIValues* FuiLinkRamSettings::createValuesObject()
 {
   return new FuaLinkRamSettingsValues();

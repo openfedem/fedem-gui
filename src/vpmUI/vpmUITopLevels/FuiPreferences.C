@@ -31,9 +31,11 @@ FuiPreferences::FuiPreferences()
 
   this->reducerFrame = NULL;
   this->eqSolverToggle     = this->recMatrixToggle = NULL;
-  this->eqSolverCacheLabel = this->recMatrixCacheLabel = NULL;
   this->eqSolverAutomatic  = this->eqSolverManual  = NULL;
   this->recMatrixAutomatic = this->recMatrixManual = NULL;
+
+  this->remoteSolveFrame = NULL;
+  this->solverPrefixToggle = this->solverPathToggle = NULL;
 
   this->isRestartActive = false;
   this->isSensitive = true;
@@ -60,15 +62,13 @@ void FuiPreferences::initWidgets()
   this->labels[MAX_CONC_PROC]->setLabel("Max concurrent processes");
   this->labels[EQ_SOLVER_SWAP]->setLabel("[MB]");
   this->labels[REC_MATRIX_SWAP]->setLabel("[MB]");
-  this->labels[SOLVER_PREFIX]->setLabel("Remote shell command prefix");
-  this->labels[SOLVER_PATH]->setLabel("Model path on remote system");
+  this->labels[SOLVER_PREFIX]->setLabel("Remote shell command prefix:");
+  //this->labels[SOLVER_PATH]->setLabel("Model path on remote system:");
 
   this->reducerFrame->setLabel("FE model Reducer Out-of-core Options ");
   this->eqSolverToggle->setLabel("Equation solver out-of-core");
   this->eqSolverToggle->setToggleCB(FFaDynCB1M(FuiPreferences,this,
 					       onEqSolverToggeled,bool));
-  this->eqSolverCacheLabel->setLabel("Cache size:");
-  this->recMatrixCacheLabel->setLabel("Cache size:");
 
   this->eqSolverAutomatic->setLabel("Automatic");
   this->eqSolverManual->setLabel("Manual");
@@ -95,163 +95,13 @@ void FuiPreferences::initWidgets()
   this->solverPrefixToggle->setLabel("Perform remote solve");
   this->solverPrefixToggle->setToggleCB(FFaDynCB1M(FuiPreferences,this,
 						   onSolvePrefixToggeled,bool));
+  this->solverPathToggle->setLabel("Model path on remote system:");
   this->solverPathToggle->setToggleCB(FFaDynCB1M(FuiPreferences,this,
 						 onSolvePathToggeled,bool));
 
   this->FuiTopLevelDialog::initWidgets();
 }
-//----------------------------------------------------------------------------
 
-void FuiPreferences::placeWidgets(int width, int height)
-{
-  //l-left, r-right, t-top, b-bottom,
-  int border      = this->getBorder();
-  int labH        = this->labels[0]->getHeightHint();
-  int linefieldH  = this->optFields[0]->getHeightHint();
-  int buttonH     = this->dialogButtons->getHeightHint();
-  int mcpWidth    = this->labels[MAX_CONC_PROC]->getWidthHint();
-  int autoWidth   = this->eqSolverAutomatic->getWidthHint();
-  int manualWidth = this->eqSolverManual->getWidthHint();
-  int swapWidth   = this->labels[EQ_SOLVER_SWAP]->getWidthHint();
-  int cacheWidth  = this->eqSolverCacheLabel->getWidthHint();
-  int toggleWidth = this->recMatrixToggle->getHeightHint();;
-
-  //GridLines
-  //vertical borders
-  int glvL  = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_START);
-  int glvL2 = glvL + border; // for fields with toggle buttons
-  int glvL3 = glvL2 + toggleWidth + 0*border; // for fields with toggle buttons
-  int glvL4 = glvL + mcpWidth + border;
-  int glvL45 = glvL3 + cacheWidth + border;
-  int glvL5 = glvL45 + autoWidth + border;
-  int glvL6 = glvL5 + manualWidth + border/2;
-  int glvR  = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_END);
-  int glvR2 = glvR - border;
-  int glvR3 = glvR2 - swapWidth;
-
-  //horisontal borders
-  int fieldH  = labH + linefieldH;
-  int glhTop  = this->getGridLinePos(height,border,FFuMultUIComponent::FROM_START);
-  int glhDiaB = this->getGridLinePos(height,buttonH,FFuMultUIComponent::FROM_END);
-  int nFields = FapLicenseManager::isProEdition() ? NFIELDS : MAX_CONC_PROC;
-  int stretch = glhDiaB - glhTop - nFields*fieldH;
-  if (FapLicenseManager::isProEdition()) stretch -= 3*labH + 5*border;
-
-  //Shrink labH and linefieldH in order to avoid overlap if negative stretch
-  if (stretch < 0) {
-    stretch    /= nFields+1;
-    fieldH     += stretch;
-    linefieldH += stretch/2;
-    labH       += stretch/2;
-    stretch     = 0;
-  }
-  else {
-    stretch /= nFields+4;
-    fieldH  += stretch;
-  }
-
-  int iField;
-  int glh[NFIELDS];
-  glh[0] = glhTop;
-  for (iField = 1; iField < NFIELDS; iField++)
-    glh[iField] = glh[iField-1] + fieldH;
-
-  glh[MAX_CONC_PROC] += border;
-  glh[EQ_SOLVER_SWAP] += labH + 2*stretch + 2*border;
-  glh[REC_MATRIX_SWAP] += labH + 3*stretch + 3*border;
-  for (iField = SOLVER_PREFIX; iField < NFIELDS; iField++)
-    glh[iField] += 3*labH + 5*stretch + 4*border;
-
-  //Place widgets
-  for (iField = REDUCER; iField <= FPP; iField++) {
-    this->labels[iField]->setSizeGeometry(glvL,glh[iField], glvR-glvL,labH);
-    this->optFields[iField]->setSizeGeometry(glvL,glh[iField]+labH, glvR-glvL,linefieldH);
-  }
-
-  iField = MAX_CONC_PROC;
-  this->labels[iField]->setSizeGeometry(glvL,glh[iField], mcpWidth,labH);
-  this->optFields[iField]->setSizeGeometry(glvL4,glh[iField], glvR-glvL4,linefieldH);
-
-  for (iField = EQ_SOLVER_SWAP; iField <= REC_MATRIX_SWAP; iField++) {
-    this->labels[iField]->setSizeGeometry(glvR3,glh[iField], swapWidth,labH);
-    this->optFields[iField]->setSizeGeometry(glvL6,glh[iField], glvR3-glvL6-border/2,linefieldH);
-  }
-
-  for (iField = SOLVER_PREFIX; iField <= SOLVER_PATH; iField++) {
-    this->labels[iField]->setSizeGeometry(glvL3,glh[iField], glvR2-glvL3,labH);
-    this->optFields[iField]->setSizeGeometry(glvL3,glh[iField]+labH, glvR2-glvL3,linefieldH);
-  }
-
-  this->eqSolverToggle->setSizeGeometry(glvL2, glh[EQ_SOLVER_SWAP]-labH-stretch,
-					glvR2-glvL2, labH);
-  this->eqSolverCacheLabel->setSizeGeometry(glvL3, glh[EQ_SOLVER_SWAP], cacheWidth, labH);
-  this->eqSolverAutomatic->setSizeGeometry(glvL45, glh[EQ_SOLVER_SWAP], autoWidth, labH);
-  this->eqSolverManual->setSizeGeometry(glvL5, glh[EQ_SOLVER_SWAP], manualWidth, labH);
-
-  this->recMatrixToggle->setSizeGeometry(glvL2, glh[REC_MATRIX_SWAP]-labH-stretch,
-					 glvR2-glvL2, labH);
-
-  this->recMatrixCacheLabel->setSizeGeometry(glvL3, glh[REC_MATRIX_SWAP], cacheWidth, labH);
-  this->recMatrixAutomatic->setSizeGeometry(glvL45, glh[REC_MATRIX_SWAP], autoWidth, labH);
-  this->recMatrixManual->setSizeGeometry(glvL5, glh[REC_MATRIX_SWAP], manualWidth, labH);
-
-  this->reducerFrame->setEdgeGeometry(glvL, glvR,
-				      glh[EQ_SOLVER_SWAP]-2*labH-2*stretch,
-				      glh[REC_MATRIX_SWAP]+linefieldH+border);
-  this->reducerFrame->toBack();
-
-  this->solverPrefixToggle->setSizeGeometry(glvL2, glh[SOLVER_PREFIX]-labH-stretch,
-					    glvR2-glvL2, labH);
-  this->solverPathToggle->setSizeGeometry(glvL2, glh[SOLVER_PATH]+labH, toggleWidth, labH);
-
-  this->remoteSolveFrame->setEdgeGeometry(glvL, glvR,
-					  glh[SOLVER_PREFIX]-2*labH-2*stretch,
-					  glh[SOLVER_PATH]+labH+linefieldH+border);
-  this->remoteSolveFrame->toBack();
-
-  if (FapLicenseManager::isProEdition()) {
-    // Show fields that are available in the pro-edition only
-    this->optFields[FPP]->setSensitivity(true);
-    for (iField = EQ_SOLVER_SWAP; iField <= SOLVER_PATH; iField++) {
-      this->labels[iField]->popUp();
-      this->optFields[iField]->popUp();
-    }
-    this->reducerFrame->popUp();
-    this->eqSolverToggle->popUp();
-    this->eqSolverCacheLabel->popUp();
-    this->eqSolverAutomatic->popUp();
-    this->eqSolverManual->popUp();
-    this->recMatrixToggle->popUp();
-    this->recMatrixCacheLabel->popUp();
-    this->recMatrixAutomatic->popUp();
-    this->recMatrixManual->popUp();
-    this->remoteSolveFrame->popUp();
-    this->solverPrefixToggle->popUp();
-    this->solverPathToggle->popUp();
-  }
-  else {
-    // Hide fields that are available in the pro-edition only
-    this->optFields[FPP]->setSensitivity(false);
-    for (iField = EQ_SOLVER_SWAP; iField <= SOLVER_PATH; iField++) {
-      this->labels[iField]->popDown();
-      this->optFields[iField]->popDown();
-    }
-    this->reducerFrame->popDown();
-    this->eqSolverToggle->popDown();
-    this->eqSolverCacheLabel->popDown();
-    this->eqSolverAutomatic->popDown();
-    this->eqSolverManual->popDown();
-    this->recMatrixToggle->popDown();
-    this->recMatrixCacheLabel->popDown();
-    this->recMatrixAutomatic->popDown();
-    this->recMatrixManual->popDown();
-    this->remoteSolveFrame->popDown();
-    this->solverPrefixToggle->popDown();
-    this->solverPathToggle->popDown();
-  }
-
-  this->dialogButtons->setEdgeGeometry(0,width,glhDiaB,height);
-}
 //-----------------------------------------------------------------------------
 
 bool FuiPreferences::updateDBValues(bool)
@@ -335,6 +185,29 @@ void FuiPreferences::setUIValues(const FFuaUIValues* values)
   this->setSensitivity(prefValues->isSensitive);
 
   this->dialogButtons->setButtonSensitivity(FFuDialogButtons::LEFTBUTTON,prefValues->isTouchable);
+
+  if (FapLicenseManager::isProEdition()) {
+    // Show fields that are available in the pro-edition only
+    this->optFields[FPP]->setSensitivity(true);
+    for (int iField = EQ_SOLVER_SWAP; iField < SOLVER_PATH; iField++) {
+      this->labels[iField]->popUp();
+      this->optFields[iField]->popUp();
+    }
+    this->optFields[SOLVER_PATH]->popUp();
+    this->reducerFrame->popUp();
+    this->remoteSolveFrame->popUp();
+  }
+  else {
+    // Hide fields that are available in the pro-edition only
+    this->optFields[FPP]->setSensitivity(false);
+    for (int iField = EQ_SOLVER_SWAP; iField < SOLVER_PATH; iField++) {
+      this->labels[iField]->popDown();
+      this->optFields[iField]->popDown();
+    }
+    this->optFields[SOLVER_PATH]->popDown();
+    this->reducerFrame->popDown();
+    this->remoteSolveFrame->popDown();
+  }
 }
 //----------------------------------------------------------------------------
 

@@ -25,7 +25,9 @@ void FuiRepeatCurve::initWidgets()
 {
   myLabel->setLabel("Enter object ID range to generate curves for");
   myFromField->setLabel("From");
+  myFromField->setLabelWidth(40);
   myToField->setLabel("To");
+  myToField->setLabelWidth(40);
 
   myFromField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myToField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
@@ -34,24 +36,6 @@ void FuiRepeatCurve::initWidgets()
   myDialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON,"Cancel");
   myDialogButtons->setButtonClickedCB(FFaDynCB1M(FuiRepeatCurve,this,
                                                  onDialogButtonClicked,int));
-}
-
-
-void FuiRepeatCurve::placeWidgets(int width, int height)
-{
-  int rowHeight = 30;
-  int border = this->getBorder();
-  int yPos = height - myDialogButtons->getHeightHint();
-  myDialogButtons->setEdgeGeometry(0, width, yPos, height);
-
-  yPos = border;
-  myLabel->setEdgeGeometry(border, width-border, yPos, yPos+rowHeight);
-  yPos += rowHeight+border; rowHeight = 20;
-  myFromField->setEdgeGeometry(border, width-border, yPos, yPos+rowHeight);
-  yPos += rowHeight+border;
-  myToField->setEdgeGeometry(border, width-border, yPos, yPos+rowHeight);
-  myFromField->setLabelWidth(40);
-  myToField->setLabelWidth(40);
 }
 
 

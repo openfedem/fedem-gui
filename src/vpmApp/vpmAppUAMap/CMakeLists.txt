@@ -32,7 +32,7 @@ set ( COMPONENT_FILE_LIST  FapUAAdvAnalysisOptions FapUAAnimationControl
                            FapUAQuery FapUAQueryInputField
                            FapUARDBListView FapUARDBSelector FapUARDBMEFatigue FapUAResultListView
                            FapUASimModelListView FapUASimModelRDBListView FapUAStressOptions
-                           FapUAViewSettings FapUAWorkSpace
+                           FapUAViewSettings
                            FapUASeaEnvironment FapUACreateBeamstringPair
                            FapUAObjectBrowser FapUAModelExport
                            vpmAppUAMapHandlers/FapUACommandHandler

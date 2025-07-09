@@ -37,7 +37,6 @@ public:
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
   virtual bool onClose();
 
 private:
@@ -48,12 +47,7 @@ public:
   FuiRDBListView*         lvPos;
 
 protected:
-  FFuLabel* resLabel;
-  FFuLabel* posLabel;
-  FFuLabel* notesImage;
-  FFuLabel* notesLabel;
-  FFuLabel* notesText;
-
+  FFuLabel*         notesText;
   FFuDialogButtons* dialogButtons;
 
 private:

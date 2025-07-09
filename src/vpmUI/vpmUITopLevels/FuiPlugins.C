@@ -32,60 +32,27 @@ FuiPlugins::FuiPlugins()
 
 void FuiPlugins::initWidgets()
 {
-  std::vector<FpPM::PluginLib> plugins;
-  FpPM::getPluginList(plugins);
-
-  myPlugins.resize(plugins.size());
-  this->setNoPlugins(plugins.size());
-  for (size_t i = 0; i < plugins.size(); i++)
-  {
-    myPlugins[i] = plugins[i].name;
-    pluginToggle[i]->setLabel(plugins[i].name.c_str());
-    pluginToggle[i]->toBack();
-    pluginLabel[i]->setLabel(plugins[i].sign.c_str());
-    pluginLabel[i]->toBack();
-  }
-
   dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiPlugins,this,
                                                onDialogButtonClicked,int));
   dialogButtons->setButtonLabel(OK,    "OK");
   dialogButtons->setButtonLabel(CANCEL,"Cancel");
   dialogButtons->setButtonLabel(HELP,  "Help");
-
-  this->placeWidgets(this->getWidth(),this->getHeight());
-}
-
-
-void FuiPlugins::placeWidgets(int width, int height)
-{
-  if (!pluginToggle.empty())
-  {
-    int border = this->getBorder();
-    int fieldH = pluginToggle.front()->getHeightHint();
-    int yPos = border;
-    for (size_t i = 0; i < pluginToggle.size(); i++)
-    {
-      pluginToggle[i]->setEdgeGeometry(border,width-border,yPos,yPos+fieldH);
-      yPos += fieldH;
-      pluginLabel[i]->setEdgeGeometry(border+fieldH,width-border,yPos,yPos+fieldH);
-      yPos += fieldH+border;
-    }
-  }
-
-  int dialogBtns = height - dialogButtons->getHeightHint();
-  dialogButtons->setEdgeGeometry(0,width,dialogBtns,height);
 }
 
 
 void FuiPlugins::onPoppedUp()
 {
-  this->placeWidgets(this->getWidth(),this->getHeight());
-
   std::vector<FpPM::PluginLib> plugins;
   FpPM::getPluginList(plugins);
+  this->setNoPlugins(plugins.size());
 
-  for (size_t i = 0; i < plugins.size() && i < pluginToggle.size(); i++)
-    pluginToggle[i]->setValue(plugins[i].loaded);
+  for (size_t i = 0; i < plugins.size(); i++)
+  {
+    myPlugins[i].name = plugins[i].name;
+    myPlugins[i].toggl->setLabel(plugins[i].name.c_str());
+    myPlugins[i].toggl->setValue(plugins[i].loaded);
+    myPlugins[i].label->setLabel(plugins[i].sign.c_str());
+  }
 }
 
 
@@ -101,8 +68,8 @@ void FuiPlugins::onDialogButtonClicked(int button)
   bool changed = false;
   switch (button) {
   case OK:
-    for (size_t i = 0; i < pluginToggle.size(); i++)
-      if (FpPM::togglePlugin(myPlugins[i],pluginToggle[i]->getValue()))
+    for (Plugin& plugin : myPlugins)
+      if (FpPM::togglePlugin(plugin.name,plugin.toggl->getValue()))
         changed = true;
 
   case CANCEL:

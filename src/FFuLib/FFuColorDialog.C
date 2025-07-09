@@ -26,21 +26,14 @@ void FFuColorDialog::init()
   myDialogButtons->setButtonLabel(FFuDialogButtons::LEFTBUTTON, "OK");
   myDialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON, "Cancel");
 
-  myDialogButtons->setButtonClickedCB(FFaDynCB1M(FFuColorDialog,this,onDlgButtonClicked, int));
+  myDialogButtons->setButtonClickedCB(FFaDynCB1M(FFuColorDialog,this,onDlgButtonClicked,int));
 
-  myColorSelector->setColorChangedCB(FFaDynCB1M(FFuColorDialog,this,onColorChanged,FFuColor));
-}
-
-//! Widget placement
-void FFuColorDialog::placeWidgets(int width, int height)
-{
-  myColorSelector->setEdgeGeometry(10, width-10, 10, height - myDialogButtons->getHeightHint());
-  myDialogButtons->setEdgeGeometry(0, width,  height - myDialogButtons->getHeightHint(), height);
+  myColorSelector->setColorChangedCB(FFaDynCB1M(FFuColorDialog,this,onColorChanged,const FFuColor&));
 }
 
 
 //! Returns the current normalized RGB colors
-FFuColor FFuColorDialog::getColor() const
+const FFuColor& FFuColorDialog::getColor() const
 {
   return myColorSelector->getColor();
 }
@@ -59,9 +52,9 @@ void FFuColorDialog::setInitialColor(const FFuColor& aColor)
   Set the current color
   \sa FFuColorSelector::setColor
 */
-void FFuColorDialog::setColor(const FFuColor& aColor, bool notify)
+void FFuColorDialog::setColor(const FFuColor& aColor)
 {
-  myColorSelector->setColor(aColor, notify);
+  myColorSelector->setColor(aColor);
 }
 
 
@@ -71,49 +64,49 @@ void FFuColorDialog::onDlgButtonClicked(int val)
     {
     case FFuDialogButtons::LEFTBUTTON:
       myOkButtonClickedCB.invoke(myColorSelector->getColor());
-      myOkButtonClickedWPtrCB.invoke(myColorSelector->getColor(),this);
+      myOkButtonClickedCB2.invoke(myColorSelector->getColor(),this);
       break;
     case FFuDialogButtons::RIGHTBUTTON:
       myCancelButtonClickedCB.invoke(myColorSelector->getInitialColor());
-      myCancelButtonClickedWPtrCB.invoke(myColorSelector->getInitialColor(),this);
+      myCancelButtonClickedCB2.invoke(myColorSelector->getInitialColor(),this);
       break;
     default:
       break;
     }
 }
 
-void FFuColorDialog::onColorChanged(FFuColor aColor)
+void FFuColorDialog::onColorChanged(const FFuColor& aColor)
 {
   myColorChangedCB.invoke(aColor);
-  myColorChangedWPtrCB.invoke(aColor,this);
+  myColorChangedCB2.invoke(aColor,this);
 }
 
-void FFuColorDialog::setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB)
+void FFuColorDialog::setColorChangedCB(const DynCB1& aDynCB)
 {
   myColorChangedCB = aDynCB;
 }
 
-void FFuColorDialog::setColorChangedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB)
+void FFuColorDialog::setColorChangedCB(const DynCB2& aDynCB)
 {
-  myColorChangedWPtrCB = aDynCB;
+  myColorChangedCB2 = aDynCB;
 }
 
-void FFuColorDialog::setOkButtonClickedCB(const FFaDynCB1<FFuColor>& aDynCB)
+void FFuColorDialog::setOkButtonClickedCB(const DynCB1& aDynCB)
 {
   myOkButtonClickedCB = aDynCB;
 }
 
-void FFuColorDialog::setOkButtonClickedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB)
+void FFuColorDialog::setOkButtonClickedCB(const DynCB2& aDynCB)
 {
-  myOkButtonClickedWPtrCB = aDynCB;
+  myOkButtonClickedCB2 = aDynCB;
 }
 
-void FFuColorDialog::setCancelButtonClickedCB(const FFaDynCB1<FFuColor>& aDynCB)
+void FFuColorDialog::setCancelButtonClickedCB(const DynCB1& aDynCB)
 {
   myCancelButtonClickedCB = aDynCB;
 }
 
-void FFuColorDialog::setCancelButtonClickedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB)
+void FFuColorDialog::setCancelButtonClickedCB(const DynCB2& aDynCB)
 {
-  myCancelButtonClickedWPtrCB = aDynCB;
+  myCancelButtonClickedCB2 = aDynCB;
 }

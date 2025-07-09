@@ -5,14 +5,18 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QLabel>
+
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
-#include "FFuLib/FFuQtComponents/FFuQtFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtFileBrowseField.H"
 #include "FFuLib/FFuQtComponents/FFuQtDialogButtons.H"
+
 #include "FuiQtEigenOptions.H"
 
 //----------------------------------------------------------------------------
@@ -32,27 +36,52 @@ FuiQtEigenOptions::FuiQtEigenOptions(int xpos, int ypos,
 				     const char* name)
   : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name)
 {
-  this->selectLabel = new FFuQtLabel(this);
-  this->modeLabel = new FFuQtLabel(this);
-  this->timeLabel = new FFuQtLabel(this);
-  this->selectedModesLabel = new FFuQtLabel(this);
+  modeMenu = new FFuQtOptionMenu();
+  timeMenu = new FFuQtOptionMenu();
 
-  this->modeMenu = new FFuQtOptionMenu(this);
-  this->timeMenu = new FFuQtOptionMenu(this);
+  addButton = new FFuQtPushButton();
+  deleteButton = new FFuQtPushButton();
 
-  this->addButton = new FFuQtPushButton(this);
-  this->deleteButton = new FFuQtPushButton(this);
+  selectedModesView = new FFuQtListView();
 
-  FFuQtFrame* sep = new FFuQtFrame(this);
-  this->separator = sep;
-  sep->setFrameStyle(QFrame::HLine | QFrame::Sunken);
+  autoVTFToggle = new FFuQtToggleButton();
+  autoVTFField  = new FFuQtFileBrowseField(NULL);
 
-  this->selectedModesView = new FFuQtListView(this);
+  dialogButtons = new FFuQtDialogButtons();
 
-  this->autoVTFToggle = new FFuQtToggleButton(this);
-  this->autoVTFField  = new FFuQtFileBrowseField(this);
+  this->initWidgets();
 
-  this->dialogButtons = new FFuQtDialogButtons(this);
+  QWidget* qModeSelector = new QWidget();
+  QGridLayout* gl = new QGridLayout(qModeSelector);
+  gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(20);
+  gl->addWidget(new QLabel("Mode:"),0,0);
+  gl->addWidget(new QLabel("Time:"),0,1);
+  gl->addWidget(static_cast<FFuQtOptionMenu*>(modeMenu),1,0);
+  gl->addWidget(static_cast<FFuQtOptionMenu*>(timeMenu),1,1);
 
-  this->FuiEigenOptions::initWidgets();
+  QWidget* qAddButton = new QWidget();
+  QBoxLayout* layout = new QHBoxLayout(qAddButton);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addStretch(1);
+  layout->addWidget(dynamic_cast<FFuQtPushButton*>(addButton));
+
+  QWidget* qDeleteButton = new QWidget();
+  layout = new QHBoxLayout(qDeleteButton);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(new QLabel("List of mode shapes to recover"));
+  layout->addStretch(1);
+  layout->addWidget(dynamic_cast<FFuQtPushButton*>(deleteButton));
+
+  layout = new QVBoxLayout(this);
+  layout->addWidget(new QLabel("Select mode shape to recover"));
+  layout->addWidget(qModeSelector);
+  layout->addWidget(qAddButton);
+  layout->addWidget(new FFuQtSeparator());
+  layout->addWidget(qDeleteButton);
+  layout->addWidget(dynamic_cast<FFuQtListView*>(selectedModesView));
+  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(autoVTFToggle));
+  layout->addWidget(static_cast<FFuQtFileBrowseField*>(autoVTFField));
+  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons),
+                    0, Qt::AlignBottom);
 }

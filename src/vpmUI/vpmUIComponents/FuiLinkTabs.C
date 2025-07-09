@@ -410,7 +410,6 @@ void FuiLinkNodeSheet::initWidgets ()
   myFENodeField->setLabel("FE Node");
   myFENodeField->setSensitivity(false);
   myNodePosition->setRefChangedCB(FFaDynCB1M(FuiLinkNodeSheet,this,onPosRefChanged,bool));
-  myNodePosition->setLook(FFuFrame::FLAT);
   myNodePosition->setSensitivity(false);
   myViewedObj = NULL;
 }

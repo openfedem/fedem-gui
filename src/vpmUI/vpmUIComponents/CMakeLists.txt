@@ -31,7 +31,7 @@ set ( COMPONENT_FILE_LIST  Fui3DPoint FuiAnimationDefine
                            FuiSummaryTable FuiTimeInterval FuiTopologyView
                            FuiTriadDOF FuiTriadSummary FuiVariableType
                            FuiBeamPropSummary FuiBeamPropHydro FuiResultTabs
-                           FuiThreshold FuiParameterView
+                           FuiThreshold FuiParameterView FuiWorkSpace
 )
 
 if ( Qwt_LIBRARY )
@@ -45,7 +45,7 @@ if ( USE_EXT_CTRLSYS )
 endif ( USE_EXT_CTRLSYS )
 
 ## Pure header files, i.e., header files without a corresponding source file
-set ( HEADER_FILE_LIST FuiWorkSpace )
+set ( HEADER_FILE_LIST )
 ## Pure implementation files, i.e., source files without corresponding header
 set ( SOURCE_FILE_LIST )
 

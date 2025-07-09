@@ -13,7 +13,6 @@
 
 class FFuSpinBox;
 class FFuRadioButton;
-class FFuLabel;
 class FFuIOField;
 class FFuPushButton;
 class FFuDialogButtons;
@@ -25,7 +24,6 @@ class FuiAnimExportSetup : virtual public FFuModalDialog
 
 protected:
   FuiAnimExportSetup();
-  virtual ~FuiAnimExportSetup() {}
 
   static FuiAnimExportSetup* create(int xpos = 100, int ypos = 100,
 				    int width = 100, int height = 100,
@@ -47,8 +45,6 @@ protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
-
   void onToggleChanged(int,bool);
   void onBrowseButtonClicked();
 
@@ -62,7 +58,6 @@ protected:
   FFuRadioButton* mySomeBtn; // Export only every nth
   FFuSpinBox* omitNthSpinBox;
   FFuSpinBox* everyNthSpinBox;
-  FFuLabel* myFileLabel;
   FFuIOField* myFileField;
   FFuPushButton* myBrowseButton;
   FFuDialogButtons* dialogButtons;

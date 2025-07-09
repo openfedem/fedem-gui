@@ -10,21 +10,9 @@
 #include "FFuLib/FFuIOField.H"
 
 
-FFuLabelField::FFuLabelField()
+void FFuLabelField::setLabel(const char* label)
 {
-  myLabelWidth = 60;
-  myRelativeLabelWidth = 300;
-  myLabelMargin = 3;
-  myResizePolicy = FFU_AUTO;
-}
-
-/*!
- * \TODO Refactor and change the name of variable string to something else.
- */
-void FFuLabelField::setLabel(const char* str)
-{
-  myLabel->setLabel(str);
-  this->placeWidgets(this->getWidth(), this->getHeight());
+  myLabel->setLabel(label);
 }
 
 void FFuLabelField::setValue(double value)
@@ -37,14 +25,14 @@ void FFuLabelField::setValue(const std::string& value)
   myField->setValue(value.c_str());
 }
 
-double FFuLabelField::getValue()
+double FFuLabelField::getValue() const
 {
   return myField->getDouble();
 }
 
-std::string FFuLabelField::getText()
+std::string FFuLabelField::getText() const
 {
-  return std::string(myField->getValue());
+  return myField->getValue();
 }
 
 
@@ -58,30 +46,14 @@ void FFuLabelField::setAcceptedCB(const FFaDynCB1<double>& aDynCB)
 
 // Label geometry :
 
-int FFuLabelField::getLabelWidth()
+int FFuLabelField::getLabelWidth(bool useHint)
 {
-  return myLabel->getWidth();
+  return useHint ? myLabel->getWidthHint() : myLabel->getWidth();
 }
 
 void FFuLabelField::setLabelWidth(int width)
 {
-  myLabelWidth = width;
-  myLabel->setWidth(width);
-  myResizePolicy = FFU_FIXED;
-  this->placeWidgets(this->getWidth(), this->getHeight());
-}
-
-void FFuLabelField::setRelativeLabelWidth(int percent)
-{
-  myRelativeLabelWidth = 10*percent;
-  myResizePolicy = FFU_RELATIVE;
-  this->placeWidgets(this->getWidth(), this->getHeight());
-}
-
-void FFuLabelField::setLabelMargin(int margin)
-{
-  myLabelMargin = margin;
-  this->placeWidgets(this->getWidth(), this->getHeight());
+  myLabel->setMinWidth(width);
 }
 
 
@@ -95,31 +67,6 @@ void FFuLabelField::setSensitivity(bool makeSensitive)
 bool FFuLabelField::getSensitivity()
 {
   return myField->getSensitivity();
-}
-
-
-// Manage geometry :
-
-void FFuLabelField::placeWidgets(int width, int height)
-{
-  int hintLabelWidth = this->myLabel->getWidthHint();
-  int relLabelWidth = getGridLinePos(width,myRelativeLabelWidth);
-
-  switch (myResizePolicy)
-    {
-    case FFuLabelField::FFU_AUTO:
-      myLabel->setEdgeGeometry(0,hintLabelWidth + 2*myLabelMargin, 0, height);
-      myField->setEdgeGeometry(hintLabelWidth + 3*myLabelMargin, width, 0, height);
-      break;
-    case FFuLabelField::FFU_FIXED:
-      myLabel->setEdgeGeometry(0,myLabelWidth+2*myLabelMargin,0,height);
-      myField->setEdgeGeometry(myLabelWidth+3*myLabelMargin,width,0,height);
-      break;
-    case FFuLabelField::FFU_RELATIVE:
-      myLabel->setEdgeGeometry(0,relLabelWidth + 2*myLabelMargin,0,height);
-      myField->setEdgeGeometry(relLabelWidth + 3*myLabelMargin,width,0,height);
-      break;
-    }
 }
 
 

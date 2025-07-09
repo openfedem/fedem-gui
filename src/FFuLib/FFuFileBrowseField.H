@@ -8,7 +8,7 @@
 #ifndef FFU_FILE_BROWSE_FIELD_H
 #define FFU_FILE_BROWSE_FIELD_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuFileDialog.H"
 #include <vector>
 #include <string>
@@ -18,7 +18,7 @@ class FFuIOField;
 class FFuLabel;
 
 
-class FFuFileBrowseField : virtual public FFuMultUIComponent
+class FFuFileBrowseField : virtual public FFuComponentBase
 {
   using Filter = std::pair<std::string,std::string>; // (description,extension)
   using FileDialogType = FFuFileDialog::DialogType;
@@ -61,7 +61,7 @@ public:
   // label, default is "File"
   void setLabel(const char* label);
   void setButtonLabel(const char* label, int width);
-  FFuIOField* getIOField() { return fileField; }
+  FFuIOField* getIOField() const { return fileField; }
 
   // recommended to do to save mem. if you delete you must (off course)
   // set the settings again. usage associated with setBrowseFileCB
@@ -72,18 +72,15 @@ public:
   virtual void setSensitivity(bool s);
   virtual bool getSensitivity(); //returns sensitivity of component browsebutton
 
+  void onBrowseButtonClicked();
+
 protected:
   void initWidgets();
-
-  virtual void placeWidgets(int width, int height);
-
-public:
-  void onBrowseButtonClicked();
-protected:
   void invokeGetDefaultDirCB(std::string& out) { getDefaultDirCB.invoke(out); }
+
 private:
   virtual void createFileDialog(const std::string& fileName = "") = 0;
-  virtual std::string getSelectedFile() = 0;
+  virtual std::string getSelectedFile() const = 0;
 
 protected:
   FFuLabel*      fileLabel;

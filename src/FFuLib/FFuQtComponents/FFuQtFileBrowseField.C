@@ -5,7 +5,7 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <cstring>
+#include <QHBoxLayout>
 
 #include "FFuLib/FFuQtComponents/FFuQtFileBrowseField.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
@@ -15,13 +15,22 @@
 
 
 FFuQtFileBrowseField::FFuQtFileBrowseField(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent,name)
+  : FFuQtWidget(parent,name)
 {
-  this->fileLabel = new FFuQtLabel(this);
-  this->fileField = new FFuQtIOField(this);
-  this->browseButton = new FFuQtPushButton(this);
+  FFuQtLabel* qLabel;
+  FFuQtIOField* qField;
+  FFuQtPushButton* qButton;
+  fileLabel = qLabel = new FFuQtLabel();
+  fileField = qField = new FFuQtIOField();
+  browseButton = qButton = new FFuQtPushButton();
 
   this->initWidgets();
+
+  QLayout* layout = new QHBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qLabel);
+  layout->addWidget(qField);
+  layout->addWidget(qButton);
 }
 
 
@@ -47,12 +56,12 @@ void FFuQtFileBrowseField::createFileDialog(const std::string& fileName)
 }
 
 
-std::string FFuQtFileBrowseField::getSelectedFile()
+std::string FFuQtFileBrowseField::getSelectedFile() const
 {
   std::vector<std::string> fileNames = fileDialog->execute();
   if (fileNames.empty()) return "";
 
-  std::string fileName = fileNames.front();
+  const std::string& fileName = fileNames.front();
   if (!fileName.empty() && fileDialog->getUserToggleSet("relToggle"))
   {
     QString relativePath = QDir(myAbsToRelPath.c_str()).relativeFilePath(fileName.c_str());

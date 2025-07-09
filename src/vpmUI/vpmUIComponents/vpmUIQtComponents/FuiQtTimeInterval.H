@@ -5,30 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTTIMEINTERVAL_H
-#define FUIQTTIMEINTERVAL_H
+#ifndef FUI_QT_TIME_INTERVAL_H
+#define FUI_QT_TIME_INTERVAL_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "vpmUI/vpmUIComponents/FuiTimeInterval.H"
 
-// Typedefs and fwd declarations
 
-class FuiQtTimeInterval: public FFuQtMultUIComponent,public FuiTimeInterval
+class FuiQtTimeInterval : public FFuQtLabelFrame, public FuiTimeInterval
 {
 public:
-  FuiQtTimeInterval(QWidget * parent=0,const char* name="FuiQtTimeInterval");
-  virtual ~FuiQtTimeInterval();
+  FuiQtTimeInterval(QWidget* parent, const char* name = "FuiQtTimeInterval");
 
-// Operations
 private:
-  virtual void setSensitivity(bool isSensitive) {
-    FuiTimeInterval::setSensitivity(isSensitive);}
-
-// Attributes 
-private: 
- 
-
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiTimeInterval::setSensitivity(isSensitive);
+  }
 };
-/////////////////////////////////////////////////////////////////////////////
 
 #endif

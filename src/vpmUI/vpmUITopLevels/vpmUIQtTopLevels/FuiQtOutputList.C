@@ -34,3 +34,11 @@ FuiQtOutputList::FuiQtOutputList(int xpos, int ypos, int width, int height,
 
   this->initWidgets();
 }
+
+
+void FuiQtOutputList::resizeEvent(QResizeEvent* e)
+{
+  this->QWidget::resizeEvent(e);
+
+  myMemo->setSizeGeometry(0,0,this->getWidth(),this->getHeight());
+}

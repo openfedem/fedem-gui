@@ -17,7 +17,6 @@
 class FFuLabel;
 class FFuLabelFrame;
 class FFuLabelField;
-class FFuIOField;
 class FFuDialogButtons;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
@@ -34,7 +33,6 @@ class FuiCreateTurbineTower : virtual public FFuTopLevelShell,
 
 public:
   FuiCreateTurbineTower();
-  virtual ~FuiCreateTurbineTower() {}
 
   static FuiCreateTurbineTower* create(int xpos = 100, int ypos = 100,
 				       int width = 100, int height = 100,
@@ -51,7 +49,6 @@ protected:
   virtual bool onClose();
 
 private:
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUp();
 
   void onDialogButtonClicked(int button);
@@ -64,13 +61,14 @@ private:
 protected:
   FFuLabel*           headerImage;
   FFuLabel*           modelImage;
+  FFuLabel*           notesText;
   FFuLabelFrame*      towerGeometryFrame;
   FFuLabelField*      towerGeometryD1Field;
   FFuLabelField*      towerGeometryD2Field;
   FFuLabelField*      towerGeometryM1Field;
   FFuLabelField*      towerGeometryH1Field;
   FFuLabelField*      towerGeometryH2Field;
-  FFuLabelField*      towerGeometryWallThicknessField;
+  FFuLabelField*      towerWallThicknField;
   FFuLabelFrame*      towerMeshFrame;
   FFuLabelField*      towerMeshN1Field;
   FFuLabelField*      towerMeshN2Field;
@@ -80,48 +78,27 @@ protected:
   FFuLabelField*      towerMaterialEField;
   FFuLabelField*      towerMaterialNuField;
   FFuLabelField*      towerMaterialGField;
-  FFuLabel*           notesImage;
-  FFuLabel*           notesLabel;
-  FFuLabelFrame*      notesSeparator;
-  FFuLabel*           notesText;
   FFuDialogButtons*   dialogButtons;
 };
-////////////////////////////////////////////////////////////////////////////////
 
 class FuaCreateTurbineTowerValues : public FFuaUIValues
 {
 public:
-  FuaCreateTurbineTowerValues() {
-    this->D1 = 1.0;
-    this->D2 = 0.0;
-    this->M1 = 68.0;
-    this->H1 = 68.0;
-    this->wallThickness = 0.1;
-    this->N1 = 10;
-    this->N2 = 10;
-    this->materialObject = 0;
-    this->materialQuery = 0;
-    this->isSensitive = true;
-    this->haveTurbine = false;
-  }
-  virtual ~FuaCreateTurbineTowerValues() {}
+  double D1 = 1.0;
+  double D2 = 0.0;
+  double M1 = 68.0;
+  double H1 = 68.0;
+  double wallThickness = 0.1;
+  int    N1 = 10;
+  int    N2 = 10;
 
-  double D1;
-  double D2;
-  double M1;
-  double H1;
-  double wallThickness;
-  int    N1;
-  int    N2;
-
-  FmModelMemberBase* materialObject;
-  FFuaQueryBase*     materialQuery;
+  FmModelMemberBase* materialObject = NULL;
+  FFuaQueryBase*     materialQuery  = NULL;
 
   FFaDynCB1<FuiQueryInputFieldValues&> editCB;
 
-  bool   isSensitive;
-  bool   haveTurbine;
+  bool isSensitive = true;
+  bool haveTurbine = false;
 };
-////////////////////////////////////////////////////////////////////////////////
 
 #endif

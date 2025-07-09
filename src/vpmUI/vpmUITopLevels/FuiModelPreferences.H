@@ -18,7 +18,6 @@
 #include <string>
 
 class FFuLabelFrame;
-class FFuLabel;
 class FFuMemo;
 class FFuIOField;
 class FFuFileBrowseField;
@@ -38,7 +37,6 @@ class FuiModelPreferences : virtual public FFuTopLevelShell,
 
 public:
   FuiModelPreferences();
-  virtual ~FuiModelPreferences() {}
 
   static FuiModelPreferences* create(int xpos = 100, int ypos = 100,
 				     int width = 100, int height = 100,
@@ -56,7 +54,6 @@ protected:
   virtual bool onClose();
 
 private:
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUp();
 
   void updateDescriptionOnly();
@@ -79,11 +76,9 @@ protected:
   FFuToggleButton* overwriteButton;
 
   FFuLabelFrame* unitsFrame;
-  FFuLabel*      unitsLabel;
   FFuOptionMenu* unitsMenu;
 
   FFuLabelFrame* modelingTolFrame;
-  FFuLabel*      modelingTolLabel;
   FFuIOField*    modelingTolField;
 
   FFuLabelFrame* gravitationFrame;
@@ -103,34 +98,25 @@ private:
   FFaDynCB1<bool>               changeRepositoryCB;
   FFaDynCB1<const std::string&> updateDescriptionCB;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 
 class FuaModelPreferencesValues : public FFuaUIValues
 {
 public:
-  FuaModelPreferencesValues() {
-    this->modelingTol = 0.0;
-    this->useFuncFile = -1;
-    this->overwriteFE = false;
-    this->isSensitive = true;
-  }
-  virtual ~FuaModelPreferencesValues() {}
-
   std::string modelFilePath;
   std::string description;
   std::string repository;
-  double      modelingTol;
+  double      modelingTol = 0.0;
   std::vector<std::string> units;
   std::string selectedUnits;
   std::string extFuncFileName;
-  char        useFuncFile;
+  char        useFuncFile = -1;
 
   FaVec3 gravitation;
   FaVec3 velocity;
 
-  bool overwriteFE;
-  bool isSensitive;
+  bool overwriteFE = false;
+  bool isSensitive = true;
 };
-////////////////////////////////////////////////////////////////////////////////
 
 #endif

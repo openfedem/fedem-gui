@@ -11,6 +11,8 @@
 #include "FFuLib/FFuQtBaseClasses/FFuQtModalDialog.H"
 #include "vpmUI/vpmUITopLevels/FuiPlugins.H"
 
+class QBoxLayout;
+
 
 class FuiQtPlugins : public FFuQtModalDialog,
 		     virtual public FuiPlugins
@@ -20,9 +22,11 @@ public:
 	       int width= 100, int height= 100,
 	       const char* title= "Fedem",
 	       const char* name = "FuiQtPlugins");
-  virtual ~FuiQtPlugins() {}
 
   virtual void setNoPlugins(unsigned int nPlugins);
+
+private:
+  QBoxLayout* myLayout;
 };
 
 #endif

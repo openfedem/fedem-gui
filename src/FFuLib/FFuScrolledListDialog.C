@@ -10,7 +10,14 @@
 #include "FFuLib/FFuDialogButtons.H"
 #include "FFuLib/FFuScrolledListDialog.H"
 
-extern const char* info_xpm[];
+
+FFuScrolledListDialog::FFuScrolledListDialog()
+{
+  myItemSelector  = NULL;
+  myNotesLabel    = NULL;
+  myNotesText     = NULL;
+  myDialogButtons = NULL;
+}
 
 
 void FFuScrolledListDialog::initWidgets()
@@ -19,13 +26,26 @@ void FFuScrolledListDialog::initWidgets()
   myDialogButtons->setButtonLabel(FFuDialogButtons::MIDBUTTON, "Apply");
   myDialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON, "Cancel");
 
-  labNotesImage->setPixMap(info_xpm);
-  labNotesLabel->setLabel("<b>Notes</b>");
-  labNotesImage->popDown();
-  labNotesLabel->popDown();
-  labNotesText->popDown();
+  if (myNotesText)
+  {
+    myNotesText->setLabel("No notes yet");
+    myNotesLabel->popDown();
+    myNotesText->popDown();
+  }
 
-  myDialogButtons->setButtonClickedCB(FFaDynCB1M(FFuScrolledListDialog,this,onDlgButtonClicked,int));
+  myDialogButtons->setButtonClickedCB(FFaDynCB1M(FFuScrolledListDialog,this,
+                                                 onDlgButtonClicked,int));
+}
+
+
+void FFuScrolledListDialog::setNotesText(const char* text)
+{
+  if (myNotesText)
+  {
+    myNotesText->setLabel(text);
+    myNotesLabel->popUp();
+    myNotesText->popUp();
+  }
 }
 
 

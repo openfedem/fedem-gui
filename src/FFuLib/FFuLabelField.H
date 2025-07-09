@@ -5,39 +5,34 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFULABELFIELD_H
-#define FFULABELFIELD_H
+#ifndef FFU_LABEL_FIELD_H
+#define FFU_LABEL_FIELD_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuLabel;
 class FFuIOField;
 
-class FFuLabelField : virtual public FFuMultUIComponent
+
+class FFuLabelField : virtual public FFuComponentBase
 {
 public:
-  FFuLabelField();
-  virtual ~FFuLabelField() {}
+  void setLabel(const char* label);
+  void setValue(const std::string& value);
+  void setValue(double value);
 
-  static FFuLabelField* create(FFuComponentBase* parent);
-
-  void   setLabel(const char* label);
-  void   setValue(double value);
-  void   setValue(const std::string& value);
-  double getValue();
-  std::string getText();
+  std::string getText() const;
+  double      getValue() const;
 
   // Field Accept :
 
-  void   setAcceptedCB(const FFaDynCB1<double>& aDynCB);
+  void setAcceptedCB(const FFaDynCB1<double>& aDynCB);
 
   // Label geometry :
 
-  int    getLabelWidth();
-  void   setLabelWidth(int width);
-  void   setLabelMargin(int margin);
-  void   setRelativeLabelWidth(int percent);
+  int  getLabelWidth(bool useHint = false);
+  void setLabelWidth(int width);
 
   // To prevent editing :
 
@@ -50,22 +45,6 @@ public:
   // Public members to ease access. Do Not Delete ! ;-)
   FFuLabel*   myLabel;
   FFuIOField* myField;
-
-  enum
-  {
-    FFU_AUTO,   // Uses LabelsizeHint, default
-    FFU_FIXED,  // Uses provided label width
-    FFU_RELATIVE// Uses provided relative sizes
-  };
-
-protected:
-  virtual void placeWidgets(int width, int height);
-
-private:
-  int myLabelWidth;
-  int myLabelMargin;
-  int myRelativeLabelWidth;
-  int myResizePolicy;
 };
 
 #endif

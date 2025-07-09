@@ -8,19 +8,14 @@
 #ifndef FUI_QT_POSITION_DATA_H
 #define FUI_QT_POSITION_DATA_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiPositionData.H"
 
 
-class FuiQtPositionData : public virtual FFuQtMultUIComponent, 
-			  public FuiPositionData
+class FuiQtPositionData : public FFuQtWidget, public FuiPositionData
 {
 public:
-  FuiQtPositionData(QWidget* parent = NULL,
-		    int xpos=100, int ypos=100,
-		    int width=800,int height=35,
-		    const char* name="PositionData");
-  virtual ~FuiQtPositionData() {}
+  FuiQtPositionData(QWidget* parent = NULL, const char* name = "PositionData");
 
   virtual void setSensitivity(bool onOff)
   {

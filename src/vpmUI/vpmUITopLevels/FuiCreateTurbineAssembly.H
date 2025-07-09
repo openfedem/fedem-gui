@@ -14,15 +14,16 @@
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 #include <array>
 
-class FFuOptionMenu;
 class FFuLabel;
 class FFuLabelFrame;
 class FFuLabelField;
+class FFuIOField;
 class FFuFileBrowseField;
+class FFuOptionMenu;
 class FFuSpinBox;
-class FFuDialogButtons;
 class FFuPushButton;
 class FFuToggleButton;
+class FFuDialogButtons;
 class FmModelMemberBase;
 class FmBladeDesign;
 
@@ -64,7 +65,6 @@ class FuiCreateTurbineAssembly : virtual public FFuTopLevelShell,
 
 public:
   FuiCreateTurbineAssembly();
-  virtual ~FuiCreateTurbineAssembly() {}
 
   static FuiCreateTurbineAssembly* create(int xpos = 100, int ypos = 100,
 					  int width = 100, int height = 100,
@@ -78,11 +78,6 @@ protected:
   void setMainImage(int drivelineType, int bearings);
   virtual bool onClose();
 
-private:
-  virtual void placeWidgets(int width, int height);
-  virtual void onPoppedUp();
-
-protected:
   void onDrivelineTypeChanged(int);
   void onBearingsChanged(int);
 
@@ -95,64 +90,50 @@ private:
   virtual FFuaUIValues* createValuesObject();
   virtual void setUIValues(const FFuaUIValues* values);
   virtual void getUIValues(FFuaUIValues* values);
+  virtual void onPoppedUp();
 
   void createOrUpdateTurbine();
+  void setApplyButton(bool switchToUpdate = false);
 
 protected:
   FFuLabel*           headerImage;
   FFuLabel*           modelImage;
-  FFuLabel*           drivelineTypeLabel;
+  FFuLabel*           notesText;
   FFuOptionMenu*      drivelineTypeMenu;
-  FFuLabel*           bearingsLabel;
   FFuOptionMenu*      bearingsMenu;
-  FFuLabel*           nameLabel;
   FFuLabelFrame*      towerBaseFrame;
   FFuLabelFrame*      hubFrame;
   FFuLabelFrame*      drivelineFrame;
   FFuLabelFrame*      nacelleFrame;
-  FFuLabelField*      nameField;
+  FFuIOField*         nameField;
   std::array<FFuLabelField*,FWP::NUM_FIELDS> myFields;
   FFuPushButton*      copyButton;
   FFuPushButton*      pasteButton;
-  FFuLabel*           bladesNumLabel;
   FFuSpinBox*         bladesNumField;
-  FFuLabel*           bladesDesignLabel;
   FFuFileBrowseField* bladesDesignField;
   FFuToggleButton*    incCtrlSysToggle;
-  FFuLabel*           notesImage;
-  FFuLabel*           notesLabel;
-  FFuLabelFrame*      notesSeparator;
-  FFuLabel*           notesText;
   FFuDialogButtons*   dialogButtons;
 
 private:
   bool haveTurbine;
   FmBladeDesign* currentBladeDesign;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 
 class FuaCreateTurbineAssemblyValues : public FFuaUIValues
 {
 public:
-  FuaCreateTurbineAssemblyValues() : geom{} {
-    haveTurbine = incCtrlSys = false;
-    drivelineType = bearings = bladesNum = 0;
-    bladesDesign = NULL;
-    isSensitive = true;
-  }
-  virtual ~FuaCreateTurbineAssemblyValues() {}
+  char haveTurbine   = 0;     //!< 0: no turbine, 1=unattached, 2=attached
+  int  drivelineType = 1;     //!< Drive line type (0=gearbox 1=direct)
+  int  bearings      = 0;     //!< Number of bearings (0, 1 or 2)
+  int  bladesNum     = 0;     //!< Number of blades (3 or 4)
+  bool incCtrlSys    = false; //!< Include control system?
 
-  char               haveTurbine;   //!< 0: no turbine, 1=unattached, 2=attached
-  int                drivelineType; //!< Drive line type (=gearbox 1=direct)
-  int                bearings;      //!< Number of bearings (0, 1 or 2)
-  int                bladesNum;     //!< Number of blades (3 or 4)
-  bool               incCtrlSys;    //!< Include control system?
-  FmModelMemberBase* bladesDesign;  //!< Pointer to turbine blade design object
-  std::string        name;          //!< Turbine name
-  std::array<double,FWP::NUM_FIELDS> geom; //!< Geometry parameters
+  std::string        name;                   //!< Turbine name
+  FmModelMemberBase* bladesDesign = NULL;    //!< Turbine blade design object
+  std::array<double,FWP::NUM_FIELDS> geom{}; //!< Geometry parameters
 
-  bool isSensitive;
+  bool isSensitive = true;
 };
-////////////////////////////////////////////////////////////////////////////////
 
 #endif

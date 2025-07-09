@@ -33,7 +33,7 @@ void FFuFileBrowseField::setDialogRememberKeyword(const std::string& memorizer)
   if (!fileDialog) this->createFileDialog();
 
   fileDialog->remember(memorizer);
- }
+}
 //----------------------------------------------------------------------------
 
 void FFuFileBrowseField::addDialogFilter(const std::string& descr,
@@ -43,6 +43,7 @@ void FFuFileBrowseField::addDialogFilter(const std::string& descr,
   if (!fileDialog) this->createFileDialog();
 
   fileDialog->addFilter(descr,extension,defaultFilter,id);
+
   if (defaultFilter) myFilterId = 0;
 }
 //----------------------------------------------------------------------------
@@ -54,6 +55,7 @@ void FFuFileBrowseField::addDialogFilter(const std::string& descr,
   if (!fileDialog) this->createFileDialog();
 
   fileDialog->addFilter(descr,exts,defaultFilter,id);
+
   if (defaultFilter) myFilterId = 0;
 }
 //----------------------------------------------------------------------------
@@ -73,7 +75,6 @@ void FFuFileBrowseField::setDialogFilters(const std::vector<Filter>& filters)
 
   fileDialog->clearFileFilters();
   fileDialog->addAllFilesFilter(false);
-
   for (const Filter& filter : filters)
     fileDialog->addFilter(filter.first,filter.second);
   fileDialog->addAllFilesFilter(true);
@@ -158,11 +159,3 @@ void FFuFileBrowseField::deleteFileDialog()
   myFilterId = -1;
 }
 //----------------------------------------------------------------------------
-
-void FFuFileBrowseField::placeWidgets(int width, int height)
-{
-  fileLabel->setCenterYGeometrySizeHint(0,height/2);
-  browseButton->setCenterYGeometryWidthHint(width-browseButton->getWidthHint(),height/2,height);
-  fileField->setEdgeGeometry(fileLabel->getWidth()+10,browseButton->getXPos()-5,0,height);
-}
-//-----------------------------------------------------------------------------

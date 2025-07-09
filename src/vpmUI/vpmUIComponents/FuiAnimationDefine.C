@@ -594,8 +594,7 @@ void FuiModesSheet::initWidgets()
   this->typeMenu->addOption("Free-free modes of reduced part");
   this->typeMenu->addOption("Eigenmodes of non-reduced part");
 
-  this->linkMenu->turnButtonOff(true);
-  this->linkMenu->setBehaviour(FuiQueryInputField::REF_NONE);
+  this->linkMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
   this->linkMenu->setTextForNoRefSelected("(All parts)");
 
   this->scaleField->setInputCheckMode(FFuIOField::DOUBLECHECK);

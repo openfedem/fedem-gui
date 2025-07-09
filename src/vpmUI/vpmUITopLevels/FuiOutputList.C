@@ -40,15 +40,11 @@ void FuiOutputList::initWidgets()
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
-void FuiOutputList::placeWidgets(int width,int height)
-{
-  myMemo->setEdgeGeometry(0,width,0,height);
-}
 
-void FuiOutputList::addText(const char * text)
+void FuiOutputList::addText(const char* text)
 {
-  myMemo->setCursorPos(FFuMemo::MOVE_END, false);
-  myMemo->insertText((const char*)text);
+  myMemo->setCursorPos(FFuMemo::MOVE_END,false);
+  myMemo->insertText(text);
   myMemo->scrollToEnd();
 }
 
@@ -66,6 +62,7 @@ void FuiOutputList::selectAll()
 {
   myMemo->selectAllText();
 }
+
 
 bool FuiOutputList::onClose()
 {

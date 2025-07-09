@@ -15,29 +15,31 @@
 #include <vector>
 
 class FFuListView;
+class FFuListViewItem;
 class FFuMemo;
 class FFuDialogButtons;
-class FFuListViewItem;
 class FFuaCmdItem;
 
 
 class FuiMiniFileBrowser : virtual public FFuTopLevelShell,
-			   public FFuUAExistenceHandler, public FFuUAFinishHandler
+                           public FFuUAExistenceHandler,
+                           public FFuUAFinishHandler
 {
   Fmd_HEADER_INIT();
 
 public:
   FuiMiniFileBrowser();
-  virtual ~FuiMiniFileBrowser() {}
 
   // static factory method
   static FuiMiniFileBrowser* create(int xpos, int ypos, int width, int height);
 
   // List view operations
   int  createItem(int parent, int after, const std::string& label,
-		  const std::string& size="", const std::string& modified="", const char** icon = 0);
+                  const std::string& size="", const std::string& modified="",
+                  const char** icon = NULL);
   bool updateItem(int item, const std::string& label,
-		  const std::string& size="", const std::string& modified="", const char** icon = 0);
+                  const std::string& size="", const std::string& modified="",
+                  const char** icon = NULL);
   bool deleteItem(int item);
   bool isItemPresent(int id);
   bool isItemExpanded(int id);
@@ -51,7 +53,7 @@ public:
   std::vector<int> getAllListViewChildren(int parent);
   std::vector<int> getListViewChildren(int parent);
   std::vector<int> getListViewAncestors(int descendant);
-  int         getListViewParent(int child);
+  int getListViewParent(int child);
 
   // List view related CBs
   void setTempSelectionChangedCB(const FFaDynCB1<int>& aDynCB)
@@ -77,10 +79,8 @@ public:
 
 protected:
   void initWidgets();
-  void placeWidgets(int width, int height);
   virtual bool onClose();
 
-  FFuComponentBase* splitter;
   FFuListView*      listView;
   FFuMemo*          infoView;
   FFuDialogButtons* dialogButtons;

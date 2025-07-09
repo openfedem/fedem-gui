@@ -12,12 +12,12 @@
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 
-class FFuDialogButtons;
 class FFuLabel;
 class FFuTable;
+class FFuIOField;
 class FFuToggleButton;
-class FFuLabelField;
 class FFuPushButton;
+class FFuDialogButtons;
 
 
 class FuiRDBMEFatigue : virtual public FFuTopLevelShell,
@@ -27,7 +27,6 @@ class FuiRDBMEFatigue : virtual public FFuTopLevelShell,
 
 public:
   FuiRDBMEFatigue();
-  virtual ~FuiRDBMEFatigue() {}
 
   static FuiRDBMEFatigue* create(int xpos = 100, int ypos  = 100,
 				 int width= 100, int height= 100,
@@ -36,7 +35,6 @@ public:
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width,int height);
   virtual bool onClose();
 
 private:
@@ -44,16 +42,14 @@ private:
   void onDialogButtonClicked(int button);
 
 public:
-  FFuTable* tableMain;
-  FFuToggleButton* useProbToggle;
-  FFuLabelField* startTimeField;
-  FFuLabelField* stopTimeField;
-  FFuLabelField* standardField;
-  FFuLabelField* snCurveField;
-  FFuPushButton* copyDataButton;
-  FFuLabel* notesImage;
-  FFuLabel* notesLabel;
-  FFuLabel* notesText;
+  FFuTable*         tableMain;
+  FFuToggleButton*  useProbToggle;
+  FFuPushButton*    copyDataButton;
+  FFuIOField*       startTimeField;
+  FFuIOField*       stopTimeField;
+  FFuIOField*       standardField;
+  FFuIOField*       snCurveField;
+  FFuLabel*         notesText;
   FFuDialogButtons* dialogButtons;
 };
 

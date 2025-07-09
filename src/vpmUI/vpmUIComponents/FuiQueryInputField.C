@@ -20,7 +20,6 @@ FuiQueryInputField::FuiQueryInputField()
   myOptions = NULL;
   myIOField = NULL;
 
-  IAmShowingButton = true;
   IAmAConstant = true;
   IAmSensitive = true;
   IAmEditSensitive = true;
@@ -43,28 +42,7 @@ void FuiQueryInputField::initWidgets()
   this->setChangedCB(FFaDynCB2M(FuiQueryInputField,this,
 				onQueryChanged,int,double));
 
-  this->invokeCreateUACB(this);
-}
-
-
-void FuiQueryInputField::placeWidgets(int width, int height)
-{
-  int arrowWidth = 17;
-  int border = 2;
-  int glv1 = width;
-  int glv0 = glv1 - arrowWidth;
-
-  if (IAmShowingButton)
-  {
-    glv1 -= height;
-    glv0 -= height;
-    myButton->setEdgeGeometry(glv1,width,0,height);
-  }
-
-  myOptions->setEdgeGeometry(0,glv1,0,height);
-
-  if (myIOField)
-    myIOField->setEdgeGeometry(border,glv0,border,height-border);
+  FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
 
@@ -73,17 +51,7 @@ void FuiQueryInputField::placeWidgets(int width, int height)
 //
 ////////////////////////////
 
-void FuiQueryInputField::turnButtonOff(bool isOff)
-{
-  IAmShowingButton = !isOff;
-  if (isOff)
-    myButton->popDown();
-  else
-    myButton->popUp();
-}
-
-
-void FuiQueryInputField::setBehaviour(Policy behaviour)
+void FuiQueryInputField::setBehaviour(Policy behaviour, bool noButton)
 {
   switch (behaviour)
     {
@@ -91,8 +59,6 @@ void FuiQueryInputField::setBehaviour(Policy behaviour)
       myIOField->setInputCheckMode(FFuIOField::DOUBLECHECK);
       myIOField->setAcceptedCB(FFaDynCB1M(FuiQueryInputField,this,
 					  onFieldAccepted,double));
-      if (myBehaviour == REF)
-        myOptions->addOption(myNoRefSelectedText.c_str(), 0);
       myIOField->setValue(0.0);
       myConstant = 0.0;
       IAmAConstant = true;
@@ -102,24 +68,21 @@ void FuiQueryInputField::setBehaviour(Policy behaviour)
       myIOField->setInputCheckMode(FFuIOField::NOCHECK);
       myIOField->setAcceptedCB(FFaDynCB1M(FuiQueryInputField,this,
 					  onFieldAccepted,const std::string&));
-      if (myBehaviour == REF)
-        myOptions->addOption(myNoRefSelectedText.c_str(), 0);
       myIOField->setValue(std::string());
       IAmAConstant = true;
       break;
 
     case REF_NONE:
-      if (myBehaviour == REF)
-        myOptions->addOption(myNoRefSelectedText.c_str(), 0);
-      IAmAConstant = false;
-      break;
-
     case REF:
-      if (myBehaviour != REF && myOptions->getOptionCount())
-        myOptions->removeOption(0);
       IAmAConstant = false;
       break;
     }
+
+  if (noButton)
+  {
+    myButtonMeaning = NONE;
+    myButton->popDown();
+  }
 
   myBehaviour = behaviour;
   this->updateSensitivity();
@@ -166,28 +129,18 @@ void FuiQueryInputField::updateSensitivity()
 
 void FuiQueryInputField::updateToolTip()
 {
+  const char* tip = NULL;
   FFuaQueryMatch* item = this->getSelectedQueryMatch();
-  switch (myBehaviour)
-    {
-    case REF_TEXT:
-    case REF_NONE:
-    case REF:
-      if (item && this->getWidth()-25 < this->getFontWidth(item->matchDescription.c_str()))
-      {
-        if (myIOField)
-          myIOField->setToolTip(item->matchDescription.c_str());
-        else
-          myOptions->setToolTip(item->matchDescription.c_str());
-        return;
-      }
-    default:
-      break;
-    }
+  if (myBehaviour >= REF_TEXT && item &&
+      this->getWidth()-25 < this->getFontWidth(item->matchDescription.c_str()))
+    tip = item->matchDescription.c_str();
+  else
+    tip = myToolTip.c_str();
 
   if (myIOField)
-    myIOField->setToolTip(myToolTip.c_str());
+    myIOField->setToolTip(tip);
   else
-    myOptions->setToolTip(myToolTip.c_str());
+    myOptions->setToolTip(tip);
 }
 
 
@@ -202,25 +155,19 @@ void FuiQueryInputField::setRefList(const std::vector<FFuaQueryMatch*>& matchLis
   std::vector<std::string> texts;
   texts.reserve(1+matchList.size());
 
-  switch (myBehaviour) {
-  case REF_NUMBER:
-    if (myConstant != 0.0) {
-      // TT #2935: Display the previous constant value instead of "None".
-      // NOTE: For this to work properly it is essential to invoke setValue
-      // before setQuery when a selection was changed
-      texts.push_back(FFaNumStr(myConstant,1,8));
-      // Append the constant value so that users know that this
-      // value will be added to the selected function output value
-      if (useAddedConstValue)
-        appendConstValue = " + " + texts.back();
-      break;
-    }
-  case REF_TEXT:
-  case REF_NONE:
-    texts.push_back(myNoRefSelectedText);
-  default:
-    break;
+  if (myBehaviour == REF_NUMBER && myConstant != 0.0)
+  {
+    // TT #2935: Display the previous constant value instead of "None".
+    // NOTE: For this to work properly it is essential to invoke setValue
+    // before setQuery when a selection was changed
+    texts.push_back(FFaNumStr(myConstant,1,8));
+    // Append the constant value so that users know that this
+    // value will be added to the selected function output value
+    if (useAddedConstValue)
+      appendConstValue = " + " + texts.back();
   }
+  else if (myBehaviour < REF)
+    texts.push_back(myNoRefSelectedText);
 
   for (FFuaQueryMatch* match : matchList)
     if (match) texts.push_back(match->matchDescription + appendConstValue);
@@ -295,25 +242,26 @@ void FuiQueryInputField::setSelectedRefIdx(int id)
     case REF_NUMBER:
     case REF_TEXT:
       if (id >= 0 && id < (int)myRefList.size())
-        {
-          IAmAConstant = false;
-          if (myConstant != 0.0 && useAddedConstValue)
-            myIOField->setValue(myRefList[id]->matchDescription + FFaNumStr(" + %.8g",myConstant));
-          else
-            myIOField->setValue(myRefList[id]->matchDescription);
-          myOptions->selectOption(id+1);
-        }
+      {
+        IAmAConstant = false;
+        if (myConstant != 0.0 && useAddedConstValue)
+          myIOField->setValue(myRefList[id]->matchDescription +
+                              FFaNumStr(" + %.8g",myConstant));
+        else
+          myIOField->setValue(myRefList[id]->matchDescription);
+        myOptions->selectOption(id+1);
+      }
       else
-	{
-	  IAmAConstant = true;
-	  if (myBehaviour == REF_NUMBER)
-	    myIOField->setValue(myConstant); // TT #2934
-	}
+      {
+        IAmAConstant = true;
+        if (myBehaviour == REF_NUMBER)
+          myIOField->setValue(myConstant); // TT #2934
+      }
       break;
 
     case REF:
       if (id >= 0 && id < (int)myRefList.size())
-	myOptions->selectOption(id);
+        myOptions->selectOption(id);
       break;
 
     default:
@@ -479,8 +427,6 @@ void FuiQueryInputField::onOptionSelected(int choice)
   }
 
   this->updateToolTip();
-
-  myButton->setLabel(IAmAConstant ? "+" : "?");
 
   switch (myBehaviour) {
   case REF_NUMBER:

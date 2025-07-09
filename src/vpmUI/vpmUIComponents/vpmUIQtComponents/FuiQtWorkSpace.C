@@ -17,8 +17,6 @@ FuiQtWorkSpace::FuiQtWorkSpace(QWidget* parent, const char*) : QMdiArea(parent)
 
   QObject::connect(this,SIGNAL(subWindowActivated(QMdiSubWindow*)),
 		   this,SLOT(fwdWindowActivated(QMdiSubWindow*)));
-
-  this->FuiWorkSpace::initWidgets();
 }
 //----------------------------------------------------------------------------
 
@@ -52,17 +50,5 @@ FFuMDIWindow* FuiQtWorkSpace::getActiveWindow()
 {
   QMdiSubWindow* active = this->activeSubWindow();
   return active ? dynamic_cast<FFuMDIWindow*>(active->widget()) : NULL;
-}
-//----------------------------------------------------------------------------
-
-void FuiQtWorkSpace::sendWindowActivated()
-{
-  this->fwdWindowActivated(NULL);
-}
-//----------------------------------------------------------------------------
-
-void FuiQtWorkSpace::fwdWindowActivated(QMdiSubWindow*)
-{
-  this->invokeWindowActivatedCB(this->getActiveWindow());
 }
 //----------------------------------------------------------------------------

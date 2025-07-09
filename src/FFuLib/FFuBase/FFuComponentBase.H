@@ -76,6 +76,7 @@ public:
 
   // Method to "Gray out" Widget :
 
+  void setDisabled(bool disable){this->setSensitivity(!disable);}
   virtual void setSensitivity(bool){}
   virtual bool getSensitivity(){return false;}
 

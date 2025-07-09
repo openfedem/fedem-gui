@@ -27,7 +27,7 @@ public:
   // Static create method to use instead of constructor :
   // Implementation in GUILib-dependent implementation file
 
-  static FuiCtrlModeller* create(FFuComponentBase* parent=0,
+  static FuiCtrlModeller* create(FFuComponentBase* parent,
                                  int xpos  = 100, int ypos   = 100,
                                  int width = 100, int height = 100,
                                  const char* title = "Control Editor",
@@ -38,13 +38,10 @@ public:
 
   void showGridUI(bool yes);
 
-  virtual void onPoppedUp();
-
 protected:
   void initWidgets();
 
   virtual bool onClose();
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedDownToMem();
 
   FuiCtrlGridAttributes* myCtrlGridAttributes;

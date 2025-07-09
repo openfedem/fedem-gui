@@ -9,7 +9,7 @@
 
 std::vector<FFuTopLevelShell*> FFuTopLevelShell::ourTopLevelDialogs;
 
-Fmd_SOURCE_INIT(FUI_TOPLEVELSHELL, FFuTopLevelShell, FFuMultUIComponent);
+Fmd_SOURCE_INIT(FUI_TOPLEVELSHELL, FFuTopLevelShell, FFuTopLevelShell);
 
 //----------------------------------------------------------------------------
 

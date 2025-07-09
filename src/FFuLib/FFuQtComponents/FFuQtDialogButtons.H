@@ -21,8 +21,7 @@ public:
 };
 
 
-class FFuQtDialogButtons : public QWidget,
-                           public FFuQtComponentBase, public FFuDialogButtons
+class FFuQtDialogButtons : public FFuQtWidget, public FFuDialogButtons
 {
 public:
   FFuQtDialogButtons(QWidget* parent = NULL, bool addSeparator = true,

@@ -15,9 +15,9 @@
 #ifndef FFU_QT_COMPONENT_BASE_H
 #define FFU_QT_COMPONENT_BASE_H
 
-#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include <QWidget>
 
-class QWidget;
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 
 
 /*!
@@ -28,9 +28,10 @@ class QWidget;
 
 class FFuQtComponentBase : virtual public FFuComponentBase
 {
-public:
+protected:
   FFuQtComponentBase() : myWidget(NULL) {}
-  virtual ~FFuQtComponentBase() {}
+
+public:
 
   // Geometry management :
 
@@ -95,8 +96,8 @@ public:
   virtual void giveKeyboardFocus();
 
 protected:
-  // Method to be called from Subclass Constructor
-  // (Which must be subclass of QWidget) to initialise the widget pointer.
+  // Method to be called from subclass constructor
+  // (which must be a QWidget subclass) to initialise the widget pointer.
   void setWidget(QWidget* widget);
 
   virtual void blockLibSignals(bool block);
@@ -107,6 +108,13 @@ private:
   virtual int  getBasicHeightHint();
 
   QWidget* myWidget;
+};
+
+
+class FFuQtWidget : public QWidget, public FFuQtComponentBase
+{
+protected:
+  FFuQtWidget(QWidget* parent, const char* name);
 };
 
 #endif

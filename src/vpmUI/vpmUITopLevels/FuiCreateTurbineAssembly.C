@@ -16,20 +16,18 @@
 #include "vpmUI/Pixmaps/turbineModel5.xpm"
 #include "vpmUI/Pixmaps/turbineModel6.xpm"
 
-extern const char* info_xpm[];
-
 #include "FFuLib/FFuAuxClasses/FFuaPalette.H"
 #include "FFuLib/FFuOptionMenu.H"
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabelField.H"
-#include "FFuLib/FFuIOField.H"
-#include "FFuLib/FFuDialogButtons.H"
-#include "FFuLib/FFuFileDialog.H"
 #include "FFuLib/FFuSpinBox.H"
+#include "FFuLib/FFuIOField.H"
+#include "FFuLib/FFuFileBrowseField.H"
+#include "FFuLib/FFuFileDialog.H"
 #include "FFuLib/FFuPushButton.H"
 #include "FFuLib/FFuToggleButton.H"
-#include "FFuLib/FFuFileBrowseField.H"
+#include "FFuLib/FFuDialogButtons.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
 
 #include "vpmPM/FpPM.H"
@@ -68,37 +66,26 @@ void FuiCreateTurbineAssembly::setSensitivity(bool isSensitive)
 }
 //----------------------------------------------------------------------------
 
-static void getPropertiesPath(std::string& dir)
-{
-  dir = FpPM::getFullFedemPath("Properties");
-}
-
 void FuiCreateTurbineAssembly::initWidgets()
 {
-  this->headerImage->setPixMap(turbines_xpm);
+  this->headerImage->setPixMap(turbines_xpm,true);
   this->setMainImage(0,2);
 
   this->dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiCreateTurbineAssembly,this,
 						     onDialogButtonClicked,int));
 
-  this->dialogButtons->setButtonLabel(APPLY,"Generate turbine");
+  this->dialogButtons->setButtonLabel(APPLY,"Generate");
   this->dialogButtons->setButtonLabel(CANCEL,"Close");
   this->dialogButtons->setButtonLabel(HELP,"Help");
 
-  this->drivelineTypeLabel->setLabel("Driveline type");
   this->drivelineTypeMenu->addOption("Gearbox");
   this->drivelineTypeMenu->addOption("Direct");
   this->drivelineTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiCreateTurbineAssembly,this,onDrivelineTypeChanged,int));
 
-  this->bearingsLabel->setLabel("Bearings");
   this->bearingsMenu->addOption("None");
   this->bearingsMenu->addOption("One bearing");
   this->bearingsMenu->addOption("Two bearings");
   this->bearingsMenu->setOptionSelectedCB(FFaDynCB1M(FuiCreateTurbineAssembly,this,onBearingsChanged,int));
-
-  this->nameLabel->setLabel("Name");
-  this->nameField->setLabelMargin(0);
-  this->nameField->setLabelWidth(0);
 
   this->towerBaseFrame->setLabel("Tower base");
   this->myFields[TOWER_X]->setLabel("X");
@@ -142,16 +129,17 @@ void FuiCreateTurbineAssembly::initWidgets()
   this->copyButton->setActivateCB(FFaDynCB0M(FuiCreateTurbineAssembly,this,onCopyButtonClicked));
   this->pasteButton->setActivateCB(FFaDynCB0M(FuiCreateTurbineAssembly,this,onPasteButtonClicked));
 
-  this->bladesNumLabel->setLabel("Number of blades");
   this->bladesNumField->setMinMax(2,4);
 
-  this->bladesDesignLabel->setLabel("Blade design");
+  this->bladesDesignField->setLabel("Blade design");
+  this->bladesDesignField->setButtonLabel("...",20);
 
-  this->bladesDesignField->setLabel("");
-  this->bladesDesignField->setButtonLabel("...", 20);
-  this->bladesDesignField->setGetDefaultDirCB(FFaDynCB1S(getPropertiesPath,std::string&));
-  this->bladesDesignField->setFileOpenedCB(FFaDynCB2M(FuiCreateTurbineAssembly,this,
-						      onBladeDesignFileSelected,const std::string&,int));
+  bladesDesignField->setGetDefaultDirCB(FFaDynCB1S([](std::string& dir){
+        dir = FpPM::getFullFedemPath("Properties");},std::string&));
+  bladesDesignField->setFileOpenedCB(FFaDynCB2M(FuiCreateTurbineAssembly,this,
+                                                onBladeDesignFileSelected,
+                                                const std::string&,int));
+
   this->bladesDesignField->addDialogFilter("Blade Definition File","fmm",true);
   this->bladesDesignField->setDialogRememberKeyword("ExternalBladeDefinition");
   this->bladesDesignField->getIOField()->setUseCustomBgColor(true);
@@ -163,195 +151,12 @@ void FuiCreateTurbineAssembly::initWidgets()
 
   this->incCtrlSysToggle->setLabel("Include control system");
 
-  this->notesImage->setPixMap(info_xpm);
-  this->notesLabel->setLabel("<b>Notes</b>");
-
-  this->placeWidgets(this->getWidth(),this->getHeight());
-
   FFuUAExistenceHandler::invokeCreateUACB(this);
-}
-//----------------------------------------------------------------------------
-
-void FuiCreateTurbineAssembly::placeWidgets(int, int height)
-{
-  int border = this->getBorder();
-  int buttonsTop = height - this->dialogButtons->getHeightHint();
-
-  int fontHeight = this->getFontHeigth();
-  int fieldHeight = 20; // hard coded field height?!
-
-  int v1 = border;
-  int v2 = v1 + 120;
-  int y  = border + 170;
-
-  // images
-
-  this->headerImage->setEdgeGeometry(0, 827, 0, 169);
-
-  this->modelImage->setEdgeGeometry(370, 827, 170, 620);
-
-  // driveline and bearings combos
-
-  this->drivelineTypeLabel->setEdgeGeometry(v1, v1+110, y, y+fieldHeight);
-  this->bearingsLabel->setEdgeGeometry(v2, v2+100, y, y+fieldHeight);
-  this->nameLabel->setEdgeGeometry(v2+110, v2+210, y, y+fieldHeight);
-  y += fieldHeight;
-
-  this->drivelineTypeMenu->setEdgeGeometry(v1, v1+110, y, y+fieldHeight);
-  this->bearingsMenu->setEdgeGeometry(v2, v2+100, y, y+fieldHeight);
-  this->nameField->setEdgeGeometry(v2+110, v2+210, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  // tower base
-
-  this->towerBaseFrame->setEdgeGeometry(v1, v1+110, y, y+110);
-  y += fontHeight+7;
-
-  this->myFields[TOWER_X]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[TOWER_X]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[TOWER_Y]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[TOWER_Y]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[TOWER_Z]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[TOWER_Z]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[TOWER_T]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[TOWER_T]->setLabelWidth(20);
-  y += fieldHeight+10;
-
-  // hub
-
-  this->hubFrame->setEdgeGeometry(v1, v1+110, y, y+110);
-  y += fontHeight+7;
-
-  this->myFields[H1]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[H1]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[HR]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[HR]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[ALPHA]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[ALPHA]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[BETA]->setEdgeGeometry(v1+10, v1+90, y, y+fieldHeight);
-  this->myFields[BETA]->setLabelWidth(20);
-
-  // driveline
-
-  y = 230;
-
-  this->drivelineFrame->setEdgeGeometry(v2, v2+210, y, 362);
-  y += fontHeight+7;
-
-  this->myFields[D1]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[D1]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[D2]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[D2]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[D3]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[D3]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[D4]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[D4]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[D5]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[D5]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  y = 230+fontHeight+7;
-
-  this->myFields[D6]->setEdgeGeometry(v2+100, v2+185, y, y+fieldHeight);
-  this->myFields[D6]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[B1]->setEdgeGeometry(v2+100, v2+185, y, y+fieldHeight);
-  this->myFields[B1]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[B2]->setEdgeGeometry(v2+100, v2+185, y, y+fieldHeight);
-  this->myFields[B2]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[S]->setEdgeGeometry(v2+100, v2+185, y, y+fieldHeight);
-  this->myFields[S]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  this->myFields[THETA]->setEdgeGeometry(v2+100, v2+185, y, y+fieldHeight);
-  this->myFields[THETA]->setLabelWidth(20);
-  y += fieldHeight+2;
-
-  // nacelle
-
-  y = 368;
-
-  this->nacelleFrame->setEdgeGeometry(v2, v2+115, y, y+90);
-  y += fontHeight+7;
-
-  this->myFields[COG_X]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[COG_X]->setLabelWidth(25);
-  y += fieldHeight+2;
-
-  this->myFields[COG_Y]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[COG_Y]->setLabelWidth(25);
-  y += fieldHeight+2;
-
-  this->myFields[COG_Z]->setEdgeGeometry(v2+10, v2+90, y, y+fieldHeight);
-  this->myFields[COG_Z]->setLabelWidth(25);
-  y += fieldHeight+2;
-
-  // copy and paste buttons
-
-  y = 374+40;
-
-  this->copyButton->setEdgeGeometry(v2+130, v2+211, y, y+fieldHeight);
-  y += fieldHeight+2;
-  this->pasteButton->setEdgeGeometry(v2+130, v2+211, y, y+fieldHeight);
-  y += fieldHeight+2;
-
-  // blades
-
-  y = 457;
-
-  this->bladesDesignLabel->setEdgeGeometry(v1, v1+60, y, y+fieldHeight);
-  y += fontHeight+7;
-  this->bladesDesignField->setEdgeGeometry(v1-5, v1+387, y, y+fieldHeight);
-  y += fieldHeight-1;
-
-  this->bladesNumLabel->setEdgeGeometry(v1, v1+84, y, y+fieldHeight);
-  y += fontHeight+4;
-
-  this->bladesNumField->setEdgeGeometry(v1, v1+84, y, y+fieldHeight);
-  this->incCtrlSysToggle->setEdgeGeometry(v1+110, v1+344, y, y+fieldHeight);
-  y += fieldHeight+12;
-
-  // notes
-
-  this->notesImage->setEdgeGeometry(v1, v1+16, y-5, y+11);
-  this->notesSeparator->setEdgeGeometry(v1+20, v1+330, y+10, y+13);
-  this->notesLabel->setEdgeGeometry(v1+20, v1+330, y-5, y+11);
-  this->notesText->setEdgeGeometry(v1, v1+335, y+14, y+66);
-
-  // dialog buttons
-
-  this->dialogButtons->setEdgeGeometry(0,350,buttonsTop,height);
 }
 //-----------------------------------------------------------------------------
 
 void FuiCreateTurbineAssembly::onPoppedUp()
 {
-  this->placeWidgets(this->getWidth(),this->getHeight());
   this->updateUIValues();
 }
 //----------------------------------------------------------------------------
@@ -516,23 +321,7 @@ void FuiCreateTurbineAssembly::setUIValues(const FFuaUIValues* values)
 
   this->incCtrlSysToggle->setValue(turbValues->incCtrlSys);
   this->setSensitivity(turbValues->isSensitive);
-
-  haveTurbine = turbValues->haveTurbine;
-
-  if (turbValues->haveTurbine) {
-    this->notesText->setLabel("You can provide high-level wind turbine model data here.\n"
-			      "Click 'Update turbine' to update the existing mechanism model.\n"
-			      "All fields use metric and degree values.\n"
-			      "The selected blade will be copied to the folder [modelfile name]_blade.");
-    this->dialogButtons->setButtonLabel(APPLY,"Update turbine");
-  }
-  else {
-    this->notesText->setLabel("You can provide high-level wind turbine model data here. Click\n"
-			      "'Generate turbine' to generate a mechanism model of the turbine.\n"
-			      "All fields use metric and degree values.\n"
-			      "The selected blade will be copied to the folder [modelfile name]_blade.");
-    this->dialogButtons->setButtonLabel(APPLY,"Generate turbine");
-  }
+  this->setApplyButton(haveTurbine = turbValues->haveTurbine);
 }
 //-----------------------------------------------------------------------------
 
@@ -542,7 +331,7 @@ void FuiCreateTurbineAssembly::getUIValues(FFuaUIValues* values)
 
   turbValues->drivelineType = this->drivelineTypeMenu->getSelectedOption();
   turbValues->bearings      = this->bearingsMenu->getSelectedOption();
-  turbValues->name          = this->nameField->getText();
+  turbValues->name          = this->nameField->getValue();
   for (size_t i = 0; i < turbValues->geom.size() && i < this->myFields.size(); i++)
     turbValues->geom[i]     = this->myFields[i]->getValue();
   turbValues->bladesNum     = this->bladesNumField->getIntValue();
@@ -567,13 +356,30 @@ void FuiCreateTurbineAssembly::createOrUpdateTurbine()
 
   if (FapDBCreateCmds::updateWindTurbine(hadTurbine))
   {
-    this->notesText->setLabel("You can provide high-level wind turbine model data here.\n"
-                              "Click 'Update turbine' to update the existing mechanism model.\n"
-                              "All fields use metric and degree values.\n"
-                              "The selected blade will be copied to the folder [modelfile name]_blade.");
-    this->dialogButtons->setButtonLabel(APPLY,"Update turbine");
+    this->setApplyButton(true);
     Fui::okDialog("Wind turbine mechanism successfully created/updated.");
   }
   else
     Fui::okDialog("Failed to create/update turbine mechanism.");
+}
+//-----------------------------------------------------------------------------
+
+void FuiCreateTurbineAssembly::setApplyButton(bool switchToUpdate)
+{
+  if (switchToUpdate)
+  {
+    notesText->setLabel("You can provide high-level wind turbine model data here.\n"
+                        "Click 'Update turbine' to update the existing mechanism model.\n"
+                        "All fields use metric and degree values.\n"
+                        "The selected blade will be copied to a folder named [modelfile]_blade.");
+    dialogButtons->setButtonLabel(APPLY,"Update turbine");
+  }
+  else
+  {
+    notesText->setLabel("You can provide high-level wind turbine model data here. Click\n"
+                        "'Generate turbine' to generate a mechanism model of the turbine.\n"
+                        "All fields use metric and degree values.\n"
+                        "The selected blade will be copied to a folder named [modelfile]_blade.");
+    dialogButtons->setButtonLabel(APPLY,"Generate turbine");
+  }
 }

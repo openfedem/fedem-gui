@@ -20,7 +20,7 @@ FuiGraphViewTLS::FuiGraphViewTLS()
 {
   Fmd_CONSTRUCTOR_INIT(FuiGraphViewTLS);
 
-  this->graphView = NULL;
+  myView = NULL;
 }
 //----------------------------------------------------------------------------
 
@@ -170,15 +170,10 @@ void FuiGraphView::onPoppedUp()
 }
 //----------------------------------------------------------------------------
 
-void FuiGraphViewTLS::placeWidgets(int width, int height)
-{
-  this->graphView->setEdgeGeometry(0,width,0,height);
-}
-//----------------------------------------------------------------------------
-
 bool FuiGraphViewTLS::onClose()
 {
   this->invokeFinishedCB();
+
   if (--numInstance < 1)
   {
     FuiMainWindow* mainWindow = Fui::getMainWindow();
@@ -188,5 +183,6 @@ bool FuiGraphViewTLS::onClose()
     if (haveZoomAndPan)
       mainWindow->showToolBar(FuiMainWindow::VIEWCTRL1, true);
   }
+
   return false;
 }

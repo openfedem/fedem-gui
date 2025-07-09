@@ -12,15 +12,15 @@
 #include "vpmUI/vpmUITopLevels/FuiLinkRamSettings.H"
 
 
-class FuiQtLinkRamSettings : public FFuQtTopLevelShell, public FuiLinkRamSettings
+class FuiQtLinkRamSettings : public FFuQtTopLevelShell,
+                             public FuiLinkRamSettings
 {
 public:
-  FuiQtLinkRamSettings(QWidget* parent=0,
-		       int xpos=100,int ypos=100,
-		       int width=100,int height=100,
-		       const char* title= "",
-		       const char* name = "FuiQtLinkRamSettings");
-  virtual ~FuiQtLinkRamSettings() {}
+  FuiQtLinkRamSettings(int xpos, int ypos, int width, int height,
+                       const char* title, const char* name);
+
+protected:
+  virtual void resizeEvent(QResizeEvent* e);
 
 private:
   virtual void setSensitivity(bool) {}

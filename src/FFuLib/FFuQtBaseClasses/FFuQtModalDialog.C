@@ -5,7 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QResizeEvent>
 #include <QCloseEvent>
 #include <QEvent>
 
@@ -13,18 +12,21 @@
 #include "FFuQtModalDialog.H"
 
 
-FFuQtModalDialog::FFuQtModalDialog(int xpos, int ypos,
-				   int width, int height,
-				   const char* title,
-				   const char* name,
-				   Qt::WindowFlags f)
-  : QDialog(NULL,f)
+FFuQtModalDialog::FFuQtModalDialog(int xpos, int ypos, int width, int height,
+                                   const char* title, const char* name)
+  : QDialog(NULL,Qt::Dialog)
 {
+  this->setWidget(this);
   this->setObjectName(name);
   this->setModal(true);
-  this->setWidget(this);
   this->setWindowTitle(title);
   this->setGeometry(xpos,ypos,width,height);
+}
+
+
+void FFuQtModalDialog::setTitle(const char* title)
+{
+  this->setWindowTitle(title);
 }
 
 
@@ -41,13 +43,6 @@ bool FFuQtModalDialog::execute()
 void FFuQtModalDialog::closeDialog(bool resultCode)
 {
   this->done(resultCode ? QDialog::Accepted : QDialog::Rejected);
-}
-
-
-void FFuQtModalDialog::resizeEvent(QResizeEvent* rEvent)
-{
-  this->QWidget::resizeEvent(rEvent);
-  this->placeWidgets(this->width(),this->height());
 }
 
 

@@ -22,7 +22,6 @@ class FFuPushButton;
 class FFuToggleButton;
 class FFuFrame;
 class FFuLabelFrame;
-class FFuLabel;
 class FFuScale;
 class FFuColorDialog;
 class FuaViewSettingsValues;
@@ -58,40 +57,46 @@ public:
     STICKER,
     TIRES,
     TRIADS,
-    NSYMBOLS};
+    NSYMBOLS
+  };
+
+  enum {
+    REVOLUTE,
+    BALL,
+    RIGID,
+    FREE,
+    PRISMATIC,
+    CYLINDRIC,
+    CAM,
+    NJOINTS
+  };
 
 protected:
-  void initWidgets(void);
 
-  virtual void placeWidgets(int width, int height);
+  void initWidgets();
+
   virtual void onPoppedUp();
   virtual void onPoppedDown();
   virtual bool onClose();
 
 private:
-  void onColorEditClicked(FFuComponentBase*);
-  void onColDlgChanged(FFuColor aColor, FFuComponentBase*);
-  void onColDlgClosed(FFuColor aColor, FFuComponentBase*);
+  void onColorEditClicked(FFuComponentBase* dlg);
+  void onColDlgChanged(const FFuColor& col, FFuColorDialog* dlg);
+  void onColDlgClosed(const FFuColor& col, FFuColorDialog* dlg);
 
-  void placeSymbols(int width, int height);
-  void placeDefaultColors(int width, int height);
-  void placeViewerOptions(int width, int height);
-
-  // Actions
-  virtual bool updateDBValues(bool updateui=true);
-
-  // callbacks
   void toggleValueChanged(int,bool) { this->updateDBValues(); }
   void sliderValueChanged(int)      { this->updateDBValues(); }
   void fieldValueChanged(double)    { this->updateDBValues(); }
   void onCloseButtonClicked()       { this->onClose(); }
 
+  virtual bool updateDBValues(bool = true);
+
 protected:
   // Main frames
 
-  FFuLabelFrame *mySymbolsFrame;
-  FFuLabelFrame *myDefaultColorFrame;
-  FFuLabelFrame *myViewerOptionsFrame;
+  FFuLabelFrame* mySymbolsFrame;
+  FFuLabelFrame* myDefaultColorFrame;
+  FFuLabelFrame* myViewerOptionsFrame;
 
   // Dialog button:
 
@@ -99,63 +104,45 @@ protected:
 
   // Symbols:
 
-  FFuLabel *myOnOffLabel;
-  FFuLabel *myColorLabel;
-  FFuLabel *mySymbolSizeLabel;
-  FFuLabel *myLineWidthLabel;
+  std::array<FFuToggleButton*,NJOINTS> myJointSymbolToggles;
+  std::array<FFuToggleButton*,3>       myPartSymbolToggles;
 
-  FFuToggleButton *myRevoluteJointToggle;
-  FFuToggleButton *myBallJointToggle;
-  FFuToggleButton *myRigidJointToggle;
-  FFuToggleButton *myFreeJointToggle;
-  FFuToggleButton *myPrismaticJointToggle;
-  FFuToggleButton *myCylindricJointToggle;
-  FFuToggleButton *myCamJointToggle;
-
-  FFuToggleButton *myBeamTriadsToggle;
-  FFuToggleButton *myBeamsToggle;
-  FFuToggleButton *myBeamCSToggle;
-  FFuToggleButton *myPartsToggle;
-  FFuToggleButton *myPartCSToggle;
-  FFuToggleButton *myInternalPartCSsToggle;
-  FFuToggleButton *myPartCoGCSToggle;
-  FFuToggleButton *myRefPlaneToggle;
-  FFuToggleButton *mySeaStateToggle;
-  FFuToggleButton *myWavesToggle;
+  FFuToggleButton* myBeamTriadsToggle;
+  FFuToggleButton* myBeamsToggle;
+  FFuToggleButton* myBeamCSToggle;
+  FFuToggleButton* myPartsToggle;
+  FFuToggleButton* myRefPlaneToggle;
+  FFuToggleButton* mySeaStateToggle;
+  FFuToggleButton* myWavesToggle;
 
   FFuIOField* mySymbolSizeField;
   FFuScale*   myLineWidthScale;
 
   std::array<FFuToggleButton*,NSYMBOLS> mySymbolToggles;
-  std::array<FFuFrame*       ,NSYMBOLS> mySymbolColFrames;
-  std::array<FFuPushButton*  ,NSYMBOLS> mySymbolColEditButtons;
-  std::array<FFuColorDialog* ,NSYMBOLS> mySymbolColDialog;
+  std::array<FFuFrame*       ,NSYMBOLS> myColorFrames;
+  std::array<FFuPushButton*  ,NSYMBOLS> myColorEditButtons;
+  std::array<FFuColorDialog* ,NSYMBOLS> myColorDialog;
 
   // Default colors:
 
-  FFuLabel *myGroundedColLabel;
-  FFuLabel *myUnattacedColLabel;
-  FFuLabel *myBackgroundColLabel;
+  FFuFrame* myGroundedColFrame;
+  FFuFrame* myUnattachedColFrame;
+  FFuFrame* myBackgroundColFrame;
 
-  FFuFrame *myGroundedColFrame;
-  FFuFrame *myUnattachedColFrame;
-  FFuFrame *myBackgroundColFrame;
+  FFuPushButton* myGroundedColEditButton;
+  FFuPushButton* myUnattachedColEditButton;
+  FFuPushButton* myBackgroundColEditButton;
 
-  FFuPushButton *myGroundedColEditButton;
-  FFuPushButton *myUnattachedColEditButton;
-  FFuPushButton *myBackgroundColEditButton;
-
-  FFuColorDialog *myGroundedColDialog;
-  FFuColorDialog *myUnattachedColDialog;
-  FFuColorDialog *myBackgroundColDialog;
+  FFuColorDialog* myGroundedColDialog;
+  FFuColorDialog* myUnattachedColDialog;
+  FFuColorDialog* myBackgroundColDialog;
 
   // Viewer options
 
-  FFuToggleButton *myFogToggle;
-  FFuScale *myFogScale;
-  FFuLabel *myFogVisibilityLabel;
-  FFuToggleButton *mySimpleTransparencyToggle;
-  FFuToggleButton *myAntialiazingToggle;
+  FFuToggleButton* myFogToggle;
+  FFuScale*        myFogScale;
+  FFuToggleButton* myTransparencyToggle;
+  FFuToggleButton* myAntialiazingToggle;
 
   // Toggle groups
   FFuLogicButtonGroup myToggleButtonGroup;
@@ -163,13 +150,8 @@ protected:
 
   // Mapping of the color dialogs and frames
   std::map<FFuColorDialog*,FFuFrame*> myColorDialogMap;
-
-private:
-  bool showTireSettings;
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
 
 class FuaViewSettingsValues : public FFuaUIValues
 {
@@ -177,9 +159,6 @@ class FuaViewSettingsValues : public FFuaUIValues
   // Colors are set directly from each color-selector.
 
 public:
-  FuaViewSettingsValues() {}
-  virtual ~FuaViewSettingsValues() {}
-
   // Viewer options
   bool isFogOn;
   bool isAntialiazingOn;

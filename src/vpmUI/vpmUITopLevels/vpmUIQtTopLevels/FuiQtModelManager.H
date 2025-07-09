@@ -8,18 +8,14 @@
 #ifndef FUI_QT_MODEL_MANAGER_H
 #define FUI_QT_MODEL_MANAGER_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUITopLevels/FuiModelManager.H"
 
 
-class FuiQtModelManager : public FFuQtMultUIComponent, public FuiModelManager
+class FuiQtModelManager : public FFuQtWidget, public FuiModelManager
 {
 public:
-  FuiQtModelManager(QWidget* parent,
-		    int xpos = 100, int ypos  = 100,
-		    int width= 100, int height= 100,
-		    const char* name = "FuiQtModelManager");
-  virtual ~FuiQtModelManager() {}
+  FuiQtModelManager(QWidget* parent);
 };
 
 #endif

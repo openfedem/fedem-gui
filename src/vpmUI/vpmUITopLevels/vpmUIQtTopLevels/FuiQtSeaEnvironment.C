@@ -5,13 +5,18 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FuiQtSeaEnvironment.H"
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QLabel>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtQueryInputField.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQt3DPoint.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
+#include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "FFuLib/FFuQtComponents/FFuQtDialogButtons.H"
+
+#include "FuiQtSeaEnvironment.H"
 
 
 FuiSeaEnvironment* FuiSeaEnvironment::create(int xpos, int ypos,
@@ -19,49 +24,104 @@ FuiSeaEnvironment* FuiSeaEnvironment::create(int xpos, int ypos,
 					     const char* title,
 					     const char* name)
 {
-  return new FuiQtSeaEnvironment(0,xpos,ypos,width,height,title,name);
+  return new FuiQtSeaEnvironment(xpos,ypos,width,height,title,name);
 }
 
 
-FuiQtSeaEnvironment::FuiQtSeaEnvironment(QWidget* parent,
-					 int xpos, int ypos,
+FuiQtSeaEnvironment::FuiQtSeaEnvironment(int xpos, int ypos,
 					 int width, int height,
 					 const char* title,
 					 const char* name)
-  : FFuQtTopLevelShell(parent,xpos,ypos,width,height,title,name)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name)
 {
-  this->waterDensityField  = new FFuQtLabelField(this);
-  this->meanSeaLevelField  = new FFuQtLabelField(this);
-  this->seaDepthField      = new FFuQtLabelField(this);
+  FFuQtLabelFrame* qGrav;
+  FFuQtLabelFrame* qWdir;
+  FFuQtLabelFrame* qMG;
 
-  this->gravitationFrame  = new FFuQtLabelFrame(this);
-  this->gravitationVector = new FuiQt3DPoint(this,0,0,0,0,"g",false);
+  waterDensityField  = new FFuQtIOField();
+  meanSeaLevelField  = new FFuQtIOField();
+  seaDepthField      = new FFuQtIOField();
 
-  this->waveDirectionFrame  = new FFuQtLabelFrame(this);
-  this->waveDirectionVector = new FuiQt3DPoint(this,0,0,0,0,"Xw",false);
+  gravitationFrame  = qGrav = new FFuQtLabelFrame();
+  gravitationVector = new FuiQt3DPoint(NULL,"g",false);
 
-  this->marineGrowthFrame           = new FFuQtLabelFrame(this);
-  this->marineGrowthDensityField    = new FFuQtLabelField(this);
-  this->marineGrowthThicknessField  = new FFuQtLabelField(this);
-  this->marineGrowthUpperLimitField = new FFuQtLabelField(this);
-  this->marineGrowthLowerLimitField = new FFuQtLabelField(this);
+  waveDirectionFrame  = qWdir = new FFuQtLabelFrame();
+  waveDirectionVector = new FuiQt3DPoint(NULL,"Xw",false);
 
-  this->waveLabel      = new FFuQtLabel(this);
-  this->waveQueryField = new FuiQtQueryInputField(this);
+  marineGrowthFrame = qMG     = new FFuQtLabelFrame();
+  marineGrowthDensityField    = new FFuQtIOField();
+  marineGrowthThicknessField  = new FFuQtIOField();
+  marineGrowthUpperLimitField = new FFuQtIOField();
+  marineGrowthLowerLimitField = new FFuQtIOField();
 
-  this->currLabel      = new FFuQtLabel(this);
-  this->currQueryField = new FuiQtQueryInputField(this);
+  waveQueryField      = new FuiQtQueryInputField(NULL);
+  currQueryField      = new FuiQtQueryInputField(NULL);
+  currDirQueryField   = new FuiQtQueryInputField(NULL);
+  currScaleQueryField = new FuiQtQueryInputField(NULL);
+  hdfScaleQueryField  = new FuiQtQueryInputField(NULL);
 
-  this->currDirLabel      = new FFuQtLabel(this);
-  this->currDirQueryField = new FuiQtQueryInputField(this);
-
-  this->currScaleLabel      = new FFuQtLabel(this);
-  this->currScaleQueryField = new FuiQtQueryInputField(this);
-
-  this->hdfScaleLabel      = new FFuQtLabel(this);
-  this->hdfScaleQueryField = new FuiQtQueryInputField(this);
-
-  this->dialogButtons = new FFuQtDialogButtons(this);
+  dialogButtons = new FFuQtDialogButtons();
 
   this->initWidgets();
+
+  QWidget* qWater = new QWidget();
+  QGridLayout* gl = new QGridLayout(qWater);
+  gl->setContentsMargins(0,0,0,10);
+  gl->addWidget(new QLabel("Water density"), 0,0);
+  gl->addWidget(new QLabel("Mean sea level"),1,0);
+  gl->addWidget(new QLabel("Water depth"),   1,2);
+  gl->addWidget(static_cast<FFuQtIOField*>(waterDensityField),0,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(meanSeaLevelField),1,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(seaDepthField),    1,3);
+  
+  QBoxLayout* layout = new QHBoxLayout(qGrav);
+  layout->setContentsMargins(0,0,0,1);
+  layout->addWidget(static_cast<FuiQt3DPoint*>(gravitationVector));
+
+  layout = new QHBoxLayout(qWdir);
+  layout->setContentsMargins(0,0,0,1);
+  layout->addWidget(static_cast<FuiQt3DPoint*>(waveDirectionVector));
+
+  QWidget* qGravAndWD = new QWidget();
+  layout = new QHBoxLayout(qGravAndWD);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qGrav);
+  layout->addWidget(qWdir);
+
+  gl = new QGridLayout(qMG);
+  gl->addWidget(new QLabel("Density"),0,0);
+  gl->addWidget(new QLabel("Thickness"),1,0);
+  gl->addWidget(new QLabel("   Upper limit"),0,2);
+  gl->addWidget(new QLabel("   Lower limit"),1,2);
+  gl->addWidget(static_cast<FFuQtIOField*>(marineGrowthDensityField),0,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(marineGrowthThicknessField),1,1);
+  gl->addWidget(static_cast<FFuQtIOField*>(marineGrowthUpperLimitField),0,3);
+  gl->addWidget(static_cast<FFuQtIOField*>(marineGrowthLowerLimitField),1,3);
+
+  QWidget* qFuncs = new QWidget();
+  gl = new QGridLayout(qFuncs);
+  gl->setContentsMargins(0,10,0,10);
+  gl->setColumnStretch(1,1);
+  gl->addWidget(new QLabel("Wave function"),0,0);
+  gl->addWidget(new QLabel("Current function"),1,0);
+  gl->addWidget(new QLabel("Current direction"),2,0);
+  gl->addWidget(new QLabel("Current direction"),3,0);
+  gl->addWidget(static_cast<FuiQtQueryInputField*>(waveQueryField),0,1);
+  gl->addWidget(static_cast<FuiQtQueryInputField*>(currQueryField),1,1);
+  gl->addWidget(static_cast<FuiQtQueryInputField*>(currDirQueryField),2,1);
+  gl->addWidget(static_cast<FuiQtQueryInputField*>(currScaleQueryField),3,1);
+
+  QWidget* qHDFscale = new QWidget();
+  layout = new QHBoxLayout(qHDFscale);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(new QLabel("Hydrodynamic force scale"));
+  layout->addWidget(static_cast<FuiQtQueryInputField*>(hdfScaleQueryField));
+
+  layout = new QVBoxLayout(this);
+  layout->addWidget(qWater);
+  layout->addWidget(qGravAndWD,4);
+  layout->addWidget(qMG,3);
+  layout->addWidget(qFuncs);
+  layout->addWidget(qHDFscale);
+  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons));
 }

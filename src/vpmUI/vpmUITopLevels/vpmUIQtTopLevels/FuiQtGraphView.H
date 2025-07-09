@@ -16,7 +16,7 @@
 class FuiQtGraphView : public FFuQt2DPlotter, public FuiGraphView
 {
 public:
-  FuiQtGraphView(QWidget* parent=0, const char* name="FuiQtGraphView");
+  FuiQtGraphView(QWidget* parent, const char* name = "FuiQtGraphView");
   virtual ~FuiQtGraphView() { this->onPoppedDownToMem(); /*hack*/ }
 
 private:
@@ -34,7 +34,9 @@ public:
                     int width=640,int height=250,
                     const char* title= "Graph View",
                     const char* name = "FuiQtGraphViewTLS");
-  virtual ~FuiQtGraphViewTLS() {}
+
+protected:
+  virtual void resizeEvent(QResizeEvent* e);
 };
 
 #endif

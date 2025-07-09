@@ -32,7 +32,7 @@ FuiFppOptions::FuiFppOptions()
 
 void FuiFppOptions::initWidgets()
 {
-  this->time->setResetCB(FFaDynCB0M(FuiFppOptions,this,onResetTimeClicked));
+  time->setResetCB(FFaDynCB0M(FFaDynCB0,&resetTimeCB,invoke));
 
   this->pvxGateField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->pvxGateField->setDoubleDisplayMode(FFuIOField::AUTO,6,1);
@@ -54,7 +54,6 @@ void FuiFppOptions::initWidgets()
 						 onAnalysisTypeChanged,int));
 
   this->rainflowFrame->setLabel("Rainflow/Fatigue Analysis");
-  this->rainflowButton->setValue(true);
   this->rainflowButton->setLabel("Perform rainflow and fatigue analysis");
   this->rainflowButton->setToggleCB(FFaDynCB1M(FuiFppOptions,this,
 					       onRainflowButtonToggled,bool));
@@ -65,133 +64,12 @@ void FuiFppOptions::initWidgets()
 
   this->onAnalysisTypeChanged(STRESS);
 
-  this->initRangeLabel->setLabel("Initial range");
-
   this->histFrame->setLabel("Histogram");
-  this->maxLabel->setLabel("Max");
-  this->minLabel->setLabel("Min");
-  this->nBinsLabel->setLabel("Number of bins");
   this->maxElemsLabel->setLabel("Max number of elements processed together");
 
   this->FuiTopLevelDialog::initWidgets();
 }
 //----------------------------------------------------------------------------
-
-void FuiFppOptions::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int timeTop = border;
-  int timeBottom = 315*height/1000;
-  this->time->setEdgeGeometry(border, width - border, timeTop, timeBottom);
-
-  int sep = this->time->getSepH();
-  int widgetHeight = this->time->getWidgetH();
-  int frameFontHeight = this->rainflowFrame->getFontHeigth();
-
-  int fieldLeft = 0;
-  int fieldWidth = 0;
-
-  // Widget Y positions
-  int maxElemsCenter = timeBottom + border + widgetHeight/2;
-  int biaxCenter = maxElemsCenter + widgetHeight + border;
-  int rainflowFrameTop = biaxCenter + widgetHeight;
-  int rainflowFrameBottom = height - this->getDialogButtonsHeightHint();
-  int rainflowCenter = rainflowFrameTop + frameFontHeight + widgetHeight/2;
-  int typeCenter = rainflowCenter + widgetHeight;
-  int peakValleyCenter = typeCenter + widgetHeight + border;
-  int histframeTop = peakValleyCenter + widgetHeight;
-  int histframeBottom = rainflowFrameBottom - 3*sep/2;
-
-  int histframeHeight = histframeBottom - histframeTop - border - frameFontHeight;
-  int heightForEach = 4*histframeHeight/15;
-
-  int noBinsCenter = histframeTop + frameFontHeight + heightForEach/2;
-  int initRangeCenter = noBinsCenter + heightForEach;
-  int maxCenter = initRangeCenter + 3*heightForEach/4;
-  int minCenter = maxCenter + heightForEach;
-
-  // Frames
-  this->rainflowFrame->setEdgeGeometry(border, width - border,
-				       rainflowFrameTop, rainflowFrameBottom);
-  this->histFrame->setEdgeGeometry(border + 3*sep/2, width - border - 3*sep/2,
-				   histframeTop, histframeBottom);
-
-  // Max elements
-  this->maxElemsLabel->setCenterYGeometryWidthHint(border, maxElemsCenter, widgetHeight);
-  fieldLeft = this->maxElemsLabel->getXRightPos() + border;
-  fieldWidth = width - fieldLeft - border;
-  this->maxElemsField->setCenterYGeometry(fieldLeft, maxElemsCenter,
-					  fieldWidth, widgetHeight);
-
-  // Biaxiality gate
-  this->biaxGateLabel->setCenterYGeometryWidthHint(border, biaxCenter, widgetHeight);
-  fieldLeft = this->biaxGateLabel->getXRightPos() + 4*border;
-  fieldWidth = width - fieldLeft - border;
-  this->biaxGateField->setCenterYGeometry(fieldLeft, biaxCenter,
-					  fieldWidth, widgetHeight);
-
-  // Rainflow toggle
-  this->rainflowButton->setCenterYGeometryWidthHint(2*border, rainflowCenter, widgetHeight);
-
-  // Type and pvx
-  this->typeLabel->setCenterYGeometryWidthHint(2*border, typeCenter, widgetHeight);
-  this->pvxGateLabel->setCenterYGeometryWidthHint(2*border, peakValleyCenter, widgetHeight);
-
-  fieldWidth = this->typeMenu->getWidthHint();
-  fieldLeft = width - sep - 5*border/2 - fieldWidth;
-
-  this->typeMenu->setCenterYGeometry(fieldLeft, typeCenter,
-				     fieldWidth, widgetHeight);
-
-  if (fieldLeft < this->pvxGateLabel->getXRightPos() + border) {
-    fieldLeft = this->pvxGateLabel->getXRightPos() + border;
-    fieldWidth = width - fieldLeft - 5*border/2 - sep;
-  }
-
-  this->pvxGateField->setCenterYGeometry(fieldLeft, peakValleyCenter,
-					 fieldWidth, widgetHeight);
-
-  // Number of bins
-  this->nBinsLabel->setCenterYGeometryWidthHint(2*border + 3*sep/2, noBinsCenter, widgetHeight);
-  fieldLeft = this->nBinsLabel->getXRightPos() + 2*border;
-  fieldWidth = width - 3*border - fieldLeft;
-  this->nBinsField->setCenterYGeometry(fieldLeft, noBinsCenter,
-				       fieldWidth, widgetHeight);
-
-  // Initial range label
-  this->initRangeLabel->setCenterYGeometryWidthHint(2*border + 3*sep/2, initRangeCenter, widgetHeight);
-
-  // Max/Min
-  this->maxLabel->setCenterYGeometryWidthHint(4*border, maxCenter, widgetHeight);
-  this->minLabel->setCenterYGeometryWidthHint(4*border, minCenter, widgetHeight);
-  this->maxField->setCenterYGeometry(fieldLeft, maxCenter, fieldWidth, widgetHeight);
-  this->minField->setCenterYGeometry(fieldLeft, minCenter, fieldWidth, widgetHeight);
-
-  // the histogram fields are relevant for nCode only
-  if (this->showNCodeFields) {
-    this->histFrame->popUp();
-    this->nBinsLabel->popUp();
-    this->nBinsField->popUp();
-    this->initRangeLabel->popUp();
-    this->maxLabel->popUp();
-    this->maxField->popUp();
-    this->minLabel->popUp();
-    this->minField->popUp();
-  }
-  else {
-    this->histFrame->popDown();
-    this->nBinsLabel->popDown();
-    this->nBinsField->popDown();
-    this->initRangeLabel->popDown();
-    this->maxLabel->popDown();
-    this->maxField->popDown();
-    this->minLabel->popDown();
-    this->minField->popDown();
-  }
-
-  this->FuiTopLevelDialog::placeWidgets(width,height);
-}
-//-----------------------------------------------------------------------------
 
 void FuiFppOptions::setTimeUIValues(const FuaTimeIntervalValues* timeValues)
 {
@@ -199,21 +77,9 @@ void FuiFppOptions::setTimeUIValues(const FuaTimeIntervalValues* timeValues)
 }
 //-----------------------------------------------------------------------------
 
-void FuiFppOptions::setResetTimeCB(const FFaDynCB0& dynCB)
-{
-  this->resetTimeCB = dynCB;
-}
-//-----------------------------------------------------------------------------
-
-void FuiFppOptions::onResetTimeClicked()
-{
-  this->resetTimeCB.invoke();
-}
-//----------------------------------------------------------------------------
-
 void FuiFppOptions::onRainflowButtonToggled(bool toggle)
 {
-  this->typeMenu->setSensitivity(toggle);
+  this->typeMenu->setSensitivity(showNCodeFields && toggle);
   this->pvxGateField->setSensitivity(toggle);
   this->maxField->setSensitivity(toggle);
   this->minField->setSensitivity(toggle);
@@ -246,15 +112,21 @@ void FuiFppOptions::setUIValues(const FFuaUIValues* values)
   this->pvxGateField->setValue(fppValues->pvxGate);
   this->biaxGateField->setValue(fppValues->biaxGate);
 
-  if ((this->showNCodeFields = fppValues->histType >= 0)) {
-    this->typeMenu->selectOption(fppValues->histType);
+  if ((showNCodeFields = fppValues->histType >= 0)) {
+    // The histogram fields are relevant for nCode only
+    typeMenu->selectOption(fppValues->histType);
+    typeMenu->setSensitivity(true);
     this->onAnalysisTypeChanged(fppValues->histType);
-    this->maxField->setValue(fppValues->max);
-    this->minField->setValue(fppValues->min);
-    this->nBinsField->setValue(fppValues->nBins);
+    maxField->setValue(fppValues->max);
+    minField->setValue(fppValues->min);
+    nBinsField->setValue(fppValues->nBins);
+    histFrame->popUp();
   }
-  else
-    this->typeMenu->selectOption(STRESS);
+  else {
+    typeMenu->selectOption(STRESS);
+    typeMenu->setSensitivity(false);
+    histFrame->popDown();
+  }
 
   this->onRainflowButtonToggled(fppValues->performRainflow);
 }

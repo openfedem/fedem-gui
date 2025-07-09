@@ -71,6 +71,12 @@ FFuQtUserDialog::FFuQtUserDialog(const char* msgText, int dialogType,
 }
 //----------------------------------------------------------------------------
 
+void FFuQtUserDialog::setTitle(const char* title)
+{
+  this->setWindowTitle(title);
+}
+//----------------------------------------------------------------------------
+
 int FFuQtUserDialog::execute()
 {
   FFuaApplication::breakUserEventBlock(true);

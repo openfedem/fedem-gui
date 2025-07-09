@@ -21,7 +21,6 @@ class FFuQtLabel : public QLabel, public FFuLabel,
 
 public:
   FFuQtLabel(QWidget* parent = NULL);
-  virtual ~FFuQtLabel() {}
 
   virtual void setPixMap(const char** pixmap, bool stretch);
   virtual void setLabel(const char* label);
@@ -30,6 +29,13 @@ public:
 
 public slots:
   void fwdLinkActivated(const QString&);
+};
+
+
+class FFuQtNotesLabel : public QWidget, public FFuQtComponentBase
+{
+public:
+  FFuQtNotesLabel(QWidget* parent = NULL);
 };
 
 #endif

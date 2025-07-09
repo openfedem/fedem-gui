@@ -11,10 +11,10 @@
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 
-class FFuLabel;
-class FFuPushButton;
 class FuiCrossSectionListView;
 class FuiMaterialListView;
+class FFuLabel;
+class FFuPushButton;
 
 
 class FuiCSSelector : virtual public FFuTopLevelShell,
@@ -24,7 +24,6 @@ class FuiCSSelector : virtual public FFuTopLevelShell,
 
 public:
   FuiCSSelector();
-  virtual ~FuiCSSelector() {}
 
   static FuiCSSelector* create(int xpos = 100, int ypos  = 100,
                                int width= 100, int height= 100,
@@ -36,19 +35,12 @@ public:
 protected:
   void initWidgets();
 
-  virtual void placeWidgets(int width, int height);
-
 public:
   FuiCrossSectionListView* lvCS;
   FuiMaterialListView*     lvMat;
 
 protected:
-  FFuLabel* csLabel;
-  FFuLabel* matLabel;
-  FFuLabel* notesImage;
-  FFuLabel* notesLabel;
-  FFuLabel* notesText;
-
+  FFuLabel*      notesText;
   FFuPushButton* importButton;
   FFuPushButton* closeButton;
 

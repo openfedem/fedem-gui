@@ -17,52 +17,42 @@ void FuiBeamPropHydro::initWidgets()
 
   myBeamHydroDbField->setLabel("Db");
   myBeamHydroDbField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroDbField->setLabelMargin(0);
   myBeamHydroDbField->setLabelWidth(25);
 
   myBeamHydroDdField->setLabel("Dd");
   myBeamHydroDdField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroDdField->setLabelMargin(0);
   myBeamHydroDdField->setLabelWidth(25);
 
   myBeamHydroCdField->setLabel("Cd");
   myBeamHydroCdField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCdField->setLabelMargin(0);
   myBeamHydroCdField->setLabelWidth(25);
 
   myBeamHydroCaField->setLabel("Ca");
   myBeamHydroCaField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCaField->setLabelMargin(0);
   myBeamHydroCaField->setLabelWidth(25);
 
   myBeamHydroCmField->setLabel("Cm");
   myBeamHydroCmField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCmField->setLabelMargin(0);
   myBeamHydroCmField->setLabelWidth(45);
 
   myBeamHydroCdAxialField->setLabel("Cd_axial");
   myBeamHydroCdAxialField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCdAxialField->setLabelMargin(0);
   myBeamHydroCdAxialField->setLabelWidth(45);
 
   myBeamHydroCaAxialField->setLabel("Ca_axial");
   myBeamHydroCaAxialField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCaAxialField->setLabelMargin(0);
   myBeamHydroCaAxialField->setLabelWidth(45);
 
   myBeamHydroCmAxialField->setLabel("Cm_axial");
   myBeamHydroCmAxialField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCmAxialField->setLabelMargin(0);
   myBeamHydroCmAxialField->setLabelWidth(45);
 
   myBeamHydroCdSpinField->setLabel("Cd_spin");
   myBeamHydroCdSpinField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCdSpinField->setLabelMargin(0);
   myBeamHydroCdSpinField->setLabelWidth(45);
 
   myBeamHydroDiField->setLabel("Di");
   myBeamHydroDiField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroDiField->setLabelMargin(0);
   myBeamHydroDiField->setLabelWidth(45);
 
   this->placeWidgets(this->getWidth(), this->getHeight());

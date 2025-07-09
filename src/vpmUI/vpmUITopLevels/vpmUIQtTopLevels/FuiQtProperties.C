@@ -59,6 +59,7 @@
 #include <QUrl>
 #include <QFile>
 #include <QProcess>
+#include <QGridLayout>
 
 #if defined(win32) || defined(win64)
 #include <windows.h>
@@ -71,6 +72,9 @@ FuiQtProperties::FuiQtProperties(QWidget* parent,
                                  const char* name)
   : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
 {
+  FFuQtLabelFrame* qFrame;
+  FFuQtIOField* qField[2];
+
   // Heading :
 
   myTypeField = new FFuQtIOField(this);
@@ -85,9 +89,14 @@ FuiQtProperties::FuiQtProperties(QWidget* parent,
   // Reference plane :
 
   myRefPlanePosition = new FuiQtPositionData(this);
-  myRefPlaneSizeFrame = new FFuQtLabelFrame(this);
-  myRefPlaneHeightField = new FFuQtLabelField(this);
-  myRefPlaneWidthField = new FFuQtLabelField(this);
+  myRefPlaneSizeFrame = qFrame = new FFuQtLabelFrame(this);
+  myRefPlaneHeightField = qField[0] = new FFuQtIOField();
+  myRefPlaneWidthField  = qField[1] = new FFuQtIOField();
+  QGridLayout* gLayout = new QGridLayout(qFrame);
+  gLayout->addWidget(new QLabel("Height"), 0,0);
+  gLayout->addWidget(new QLabel("Width"),  1,0);
+  for (int i = 0; i < 2; i++)
+    gLayout->addWidget(qField[i], i,1);
 
   // HPs :
 

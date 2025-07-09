@@ -22,7 +22,6 @@ class FuiOutputList : public virtual FFuTopLevelShell,
 
 public:
   FuiOutputList();
-  virtual ~FuiOutputList() {}
 
   // Static create method to use instead of constructor :
   // Implementation in GUILib-dependent implementation file
@@ -39,8 +38,6 @@ public:
 
 protected:
   void initWidgets();
-
-  virtual void placeWidgets(int width,int height);
 
   virtual bool onClose();
 

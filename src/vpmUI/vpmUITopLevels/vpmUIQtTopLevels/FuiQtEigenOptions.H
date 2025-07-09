@@ -15,17 +15,13 @@
 class FuiQtEigenOptions : public FFuQtTopLevelShell, public FuiEigenOptions
 {
 public:
-  FuiQtEigenOptions(int xpos=100, int ypos=100,
-                    int width=388, int height=460,
-		    const char* title="Fedem",
-		    const char* name ="FuiQtEigenOptions");
-
-  virtual ~FuiQtEigenOptions() {}
+  FuiQtEigenOptions(int xpos, int ypos, int width, int height,
+                    const char* title, const char* name);
 
 private:
   virtual void setSensitivity(bool sens)
   {
-    FuiEigenOptions::setSensitivity(sens);
+    this->FuiEigenOptions::setSensitivity(sens);
   }
 };
 

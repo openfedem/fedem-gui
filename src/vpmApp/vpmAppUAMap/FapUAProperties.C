@@ -120,7 +120,7 @@ FapUAProperties::FapUAProperties(FuiProperties* uic)
 
   pv.myTopologyHighlightCB    = FFaDynCB2M(FapUAProperties, this, topologyHighlightCB, int, bool);
   pv.myTopologyActivatedCB    = FFaDynCB1M(FapUAProperties, this, topologyActivatedCB, int);
-  pv.myTopologyRightClickedCB = FFaDynCB2M(FapUAProperties, this, onTopViewRightClick, const IntVec&, std::vector<FFuaCmdItem*>&);
+  pv.myTopologyRightClickedCB = FFaDynCB2M(FapUAProperties, this, onTopViewRightClick, int, std::vector<FFuaCmdItem*>&);
 
   pv.myAxialDaForceValues.myFunctionQIFieldButtonCB  = FFaDynCB1M(FapUAProperties, this, onQIFieldButtonCB, FuiQueryInputFieldValues&);
   pv.myAxialDaForceValues.myEngineQIFieldButtonCB    = FFaDynCB1M(FapUAProperties, this, onQIFieldButtonCB, FuiQueryInputFieldValues&);
@@ -2061,7 +2061,7 @@ void FapUAProperties::addTopologyItem(std::vector<FuiTopologyItem>& topology,
 {
   if (!item && (typeAddString.empty() || level > 0)) return;
 
-  FuiTopologyItem ti(typeAddString, "", "", level < 0 ? -level : level);
+  FuiTopologyItem ti{ typeAddString, "", "", level < 0 ? -level : level };
 
   if (item)
   {
@@ -3648,9 +3648,8 @@ void FapUAProperties::topologyHighlightCB(int i, bool onOrOff)
 }
 
 
-void FapUAProperties::onTopViewRightClick(const IntVec& selectedIDs, std::vector<FFuaCmdItem*>& cmds)
+void FapUAProperties::onTopViewRightClick(int i, std::vector<FFuaCmdItem*>& cmds)
 {
-  int i = selectedIDs.empty() ? -1 : selectedIDs.front();
   if (i < 0 || (size_t)i >= myTopologyViewList.size()) return;
   if (!myTopologyViewList[i]) return;
 

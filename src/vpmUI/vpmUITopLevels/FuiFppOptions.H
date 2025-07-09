@@ -24,7 +24,6 @@ class FuiFppOptions : public FuiTopLevelDialog
 
 public:
   FuiFppOptions();
-  virtual ~FuiFppOptions() {}
 
   // Static create method to use instead of constructor
   // Implementation in GUIlib-dependent implementation file
@@ -34,16 +33,12 @@ public:
 			       const char* name = "FuiFppOptions");
 
   void setTimeUIValues(const FuaTimeIntervalValues* timeValues);
-  void setResetTimeCB(const FFaDynCB0& dynCB);
+  void setResetTimeCB(const FFaDynCB0& dynCB) { resetTimeCB = dynCB; }
 
 protected:
   virtual void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
-
-  // CB's from widgets
-  void onResetTimeClicked();
   void onAnalysisTypeChanged(int type);
   void onRainflowButtonToggled(bool toggle);
 
@@ -55,55 +50,43 @@ private:
 protected:
   FuiTimeInterval* time;
 
-  FFuLabelFrame* rainflowFrame;
+  FFuLabelFrame*   rainflowFrame;
   FFuToggleButton* rainflowButton;
-  FFuLabel* pvxGateLabel;
-  FFuIOField* pvxGateField;
-  FFuLabel* biaxGateLabel;
-  FFuIOField* biaxGateField;
 
-  FFuLabel* typeLabel;
+  FFuLabel*   maxElemsLabel;
+  FFuIOField* maxElemsField;
+  FFuLabel*   biaxGateLabel;
+  FFuIOField* biaxGateField;
+  FFuLabel*   pvxGateLabel;
+  FFuIOField* pvxGateField;
+
+  FFuLabel*      typeLabel;
   FFuOptionMenu* typeMenu;
 
   FFuLabelFrame* histFrame;
-  FFuLabel* maxLabel;
-  FFuIOField* maxField;
-  FFuLabel* minLabel;
-  FFuIOField* minField;
-  FFuLabel* initRangeLabel;
-  FFuLabel* nBinsLabel;
-  FFuIOField* nBinsField;
-  FFuLabel* maxElemsLabel;
-  FFuIOField* maxElemsField;
+  FFuIOField*    maxField;
+  FFuIOField*    minField;
+  FFuIOField*    nBinsField;
 
 private:
   FFaDynCB0 resetTimeCB;
   bool showNCodeFields;
 };
-/////////////////////////////////////////////////////////////////////////////
+
 
 class FuaFppOptionsValues : public FFuaUIValues
 {
 public:
-  FuaFppOptionsValues() {
-    this->nElemsTogether = 0;
-    this->performRainflow = true;
-    this->histType = this->nBins = 0;
-    this->pvxGate = this->biaxGate = 0.0;
-    this->max = this->min = 0.0;
-  }
-  virtual ~FuaFppOptionsValues() {}
-
-public:
   FuaTimeIntervalValues timeValues;
 
-  int nElemsTogether;
-  bool performRainflow;
-  int histType;
-  double pvxGate, biaxGate;
-  double max, min;
-  int nBins;
+  int    nElemsTogether = 0;
+  bool   performRainflow = true;
+  int    histType = 0;
+  double biaxGate = 0.0;
+  double pvxGate = 0.0;
+  double max = 0.0;
+  double min = 0.0;
+  int    nBins = 0;
 };
-/////////////////////////////////////////////////////////////////////////////
 
 #endif

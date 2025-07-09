@@ -110,6 +110,12 @@ void FuiPositionData::initWidgets()
 }
 
 
+int FuiPositionData::getLeftHeightHint() const
+{
+  return myTranslationFrame->getHeightHint();
+}
+
+
 void FuiPositionData::setPosLabel(const char* text)
 {
   myTranslationFrame->setLabel(text);

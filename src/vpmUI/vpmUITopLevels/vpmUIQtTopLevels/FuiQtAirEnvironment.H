@@ -15,12 +15,8 @@
 class FuiQtAirEnvironment : public FFuQtTopLevelShell, public FuiAirEnvironment
 {
 public:
-  FuiQtAirEnvironment(QWidget* parent = 0,
-		      int xpos =100, int ypos  =100,
-		      int width=100, int height=100,
-		      const char* title= "Fedem",
-		      const char* name = "FuiQtAirEnvironment");
-  virtual ~FuiQtAirEnvironment() {}
+  FuiQtAirEnvironment(int xpos, int ypos, int width, int height,
+                      const char* title, const char* name);
 
 private:
   virtual void setSensitivity(bool isSensitive)

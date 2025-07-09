@@ -22,10 +22,8 @@ class FFuQtFileDialog : public QFileDialog, public FFuFileDialog,
 public:
   FFuQtFileDialog(const char* dirName, const char* name,
 		  FFuFileDialog::DialogType type, bool modal = false);
-  virtual ~FFuQtFileDialog() {}
 
-  virtual void setTitle(const std::string& title);
-  virtual void setDirectory(const std::string& dir);
+  virtual void setTitle(const char* title);
 
   virtual void clearFileFilters();
   virtual int getSelectedFilter() const;

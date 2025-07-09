@@ -69,7 +69,7 @@ FuiQtCurveDefSheet::FuiQtCurveDefSheet(QWidget* parent, const char* name)
   this->reloadCurveButton = new FFuQtPushButton(this);
   this->channelField = new FFuQtLabelField(this);
   this->channelBtn = new FFuQtPushButton(this);
-  this->channelSelectUI = new FFuQtScrolledListDialog(this);
+  this->channelSelectUI = new FFuQtScrolledListDialog(this,true);
   this->startXField = new FFuQtLabelField(this);
   this->stopXField = new FFuQtLabelField(this);
   this->incXField = new FFuQtLabelField(this);

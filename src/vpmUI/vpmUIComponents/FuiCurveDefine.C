@@ -363,12 +363,12 @@ void FuiCurveAppearanceSheet::initWidgets()
   this->curveWidthBox->setValueChangedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
 						    onIntValueChanged,int));
 
-  this->colorDialog->setOkButtonClickedCB(FFaDynCB2M(FuiCurveAppearanceSheet,this,
-						     onColorDialogOk,FFuColor,FFuComponentBase*));
-  this->colorDialog->setCancelButtonClickedCB(FFaDynCB2M(FuiCurveAppearanceSheet,this,
-							 onColorDialogCancel,FFuColor,FFuComponentBase*));
-  this->colorChooser->setSelectionChangedCB(FFaDynCB2M(FuiCurveAppearanceSheet,this,
-						       onColorChanged,FFuColor,FFuComponentBase*));
+  colorDialog->setOkButtonClickedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
+                                               onColorDialogOk,const FFuColor&));
+  colorDialog->setCancelButtonClickedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
+                                                   onColorDialogCancel,const FFuColor&));
+  colorChooser->setSelectionChangedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
+                                                 onColorChanged,const FFuColor&));
 
   this->curveSymbolMenu->setOptionSelectedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
 							onIntValueChanged,int));
@@ -552,7 +552,7 @@ void FuiCurveAppearanceSheet::onIntValueChanged(int)
 
 //----------------------------------------------------------------------------
 
-void FuiCurveAppearanceSheet::onColorDialogOk(FFuColor, FFuComponentBase*)
+void FuiCurveAppearanceSheet::onColorDialogOk(const FFuColor&)
 {
   this->colorDialog->popDown();
   this->dataChangedCB.invoke();
@@ -560,14 +560,14 @@ void FuiCurveAppearanceSheet::onColorDialogOk(FFuColor, FFuComponentBase*)
 
 //----------------------------------------------------------------------------
 
-void FuiCurveAppearanceSheet::onColorDialogCancel(FFuColor, FFuComponentBase*)
+void FuiCurveAppearanceSheet::onColorDialogCancel(const FFuColor&)
 {
   this->colorDialog->popDown();
 }
 
 //----------------------------------------------------------------------------
 
-void FuiCurveAppearanceSheet::onColorChanged(FFuColor, FFuComponentBase*)
+void FuiCurveAppearanceSheet::onColorChanged(const FFuColor&)
 {
   this->dataChangedCB.invoke();
 }
@@ -772,8 +772,7 @@ void FuiCurveDefSheet::buildDynamicWidgets(const FuaCurveDefineValues* v)
 
   std::string label("A:");
   for (int i = 0; i < numComp; i++) {
-    this->curveComps[i]->turnButtonOff(true);
-    this->curveComps[i]->setBehaviour(FuiQueryInputField::REF_NONE);
+    this->curveComps[i]->setBehaviour(FuiQueryInputField::REF_NONE,true);
     this->curveComps[i]->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,onRefSelected,int));
     this->curveComps[i]->setQuery(v->curveQuery);
     if (i >= numRows)
@@ -871,8 +870,7 @@ void FuiCurveDefSheet::initWidgets()
 						  onButtonToggled,bool));
 
   this->functionLabel->setLabel("Function");
-  this->functionMenu->turnButtonOff(true);
-  this->functionMenu->setBehaviour(FuiQueryInputField::REF_NONE);
+  this->functionMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
   this->functionMenu->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,
 						  onRefSelected,int));
 
@@ -896,11 +894,7 @@ void FuiCurveDefSheet::initWidgets()
   this->channelBtn->setActivateCB(FFaDynCB0M(FuiCurveDefSheet,this,
 					     onChannelBtnClicked));
   this->channelSelectUI->setTitle("Channel list");
-  this->channelSelectUI->showNotes = true;
-  this->channelSelectUI->labNotesText->setLabel("Column 1 is the first <u>after</u> the argument column.");
-  this->channelSelectUI->labNotesImage->popUp();
-  this->channelSelectUI->labNotesLabel->popUp();
-  this->channelSelectUI->labNotesText->popUp();
+  this->channelSelectUI->setNotesText("Column 1 is the first <u>after</u> the argument column.");
   this->channelSelectUI->setCancelButtonClickedCB(FFaDynCB1M(FuiCurveDefSheet,this,
 							     onChannelSelectCancel,int));
   this->channelSelectUI->setOkButtonClickedCB(FFaDynCB1M(FuiCurveDefSheet,this,

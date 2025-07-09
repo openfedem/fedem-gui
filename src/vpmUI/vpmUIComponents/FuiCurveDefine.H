@@ -352,9 +352,9 @@ private:
   void onIntValueChanged(int);
   void onAllSymbolsToggled(bool);
 
-  void onColorDialogOk(FFuColor, FFuComponentBase*);
-  void onColorDialogCancel(FFuColor, FFuComponentBase*);
-  void onColorChanged(FFuColor, FFuComponentBase*);
+  void onColorDialogOk(const FFuColor&);
+  void onColorDialogCancel(const FFuColor&);
+  void onColorChanged(const FFuColor&);
 
 protected:
   FFuLabelFrame* genAppearanceFrame;

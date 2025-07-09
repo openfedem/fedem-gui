@@ -13,15 +13,44 @@
 
 #include "vpmUI/vpmUITopLevels/FuiTopLevelDialog.H"
 
-class FFuLabel;
 class FFuOptionMenu;
 class FFuPushButton;
-class FFuFrame;
 class FFuListView;
 class FFuListViewItem;
 class FFuToggleButton;
 class FFuFileBrowseField;
-class FuaEigenOptionsValues;
+
+
+struct FuiModeData
+{
+  bool operator< (const FuiModeData& m) const;
+  bool operator==(const FuiModeData& m) const;
+
+  int    mode = 0;
+  double time = 0.0;
+  int  listId = -1; // id for this objects list view item
+};
+
+
+class FuaEigenOptionsValues : public FFuaUIValues
+{
+public:
+  bool eraseModeData(int idToErase);
+
+  // db -> ui
+  std::vector<int>    modes;
+  std::vector<double> times;
+
+  // db <-> ui
+  std::vector<FuiModeData> selectedModes;
+
+  char autoVTFSwitch = 0;
+  int  autoVTFFileType = 0;
+  std::string autoVTFFileName;
+  std::string modelFilePath;
+
+  bool isSensitive = true;
+};
 
 
 class FuiEigenOptions : public FuiTopLevelDialog
@@ -30,7 +59,6 @@ class FuiEigenOptions : public FuiTopLevelDialog
 
 public:
   FuiEigenOptions();
-  virtual ~FuiEigenOptions();
 
   // Static create method to use instead of constructor
   // Implementation in GUILib-dependent implementation file
@@ -43,13 +71,10 @@ protected:
   virtual void initWidgets();
 
 private:
-  void setUIValues();
   void setUISelectedModes();
 
   virtual void setUIValues(const FFuaUIValues* values);
-  virtual bool updateDBValues(bool updateui = true);
-
-  virtual void placeWidgets(int width, int height);
+  virtual bool updateDBValues(bool);
 
   void addModeAtTime(int mode, double time);
   void addModeAtAllTimes(int mode);
@@ -66,71 +91,18 @@ private:
   void onAutoVTFFileChanged(const std::string&, int);
 
 protected:
-  FFuLabel* selectLabel;
-  FFuLabel* modeLabel;
-  FFuLabel* timeLabel;
-  FFuLabel* selectedModesLabel;
-
   FFuOptionMenu* modeMenu;
   FFuOptionMenu* timeMenu;
 
   FFuPushButton* addButton;
   FFuPushButton* deleteButton;
-
-  FFuFrame*    separator;
-  FFuListView* selectedModesView;
+  FFuListView*   selectedModesView;
 
   FFuToggleButton*    autoVTFToggle;
   FFuFileBrowseField* autoVTFField;
 
 private:
-  FuaEigenOptionsValues* values;
+  FuaEigenOptionsValues myValues;
 };
-////////////////////////////////////////////////////////////////////////////////
-
-struct FuiModeData
-{
-  FuiModeData(int m = 0, double t = 0.0, int id = -1) {
-    this->mode = m;
-    this->time = t;
-    this->listId = id;
-  }
-
-  bool operator< (const FuiModeData& m) const;
-  bool operator==(const FuiModeData& m) const;
-
-  int    mode;
-  double time;
-  int    listId; // id for this objects list view item
-};
-////////////////////////////////////////////////////////////////////////////////
-
-class FuaEigenOptionsValues : public FFuaUIValues
-{
-public:
-  FuaEigenOptionsValues() {
-    this->autoVTFSwitch = false;
-    this->autoVTFFileType = 0;
-    this->isSensitive = true;
-  }
-  virtual ~FuaEigenOptionsValues() {}
-
-  bool eraseModeData(int idToErase);
-
-  // db -> ui
-  std::vector<int>    modes;
-  std::vector<double> times;
-
-  // db <-> ui
-  std::vector<FuiModeData> selectedModes;
-
-  char autoVTFSwitch;
-  int  autoVTFFileType;
-  std::string autoVTFFileName;
-  std::string modelFilePath;
-
-  bool isSensitive;
-};
-////////////////////////////////////////////////////////////////////////////////
 
 #endif

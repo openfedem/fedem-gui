@@ -5,36 +5,24 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTSTRESSOPTIONS_H  
-#define FUIQTSTRESSOPTIONS_H
+#ifndef FUI_QT_STRESS_OPTIONS_H
+#define FUI_QT_STRESS_OPTIONS_H
 
 #include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
 #include "vpmUI/vpmUITopLevels/FuiStressOptions.H"
 
-// Typedefs and fwd declarations
 
-class FuiQtStressOptions: public FFuQtTopLevelShell,
-			  public FuiStressOptions
+class FuiQtStressOptions : public FFuQtTopLevelShell, public FuiStressOptions
 {
 public:
-  FuiQtStressOptions(QWidget* parent=0,int xpos=100,int ypos=100,
-		       int width=330,int height=250,
-		       const char* title= "Fedem",
-		       const char* name = "FuiQtStressOptions");
-  virtual ~FuiQtStressOptions();
-
-
- 
-  // Operations
+  FuiQtStressOptions(int xpos, int ypos, int width, int height,
+                     const char* title, const char* name);
  
 private:
   virtual void setSensitivity(bool sens)
-    { FuiStressOptions::setSensitivity( sens);}
-
-  // Attributes 
-
-private: 
-
+  {
+    this->FuiStressOptions::setSensitivity(sens);
+  }
 };
-/////////////////////////////////////////////////////////////////////////////
+
 #endif

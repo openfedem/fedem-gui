@@ -23,17 +23,13 @@ class FuiTopLevelDialog : virtual public FFuTopLevelShell,
 {
 public:
   FuiTopLevelDialog() { dialogButtons = NULL; }
-  virtual ~FuiTopLevelDialog() {}
 
   virtual void setSensitivity(bool sens);
 
 protected:
   virtual void initWidgets();
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUp();
   virtual bool onClose();
-
-  int getDialogButtonsHeightHint() const;
 
 private:
   void onDialogButtonClicked(int);

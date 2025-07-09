@@ -17,7 +17,6 @@ class FFuModalDialog : virtual public FFuTopLevelShell
 
 public:
   FFuModalDialog();
-  virtual ~FFuModalDialog() {}
 
   virtual bool execute() = 0;
   virtual void closeDialog(bool resultCode) = 0;
@@ -26,9 +25,6 @@ private:
   virtual void onDialogButtonClicked(int) = 0;
 
 protected:
-  // Reimplemented from FFuTopLevelShell
-  virtual void setNonBlockableWidget(FFuComponentBase*) {}
-  virtual void onPoppedUp();
   virtual bool onClose();
 };
 

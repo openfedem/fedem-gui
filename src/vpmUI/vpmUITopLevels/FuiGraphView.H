@@ -22,9 +22,6 @@ class FuiGraphView : virtual public FFu2DPlotter,
                      public FFuUADataHandler
 {
 public:
-  FuiGraphView() {}
-  virtual ~FuiGraphView() {}
-
   //see FFu2DPlotter for format
   bool saveAsImage(const std::string& fileName, const char* format)
   {
@@ -83,7 +80,6 @@ class FuiGraphViewTLS : virtual public FFuMDIWindow,
 
 public:
   FuiGraphViewTLS();
-  virtual ~FuiGraphViewTLS() {}
 
   static FuiGraphView* create(FFuComponentBase* parent,
                               int xpos=100,int ypos=100,
@@ -91,70 +87,52 @@ public:
                               const char* title= "Fedem Graph",
                               const char* name = "FuiGraphViewTLS");
 
-  FuiGraphView* getGraphViewComp() { return this->graphView; }
+  FuiGraphView* getGraphViewComp() { return myView; }
 
   virtual bool onClose();
 
 protected:
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUp() { ++numInstance; }
 
 private:
   static short int numInstance;
 
 protected:
-  FuiGraphView* graphView;
+  FuiGraphView* myView;
 };
 
 
 class FuaGraphViewValues : public FFuaUIValues
 {
 public:
-  FuaGraphViewValues()
-  {
-    this->fontSize = {10,8,8};
-    this->showLegend = false;
-    this->gridtype = -1;
-    this->autoScaleOnLoadCurve = false;
-    this->xAxisMin = this->xAxisMax = 0.0;
-    this->yAxisMin = this->yAxisMax = 0.0;
-  }
-
-  virtual ~FuaGraphViewValues() {}
-
   struct CurveData
   {
-    CurveData()
-    {
-      this->id = -1;
-      this->color = {0,0,0};
-      this->style = this->width = -1;
-      this->symbols = this->symbolssize = this->numSymbols = -1;
-    }
-
-    int id;
+    int id = -1;
     std::string legend;
-    UColor color;
-    int style;
-    int width;
-    int symbols;
-    int symbolssize;
-    int numSymbols;
+    std::array<int,3> color = {0,0,0};
+    int style = -1;
+    int width = -1;
+    int symbols = -1;
+    int symbolssize = -1;
+    int numSymbols = -1;
   };
 
   std::vector<CurveData> curves;
 
   std::string title, subtitle;
   std::string xAxisLabel, yAxisLabel;
-  std::array<int,3> fontSize;
 
-  bool showLegend;
+  std::array<int,3> fontSize = {10,8,8};
 
-  int gridtype; // see FFu2DPlotter enum
+  bool showLegend = false;
+  bool autoScaleOnLoadCurve = false;
 
-  bool autoScaleOnLoadCurve;
-  double xAxisMin, xAxisMax;
-  double yAxisMin, yAxisMax;
+  int gridtype = -1; // see FFu2DPlotter enum
+
+  double xAxisMin = 0.0;
+  double xAxisMax = 0.0;
+  double yAxisMin = 0.0;
+  double yAxisMax = 0.0;
 };
 
 #endif

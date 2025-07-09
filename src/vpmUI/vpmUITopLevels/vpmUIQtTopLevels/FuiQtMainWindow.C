@@ -24,7 +24,6 @@
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtProperties.H"
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtModelManager.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtWorkSpace.H"
-#include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
 #include "vpmUI/FuiCtrlModes.H"
 
@@ -108,8 +107,7 @@ FuiQtMainWindow::FuiQtMainWindow()
   FFuQtSplitter* items__ws       = new FFuQtSplitter(Qt::Horizontal,items_ws__props);
   FFuQtSplitter* leftColumn      = new FFuQtSplitter(Qt::Vertical,items__ws);
 
-  Fui::Geo geo = Fui::getGeo(Fui::PROPERTIES_GEO);
-  FuiQtProperties* qtproperties = new FuiQtProperties(items_ws__props,geo.xPos,geo.yPos,geo.width,geo.height);
+  FuiQtProperties* qtproperties = new FuiQtProperties(items_ws__props);
   this->properties = qtproperties;
 
   this->leftSplitter = leftColumn;
@@ -146,8 +144,7 @@ FuiQtMainWindow::FuiQtMainWindow()
 
   hintLayout->addItem(new QSpacerItem(50, 10, QSizePolicy::Preferred, QSizePolicy::Fixed), 3,0, 1,4);
 
-  geo = Fui::getGeo(Fui::MODELMANAGER_GEO);
-  this->modelManager = new FuiQtModelManager(leftColumn, geo.xPos,geo.yPos,geo.width,geo.height);
+  this->modelManager = new FuiQtModelManager(leftColumn);
   this->workSpace = new FuiQtWorkSpace(items__ws);
 
   this->setCentralWidget(items_ws__props);

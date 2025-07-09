@@ -60,9 +60,8 @@ void FuiAirEnvironment::initWidgets()
   this->dialogButtons->setButtonLabel(CANCEL,"Close");
   this->dialogButtons->setButtonLabel(HELP,"Help");
 
-  this->aTolerField->setLabel("Induction-factor tolerance");
-  this->aTolerField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->aTolerField->myField->setDoubleDisplayPrecision(3);
+  this->aTolerField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  this->aTolerField->setDoubleDisplayPrecision(3);
 
   this->airDensField->setLabel("Air density");
   this->airDensField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
@@ -80,29 +79,24 @@ void FuiAirEnvironment::initWidgets()
 
   this->useCMToggle->setLabel("Use aerodynamic pitching moment mode");
 
-  this->stallModLabel->setLabel("Dynamic stall model");
   this->stallModMenu->addOption("STEADY");
   this->stallModMenu->addOption("BEDDOES");
   this->stallModMenu->setOptionSelectedCB(FFaDynCB1M(FuiAirEnvironment,this,onStallChanged,int));
 
-  this->infModLabel->setLabel("Inflow model");
   this->infModMenu->addOption("GDW");
   this->infModMenu->addOption("BEM");
   this->infModMenu->setOptionSelectedCB(FFaDynCB1M(FuiAirEnvironment,this,onInflowChanged,int));
 
-  this->indModLabel->setLabel("Induction-factor model");
   this->indModMenu->addOption("NONE");
   this->indModMenu->addOption("WAKE");
   this->indModMenu->addOption("SWIRL");
   this->indModMenu->setOptionSelectedCB(FFaDynCB1M(FuiAirEnvironment,this,onInductionChanged,int));
 
-  this->tipLossLabel->setLabel("Tip-loss model");
   this->tipLossMenu->addOption("NONE");
   this->tipLossMenu->addOption("PRAND");
   this->tipLossMenu->addOption("GTECH");
   this->tipLossMenu->setOptionSelectedCB(FFaDynCB1M(FuiAirEnvironment,this,onTLossChanged,int));
 
-  this->hubLossLabel->setLabel("Hub-loss model");
   this->hubLossMenu->addOption("NONE");
   this->hubLossMenu->addOption("PRAND");
   this->hubLossMenu->setOptionSelectedCB(FFaDynCB1M(FuiAirEnvironment,this,onHLossChanged,int));
@@ -143,94 +137,12 @@ void FuiAirEnvironment::initWidgets()
   this->towerField->addDialogFilter("Tower file","dat",true,0);
   this->towerField->addAllFilesFilter(true);
 
-  this->placeWidgets(this->getWidth(),this->getHeight());
-
   FFuUAExistenceHandler::invokeCreateUACB(this);
-}
-//----------------------------------------------------------------------------
-
-void FuiAirEnvironment::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int buttonsTop = height - this->dialogButtons->getHeightHint();
-
-  int fontHeight = this->getFontHeigth();
-  int fieldHeight = this->aTolerField->myField->getHeightHint();
-
-  int v1 = border;
-  int v2 = width - border;
-  int v3 = (width - border)*2/3;
-  int v4 = v3 + border;
-  int v5 = (width - 2*border)/2;
-  int v6 = v5 + 2*border;
-  int y  = border;
-
-  this->stallModLabel->setEdgeGeometry(v1, v3, y, y+fieldHeight);
-  this->stallModMenu->setEdgeGeometry(v4, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->useCMToggle->setEdgeGeometry(v1, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->infModLabel->setEdgeGeometry(v1, v3, y, y+fieldHeight);
-  this->infModMenu->setEdgeGeometry(v4, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->indModLabel->setEdgeGeometry(v1, v3, y, y+fieldHeight);
-  this->indModMenu->setEdgeGeometry(v4, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->aTolerField->setEdgeGeometry(v1, v5, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->tipLossLabel->setEdgeGeometry(v1, v3, y, y+fieldHeight);
-  this->tipLossMenu->setEdgeGeometry(v4, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->hubLossLabel->setEdgeGeometry(v1, v3, y, y+fieldHeight);
-  this->hubLossMenu->setEdgeGeometry(v4, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->windFrame->setEdgeGeometry(v1, v2, y, y+2*fontHeight+2*fieldHeight+4*border);
-  y += fontHeight+border;
-
-  this->windToggle->setEdgeGeometry(v1+border, v2-border, y, y+fontHeight);
-  this->windTurbButton->setEdgeGeometry(v2-border-150, v2-border, y-5, y-5+fieldHeight);
-  y += fontHeight+border;
-
-  this->windSpeedField->setEdgeGeometry(v1+border, v5, y, y+fieldHeight);
-  this->windDirField->setEdgeGeometry(v6, v2-border, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->windField->setEdgeGeometry(v1+border, v2-border, y, y+fieldHeight);
-  y += fieldHeight+2*border;
-
-  this->towerFrame->setEdgeGeometry(v1, v2, y, y+2*fontHeight+fieldHeight+3*border);
-  y += fontHeight+border;
-
-  this->towerPotToggle->setEdgeGeometry(v1+border, v5, y, y+fontHeight);
-  this->towerShdToggle->setEdgeGeometry(v6-border, v2-border, y, y+fontHeight);
-  y += fontHeight+border;
-
-  this->towerField->setEdgeGeometry(v1+border, v2-border, y, y+fieldHeight);
-  y += fieldHeight+2*border;
-
-  this->airDensField->setEdgeGeometry(v1, v5, y, y+fieldHeight);
-  this->kinViscField->setEdgeGeometry(v6, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->dtAeroField->setEdgeGeometry(v1, v2, y, y+fieldHeight);
-  y += fieldHeight+border;
-
-  this->dtAeroToggle->setEdgeGeometry(v1+border, v2-border, y, y+fontHeight);
-
-  this->dialogButtons->setEdgeGeometry(0,width,buttonsTop,height);
 }
 //-----------------------------------------------------------------------------
 
 void FuiAirEnvironment::onPoppedUp()
 {
-  this->placeWidgets(this->getWidth(),this->getHeight());
   this->updateUIValues();
 }
 //----------------------------------------------------------------------------
@@ -433,7 +345,7 @@ void FuiAirEnvironment::getUIValues(FFuaUIValues* values)
   envValues->useCM    = this->useCMToggle->getToggle();
   envValues->infMod   = this->infModMenu->getSelectedOption();
   envValues->indMod   = this->indModMenu->getSelectedOption();
-  envValues->aToler   = this->aTolerField->getValue();
+  envValues->aToler   = this->aTolerField->getDouble();
   envValues->tlMod    = this->tipLossMenu->getSelectedOption();
   envValues->hlMod    = this->hubLossMenu->getSelectedOption();
   envValues->constWnd = this->windToggle->getToggle();

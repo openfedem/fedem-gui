@@ -11,7 +11,6 @@
 #include "FFuLib/FFuBase/FFuTopLevelShell.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 
-class FFuLabel;
 class FFuIOField;
 class FFuPushButton;
 class FFuListView;
@@ -27,7 +26,6 @@ class FuiObjectBrowser : virtual public FFuTopLevelShell,
 
 public:
   FuiObjectBrowser();
-  virtual ~FuiObjectBrowser() {}
 
   static FuiObjectBrowser* create(int xpos = 100, int ypos = 100,
 				  int width = 100, int height = 100,
@@ -37,8 +35,6 @@ public:
 protected:
   void initWidgets();
 
-  virtual void placeWidgets(int width, int height);
-  virtual void onPoppedUp();
   virtual void onCopyDataButtonClicked() = 0;
 
 private:
@@ -59,18 +55,13 @@ private:
   FmModelMemberBase* myObj;
 
 protected:
-  FFuLabel*           headerImage1;
-  FFuLabel*           headerImage2;
-  FFuLabel*           searchLabel;
-  FFuIOField*         searchField;
-  FFuPushButton*      searchButton;
-  FFuListView*        searchView;
-  FFuLabel*           outputLabel;
-  FFuMemo*            outputMemo;
-  FFuPushButton*      closeButton;
-  FFuPushButton*      helpButton;
-  FFuLabel*           sepLabel;
-  FFuPushButton*      copyDataButton;
+  FFuIOField*    searchField;
+  FFuPushButton* searchButton;
+  FFuListView*   searchView;
+  FFuMemo*       outputMemo;
+  FFuPushButton* closeButton;
+  FFuPushButton* helpButton;
+  FFuPushButton* copyDataButton;
 };
 
 #endif

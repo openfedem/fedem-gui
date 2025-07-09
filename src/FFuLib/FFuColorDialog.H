@@ -18,41 +18,37 @@ class FFuDialogButtons;
 
 class FFuColorDialog : virtual public FFuTopLevelShell
 {
+  using DynCB1 = FFaDynCB1<const FFuColor&>;
+  using DynCB2 = FFaDynCB2<const FFuColor&,FFuColorDialog*>;
+
 public:
-  FFuColorDialog() {}
-  virtual ~FFuColorDialog() {}
-
   void setInitialColor(const FFuColor& aColor);
-  void setColor(const FFuColor& aColor, bool notify = true);
-  FFuColor getColor() const;
+  void setColor(const FFuColor& aColor);
+  const FFuColor& getColor() const;
 
-  void setColorChangedCB(const FFaDynCB1<FFuColor>& aDynCB);
-  void setOkButtonClickedCB(const FFaDynCB1<FFuColor>& aDynCB);
-  void setCancelButtonClickedCB(const FFaDynCB1<FFuColor>& aDynCB);
+  void setColorChangedCB(const DynCB1& cb);
+  void setOkButtonClickedCB(const DynCB1& cb);
+  void setCancelButtonClickedCB(const DynCB1& cb);
 
-  void setColorChangedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB);
-  void setOkButtonClickedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB);
-  void setCancelButtonClickedCB(const FFaDynCB2<FFuColor,FFuComponentBase*>& aDynCB);
+  void setColorChangedCB(const DynCB2& cb);
+  void setOkButtonClickedCB(const DynCB2& cb);
+  void setCancelButtonClickedCB(const DynCB2& cb);
 
 protected:
-
   void onDlgButtonClicked(int);
-  void onColorChanged(FFuColor aColor);
-
-  // widget placement - from MuitiUIComponent
-  virtual void placeWidgets(int width, int height);
+  void onColorChanged(const FFuColor& aColor);
 
   // Initialisation to be called by UILib dep. subclass
   void init();
 
 protected:
-  FFaDynCB1<FFuColor> myOkButtonClickedCB;
-  FFaDynCB1<FFuColor> myCancelButtonClickedCB;
-  FFaDynCB1<FFuColor> myColorChangedCB;
+  DynCB1 myOkButtonClickedCB;
+  DynCB1 myCancelButtonClickedCB;
+  DynCB1 myColorChangedCB;
 
-  FFaDynCB2<FFuColor,FFuComponentBase*> myOkButtonClickedWPtrCB;
-  FFaDynCB2<FFuColor,FFuComponentBase*> myCancelButtonClickedWPtrCB;
-  FFaDynCB2<FFuColor,FFuComponentBase*> myColorChangedWPtrCB;
+  DynCB2 myOkButtonClickedCB2;
+  DynCB2 myCancelButtonClickedCB2;
+  DynCB2 myColorChangedCB2;
 
   FFuDialogButtons* myDialogButtons;
   FFuColorSelector* myColorSelector;

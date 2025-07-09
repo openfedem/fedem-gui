@@ -5,26 +5,20 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTPLAYPANEL_H
-#define FUIQTPLAYPANEL_H
+#ifndef FUI_QT_PLAY_PANEL_H
+#define FUI_QT_PLAY_PANEL_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiPlayPanel.H"
 
-class QWidget;
 
-class FuiQtPlayPanel: public FFuQtMultUIComponent, public  FuiPlayPanel
+class FuiQtPlayPanel : public FFuQtWidget, public  FuiPlayPanel
 {
 public:
-  FuiQtPlayPanel(QWidget* parent = 0,
-			 int xpos=100,
-			 int ypos=100,
-			 int width=40,
-			 int height=60,
-			 const char* name="PlayPanel");
-  virtual ~FuiQtPlayPanel(){};
+  FuiQtPlayPanel(QWidget* parent = NULL, const char* name="PlayPanel");
 
+protected:
+  virtual void showEvent(QShowEvent* e);
 };
-
 
 #endif

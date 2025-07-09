@@ -182,7 +182,6 @@ void FuiFunctionProperties::initWidgets()
 
   myChannelNameField->setLabel("Channel");
   myChannelNameField->setSensitivity(false);
-  myChannelNameField->setLabelMargin(0);
 
   myChannelBrowseButton->setLabel("...");
   myChannelBrowseButton->setActivateCB(FFaDynCB0M(FFaDynCB0,&myGetChannelListCB,invoke));
@@ -199,7 +198,6 @@ void FuiFunctionProperties::initWidgets()
   myScaleFactorField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myScaleFactorField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onParameterValueChanged,double));
-  myScaleFactorField->setLabelMargin(0);
 
   myVerticalShiftFrame->setLabel("Vertical shift after scale");
 
@@ -207,7 +205,6 @@ void FuiFunctionProperties::initWidgets()
   myVerticalShiftField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myVerticalShiftField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 						 onParameterValueChanged,double));
-  myVerticalShiftField->setLabelMargin(0);
 
   myZeroAdjustToggle->setLabel("Shift function to zero out start value");
   myZeroAdjustToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
@@ -231,8 +228,7 @@ void FuiFunctionProperties::initWidgets()
 
   myFileRefQueryField->setChangedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onFileQIChanged,FuiQueryInputField*));
-  myFileRefQueryField->turnButtonOff(true);
-  myFileRefQueryField->setBehaviour(FuiQueryInputField::REF_TEXT);
+  myFileRefQueryField->setBehaviour(FuiQueryInputField::REF_TEXT,true);
   myFileRefQueryField->setEditSensitivity(false);
 
   myActualFileInfoLabel->setLabel("Actual file");
@@ -274,7 +270,6 @@ void FuiFunctionProperties::initWidgets()
   myJonswapSpectralPeakednessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myJonswapSpectralPeakednessField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
                                                              onParameterValueChanged,double));
-  myJonswapSpectralPeakednessField->setLabelMargin(0);
 
   myJonswapSpectralPeakednessToggle->setLabel("Use DNV recommendation");
   myJonswapSpectralPeakednessToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
@@ -283,22 +278,18 @@ void FuiFunctionProperties::initWidgets()
   myJonswapWaveComponentsField->setLabel("Number of wave components");
   myJonswapWaveComponentsField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myJonswapWaveComponentsField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-  myJonswapWaveComponentsField->setLabelMargin(0);
 
   myJonswapRandomSeedField->setLabel("Random seed");
   myJonswapRandomSeedField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myJonswapRandomSeedField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-  myJonswapRandomSeedField->setLabelMargin(2);
 
   myJonswapWaveDirsField->setLabel("Number of wave directions");
   myJonswapWaveDirsField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myJonswapWaveDirsField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-  myJonswapWaveDirsField->setLabelMargin(0);
 
   myJonswapSpreadExpField->setLabel("Spreading exp.");
   myJonswapSpreadExpField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myJonswapSpreadExpField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-  myJonswapSpreadExpField->setLabelMargin(2);
 
   myJonswapBasicFrame->setLabel("Basic");
 
@@ -306,13 +297,11 @@ void FuiFunctionProperties::initWidgets()
   myJonswapHsField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myJonswapHsField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onParameterValueChanged,double));
-  myJonswapHsField->setLabelMargin(0);
 
   myJonswapTpField->setLabel("Spectral peak period, Tp");
   myJonswapTpField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myJonswapTpField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
                                              onParameterValueChanged,double));
-  myJonswapTpField->setLabelMargin(0);
 
   myJonswapCutOffFrame->setLabel("Period cut-off values");
 
@@ -324,13 +313,11 @@ void FuiFunctionProperties::initWidgets()
   myJonswapTLowField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myJonswapTLowField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onParameterValueChanged,double));
-  myJonswapTLowField->setLabelMargin(0);
 
   myJonswapTHighField->setLabel("T<sub>high</sub>");
   myJonswapTHighField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myJonswapTHighField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onParameterValueChanged,double));
-  myJonswapTHighField->setLabelMargin(0);
 
   myJonswapAdvancedFrame->popDown();
   myJonswapSpectralPeakednessField->popDown();
@@ -347,7 +334,7 @@ void FuiFunctionProperties::initWidgets()
   myJonswapTLowField->popDown();
   myJonswapTHighField->popDown();
 
-  this->invokeCreateUACB(this);
+  FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
 
