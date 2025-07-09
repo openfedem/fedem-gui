@@ -1,0 +1,5 @@
+#!/bin/sh
+# Launcher for the FEDEM GUI on Linux.
+path=`which $0`
+dir=`dirname $path`
+LD_LIBRARY_PATH=$dir exec $dir/Fedem $*
