@@ -74,11 +74,26 @@ endif ( FTENV_VERBOSE )
 set ( BINARY_DIR "${CMAKE_INSTALL_PREFIX}/bin" )
 set ( PROPERTY_DIR "${BINARY_DIR}/Properties" )
 install ( FILES ${RESOURCES} DESTINATION "${BINARY_DIR}/resources" )
-install ( DIRECTORY Addons DESTINATION "${BINARY_DIR}" )
-install ( DIRECTORY Plugin DESTINATION "${BINARY_DIR}" )
+if ( WIN )
+  install ( DIRECTORY Addons/ DESTINATION "${BINARY_DIR}/addons" )
+  install ( DIRECTORY Plugin/ DESTINATION "${BINARY_DIR}/plugins" )
+else ( WIN )
+  install ( DIRECTORY Plugin.linux/ DESTINATION "${BINARY_DIR}/plugins" )
+endif ( WIN )
 install ( DIRECTORY Templates DESTINATION "${BINARY_DIR}" )
 install ( DIRECTORY Properties/CrossSections DESTINATION "${PROPERTY_DIR}" )
 install ( FILES Properties/README.md DESTINATION "${PROPERTY_DIR}" )
+
+if ( LINUX )
+  # Install Fedem GUI launcher script
+  configure_file ( Install/fedem.in fedem )
+  install ( FILES "${CMAKE_CURRENT_BINARY_DIR}/fedem"
+            DESTINATION "${BINARY_DIR}"
+            PERMISSIONS OWNER_READ OWNER_EXECUTE OWNER_WRITE
+                        GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE
+          )
+endif ( LINUX )
 
 if ( USE_WINDPOW )
   # Install the Fedem Windpower property files
@@ -100,7 +115,10 @@ endif ( USE_WINDPOW )
 set ( DOC_VER fedem-8.1.0 )
 set ( DOC_URL https://github.com/openfedem/fedem-docs/releases/download/${DOC_VER} )
 set ( DOC_DIR "${CMAKE_CURRENT_BINARY_DIR}/Doc" )
-set ( DOC_FILES Fedem.chm FedemUsersGuide.pdf FedemTheoryGuide.pdf )
+set ( DOC_FILES FedemUsersGuide.pdf FedemTheoryGuide.pdf )
+if ( WIN )
+  list ( APPEND DOC_FILES Fedem.chm )
+endif ( WIN )
 set ( FEDEM_DOCS )
 foreach ( FILE ${DOC_FILES} )
   list ( APPEND FEDEM_DOCS "${DOC_DIR}/${FILE}" )

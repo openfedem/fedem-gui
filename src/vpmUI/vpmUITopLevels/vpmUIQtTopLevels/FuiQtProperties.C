@@ -404,8 +404,9 @@ static void showPDFfile(QString& strUrl)
 {
   // Get AcroRd32.exe
   QString strAR;
+  bool shellOpen = false;
 #if defined(win32) || defined(win64)
-  // Open registry key
+  // Open registry key to find the registered PDF-file reader
   const wchar_t* regkey = L"AcroExch.Document\\Shell\\Open\\Command";
   HKEY hk;
   LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, regkey, 0, KEY_QUERY_VALUE, &hk);
@@ -419,35 +420,41 @@ static void showPDFfile(QString& strUrl)
     if (err == ERROR_SUCCESS)
       strAR = buf;
   }
+  if (strAR.isEmpty()) {
+    std::string errmsg("Unable to find Adobe Acrobat Reader "
+                       "when opening PDF-file:\n");
+    errmsg.append(strUrl.replace("file://","").toStdString());
+    errmsg.append("\n\nWould you like to try to open it using another reader?");
+    if (!(shellOpen = FFaMsg::dialog(errmsg,FFaMsg::YES_NO) == 1))
+      return;
+  }
+#else
+  shellOpen = true;
+  strUrl.replace("file://","");
 #endif
 
-  if (strAR.isEmpty()) {
-    std::string errmsg("Unable to find Adobe Acrobat Reader when opening file:\n");
-    strUrl.replace("file://", "");
-    errmsg.append(strUrl.toStdString());
-    errmsg.append("\n\nWould you like to try open the PDF using an other reader?");
-    if (FFaMsg::dialog(errmsg, FFaMsg::YES_NO_CANCEL) == 1) {
-      // Try shell open
-      if (strUrl.indexOf("?") > 0)
-        strUrl = strUrl.left(strUrl.indexOf("?"));
-      QUrl objUrl(QApplication::applicationDirPath() + "/" + strUrl);
-      if (!QDesktopServices::openUrl(objUrl))
-        FFaMsg::dialog("Unable to find any PDF reader!",FFaMsg::OK);
-      return;
-    }
+  if (shellOpen) {
+    // Try shell open
+    if (strUrl.indexOf("?") > 0)
+      strUrl = strUrl.left(strUrl.indexOf("?"));
+    QUrl objUrl(QApplication::applicationDirPath() + "/" + strUrl);
+    if (!QDesktopServices::openUrl(objUrl))
+      FFaMsg::dialog("Unable to find a PDF reader!",FFaMsg::DISMISS_ERROR);
+    return;
   }
+
   QStringList listAR = strAR.split('\"');
   strAR = listAR[strAR.startsWith('\"') ? 1 : 0];
   // Get pdf file path and page number
   QStringList listUrl = strUrl.split('?');
-  listUrl[0].replace("file://", "");
+  listUrl[0].replace("file://","");
   // Show PDF
   QProcess* myProcess = new QProcess();
   QStringList arguments;
   if (listUrl.size() > 1)
     arguments << "/A" << listUrl[1];
   arguments << QApplication::applicationDirPath() + "/" + listUrl[0];
-  myProcess->start(strAR, arguments);
+  myProcess->start(strAR,arguments);
 }
 
 

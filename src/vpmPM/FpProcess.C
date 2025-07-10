@@ -115,6 +115,12 @@ int FpProcess::run(const FpProcessOptions& options)
   if (!options.workingDir.empty())
     myQProcess->setWorkingDirectory(options.workingDir.c_str());
 
+#ifdef linux64
+  QProcessEnvironment env;
+  env.insert("LD_LIBRARY_PATH",FFaAppInfo::getProgramPath().c_str());
+  myQProcess->setProcessEnvironment(env);
+#endif
+
   connect(myQProcess,SIGNAL(readyReadStandardOutput()),this,SLOT(readStdOut()));
   connect(myQProcess,SIGNAL(readyReadStandardError()),this,SLOT(readStdErr()));
   connect(myQProcess,SIGNAL(finished(int,QProcess::ExitStatus)),this,SLOT(processFinished(int,QProcess::ExitStatus)));

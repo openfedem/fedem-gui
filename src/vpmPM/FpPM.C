@@ -110,6 +110,32 @@ void FpPM::init(const char* program)
   sigemptyset(&set); // Empty the signal mask
   // Process signal mask set to empty set - we recieve all signals
   sigprocmask(SIG_SETMASK,NULL,&set);
+
+  std::string fullPath;
+  if (FFaFilePath::isRelativePath(program))
+  {
+    // Transform the relative program path into a full path
+    // TODO: Merge this with FFaAppInfo::init()
+    fullPath = FFaAppInfo::getCWD();
+    size_t nextSlash = fullPath.find_last_of('/');
+    size_t prevSlash = nextSlash;
+    std::string progName = program;
+    if (progName.substr(0,2) == "./")
+    {
+      prevSlash = fullPath.size();
+      progName.erase(0,1);
+    }
+    else while (progName.substr(0,3) == "../" && nextSlash < fullPath.size())
+    {
+      prevSlash = nextSlash;
+      nextSlash = fullPath.substr(0,nextSlash).find_last_of('/');
+      progName.erase(0,3);
+    }
+    if (prevSlash < fullPath.size())
+      fullPath.erase(prevSlash+1);
+    fullPath.append(progName);
+    program = fullPath.c_str();
+  }
 #endif
 
   // Initialize the program path (without the trailing slash)
