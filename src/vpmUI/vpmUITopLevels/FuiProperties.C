@@ -4527,12 +4527,12 @@ void FuiProperties::updateSubassCoG()
 
 void FuiProperties::showUsersGuide()
 {
-  showPDF("file://Doc/FedemUsersGuide.pdf?page=1");
+  showPDF("file://Doc/FedemUsersGuide.pdf");
 }
 
 void FuiProperties::showTheoryGuide()
 {
-  showPDF("file://Doc/FedemTheoryGuide.pdf?page=1");
+  showPDF("file://Doc/FedemTheoryGuide.pdf");
 }
 
 

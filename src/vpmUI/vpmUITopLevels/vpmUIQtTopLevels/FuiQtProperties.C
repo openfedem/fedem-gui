@@ -64,7 +64,7 @@
 #if defined(win32) || defined(win64)
 #include <windows.h>
 #endif
-
+#include <iostream>
 
 FuiQtProperties::FuiQtProperties(QWidget* parent,
                                  int xpos, int ypos,
@@ -400,12 +400,13 @@ FuiQtProperties::FuiQtProperties(QWidget* parent,
 }
 
 
-static void showPDFfile(QString& strUrl)
+#if defined(win32) || defined(win64)
+// This does not seem to work any longer with Qt 6.
+// Anyway, it is currently unused, so consider remove.
+static bool showPDFfileAtPage(QString& strUrl)
 {
   // Get AcroRd32.exe
   QString strAR;
-  bool shellOpen = false;
-#if defined(win32) || defined(win64)
   // Open registry key to find the registered PDF-file reader
   const wchar_t* regkey = L"AcroExch.Document\\Shell\\Open\\Command";
   HKEY hk;
@@ -425,22 +426,7 @@ static void showPDFfile(QString& strUrl)
                        "when opening PDF-file:\n");
     errmsg.append(strUrl.replace("file://","").toStdString());
     errmsg.append("\n\nWould you like to try to open it using another reader?");
-    if (!(shellOpen = FFaMsg::dialog(errmsg,FFaMsg::YES_NO) == 1))
-      return;
-  }
-#else
-  shellOpen = true;
-  strUrl.replace("file://","");
-#endif
-
-  if (shellOpen) {
-    // Try shell open
-    if (strUrl.indexOf("?") > 0)
-      strUrl = strUrl.left(strUrl.indexOf("?"));
-    QUrl objUrl(QApplication::applicationDirPath() + "/" + strUrl);
-    if (!QDesktopServices::openUrl(objUrl))
-      FFaMsg::dialog("Unable to find a PDF reader!",FFaMsg::DISMISS_ERROR);
-    return;
+    return FFaMsg::dialog(errmsg,FFaMsg::YES_NO) == 0;
   }
 
   QStringList listAR = strAR.split('\"');
@@ -448,67 +434,66 @@ static void showPDFfile(QString& strUrl)
   // Get pdf file path and page number
   QStringList listUrl = strUrl.split('?');
   listUrl[0].replace("file://","");
-  // Show PDF
+  // Show pdf file at the specified page
   QProcess* myProcess = new QProcess();
   QStringList arguments;
   if (listUrl.size() > 1)
     arguments << "/A" << listUrl[1];
   arguments << QApplication::applicationDirPath() + "/" + listUrl[0];
   myProcess->start(strAR,arguments);
+  return true;
 }
+#endif
 
 
 static void onURLActivated(const std::string& url)
 {
   QString strUrl(url.c_str());
-  QUrl    objUrl(strUrl);
+  if (strUrl.left(7) == "file://")
+  {
+    if (strUrl.indexOf("?") > 0)
+    {
+#if defined(win32) || defined(win64)
+      if (showPDFfileAtPage(strUrl)) return;
+#endif
+      strUrl = strUrl.split('?').first();
+    }
+    strUrl.insert(7, "/" + QApplication::applicationDirPath() + "/").replace(" ", "%20");
+  }
+
+  std::string msg;
+  QUrl objUrl(strUrl,QUrl::StrictMode);
   if (!objUrl.isValid())
-    FFaMsg::dialog("Invalid URL:\n" + url, FFaMsg::WARNING);
-  else if (strUrl.left(7) == "file://")
-    showPDFfile(strUrl);
-  else if (strUrl.left(8) == "https://" || strUrl.left(7) == "http://")
-    if (!QDesktopServices::openUrl(objUrl))
-      FFaMsg::dialog("Unable to open URL:\n" + url, FFaMsg::WARNING);
+  {
+    msg = "Invalid URL:\n";
+    std::cerr <<"QUrl: "<< objUrl.errorString().toStdString() << std::endl;
+  }
+  else if (!QDesktopServices::openUrl(objUrl))
+    msg = "Unable to open URL:\n";
+  else
+    return;
+
+  FFaMsg::dialog(msg + strUrl.toStdString(), FFaMsg::WARNING);
 }
 
 
 bool FuiQtProperties::initStartGuide()
 {
   // Load HTML file
-  QString htmFile = "StartGuide.htm";
   QString appPath = QApplication::applicationDirPath() + "/Doc/";
-  QFile file(appPath + htmFile);
-  bool fileOk = file.open(QIODevice::ReadOnly | QIODevice::Text);
-#if defined(win32) || defined(win64)
-  if (!fileOk) {
-    // Get path of the startguide folder from Windows registry.
-    // The path must use forward slashes, and must end with a forward slash.
-    std::string regkey = std::string("FMM-file\\internal\\") + FedemAdmin::getVersion();
-    std::wstring wrkey(regkey.begin(),regkey.end());
-    HKEY hk;
-    LONG err = ::RegOpenKeyEx(HKEY_CLASSES_ROOT, wrkey.c_str(), 0, KEY_QUERY_VALUE, &hk);
-    if (err == ERROR_SUCCESS) {
-      // Get registry value
-      char path[2048];
-      DWORD cbData = 2048;
-      memset(path,0,cbData);
-      err = ::RegQueryValueEx(hk, L"startGuidePath", NULL, NULL, (LPBYTE)path, &cbData);
-      ::RegCloseKey(hk);
-      if (err == ERROR_SUCCESS) {
-        appPath = path; // internal url
-        file.setFileName(appPath + htmFile);
-        fileOk = file.open(QIODevice::ReadOnly | QIODevice::Text);
-      }
-    }
-  }
-#endif
-
+  QString htmFile = appPath + "StartGuide.htm";
   QString strData;
+  QFile file(htmFile);
+  bool fileOk = file.open(QIODevice::ReadOnly | QIODevice::Text);
   if (!fileOk)
+  {
+    std::cerr <<" *** Can't open file "<< htmFile.toStdString() << std::endl;
     strData = "Welcome to <i>FEDEM 8.1</i>";
+  }
   else while (!file.atEnd())
     strData.append(file.readLine().data());
   file.close();
+
   // Change all relative local paths
   strData.replace(" src='", " src='" + appPath);
   // Set fields
@@ -533,8 +518,7 @@ bool FuiQtProperties::initStartGuide()
 
 void FuiProperties::showPDF(const char* url)
 {
-  QString strUrl(url);
-  showPDFfile(strUrl);
+  onURLActivated(url);
 }
 
 
