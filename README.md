@@ -94,6 +94,12 @@ Unzip this file in an arbitrary location, and execute the file `INSTALL.bat`
 as administrator to install the software on your PC.
 See also [Install/README.txt](Install/README.txt).
 
+The Compiled HTML Help file (Fedem.chm) embedded with the installation
+will normally be blocked by the Windows operation system,
+such that only its table of contents is shown when opening it.
+To avoid this, you may need to unblock it in the file Properties,
+as explained [here](https://support.helpndoc.com/en/support/solutions/articles/43000549682-the-chm-documentation-format-only-displays-the-table-of-contents-without-any-topic-content).
+
 Unless you already have Microsoft Visual Studio installed (2015 or later),
 you may also need to download and install some C++ runtime libraries from
 [Microsoft](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)

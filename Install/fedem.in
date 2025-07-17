@@ -1,4 +1,10 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2023 SAP SE
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This file is part of FEDEM - https://openfedem.org
+
 # Launcher for the FEDEM GUI on Linux.
 path=`which $0`
 dir=`dirname $path`
