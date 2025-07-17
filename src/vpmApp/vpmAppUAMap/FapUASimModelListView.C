@@ -426,9 +426,6 @@ FFuaUICommands* FapUASimModelListView::getCommands()
     this->solveHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveStressOnLink"));
     this->solveHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveRosetteOnLink"));
     this->solveHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveStrainCoatOnLink"));
-#ifdef FT_HAS_NCODE
-    this->solveHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveFEFatigueOnLink"));
-#endif
   }
 
   if (FapLicenseManager::hasFeature("FA-WND")) {

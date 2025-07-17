@@ -60,10 +60,9 @@ static void reportRDBFiles(const std::vector<std::string>& files, const std::str
   std::string modes("eigval_rcy");
   std::string gage("timehist_gage_rcy");
   std::string fpp("summary_rcy");
-  std::string dutyCycle("dutycycle_rcy");
   std::string reducerFiles, solver1Files, solver2Files;
   std::string solverEigFiles, solverFreqFiles;
-  std::string stressFiles, modesFiles, gageFiles, fppFiles, dcFiles;
+  std::string stressFiles, modesFiles, gageFiles, fppFiles;
 
   for (const std::string& file : files)
     if (file.size() > rdbPath.size())
@@ -95,9 +94,6 @@ static void reportRDBFiles(const std::vector<std::string>& files, const std::str
       else if (current.find(solverFreq) != std::string::npos)
 	solverFreqFiles += "\t" + current + "\n";
 
-      else if (current.find(dutyCycle) != std::string::npos)
-	dcFiles += "\t" + current + "\n";
-
       else // Nothing else fit, assume it is a reducer file
 	reducerFiles += "\t" + current + "\n";
     }
@@ -122,8 +118,6 @@ static void reportRDBFiles(const std::vector<std::string>& files, const std::str
     ListUI <<"  -> Found Strain Rosette Recovery results:\n"<< gageFiles;
   if (!fppFiles.empty())
     ListUI <<"  -> Found Strain Coat Recovery results:\n"<< fppFiles;
-  if (!dcFiles.empty())
-    ListUI <<"  -> Found Duty Cycle results:\n"<< dcFiles;
 }
 
 

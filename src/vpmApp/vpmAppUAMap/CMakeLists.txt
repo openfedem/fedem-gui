@@ -59,11 +59,6 @@ if ( USE_EXT_CTRLSYS )
   list ( APPEND COMPONENT_FILE_LIST FapUAExtCtrlSysProperties )
 endif ( USE_EXT_CTRLSYS )
 
-if ( USE_NCODE_INTERFACE )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_NCODE" )
-  list ( APPEND COMPONENT_FILE_LIST FapUADutyCycleOptions )
-endif ( USE_NCODE_INTERFACE )
-
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST FapUAQueryMatch )
 ## Pure implementation files, i.e., source files without corresponding header

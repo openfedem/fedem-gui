@@ -17,10 +17,6 @@
 #include "vpmApp/vpmAppProcess/FapModeShapeExpander.H"
 #include "vpmApp/vpmAppProcess/FapGageRecovery.H"
 #include "vpmApp/vpmAppProcess/FapDamageRecovery.H"
-#ifdef FT_HAS_NCODE
-#include "vpmApp/vpmAppProcess/FapFEFatigueProcess.H"
-#include "vpmApp/vpmAppProcess/FapNCodeProcesses.H"
-#endif
 #include "vpmApp/FapLicenseManager.H"
 #include "vpmApp/vpmAppProcess/FapSimEventHandler.H"
 
@@ -43,9 +39,6 @@
 #include "vpmDB/FmModesOptions.H"
 #include "vpmDB/FmGageOptions.H"
 #include "vpmDB/FmFppOptions.H"
-#ifdef FT_HAS_NCODE
-#include "vpmDB/FmDutyCycleOptions.H"
-#endif
 #include "vpmDB/FmMechanism.H"
 #include "vpmDB/FmPart.H"
 #include "vpmDB/FmElementGroupProxy.H"
@@ -185,16 +178,6 @@ void FapSolveCmds::init()
   cmdItem->setActivatedCB(FFaDynCB0S([](){ FapSolveCmds::solveStrainCoat(false); }));
   cmdItem->setGetSensitivityCB(SENSITIVITY_LAMBDA(sensitive = FpPM::isModelTouchable()));
 
-#ifdef FT_HAS_NCODE
-  cmdItem = new FFuaCmdItem("cmdId_solve_solveDutyCycle");
-  cmdItem->setSmallIcon(solveDutyCycle_xpm);
-  cmdItem->setText("Run Duty Cycle");
-  cmdItem->setToolTip("Run Duty Cycle");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapSolveCmds::solveDutyCycle));
-  cmdItem->setGetSensitivityCB(SENSITIVITY_LAMBDA(
-    sensitive = FmDB::getDutyCycleOptions(false) && !FpPM::hasResults() ));
-#endif
-
   cmdItem = new FFuaCmdItem("cmdId_solve_reduceLink");
   cmdItem->setSmallIcon(reduceLinks_xpm);
   cmdItem->setText("Reduce");
@@ -229,14 +212,6 @@ void FapSolveCmds::init()
   cmdItem->setToolTip("Create a summary of stress and strain on strain coat on FE part");
   cmdItem->setActivatedCB(FFaDynCB0S(FapSolveCmds::solveStrainCoatOnPart));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(getSolveOnPartGroupSensitivity,bool&));
-
-#ifdef FT_HAS_NCODE
-  cmdItem = new FFuaCmdItem("cmdId_solve_solveFEFatigueOnLink");
-  cmdItem->setText("FE-Fatigue on FE part");
-  cmdItem->setToolTip("Start FE-Fatigue on FE part");
-  cmdItem->setActivatedCB(FFaDynCB0S(FapSolveCmds::solveFEFatigueOnPart));
-  cmdItem->setGetSensitivityCB(FFaDynCB1S(getSolveOnPartGroupSensitivity,bool&));
-#endif
 
   cmdItem = new FFuaCmdItem("cmdId_solve_stopSolver");
   cmdItem->setSmallIcon(StopProcessing_xpm);
@@ -300,14 +275,6 @@ void FapSolveCmds::init()
   cmdItem->setToolTip("Strain Coat Recovery Summary Setup");
   cmdItem->setActivatedCB(FFaDynCB0S([](){ Fui::fppOptionsUI(); }));
 
-#ifdef FT_HAS_NCODE
-  cmdItem = new FFuaCmdItem("cmdId_solve_manageSolveDutyCycle");
-  cmdItem->setSmallIcon(manageSolveDutyCycle_xpm);
-  cmdItem->setText("Duty Cycle Setup...");
-  cmdItem->setToolTip("Duty Cycle Setup");
-  cmdItem->setActivatedCB(FFaDynCB0S([](){ Fui::dutyCycleOptionsUI(); }));
-#endif
-
   cmdItem = new FFuaCmdItem("cmdId_solve_refreshRDB");
   cmdItem->setSmallIcon(refreshRDB_xpm);
   cmdItem->setText("Refresh Results");
@@ -358,19 +325,6 @@ void FapSolveCmds::init()
       }));
   cmdItem->setGetSensitivityCB(SENSITIVITY_LAMBDA(
     sensitive = FpPM::isModelTouchable() && FpPM::hasResults(FpPM::SUMMARY_RCY) ));
-
-#ifdef FT_HAS_NCODE
-  cmdItem = new FFuaCmdItem("cmdId_solve_deleteDutyCycleResults");
-  cmdItem->setSmallIcon(deleteDutyCycle_xpm);
-  cmdItem->setText("Delete Duty Cycle recovery results");
-  cmdItem->setToolTip("Delete Duty Cycle recovery results");
-  cmdItem->setActivatedCB(FFaDynCB0S([]() {
-        FFaMsg::list("===> Removing duty cycle results from the active result database.\n");
-        FpModelRDBHandler::removeResults("dutycycle_rcy",FapSimEventHandler::getActiveRSD());
-      }));
-  cmdItem->setGetSensitivityCB(SENSITIVITY_LAMBDA(
-    sensitive = FpPM::isModelTouchable() && FpPM::hasResults(FpPM::DUTYCYCLE) ));
-#endif
 
   cmdItem = new FFuaCmdItem("cmdId_solve_prepareBatch");
   cmdItem->setSmallIcon(prepareForBatch_xpm);
@@ -814,29 +768,6 @@ bool FapSolveCmds::solveStrainCoat(bool prepareForBatchOnly)
 
 //----------------------------------------------------------------------------
 
-#ifdef FT_HAS_NCODE
-void FapSolveCmds::solveDutyCycle()
-{
-  if (!FapLicenseManager::hasNCodeInterfaceLicense()) return;
-
-  FmDutyCycleOptions* dcOpts = FmDB::getDutyCycleOptions(false);
-  if (!dcOpts || FapSimEventHandler::getActiveEvent()) return;
-
-  FuiModes::cancel();
-
-  std::vector<FmLink*> links = dcOpts->getLinks();
-  for (FmLink* link : links)
-  {
-    FapFEF2FRS* proc = new FapFEF2FRS(dynamic_cast<FmPart*>(link));
-    FapSolutionProcessManager::instance()->pushSolverProcess(proc);
-  }
-
-  FapSolutionProcessManager::instance()->run();
-}
-#endif
-
-//----------------------------------------------------------------------------
-
 void FapSolveCmds::reducePart()
 {
   std::vector<FmPart*> parts;
@@ -937,28 +868,6 @@ void FapSolveCmds::solveStrainCoatOnPart()
 
   FapSolutionProcessManager::instance()->run();
 }
-
-//----------------------------------------------------------------------------
-
-#ifdef FT_HAS_NCODE
-void FapSolveCmds::solveFEFatigueOnPart()
-{
-  if (!FapLicenseManager::hasNCodeInterfaceLicense()) return;
-
-  FapPartGroupsMap parts;
-  FapCmdsBase::getSelectedPartsWithGroups(parts);
-
-  FuiModes::cancel();
-
-  for (const FapPartGroupsMap::value_type& part : parts)
-  {
-    FapFEFatigueProcess* proc = new FapFEFatigueProcess(part.first);
-    FapSolutionProcessManager::instance()->pushSolverProcess(proc);
-  }
-
-  FapSolutionProcessManager::instance()->run();
-}
-#endif
 
 //----------------------------------------------------------------------------
 

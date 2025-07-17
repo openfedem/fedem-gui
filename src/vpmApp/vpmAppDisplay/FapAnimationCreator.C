@@ -271,21 +271,14 @@ double FapAnimationCreator::initRDB(DoubleSet& timeSteps,
   FmResultStatusData* rsd = FapSimEventHandler::getActiveRSD();
   if (IAmLoadingDeformData || IAmLoadingFringeData) {
     if (IAmSummaryAnimation)
-    {
       FpModelRDBHandler::enableTimeStepPreRead(rsd,"summary_rcy");
-      FpModelRDBHandler::enableTimeStepPreRead(rsd,"dutycycle_rcy");
-    }
     else
       FpModelRDBHandler::enableTimeStepPreRead(rsd,"timehist_rcy");
   }
   // Find the time steps to load (all or just some)
   bool useTimeSet = true;
   if (IAmSummaryAnimation)
-  {
     FpModelRDBHandler::getKeys(rsd,timeSteps,"summary_rcy");
-    if (timeSteps.empty())
-      FpModelRDBHandler::getKeys(rsd,timeSteps,"dutycycle_rcy");
-  }
   else if ((IAmLoadingDeformData || IAmLoadingFringeData) && !IAmUsingMostFrames)
     FpModelRDBHandler::getKeys(rsd,timeSteps,"timehist_rcy");
   else

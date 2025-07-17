@@ -15,9 +15,6 @@ set ( COMPONENT_FILE_LIST  FapDamageRecovery FapDynamicSolver
                            FapRecoveryBase FapSimEventHandler FapSolutionProcessMgr
                            FapSolverBase FapStressExpander
     )
-if ( USE_NCODE_INTERFACE )
-  list ( APPEND COMPONENT_FILE_LIST FapFEFatigueProcess FapNCodeBase FapNCodeProcesses )
-endif ( USE_NCODE_INTERFACE )
 
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST FapSolverID )

@@ -43,10 +43,6 @@ if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FuiQtGraphView FuiQtRDBMEFatigue )
 endif ( Qwt_LIBRARY )
 
-if ( USE_NCODE_INTERFACE )
-  list ( APPEND COMPONENT_FILE_LIST FuiQtDutyCycleOptions )
-endif ( USE_NCODE_INTERFACE )
-
 
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST )

@@ -32,6 +32,7 @@
 #include "vpmApp/vpmAppProcess/FapLinkReducer.H"
 
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <fstream>
 
@@ -221,9 +222,6 @@ void FapUAMiniFileBrowser::onSolverFinished(int groupID, int eventID,
   case FapSolverID::FAP_MODES:
   case FapSolverID::FAP_GAGE:
   case FapSolverID::FAP_FPP:
-  case FapSolverID::FAP_FEFATIGUE:
-  case FapSolverID::FAP_DC_FEFCOM:  // These are the only two duty cycle processes
-  case FapSolverID::FAP_DC_FEF2FRS: // that actually produce results for this model
 
     if (isUIPoppedUp) {
       this->buildRecovery();
@@ -360,9 +358,6 @@ void FapUAMiniFileBrowser::onModelExtractorDataChanged(FFrExtractor*)
         case FapSolverID::FAP_MODES:
         case FapSolverID::FAP_GAGE:
         case FapSolverID::FAP_FPP:
-        case FapSolverID::FAP_FEFATIGUE:
-        case FapSolverID::FAP_DC_FEFCOM:  // These are the only two duty cycle processes
-        case FapSolverID::FAP_DC_FEF2FRS: // that actually produce results for this model
           recoveringParts.insert(proc.second);
           break;
       }
@@ -945,15 +940,15 @@ void FapUAMiniFileBrowser::buildRecovery()
     if (!part->baseFTLFile.getValue().empty())
       parts[part->getTaskName()] = part;
 
-  FmResultStatusData* recRSD[5];
-  recRSD[0] = topRSD->getSubTask("timehist_rcy");
-  recRSD[1] = topRSD->getSubTask("eigval_rcy");
-  recRSD[2] = topRSD->getSubTask("timehist_gage_rcy");
-  recRSD[3] = topRSD->getSubTask("summary_rcy");
-  recRSD[4] = topRSD->getSubTask("dutycycle_rcy");
+  std::array<FmResultStatusData*,4> recRSD = {
+    topRSD->getSubTask("timehist_rcy"),
+    topRSD->getSubTask("eigval_rcy"),
+    topRSD->getSubTask("timehist_gage_rcy"),
+    topRSD->getSubTask("summary_rcy")
+  };
 
-  StringSet resultFiles[5];
-  for (int j = 0; j < 5; j++)
+  std::array<StringSet,4> resultFiles;
+  for (int j = 0; j < 4; j++)
     if (recRSD[j] && !recRSD[j]->isEmpty()) {
       recRSD[j]->getAllFileNames(resultFiles[j], "fco");
       recRSD[j]->getAllFileNames(resultFiles[j], "fop");
@@ -1036,20 +1031,6 @@ void FapUAMiniFileBrowser::buildRecovery()
       for (const std::string& file : subSet)
         if (spec.setup(file))
 	  item = this->insertUIItem(proc, item, spec);
-    }
-
-    // Check for duty cycle files
-    if (getSubSet(resultFiles[4], subSet, p.first))
-    {
-      // Create header
-      proc = this->insertUIItem(part, proc,
-				FileSpec(FileSpec::RESULT_TYPE,
-					 "Duty Cycle", "", "", "",
-					 "dutycycle_rcy", NULL, solveDutyCycle_xpm));
-      item = -1;
-      for (const std::string& file : subSet)
-        if (spec.setup(file))
-          item = this->insertUIItem(proc, item, spec);
     }
   }
 
