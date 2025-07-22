@@ -8,22 +8,20 @@
 #ifndef FUI_MOTION_TYPE_H
 #define FUI_MOTION_TYPE_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuLogicButtonGroup.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <vector>
-#include <string>
+#include <array>
 
-class FFuLabelFrame;
 class FFuToggleButton;
 class FFuRadioButton;
 
 
-class FuiMotionType : public virtual FFuMultUIComponent
+class FuiMotionType : public virtual FFuComponentBase
 {
 public:
-  FuiMotionType(int nButton = 4);
-  virtual ~FuiMotionType() {}
+  FuiMotionType();
 
   // Setting up:
 
@@ -44,17 +42,15 @@ public:
   unsigned int getValue() const;
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   // Shadow pointers from subclass,
   // Subclass is responsible to set them up:
 
-  FFuLabelFrame*               myFrame;
   FFuToggleButton*             myAddButton;
   FFuLogicButtonGroup          myMotionTypeToggleGroup;
   std::vector<FFuRadioButton*> myMotionTypeButtons;
-  std::vector<std::string>     myMotionTypeLabels;
+  std::array<const char*,4>    myMotionTypeLabels;
 
 private:
 

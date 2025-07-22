@@ -5,25 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQMOTIONTYPE_H
-#define FUIQMOTIONTYPE_H
+#ifndef FUI_QT_MOTION_TYPE_H
+#define FUI_QT_MOTION_TYPE_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "vpmUI/vpmUIComponents/FuiMotionType.H"
 
 
-class FuiQtMotionType : public virtual FFuQtMultUIComponent, 
-			public FuiMotionType
+class FuiQtMotionType : public FFuQtLabelFrame, public FuiMotionType
 {
 public:
-  FuiQtMotionType(QWidget* parent = 0, int nRButton = 4,
-		  int xpos=100, int ypos=100,
-		  int width=800,int height=35,
-		  const char* name="Motion Type");
-  virtual ~FuiQtMotionType() {}
+  FuiQtMotionType(QWidget* parent, int nButton = 4,
+                  const char* name = "FuiQtMotionType");
 
-  virtual void setSensitivity(bool sensitive)
-  { FuiMotionType::setSensitivity(sensitive); }
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiMotionType::setSensitivity(isSensitive);
+  }
 };
 
 #endif

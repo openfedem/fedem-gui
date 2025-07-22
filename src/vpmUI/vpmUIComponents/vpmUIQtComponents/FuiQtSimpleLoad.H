@@ -5,29 +5,27 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQSIMPLELOAD_H
-#define FUIQSIMPLELOAD_H
+#ifndef FUI_QT_SIMPLE_LOAD_H
+#define FUI_QT_SIMPLE_LOAD_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "vpmUI/vpmUIComponents/FuiSimpleLoad.H"
 
 
-class FuiQtSimpleLoad : public virtual FFuQtMultUIComponent, 
-                         public FuiSimpleLoad
+class FuiQtSimpleLoad : public FFuQtLabelFrame, public FuiSimpleLoad
 {
-  
 public:
+  FuiQtSimpleLoad(QWidget* parent, const char* name = "FuiQtSimpleLoad");
 
-  FuiQtSimpleLoad(QWidget* parent = 0,
-                   int xpos=100,
-                   int ypos=100,
-                   int width=800,
-                   int height=35,
-                   const char* name="Motion Type");
-  virtual ~FuiQtSimpleLoad();
+  virtual void setLabel(const char* text)
+  {
+    this->FFuQtLabelFrame::setLabel(text);
+  }
 
-  virtual void setSensitivity(bool sensitive){FuiSimpleLoad::setSensitivity(sensitive);}
-
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiSimpleLoad::setSensitivity(isSensitive);
+  }
 };
 
 #endif

@@ -6,30 +6,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmUI/vpmUIComponents/FuiMotionType.H"
-#include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuRadioButton.H"
 #include "FFuLib/FFuToggleButton.H"
 
 
-FuiMotionType::FuiMotionType(int nButton)
+FuiMotionType::FuiMotionType() : IAmSensitive(true)
 {
-  IAmSensitive = true;
-  myMotionTypeLabels.reserve(4);
-  myMotionTypeLabels.push_back("Free");
-  myMotionTypeLabels.push_back("Fixed");
-  myMotionTypeLabels.push_back("Prescribed");
-  if (nButton > 3)
-    myMotionTypeLabels.push_back("Spring-Damper");
+  myMotionTypeLabels = {
+    "Free",
+    "Fixed",
+    "Prescribed",
+    "Spring-Damper"
+  };
 }
 
 
 void FuiMotionType::initWidgets()
 {
-  myFrame->setLabel("Constraint Type");
-
   for (size_t i = 0; i < myMotionTypeButtons.size(); i++)
   {
-    myMotionTypeButtons[i]->setLabel(myMotionTypeLabels[i].c_str());
+    myMotionTypeButtons[i]->setLabel(myMotionTypeLabels[i]);
     myMotionTypeToggleGroup.insert(myMotionTypeButtons[i]);
   }
 
@@ -43,47 +39,11 @@ void FuiMotionType::initWidgets()
 }
 
 
-void FuiMotionType::placeWidgets(int width, int height)
-{
-  int border      = 6;
-  int frameLeft   = 0;
-  int frameRight  = width;
-  int frameTop    = 0;
-  int frameBtm    = height;
-
-  int fieldHeight = 20;
-  int fieldSpace  = 10;
-
-  int nButtons = myMotionTypeButtons.size();
-
-  while ((2*nButtons+1)*(fieldHeight+fieldSpace) > 2*height-4*border)
-    if ((2*nButtons+1)*fieldHeight > 2*height-4*border) {
-      fieldHeight = (2*height-4*border)/(2*nButtons+1);
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-
-  myFrame->setEdgeGeometry(frameLeft,frameRight,frameTop,frameBtm);
-
-  int v1 = frameLeft  + border;
-  int v2 = frameRight - border;
-  int v3 = v2 - myAddButton->getWidthHint();
-  int line = frameTop + fieldSpace + fieldHeight + border;
-  myAddButton->setCenterYGeometry(v3, line, v2-v3, fieldHeight);
-  for (int i = 0; i < nButtons; i++)
-  {
-    myMotionTypeButtons[i]->setCenterYGeometry(v1, line, v2-v1, fieldHeight);
-    line += fieldSpace + fieldHeight;
-  }
-}
-
-
 void FuiMotionType::setChangedCB(const FFaDynCB0& aDynCB)
 {
   myChangedCB = aDynCB;
 }
+
 
 void FuiMotionType::setValuesChangedCB(const FFaDynCB1<int>& aDynCB)
 {
@@ -120,6 +80,7 @@ void FuiMotionType::setValue(unsigned int motionType)
     myMotionTypeToggleGroup.setValue(myMotionTypeButtons[motionType],true);
 }
 
+
 unsigned int FuiMotionType::getValue() const
 {
   for (size_t i = 0; i < myMotionTypeButtons.size(); i++)
@@ -150,6 +111,7 @@ void FuiMotionType::setSensitivity(bool isSensitive)
   else
     myAddButton->setSensitivity(isSensitive);
 }
+
 
 void FuiMotionType::setSensitivity(unsigned int button, bool isSensitive)
 {

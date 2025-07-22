@@ -5,23 +5,33 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QGridLayout>
+
 #include "FuiQtMotionType.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtRadioButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 
 
-FuiQtMotionType::FuiQtMotionType(QWidget* parent, int nB,
-				 int xpos, int ypos,
-				 int width, int height, const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name), FuiMotionType(nB)
+FuiQtMotionType::FuiQtMotionType(QWidget* parent, int nButton, const char* name)
+  : FFuQtLabelFrame(parent)
 {
-  myFrame = new FFuQtLabelFrame(this);
+  this->setObjectName(name);
+  this->setLabel("Constraint Type");
 
-  for (unsigned int i = 0; i < myMotionTypeLabels.size(); i++)
-    myMotionTypeButtons.push_back(new FFuQtRadioButton(this));
+  for (int i = 0; i < nButton; i++)
+    myMotionTypeButtons.push_back(new FFuQtRadioButton());
 
-  myAddButton = new FFuQtToggleButton(this);
+  myAddButton = new FFuQtToggleButton();
 
   this->initWidgets();
+
+  QGridLayout* layout = new QGridLayout(this);
+  layout->setContentsMargins(5,0,5,5);
+  int row = 0;
+  for (FFuRadioButton* button : myMotionTypeButtons)
+    if (row == 0)
+      layout->addWidget(dynamic_cast<FFuQtRadioButton*>(button), row++,0);
+    else
+      layout->addWidget(dynamic_cast<FFuQtRadioButton*>(button), row++,0,1,2);
+  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(myAddButton), 0,1);
 }

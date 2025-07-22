@@ -7,55 +7,16 @@
 
 #include "vpmUI/vpmUIComponents/FuiSimpleLoad.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
-#include "FFuLib/FFuLabelFrame.H"
 
 
 void FuiSimpleLoad::initWidgets()
 {
-  myFrame->setLabel("Load magnitude");
   myEngineField->setToolTip("Sets the magnitude as a constant value, or\n"
     "as a function (with the constant value added).");
   myEngineField->useAddedConstValue = true; // shows const value as added to function
   myEngineField->setBehaviour(FuiQueryInputField::REF_NUMBER);
   myEngineField->setChangedCB(FFaDynCB1M(FuiSimpleLoad,this,onQIFieldChanged,
 					 FuiQueryInputField*));
-}
-
-
-void FuiSimpleLoad::setLabel(const char* text)
-{
-  myFrame->setLabel(text);
-}
-
-
-void FuiSimpleLoad::placeWidgets(int width, int height)
-{
-  int border      = 6;
-  int frameLeft   = 0;
-  int frameRight  = width;
-  int frameTop    = 0;
-  int frameBtm    = height;
-
-  int fieldHeight = 20;
-  int fieldSpace  = 10;
-
-  while (3*(fieldHeight + fieldSpace)/2 > (height-border)) {
-    if (3*fieldHeight/2 > (height-border)) {
-      fieldHeight = 2*(height-border)/3;
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-  }
-
-  int line1 = frameTop + fieldSpace + fieldHeight + border/2;
-  int v1 = frameLeft  + border;
-  int v2 = frameRight - border;
-
-  myFrame->setEdgeGeometry(frameLeft,frameRight,frameTop,frameBtm);
-
-  myEngineField->setCenterYGeometry(v1, line1, v2-v1, fieldHeight);
 }
 
 

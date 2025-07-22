@@ -5,22 +5,18 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIVARIABLETYPE_H
-#define FUIVARIABLETYPE_H
+#ifndef FUI_VARIABLE_TYPE_H
+#define FUI_VARIABLE_TYPE_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
-class FFuLabelFrame;
 class FFuOptionMenu;
 
 
-class FuiVariableType : public virtual FFuMultUIComponent
+class FuiVariableType : public virtual FFuComponentBase
 {
 public:
-  FuiVariableType() {}
-  virtual ~FuiVariableType() {}
-
   virtual void setSensitivity(bool isSensitive);
 
   void setChangedCB(const FFaDynCB0& aDynCB);
@@ -30,10 +26,8 @@ public:
   int getValue() const;
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
-  FFuLabelFrame* myFrame;
   FFuOptionMenu* myTypeMenu;
 
 private:

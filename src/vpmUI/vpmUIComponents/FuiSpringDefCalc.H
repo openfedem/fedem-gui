@@ -8,31 +8,56 @@
 #ifndef FUI_SPRING_DEF_CALC_H
 #define FUI_SPRING_DEF_CALC_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuLogicButtonGroup.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuLabel;
-class FFuLabelFrame;
 class FFuIOField;
 class FFuRadioButton;
 class FFuaQueryBase;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
-class FuiSpringDefCalcValues;
 class FmModelMemberBase;
 
 
-class FuiSpringDefCalc : public virtual FFuMultUIComponent
+struct FuiSpringDefCalcValues
+{
+  char useAngularLabels = false;
+  bool useSpringLabels = true;
+
+  double variable = 0.0;
+  bool   variableIsEditable = false;
+  bool   fixedOrFree = false;
+
+  double initLengtOrDeflection = 0.0;
+  bool   useAsDeflection = true;
+
+  FFuaQueryBase*     engineQuery = NULL;
+  FmModelMemberBase* selectedLengthEngine = NULL;
+
+  FFaDynCB1<FuiQueryInputFieldValues&> myQIFieldButtonCB;
+
+  double getInitDeflection() const
+  {
+    if (useAsDeflection)
+      return initLengtOrDeflection;
+    else
+      return variable - initLengtOrDeflection;
+  }
+};
+
+
+class FuiSpringDefCalc : public virtual FFuComponentBase
 {
 public:
   FuiSpringDefCalc();
-  virtual ~FuiSpringDefCalc() {}
 
   // Setting Up :
 
   void setLabels(char isAngle, bool isSpring);
 
+  virtual void setLabel(const char* text) = 0;
   virtual void setSensitivity(bool isSensitive);
 
   // Callbacks :
@@ -51,26 +76,23 @@ public:
   void getValues(FuiSpringDefCalcValues& values);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   // Shadow pointers from subclass.
   // Subclass is responsible to set them up:
 
-  FFuLabelFrame      * myFrame;
+  FFuLabel*           myVariableLabel;
+  FFuIOField*         myVariableField;
 
-  FFuLabel           * myVariableLabel;
-  FFuIOField         * myVariableField;
+  FFuIOField*         myILengthField;
+  FFuIOField*         myIDeflField;
 
-  FFuIOField         * myILengthField;
-  FFuIOField         * myIDeflField;
+  FFuLogicButtonGroup myILDToggleGroup;
+  FFuRadioButton*     myILToggle;
+  FFuRadioButton*     myIDToggle;
 
-  FFuLogicButtonGroup  myILDToggleGroup;
-  FFuRadioButton     * myILToggle;
-  FFuRadioButton     * myIDToggle;
-
-  FFuLabel           * myLengthChangeLabel;
-  FuiQueryInputField * myLengthEngineField;
+  FFuLabel*           myLengthChangeLabel;
+  FuiQueryInputField* myLengthEngineField;
 
 private:
 
@@ -93,36 +115,6 @@ private:
   bool IAmDeflection;
   bool IAmSensitive;
   bool IAmBlockingVariable;
-};
-
-
-class FuiSpringDefCalcValues
-{
-public:
-  FuiSpringDefCalcValues()
-  {
-    useAngularLabels = false;
-    useSpringLabels = useAsDeflection = true;
-    variable = initLengtOrDeflection = 0.0;
-    variableIsEditable = fixedOrFree = false;
-    engineQuery = NULL;
-    selectedLengthEngine = NULL;
-  }
-
-  char useAngularLabels;
-  bool useSpringLabels;
-
-  double variable;
-  bool   variableIsEditable;
-  bool   fixedOrFree;
-
-  double initLengtOrDeflection;
-  bool   useAsDeflection;
-
-  FFuaQueryBase*     engineQuery;
-  FmModelMemberBase* selectedLengthEngine;
-
-  FFaDynCB1<FuiQueryInputFieldValues&> myQIFieldButtonCB;
 };
 
 #endif
