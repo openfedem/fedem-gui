@@ -8,19 +8,18 @@
 #ifndef FUI_RESULT_TABS_H
 #define FUI_RESULT_TABS_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <vector>
 #include <array>
 
-class FFuLabelFrame;
 class FFuToggleButton;
 
 
-class FuiTriadResults : public virtual FFuMultUIComponent
+class FuiTriadResults : public virtual FFuComponentBase
 {
 public:
-  FuiTriadResults();
-  virtual ~FuiTriadResults() {}
+  FuiTriadResults() { myToggles.fill(NULL); }
 
   void setToggleCB(const FFaDynCB1<bool>& cb);
   void setValues(const std::vector<bool>& vals);
@@ -28,21 +27,15 @@ public:
 
 protected:
   void initWidgets();
-
-  virtual void placeWidgets(int width, int height);
-
-  FFuLabelFrame* myGlobalFrame;
-  FFuLabelFrame* myLocalFrame;
 
   std::array<FFuToggleButton*,7> myToggles;
 };
 
 
-class FuiJointResults : public virtual FFuMultUIComponent
+class FuiJointResults : public virtual FFuComponentBase
 {
 public:
-  FuiJointResults();
-  virtual ~FuiJointResults() {}
+  FuiJointResults() { myToggles.fill(NULL); }
 
   void setToggleCB(const FFaDynCB1<bool>& cb);
   void setValues(const std::vector<bool>& vals);
@@ -51,11 +44,7 @@ public:
 protected:
   void initWidgets();
 
-  virtual void placeWidgets(int width, int height);
-
-  FFuLabelFrame* myJointFrame;
-  FFuLabelFrame* mySpringFrame;
-  FFuLabelFrame* myDamperFrame;
+  virtual void setSpringDamper(bool onOff) = 0;
 
   std::array<FFuToggleButton*,15> myToggles;
 };
