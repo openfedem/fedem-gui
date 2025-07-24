@@ -8,16 +8,14 @@
 #ifndef FUI_QT_JOINT_DOF_H
 #define FUI_QT_JOINT_DOF_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiJointDOF.H"
 
 
-class FuiQtJointDOF : public virtual FFuQtMultUIComponent,
-		      public FuiJointDOF
+class FuiQtJointDOF : public FFuQtWidget, public FuiJointDOF
 {
 public:
-  FuiQtJointDOF(QWidget* parent, const char* name="JointDOF");
-  virtual ~FuiQtJointDOF() {}
+  FuiQtJointDOF(QWidget* parent, const char* name = "FuiQtJointDOF");
 };
 
 #endif

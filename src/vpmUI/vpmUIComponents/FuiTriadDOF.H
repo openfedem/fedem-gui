@@ -8,21 +8,28 @@
 #ifndef FUI_TRIAD_DOF_H
 #define FUI_TRIAD_DOF_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiSimpleLoad.H"
 
-class FuiTriadDOFValues;
 class FuiMotionType;
 class FuiVariableType;
 class FFuLabelField;
 class FFuToggleButton;
 
 
-class FuiTriadDOF : public virtual FFuMultUIComponent
+struct FuiTriadDOFValues
+{
+  int myMotionType = -1;
+  bool freqDomain = false;
+  double myInitVel = 0.0;
+  FuiSimpleLoadValues myLoadVals;
+};
+
+
+class FuiTriadDOF : public virtual FFuComponentBase
 {
 public:
   FuiTriadDOF();
-  virtual ~FuiTriadDOF() {}
 
   void setChangedCB(const FFaDynCB0& aDynCB);
 
@@ -48,25 +55,7 @@ public:
   };
 
 protected:
-  virtual void placeWidgets(int width, int height);
-
   void initWidgets();
-};
-
-
-class FuiTriadDOFValues
-{
-public:
-  int myMotionType;
-  bool freqDomain;
-  double myInitVel;
-  FuiSimpleLoadValues myLoadVals;
-
-  FuiTriadDOFValues() {
-    myMotionType = -1;
-    freqDomain = false;
-    myInitVel = 0.0;
-  }
 };
 
 #endif

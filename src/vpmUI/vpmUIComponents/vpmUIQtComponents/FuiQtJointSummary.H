@@ -5,22 +5,34 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTJOINTSUMMARY_H
-#define FUIQTJOINTSUMMARY_H
+#ifndef FUI_QT_JOINT_SUMMARY_H
+#define FUI_QT_JOINT_SUMMARY_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiJointSummary.H"
 
+class QGroupBox;
 
-class FuiQtJointSummary : public virtual FFuQtMultUIComponent,
-			  public FuiJointSummary
+
+class FuiQtJointSummary : public FFuQtWidget, public FuiJointSummary
 {
 public:
-  FuiQtJointSummary(QWidget* parent = 0,
-		    int xpos = 100, int ypos = 100,
-		    int width = 800, int height = 35,
-		    const char* name="JointSummary");
-  virtual ~FuiQtJointSummary() {}
+  FuiQtJointSummary(QWidget* parent, const char* name = "FuiQtJointSummary");
+
+  virtual void showCamVars(bool onOff) { showFrame(myCamFrame,onOff); }
+  virtual void showScrew(bool onOff) { showFrame(myScrewFrame,onOff); }
+  virtual void showFriction(char onOff);
+
+protected:
+  void resizeEvent(QResizeEvent* e);
+
+private:
+  static void showFrame(QGroupBox* frame, bool onOff);
+
+  QGroupBox* myCamFrame;
+  QGroupBox* myScrewFrame;
+  QGroupBox* myFrictionFrame;
+  QWidget*   qFrictionDof;
 };
 
 #endif

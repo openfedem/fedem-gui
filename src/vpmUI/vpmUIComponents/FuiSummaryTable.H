@@ -8,19 +8,18 @@
 #ifndef FUI_SUMMARY_TABLE_H
 #define FUI_SUMMARY_TABLE_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 
 class FFuTable;
 class FFuLabel;
 
 
-class FuiSummaryTable : public virtual FFuMultUIComponent
+class FuiSummaryTable : public virtual FFuComponentBase
 {
 public:
   FuiSummaryTable() { mySummaryTable = NULL; myAddBCLabel = NULL; }
-  virtual ~FuiSummaryTable() {}
 
-  int getTableHeight() const;
+  void updateTableGeometry();
 
 protected:
   static FFuTable* createTable(FFuComponentBase* parent);

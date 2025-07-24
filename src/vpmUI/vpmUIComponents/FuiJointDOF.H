@@ -8,23 +8,36 @@
 #ifndef FUI_JOINT_DOF_H
 #define FUI_JOINT_DOF_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiSimpleLoad.H"
 #include "vpmUI/vpmUIComponents/FuiSpringDefCalc.H"
 #include "vpmUI/vpmUIComponents/FuiSprDaForce.H"
 
-class FuiJointDOFValues;
 class FuiMotionType;
 class FuiVariableType;
 class FFuLabelField;
 class FFuToggleButton;
 
 
-class FuiJointDOF : public virtual FFuMultUIComponent
+struct FuiJointDOFValues
+{
+  int myDofNo;
+  int myMotionType = -1;
+  bool freqDomain  = false;
+  double myInitVel = 0.0;
+  FuiSimpleLoadValues    myLoadVals;
+  FuiSpringDefCalcValues mySpringDCVals;
+  FuiSprDaForceValues    mySpringFSVals;
+  FuiSprDaForceValues    myDamperFCVals;
+
+  FuiJointDOFValues(int dof = -1) : myDofNo(dof) {}
+};
+
+
+class FuiJointDOF : public virtual FFuComponentBase
 {
 public:
   FuiJointDOF();
-  virtual ~FuiJointDOF() {}
 
   void setChangedCB(const FFaDynCB0& aDynCB);
 
@@ -55,30 +68,7 @@ public:
   };
 
 protected:
-  virtual void placeWidgets(int width, int height);
-
   void initWidgets();
-};
-
-
-class FuiJointDOFValues
-{
-public:
-  int myDofNo;
-  int myMotionType;
-  bool freqDomain;
-  double myInitVel;
-  FuiSimpleLoadValues    myLoadVals;
-  FuiSpringDefCalcValues mySpringDCVals;
-  FuiSprDaForceValues    mySpringFSVals;
-  FuiSprDaForceValues    myDamperFCVals;
-
-  FuiJointDOFValues(int dof = -1) {
-    myDofNo = dof;
-    myMotionType = -1;
-    freqDomain = false;
-    myInitVel = 0.0;
-  }
 };
 
 #endif

@@ -11,54 +11,40 @@
 #include "FuiSummaryTable.H"
 
 class FFuToggleButton;
-class FFuLabelFrame;
-class FFuLabelField;
+class FFuIOField;
 class FFuPushButton;
 class FFuOptionMenu;
 class FuiQueryInputField;
-class FuiJointDOFValues;
+struct FuiJointDOFValues;
 
 
 class FuiJointSummary : public FuiSummaryTable
 {
 public:
-  void setRowLabel(int dof, const FuiJointDOFValues& jval, const char** labels);
   void setSummary(int dof, const FuiJointDOFValues& jval);
+
   void showFixFreeAll(bool yesOrNo);
   void showSwapJoint(int jType);
   void showTzToggle(bool yesOrNo);
-  void showFriction(char yesOrNo);
-  void showScrew(bool yesOrNo);
-  void showCamVars(bool yesOrNo);
+  virtual void showCamVars(bool yesOrNo) = 0;
+  virtual void showScrew(bool yesOrNo) = 0;
+  virtual void showFriction(char yesOrNo) = 0;
 
-  FFuToggleButton    * myDOF_TZ_Toggle;
-  FFuLabel           * myDefDamperLabel;
-  FFuPushButton      * mySetAllFreeButton;
-  FFuPushButton      * mySetAllFixedButton;
-  FFuPushButton      * mySwapJointButton;
-  FFuLabelFrame      * myFrictionFrame;
-  FuiQueryInputField * myFriction;
-  FFuLabel           * myFrictionLabel;
-  FFuOptionMenu      * myFrictionDof;
-  FFuLabelFrame      * myScrewFrame;
-  FFuToggleButton    * myScrewToggle;
-  FFuLabelField      * myScrewRatioField;
-  FFuLabelField      * myCamThicknessField;
-  FFuLabelField      * myCamWidthField;
-  FFuToggleButton    * myRadialToggle;
+  FFuLabel*           myDefDamperLabel;
+  FFuToggleButton*    myDOF_TZ_Toggle;
+  FFuPushButton*      mySetAllFreeButton;
+  FFuPushButton*      mySetAllFixedButton;
+  FFuPushButton*      mySwapJointButton;
+  FuiQueryInputField* myFriction;
+  FFuOptionMenu*      myFrictionDof;
+  FFuToggleButton*    myScrewToggle;
+  FFuIOField*         myScrewRatioField;
+  FFuIOField*         myCamThicknessField;
+  FFuIOField*         myCamWidthField;
+  FFuToggleButton*    myRadialToggle;
 
 protected:
-  virtual void placeWidgets(int width, int height);
   virtual void initWidgets();
-
-private:
-  bool IAmShowingFixFreeAll;
-  bool IAmShowingSwapJoint;
-  bool IAmShowingTzToggle;
-  char IAmShowingFriction;
-  bool IAmShowingScrew;
-  bool IAmShowingCamVars;
-  char IAmShowingFootNotes;
 };
 
 #endif

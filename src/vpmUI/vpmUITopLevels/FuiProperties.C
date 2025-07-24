@@ -1381,8 +1381,6 @@ void FuiProperties::placeWidgets(int width, int height)
       int glh1 = headingBottom + vBorder;
       int glh2 = height;
 
-      // "Touch" the geometry first
-      myJointTabs->setEdgeGeometry(glv1, glv2-1, glh1, glh2);
       myJointTabs->setEdgeGeometry(glv1, glv2, glh1, glh2);
     }
 
@@ -1441,8 +1439,6 @@ void FuiProperties::placeWidgets(int width, int height)
       int glh1 = headingBottom + vBorder;
       int glh2 = height;
 
-      // "Touch" the geometry first
-      myTriadTabs->setEdgeGeometry(glv1, glv2-1, glh1, glh2);
       myTriadTabs->setEdgeGeometry(glv1, glv2, glh1, glh2);
     }
 
@@ -2455,8 +2451,9 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     const char* label[] = { "Tx", "Ty", "Tz", "Rx", "Ry", "Rz" };
     for (FuiJointDOF* jdof : myJointDofs)
       if (jv < pv->myJointVals.size()) {
-        myJointTabs->addTabPage(jdof, label[pv->myJointVals[jv].myDofNo]);
-        myJointSummary->setRowLabel(jv, pv->myJointVals[jv], label);
+        int idof = pv->myJointVals[jv].myDofNo;
+        myJointTabs->addTabPage(jdof, label[idof]);
+        myJointSummary->mySummaryTable->setRowLabel(jv, label[idof]);
         jdof->springDC->buildDynamicWidgets(pv->myJointVals[jv].mySpringDCVals);
         jdof->springFS->buildDynamicWidgets(pv->myJointVals[jv].mySpringFSVals);
         jdof->damperFS->buildDynamicWidgets(pv->myJointVals[jv].myDamperFCVals);
@@ -2502,40 +2499,16 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myTriadPosition->setEditedObjs(pv->objsToPosition);
 
     if (pv->myTriadVals.empty()) {
-      myTriadSummary->myMassFrame->popDown();
-      myTriadSummary->myMassField->popDown();
-      myTriadSummary->myIxField->popDown();
-      myTriadSummary->myIyField->popDown();
-      myTriadSummary->myIzField->popDown();
-      myTriadSummary->mySysDirFrame->popDown();
-      myTriadSummary->mySysDirMenu->popDown();
+      myTriadSummary->showMass(false);
+      myTriadSummary->showSysDir(false);
       myTriadSummary->mySummaryTable->popDown();
     }
     else {
-      myTriadSummary->myMassFrame->popUp();
-      myTriadSummary->myMassField->popUp();
-      if (pv->myTriadVals.size() > 3) {
-	myTriadSummary->myIxField->popUp();
-	myTriadSummary->myIyField->popUp();
-	myTriadSummary->myIzField->popUp();
-      }
-      else {
-	myTriadSummary->myIxField->popDown();
-	myTriadSummary->myIyField->popDown();
-	myTriadSummary->myIzField->popDown();
-      }
-      myTriadSummary->mySysDirFrame->popUp();
-      myTriadSummary->mySysDirMenu->popUp();
+      myTriadSummary->showMass(pv->myTriadVals.size());
+      myTriadSummary->showSysDir(true);
       myTriadSummary->mySummaryTable->popUp();
     }
-    if (pv->myTriadConnector > 1) {
-      myTriadSummary->myConnectorFrame->popUp();
-      myTriadSummary->myConnectorMenu->popUp();
-    }
-    else {
-      myTriadSummary->myConnectorFrame->popDown();
-      myTriadSummary->myConnectorMenu->popDown();
-    }
+    myTriadSummary->showConnector(pv->myTriadConnector > 1);
 
     myTriadTabs->popDown();
     const char* label[] = { "Tx", "Ty", "Tz", "Rx", "Ry", "Rz" };
@@ -3305,6 +3278,7 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
       myJointSummary->setSummary(jv,pv->myJointVals[jv]);
     }
 
+    myJointSummary->updateTableGeometry();
     myJointResults->setValues(pv->myResToggles);
   }
 
@@ -3383,10 +3357,12 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     if (pv->isSlave)
       myTriadSummary->myTriadLabel->setLabel("This is a slave triad");
     else if (pv->isMaster)
+    {
       if (pv->myTriadVals.empty())
-	myTriadSummary->myTriadLabel->setLabel("This is a grounded master triad");
+        myTriadSummary->myTriadLabel->setLabel("This is a grounded master triad");
       else
-	myTriadSummary->myTriadLabel->setLabel("This is a master triad");
+        myTriadSummary->myTriadLabel->setLabel("This is a master triad");
+    }
     else if (pv->myTriadVals.empty())
       myTriadSummary->myTriadLabel->setLabel("This triad is grounded");
     else
@@ -3409,6 +3385,7 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
       myTriadSummary->setSummary(i,pv->myTriadVals[i]);
     }
 
+    myTriadSummary->updateTableGeometry();
     myTriadResults->setValues(pv->myResToggles);
   }
 
@@ -3845,8 +3822,8 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
 
   if (IAmShowingCamData)
     {
-      pv->myCamThickness = myJointSummary->myCamThicknessField->getValue();
-      pv->myCamWidth     = myJointSummary->myCamWidthField->getValue();
+      pv->myCamThickness   = myJointSummary->myCamThicknessField->getDouble();
+      pv->myCamWidth       = myJointSummary->myCamWidthField->getDouble();
       pv->IAmRadialContact = myJointSummary->myRadialToggle->getValue();
     }
 
@@ -3860,7 +3837,7 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   if (IAmShowingScrew)
     {
       pv->myIsScrewConnection = myJointSummary->myScrewToggle->getValue();
-      pv->myScrewRatio = myJointSummary->myScrewRatioField->getValue();
+      pv->myScrewRatio = myJointSummary->myScrewRatioField->getDouble();
     }
 
   // Friction

@@ -22,11 +22,15 @@ void FuiSummaryTable::initWidgets()
 }
 
 
-int FuiSummaryTable::getTableHeight() const
+void FuiSummaryTable::updateTableGeometry()
 {
+  mySummaryTable->updateColumnWidths();
+
   int height = mySummaryTable->getColumnHeaderHeight() + 4;
   for (int i = 0; i < mySummaryTable->getNumberRows(); i++)
     height += mySummaryTable->getRowHeight(i);
 
-  return height;
+  // Adjust the table height to avoid a blank line in the bottom
+  if (height < mySummaryTable->getHeight())
+    mySummaryTable->setHeight(height);
 }
