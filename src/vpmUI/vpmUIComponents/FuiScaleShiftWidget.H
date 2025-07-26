@@ -8,18 +8,17 @@
 #ifndef FUI_SCALE_SHIFT_WIDGET_H
 #define FUI_SCALE_SHIFT_WIDGET_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuIOField;
 class FFuToggleButton;
 
 
-class FuiScaleShiftWidget : public virtual FFuMultUIComponent
+class FuiScaleShiftWidget : public virtual FFuComponentBase
 {
 public:
   FuiScaleShiftWidget();
-  virtual ~FuiScaleShiftWidget() {}
 
   virtual void setFrameTitles(const char* main, const char* shift) = 0;
 

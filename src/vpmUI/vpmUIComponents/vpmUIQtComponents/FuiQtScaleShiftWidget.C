@@ -27,7 +27,7 @@
 
 //! Constructs a FuiQtScaleShiftWidget object as a child of \a parent.
 FuiQtScaleShiftWidget::FuiQtScaleShiftWidget(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+  : FFuQtWidget(parent,name)
 {
   this->setSizePolicy(QSizePolicy(QSizePolicy::Ignored,QSizePolicy::Ignored));
 

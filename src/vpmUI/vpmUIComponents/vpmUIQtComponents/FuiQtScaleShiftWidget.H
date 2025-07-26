@@ -19,19 +19,17 @@
 #define FUI_QT_SCALE_SHIFT_WIDGET_H
 
 #include "vpmUI/vpmUIComponents/FuiScaleShiftWidget.H"
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 
 class QGroupBox;
 
 
-class FuiQtScaleShiftWidget : public FFuQtMultUIComponent,
-			      public FuiScaleShiftWidget
+class FuiQtScaleShiftWidget : public FFuQtWidget, public FuiScaleShiftWidget
 {
   Q_OBJECT
 
 public:
-  FuiQtScaleShiftWidget(QWidget* parent, const char* name);
-  virtual ~FuiQtScaleShiftWidget() {}
+  FuiQtScaleShiftWidget(QWidget* parent, const char* name = "FuiQtScaleShift");
 
   virtual void setFrameTitles(const char* main, const char* shift);
 
