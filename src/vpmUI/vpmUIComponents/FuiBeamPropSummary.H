@@ -8,70 +8,42 @@
 #ifndef FUI_BEAM_PROP_SUMMARY_H
 #define FUI_BEAM_PROP_SUMMARY_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <array>
 
 class FFuLabel;
-class FFuLabelFrame;
 class FFuLabelField;
 class FFuOptionMenu;
 class FFuToggleButton;
 class FuiQueryInputField;
 
 
-class FuiBeamPropSummary : public virtual FFuMultUIComponent
+class FuiBeamPropSummary : public virtual FFuComponentBase
 {
 public:
-  FuiBeamPropSummary() {}
-  virtual ~FuiBeamPropSummary() {}
-
-  // Combos
-  FFuLabel*           myCrossSectionTypeLabel;
   FFuOptionMenu*      myCrossSectionTypeMenu;
-  FFuLabel*           myMaterialDefLabel;
   FuiQueryInputField* myMaterialDefField;
-
-  // Definition
-  FFuLabelFrame*      myDefinitionFrame;
-  FFuLabelField*      myDoField;
-  FFuLabelField*      myDiField;
-  FFuLabel*           myImage;
-  FFuLabelField*      myGEAField;
-  FFuLabelField*      myGEIyyField;
-  FFuLabelField*      myGEIzzField;
-  FFuLabelField*      myGItField;
-  FFuLabelField*      myGmlField;
-  FFuLabelField*      myGIpField;
-
-  // Dependent properties
-  FFuLabelFrame*      myDependencyFrame;
   FFuToggleButton*    myDependencyButton;
-  FFuLabelField*      myAField;
-  FFuLabelField*      myIyField;
-  FFuLabelField*      myIzField;
-  FFuLabelField*      myIpField;
-
-  // Shear
-  FFuLabelFrame*      myShearKFrame;
-  FFuLabelField*      myShearKYField;
-  FFuLabelField*      myShearKZField;
-  FFuLabelField*      myShearGAsyField;
-  FFuLabelField*      myShearGAszField;
-  FFuLabelFrame*      myShearSFrame;
-  FFuLabelField*      myShearSYField;
-  FFuLabelField*      myShearSZField;
 
 protected:
-  virtual void placeWidgets(int width, int height);
-  virtual void initWidgets();
+  enum { DO, DI, GEA, GEIYY, GEIZZ, GIT, GML, GIP,
+         AREA, IY, IZ, IP,
+	 KY, KZ, GASY, GASZ, SY, SZ,
+         NFIELD };
+
+  FFuLabel*                         myImage;
+  std::array<FFuLabelField*,NFIELD> myFields;
+
+  void initWidgets();
 
 public:
   void setAcceptedCBs(const FFaDynCB1<double>& aDynCB);
-  void onCrossSectionTypeChanged(int value);
+  virtual void onCrossSectionTypeChanged(int value) = 0;
   void onBreakDependencyToggled(bool value);
   void setPropSensitivity(bool makeSensitive);
-  void setValues(const std::array<double,18>& values);
-  void getValues(std::array<double,18>& values) const;
+  void setValues(const std::array<double,NFIELD>& values);
+  void getValues(std::array<double,NFIELD>& values) const;
 };
 
 #endif

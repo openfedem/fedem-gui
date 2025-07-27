@@ -716,7 +716,7 @@ void FuiProperties::initWidgets()
   myBeamPropSummary->myMaterialDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myBeamPropSummary->myDependencyButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
   myBeamPropSummary->setAcceptedCBs(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myBeamPropHydro->myBeamHydroToggleButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
+  myBeamPropHydro->setToggledCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
   myBeamPropHydro->setAcceptedCBs(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
 
   // Strain rosette
@@ -3488,9 +3488,8 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myBeamPropSummary->myDependencyButton->setValue(pv->myBeamBreakDependence);
     myBeamPropSummary->onBreakDependencyToggled(IAmSensitive && pv->myBeamBreakDependence);
     myBeamPropSummary->setValues(pv->myBeamProp);
-    myBeamPropHydro->myBeamHydroToggleButton->setValue(pv->myBeamHydroToggle);
     myBeamPropHydro->onBeamHydroToggled(IAmSensitive && pv->myBeamHydroToggle);
-    myBeamPropHydro->setValues(pv->myHydroProp);
+    myBeamPropHydro->setValues(pv->myBeamHydroToggle,pv->myHydroProp);
   }
 
   // Strain rosette
@@ -3964,8 +3963,7 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
       pv->mySelectedMaterial = myBeamPropSummary->myMaterialDefField->getSelectedRef();
       pv->myBeamBreakDependence = myBeamPropSummary->myDependencyButton->getValue();
       myBeamPropSummary->getValues(pv->myBeamProp);
-      pv->myBeamHydroToggle = myBeamPropHydro->myBeamHydroToggleButton->getValue();
-      myBeamPropHydro->getValues(pv->myHydroProp);
+      pv->myBeamHydroToggle = myBeamPropHydro->getValues(pv->myHydroProp);
     }
 
   // Strain rosette

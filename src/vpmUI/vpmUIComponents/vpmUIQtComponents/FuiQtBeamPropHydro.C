@@ -5,27 +5,25 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QGridLayout>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtBeamPropHydro.H"
 #include "FFuLib/FFuQtComponents/FFuQtToggleButton.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
 
 
-FuiQtBeamPropHydro::FuiQtBeamPropHydro(QWidget* parent,
-				       int xpos, int ypos,
-				       int width,int height, const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQtBeamPropHydro::FuiQtBeamPropHydro(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
 {
-  myBeamHydroToggleButton = new FFuQtToggleButton(this);
-  myBeamHydroDbField      = new FFuQtLabelField(this);
-  myBeamHydroDdField      = new FFuQtLabelField(this);
-  myBeamHydroCdField      = new FFuQtLabelField(this);
-  myBeamHydroCaField      = new FFuQtLabelField(this);
-  myBeamHydroCmField      = new FFuQtLabelField(this);
-  myBeamHydroCdAxialField = new FFuQtLabelField(this);
-  myBeamHydroCaAxialField = new FFuQtLabelField(this);
-  myBeamHydroCmAxialField = new FFuQtLabelField(this);
-  myBeamHydroCdSpinField  = new FFuQtLabelField(this);
-  myBeamHydroDiField      = new FFuQtLabelField(this);
+  myToggle = new FFuQtToggleButton();
+  for (FFuLabelField*& fld : myFields)
+    fld = new FFuQtLabelField();
 
   this->initWidgets();
+
+  QGridLayout* layout = new QGridLayout(this);
+  layout->setHorizontalSpacing(20);
+  layout->addWidget(myToggle->getQtWidget(), 0,0,1,3);
+  for (int i = 0; i < NFIELD; i++)
+    layout->addWidget(myFields[i]->getQtWidget(), 1+i%4, i/4);
 }

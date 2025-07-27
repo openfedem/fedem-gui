@@ -13,155 +13,68 @@
 
 void FuiBeamPropHydro::initWidgets()
 {
-  myBeamHydroToggleButton->setLabel("Enable hydrodynamic properties");
+  myToggle->setLabel("Enable hydrodynamic properties");
 
-  myBeamHydroDbField->setLabel("Db");
-  myBeamHydroDbField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroDbField->setLabelWidth(25);
+  for (int i = 0; i < NFIELD; i++)
+  {
+    myFields[i]->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+    myFields[i]->setLabelWidth(i <= CA ? 25 : 45);
+  }
 
-  myBeamHydroDdField->setLabel("Dd");
-  myBeamHydroDdField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroDdField->setLabelWidth(25);
+  myFields[DB]->setLabel("Db");
+  myFields[DD]->setLabel("Dd");
+  myFields[CD]->setLabel("Cd");
+  myFields[CA]->setLabel("Ca");
+  myFields[CM]->setLabel("Cm");
+  myFields[CD_AXIAL]->setLabel("Cd_axial");
+  myFields[CA_AXIAL]->setLabel("Ca_axial");
+  myFields[CM_AXIAL]->setLabel("Cm_axial");
+  myFields[CD_SPIN]->setLabel("Cd_spin");
+  myFields[DI]->setLabel("Di");
+}
 
-  myBeamHydroCdField->setLabel("Cd");
-  myBeamHydroCdField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCdField->setLabelWidth(25);
 
-  myBeamHydroCaField->setLabel("Ca");
-  myBeamHydroCaField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCaField->setLabelWidth(25);
-
-  myBeamHydroCmField->setLabel("Cm");
-  myBeamHydroCmField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCmField->setLabelWidth(45);
-
-  myBeamHydroCdAxialField->setLabel("Cd_axial");
-  myBeamHydroCdAxialField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCdAxialField->setLabelWidth(45);
-
-  myBeamHydroCaAxialField->setLabel("Ca_axial");
-  myBeamHydroCaAxialField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCaAxialField->setLabelWidth(45);
-
-  myBeamHydroCmAxialField->setLabel("Cm_axial");
-  myBeamHydroCmAxialField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCmAxialField->setLabelWidth(45);
-
-  myBeamHydroCdSpinField->setLabel("Cd_spin");
-  myBeamHydroCdSpinField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroCdSpinField->setLabelWidth(45);
-
-  myBeamHydroDiField->setLabel("Di");
-  myBeamHydroDiField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myBeamHydroDiField->setLabelWidth(45);
-
-  this->placeWidgets(this->getWidth(), this->getHeight());
+void FuiBeamPropHydro::setToggledCB(const FFaDynCB1<bool>& aDynCB)
+{
+  myToggle->setToggleCB(aDynCB);
 }
 
 
 void FuiBeamPropHydro::setAcceptedCBs(const FFaDynCB1<double>& aDynCB)
 {
-  myBeamHydroDbField->setAcceptedCB(aDynCB);
-  myBeamHydroDdField->setAcceptedCB(aDynCB);
-  myBeamHydroCdField->setAcceptedCB(aDynCB);
-  myBeamHydroCaField->setAcceptedCB(aDynCB);
-  myBeamHydroCmField->setAcceptedCB(aDynCB);
-  myBeamHydroCdAxialField->setAcceptedCB(aDynCB);
-  myBeamHydroCaAxialField->setAcceptedCB(aDynCB);
-  myBeamHydroCmAxialField->setAcceptedCB(aDynCB);
-  myBeamHydroCdSpinField->setAcceptedCB(aDynCB);
-  myBeamHydroDiField->setAcceptedCB(aDynCB);
-}
-
-
-void FuiBeamPropHydro::placeWidgets(int, int)
-{
-  int y = 4;
-
-  myBeamHydroToggleButton->setEdgeGeometry(10, 10+200, y, y+20);
-  y += 20 + 4;
-
-  int y1 = y;
-  myBeamHydroDbField->setEdgeGeometry(10, 110, y, y+20);
-  y += 20 + 4;
-  myBeamHydroDdField->setEdgeGeometry(10, 110, y, y+20);
-  y += 20 + 4;
-  myBeamHydroCdField->setEdgeGeometry(10, 110, y, y+20);
-  y += 20 + 4;
-  myBeamHydroCaField->setEdgeGeometry(10, 110, y, y+20);
-
-  y = y1;
-  int x1 = 130;
-  myBeamHydroCmField->setEdgeGeometry(10+x1, 130+x1, y, y+20);
-  y += 20 + 4;
-  myBeamHydroCdAxialField->setEdgeGeometry(10+x1, 130+x1, y, y+20);
-  y += 20 + 4;
-  myBeamHydroCaAxialField->setEdgeGeometry(10+x1, 130+x1, y, y+20);
-  y += 20 + 4;
-  myBeamHydroCmAxialField->setEdgeGeometry(10+x1, 130+x1, y, y+20);
-
-  y = y1;
-  int x2 = 280;
-  myBeamHydroCdSpinField->setEdgeGeometry(10+x2, 130+x2, y, y+20);
-  y += 20 + 4;
-  myBeamHydroDiField->setEdgeGeometry(10+x2, 130+x2, y, y+20);
+  for (FFuLabelField* fld : myFields)
+    fld->setAcceptedCB(aDynCB);
 }
 
 
 void FuiBeamPropHydro::onBeamHydroToggled(bool value)
 {
-  myBeamHydroDbField->setSensitivity(value);
-  myBeamHydroDdField->setSensitivity(value);
-  myBeamHydroCdField->setSensitivity(value);
-  myBeamHydroCaField->setSensitivity(value);
-  myBeamHydroCmField->setSensitivity(value);
-  myBeamHydroCdAxialField->setSensitivity(value);
-  myBeamHydroCaAxialField->setSensitivity(value);
-  myBeamHydroCmAxialField->setSensitivity(value);
-  myBeamHydroCdSpinField->setSensitivity(value);
-  myBeamHydroDiField->setSensitivity(value);
+  for (FFuLabelField* fld : myFields)
+    fld->setSensitivity(value);
 }
 
 
 void FuiBeamPropHydro::setPropSensitivity(bool makeSensitive)
 {
-  myBeamHydroToggleButton->setSensitivity(makeSensitive);
-
-  if (myBeamHydroToggleButton->getValue())
-    this->onBeamHydroToggled(makeSensitive);
-  else
-    this->onBeamHydroToggled(false);
+  myToggle->setSensitivity(makeSensitive);
+  this->onBeamHydroToggled(makeSensitive && myToggle->getValue());
 }
 
 
-void FuiBeamPropHydro::setValues(const std::array<double,10>& values)
+void FuiBeamPropHydro::setValues(bool onOrOff,
+                                 const std::array<double,NFIELD>& values)
 {
-  myBeamHydroDbField->setValue(values[0]);
-  myBeamHydroDdField->setValue(values[1]);
-  myBeamHydroCdField->setValue(values[2]);
-  myBeamHydroCaField->setValue(values[3]);
-  myBeamHydroCmField->setValue(values[4]);
-  myBeamHydroCdAxialField->setValue(values[5]);
-  myBeamHydroCaAxialField->setValue(values[6]);
-  myBeamHydroCmAxialField->setValue(values[7]);
-  myBeamHydroCdSpinField->setValue(values[8]);
-  myBeamHydroDiField->setValue(values[9]);
+  myToggle->setValue(onOrOff);
+  for (int i = 0; i < NFIELD; i++)
+    myFields[i]->setValue(values[i]);
 }
 
 
-void FuiBeamPropHydro::getValues(std::array<double,10>& values) const
+bool FuiBeamPropHydro::getValues(std::array<double,NFIELD>& values) const
 {
-  values = {
-    myBeamHydroDbField->getValue(),
-    myBeamHydroDdField->getValue(),
-    myBeamHydroCdField->getValue(),
-    myBeamHydroCaField->getValue(),
-    myBeamHydroCmField->getValue(),
-    myBeamHydroCdAxialField->getValue(),
-    myBeamHydroCaAxialField->getValue(),
-    myBeamHydroCmAxialField->getValue(),
-    myBeamHydroCdSpinField->getValue(),
-    myBeamHydroDiField->getValue()
-  };
+  for (int i = 0; i < NFIELD; i++)
+    values[i] = myFields[i]->getValue();
+
+  return myToggle->getValue();
 }
 

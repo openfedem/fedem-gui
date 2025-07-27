@@ -5,22 +5,30 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTBEAMPROPSUMMARY_H
-#define FUIQTBEAMPROPSUMMARY_H
+#ifndef FUI_QT_BEAM_PROP_SUMMARY_H
+#define FUI_QT_BEAM_PROP_SUMMARY_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiBeamPropSummary.H"
 
+class QGroupBox;
 
-class FuiQtBeamPropSummary : public virtual FFuQtMultUIComponent,
-			  public FuiBeamPropSummary
+
+class FuiQtBeamPropSummary : public FFuQtWidget, public FuiBeamPropSummary
 {
 public:
-  FuiQtBeamPropSummary(QWidget* parent = 0,
-		    int xpos = 100, int ypos = 100,
-		    int width = 800, int height = 35,
-		    const char* name="BeamPropSummary");
-  virtual ~FuiQtBeamPropSummary() {}
+  FuiQtBeamPropSummary(QWidget* parent,
+                       const char* name = "FuiQtBeamPropSummary");
+
+  virtual void onCrossSectionTypeChanged(int value);
+
+private:
+  QGroupBox* myMaterialDefFrame;
+  QGroupBox* myPipeDefFrame;
+  QGroupBox* myGenericDefFrame;
+  QGroupBox* myShearRedFrame;
+  QGroupBox* myShearStiffFrame;
+  QGroupBox* myDependentFrame;
 };
 
 #endif
