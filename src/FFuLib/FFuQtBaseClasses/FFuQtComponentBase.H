@@ -32,6 +32,7 @@ protected:
   FFuQtComponentBase() : myWidget(NULL) {}
 
 public:
+  virtual QWidget* getQtWidget() { return myWidget; }
 
   // Geometry management :
 

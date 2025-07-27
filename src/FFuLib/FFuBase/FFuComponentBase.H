@@ -11,6 +11,8 @@
 #include "FFuLib/FFuAuxClasses/FFuaFontSet.H"
 #include "FFuLib/FFuAuxClasses/FFuaPalette.H"
 
+class QWidget;
+
 
 /*!
   \brief Base class for GUI components, equivalent to a Widget.
@@ -26,6 +28,8 @@ class FFuComponentBase
 public:
   FFuComponentBase() {}
   virtual ~FFuComponentBase() {}
+
+  virtual QWidget* getQtWidget() = 0;
 
   // Geometry management:
 
