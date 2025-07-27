@@ -480,26 +480,10 @@ void FuiProperties::initWidgets()
 
   myJointSummary->myDOF_TZ_Toggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
 
-  // Rotational formulation
+  // Rotational formulation and Spring couplings
 
+  myJointAdvancedTab->setOptionChangedCB(FFaDynCB1M(FuiProperties,this,onNonConstStringChanged,std::string));
   myJointAdvancedTab->popDown();
-  myJointAdvancedTab->myRotFormulationFrame->setLabel("Rotation formulation");
-  myJointAdvancedTab->myRotFormulationLabel->setLabel("Formulation");
-  myJointAdvancedTab->myRotSequenceLabel->setLabel("Sequence");
-  myJointAdvancedTab->myRotFormulationMenu->setOptionChangedCB(FFaDynCB1M(FuiProperties,this,
-									  onNonConstStringChanged,std::string));
-  myJointAdvancedTab->myRotSequenceMenu->setOptionChangedCB(FFaDynCB1M(FuiProperties,this,
-								       onNonConstStringChanged,std::string));
-
-  // Spring connectivity
-
-  myJointAdvancedTab->mySpringCplFrame->setLabel("Spring inter-connectivity");
-  myJointAdvancedTab->myRotSpringCplLabel->setLabel("Rotation");
-  myJointAdvancedTab->myTranSpringCplLabel->setLabel("Translation");
-  myJointAdvancedTab->myRotSpringCplMenu->setOptionChangedCB(FFaDynCB1M(FuiProperties,this,
-									onNonConstStringChanged,std::string));
-  myJointAdvancedTab->myTranSpringCplMenu->setOptionChangedCB(FFaDynCB1M(FuiProperties,this,
-									 onNonConstStringChanged,std::string));
 
   // Triad
 
@@ -1951,8 +1935,8 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   IAmShowingFriction          = pv->showFriction;
   IAmShowingDOF_TZ_Toggle     = pv->showDOF_TZ_Toggle;
   IAmShowingRotFormulation    = pv->showRotFormulation;
-  IAmShowingRotSpringCpl      = pv->showRotSpringCpl;
-  IAmShowingTranSpringCpl     = pv->showTranSpringCpl;
+  IAmShowingRotSpringCpl      = pv->showSpringCpl > 0;
+  IAmShowingTranSpringCpl     = pv->showSpringCpl == 1;
   IAmShowingRefPlane          = pv->showRefPlane;
   IAmShowingScrew             = pv->showScrew;
   IAmShowingSwapTriadButton   = pv->showSwapTriadButton;
@@ -2390,8 +2374,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   // Friction data
 
   myJointSummary->showFriction(pv->showFriction);
-  if (pv->showFriction)
-    myJointSummary->myFriction->setQuery(pv->myFrictionQuery);
+  myJointSummary->myFriction->setQuery(pv->myFrictionQuery);
 
   // TZ dof toggle
 
@@ -2404,25 +2387,14 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   // Joint rotation formulation
 
   myJointAdvancedTab->showRotFormulation(pv->showRotFormulation);
-  if (pv->showRotFormulation)
-  {
-    myJointAdvancedTab->myRotFormulationMenu->setOptions(pv->myRotFormulationTypes);
-    myJointAdvancedTab->myRotSequenceMenu->setOptions(pv->myRotSequenceTypes);
-  }
+  myJointAdvancedTab->myRotFormulationMenu->setOptions(pv->myRotFormulationTypes);
+  myJointAdvancedTab->myRotSequenceMenu->setOptions(pv->myRotSequenceTypes);
 
   // Joint spring coupling
 
-  if (pv->showTranSpringCpl)
-    myJointAdvancedTab->showSpringCpl(true);
-  else if (pv->showRotSpringCpl)
-    myJointAdvancedTab->showRotSpringCpl();
-  else
-    myJointAdvancedTab->showSpringCpl(false);
-
-  if (pv->showRotSpringCpl)
-    myJointAdvancedTab->myRotSpringCplMenu->setOptions(pv->mySpringCplTypes);
-  if (pv->showTranSpringCpl)
-    myJointAdvancedTab->myTranSpringCplMenu->setOptions(pv->mySpringCplTypes);
+  myJointAdvancedTab->showSpringCpl(pv->showSpringCpl);
+  myJointAdvancedTab->myRotSpringCplMenu->setOptions(pv->mySpringCplTypes);
+  myJointAdvancedTab->myTranSpringCplMenu->setOptions(pv->mySpringCplTypes);
 
   // Joints :
 
@@ -2462,7 +2434,7 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
       else
         jdof->dofNo = -1;
 
-    if (pv->showRotSpringCpl || pv->showRotFormulation)
+    if (pv->showRotFormulation || pv->showSpringCpl)
       myJointTabs->addTabPage(myJointAdvancedTab, "Advanced");
 
     if (!pv->myJointVals.empty())
@@ -3327,15 +3299,14 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
       myJointAdvancedTab->myRotSequenceMenu->setSensitivity(false);
     else
       myJointAdvancedTab->myRotSequenceMenu->setSensitivity(IAmSensitive);
-    myJointAdvancedTab->myRotExplainLabel->setLabel(FmJointBase::getRotExplain(pv->mySelectedRotFormulation,
-									       pv->mySelectedRotSequence));
+    myJointAdvancedTab->setRotExplain(FmJointBase::getRotExplain(pv->mySelectedRotFormulation,pv->mySelectedRotSequence));
   }
 
   // Spring Coupling
 
-  if (pv->showRotSpringCpl)
+  if (pv->showSpringCpl)
     myJointAdvancedTab->myRotSpringCplMenu->selectOption(pv->mySelectedRotSpringCpl);
-  if (pv->showTranSpringCpl)
+  if (pv->showSpringCpl == 1)
     myJointAdvancedTab->myTranSpringCplMenu->selectOption(pv->mySelectedTranSpringCpl);
 
   // Triad
@@ -4254,15 +4225,9 @@ void FuiProperties::setSensitivity(bool makeSensitive)
 
   myJointSummary->myDOF_TZ_Toggle->setSensitivity(makeSensitive);
 
-  // Rotational formulation
+  // Rotational formulation and Spring couplings
 
-  myJointAdvancedTab->myRotFormulationMenu->setSensitivity(makeSensitive);
-  myJointAdvancedTab->myRotSequenceMenu->setSensitivity(makeSensitive);
-
-  // Spring couplings
-
-  myJointAdvancedTab->myTranSpringCplMenu->setSensitivity(makeSensitive);
-  myJointAdvancedTab->myRotSpringCplMenu->setSensitivity(makeSensitive);
+  myJointAdvancedTab->setSensitivity(makeSensitive);
 
   // Triad
 

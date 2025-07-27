@@ -5,28 +5,35 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTJOINTTABADVANCED_H
-#define FUIQTJOINTTABADVANCED_H
+#ifndef FUI_QT_JOINT_TAB_ADVANCED_H
+#define FUI_QT_JOINT_TAB_ADVANCED_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiJointTabAdvanced.H"
 
+class QGroupBox;
+class QLabel;
 
-class FuiQtJointTabAdvanced : public virtual FFuQtMultUIComponent, 
-                         public FuiJointTabAdvanced
+
+class FuiQtJointTabAdvanced : public FFuQtWidget, public FuiJointTabAdvanced
 {
-  
 public:
+  FuiQtJointTabAdvanced(QWidget* parent,
+                        const char* name = "FuiQtJointAdvanced");
 
-  FuiQtJointTabAdvanced(QWidget* parent = 0,
-                   int xpos=100,
-                   int ypos=100,
-                   int width=800,
-                   int height=35,
-                   const char* name="JointTabAdvanced");
-  virtual ~FuiQtJointTabAdvanced();
+  virtual void showRotFormulation(bool yesOrNo);
+  virtual void showSpringCpl(int rotOrYesOrNo);
+  virtual void setRotExplain(const char* text);
 
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiJointTabAdvanced::setSensitivity(isSensitive);
+  }
 
+private:
+  QGroupBox* myRotFormulationFrame;
+  QGroupBox* mySpringCouplingFrame;
+  QLabel*    myRotExplainLabel;
 };
 
 #endif

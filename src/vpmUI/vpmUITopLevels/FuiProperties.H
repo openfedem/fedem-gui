@@ -683,8 +683,7 @@ public:
   std::vector<std::string> myRotSequenceTypes;
 
   // Spring coupling
-  bool showRotSpringCpl = false;
-  bool showTranSpringCpl = false;
+  char showSpringCpl = false;
   int  mySelectedRotSpringCpl = 0;
   int  mySelectedTranSpringCpl = 0;
   std::vector<std::string> mySpringCplTypes;

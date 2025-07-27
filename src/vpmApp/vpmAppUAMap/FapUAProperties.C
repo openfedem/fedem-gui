@@ -718,8 +718,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	{
 	  pv->showJointData = 2;
 	  pv->showRotFormulation = true;
-	  pv->showTranSpringCpl  = true;
-	  pv->showRotSpringCpl   = true;
+	  pv->showSpringCpl = true;
 	  const Strings& rotFormulationTypes = FmJointBase::getRotFormulationUINames();
 	  pv->myRotFormulationTypes = rotFormulationTypes;
 	  pv->mySelectedRotFormulation = item->rotFormulation.getValue();
@@ -737,7 +736,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	{
 	  pv->showJointData = 2;
 	  pv->showRotFormulation = true;
-	  pv->showRotSpringCpl   = true;
+	  pv->showSpringCpl = 2;
 	  const Strings& rotFormulationTypes = FmJointBase::getRotFormulationUINames();
 	  pv->myRotFormulationTypes = rotFormulationTypes;
 	  pv->mySelectedRotFormulation = item->rotFormulation.getValue();
