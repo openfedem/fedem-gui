@@ -2458,8 +2458,7 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
     {
       FmSpringChar* item = (FmSpringChar*)fmItem;
 
-      if (pv->mySpringCharValues.isConstantStiffness)
-	item->springStiffness.setValue(pv->mySpringCharValues.constantStiffness);
+      item->springStiffness.setValue(pv->mySpringCharValues.constantStiffness);
       item->springFunction.setPointer(static_cast<FmMathFuncBase*>(pv->mySpringCharValues.springFunction));
 
       item->deflectionMax.setValue(pv->mySpringCharValues.deflectionMax);
@@ -2476,10 +2475,8 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
       item->yieldForceMinEngine.setPointer(static_cast<FmEngine*>(pv->mySpringCharValues.yieldForceMinEngine));
       item->yieldForceMaxIsOn.setValue(pv->mySpringCharValues.useYieldForceMax);
       item->yieldForceMinIsOn.setValue(pv->mySpringCharValues.useYieldForceMin);
-      if (pv->mySpringCharValues.isConstantYieldForceMax)
-	item->yieldForceMax.setValue(pv->mySpringCharValues.constantYieldForceMax);
-      if (pv->mySpringCharValues.isConstantYieldForceMin)
-	item->yieldForceMin.setValue(pv->mySpringCharValues.constantYieldForceMin);
+      item->yieldForceMax.setValue(pv->mySpringCharValues.constantYieldForceMax);
+      item->yieldForceMin.setValue(pv->mySpringCharValues.constantYieldForceMin);
       item->yieldDeflectionMaxIsOn.setValue(pv->mySpringCharValues.useYieldDeflectionMax);
       item->yieldDeflectionMax.setValue(pv->mySpringCharValues.yieldDeflectionMax);
     }
