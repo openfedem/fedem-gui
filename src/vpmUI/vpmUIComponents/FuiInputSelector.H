@@ -8,30 +8,45 @@
 #ifndef FUI_INPUT_SELECTOR_H
 #define FUI_INPUT_SELECTOR_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <vector>
 #include <string>
+#include <map>
 
 class FuiQueryInputField;
-class FuiInputSelectorValues;
-class FFuLabelFrame;
-class FFuLabel;
 class FFuOptionMenu;
 class FFuaQueryBase;
 class FmModelMemberBase;
 
 
-class FuiInputSelector : public virtual FFuMultUIComponent
+struct FuiInputSelectorValues
+{
+  FFuaQueryBase*     objectSelectorQuery = NULL;
+  FmModelMemberBase* selectedObject = NULL;
+
+  bool showDofList = false;
+  int  selectedDofIdx = -1;
+  std::vector<std::string> dofList;
+
+  bool showVariableList = false;
+  int  selectedVariableIdx = -1;
+  std::vector<std::string> variableList;
+};
+
+
+class FuiInputSelector : public virtual FFuComponentBase
 {
 public:
-  FuiInputSelector();
-  virtual ~FuiInputSelector() {}
+  using DynCB1 = FFaDynCB1<FuiInputSelectorValues&>;
+
+  FuiInputSelector(int iArg = -1);
 
   // Callbacks:
 
-  void setValuesChangedCB(const FFaDynCB1<FuiInputSelectorValues&>& aDynCB);
-  void setSetDBValuesCB(const FFaDynCB1<FuiInputSelectorValues&>& aDynCB);
+  void setValuesChangedCB(const DynCB1& aDynCB) { myValuesChangedCB = aDynCB; }
+  void setSetDBValuesCB(const DynCB1&   aDynCB) { mySetDBValuesCB   = aDynCB; }
+  void setPickCB(const FFaDynCB1<int>&  aDynCB) { myPickSensorCB    = aDynCB; }
   void setPickCB(const FFaDynCB0& aDynCB);
 
   // Setting values:
@@ -44,66 +59,82 @@ public:
 
   // Look
 
-  void setLabel(const std::string& label);
+  virtual void setLabel(const std::string& text) = 0;
   virtual void setSensitivity(bool isSensitive);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   // Shadow pointers from subclass.
   // Subclass is responsible to set them up:
 
-  FFuLabelFrame     * myLabelFrame;
-  FuiQueryInputField* myObjectSelector;
-  FFuLabel          * myDofLabel;
-  FFuOptionMenu     * myDofSelector;
-  FFuLabel          * myVariableLabel;
-  FFuOptionMenu     * myVariableSelector;
+  FuiQueryInputField* myObjSelector;
+  FFuOptionMenu*      myDofSelector;
+  FFuOptionMenu*      myVarSelector;
 
 private:
-  void updateSensitivity();
 
-  // Internal methods for rerouting of Callbacks
+  // Internal methods for rerouting of callbacks
 
-  void onIntChanged(int idx);
-  void onValuesChanged();
-  void setDBValues();
+  void onIntChanged(int);
+  void onSensorPicked();
 
-  // Callback Objects
+  // Callback objects
 
-  FFaDynCB1<FuiInputSelectorValues&> myValuesChangedCB;
-  FFaDynCB1<FuiInputSelectorValues&> mySetDBValuesCB;
+  DynCB1         myValuesChangedCB;
+  DynCB1         mySetDBValuesCB;
+  FFaDynCB1<int> myPickSensorCB;
 
-  // Internal Vars
+  // Internal variables
 
   bool IAmSensitive;
   bool IAmShowingDofList;
   bool IAmShowingVariableList;
+  int  myArgNo;
 };
 
 
-class FuiInputSelectorValues
+class FuiInputSelectors
 {
 public:
-  FuiInputSelectorValues()
+  using DynCB1 = FuiInputSelector::DynCB1;
+  using Values = std::vector<FuiInputSelectorValues>;
+
+  class Sheet : public virtual FFuComponentBase
   {
-    objectSelectorQuery = 0;
-    selectedObject = 0;
-    showDofList = showVariableList = false;
-    selectedDofIdx = selectedVariableIdx = -1;
-  }
+  public:
+    void initWidgets(const DynCB1& valChangedCB,
+                     const DynCB1& setDBvalsCB,
+                     const FFaDynCB1<int>& sensorPickedCB);
 
-  FFuaQueryBase*     objectSelectorQuery;
-  FmModelMemberBase* selectedObject;
+    void setValues(const Values& vals);
+    void getValues(Values& vals) const;
 
-  bool           showDofList;
-  std::vector<std::string> dofList;
-  int            selectedDofIdx;
+    virtual void setSensitivity(bool isSensitive);
 
-  bool           showVariableList;
-  std::vector<std::string> variableList;
-  int            selectedVariableIdx;
+  protected:
+    std::vector<FuiInputSelector*> myArgs;
+  };
+
+  virtual Sheet* createSheet(int numArg,
+                             const char* name = "FuiInputSelectors") const = 0;
+
+  void setCBs(const DynCB1& cb1, const DynCB1& cb2, const FFaDynCB1<int>& cb3);
+
+  void setValues(const Values& vals);
+  void getValues(Values& vals) const;
+
+  void setSensitivity(bool isSensitive);
+
+  void popUp(size_t numArg);
+  void popDown();
+
+protected:
+  std::map<size_t,Sheet*> myLists;
+
+  DynCB1         myValuesChangedCB;
+  DynCB1         mySetDBvaluessCB;
+  FFaDynCB1<int> mySensorPickedCB;
 };
 
 #endif
