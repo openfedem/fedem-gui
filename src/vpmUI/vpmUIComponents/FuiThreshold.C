@@ -9,7 +9,6 @@
 #include "FFuLib/FFuToggleButton.H"
 #include "FFuLib/FFuLabelField.H"
 #include "FFuLib/FFuIOField.H"
-#include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuOptionMenu.H"
 
 
@@ -17,7 +16,6 @@ FuiThreshold::FuiThreshold()
 {
   myToggle = NULL;
   myDescription = myValueField = myMinField = mySkipField = NULL;
-  mySeverityLabel = NULL;
   mySeverityMenu = NULL;
 }
 
@@ -32,35 +30,9 @@ void FuiThreshold::initWidgets()
   myMinField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   mySkipField->setLabel("Skip interval [<font face='Symbol'>m</font>s]");
   mySkipField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  mySeverityLabel->setLabel("Severity");
   mySeverityMenu->addOption("Low");
   mySeverityMenu->addOption("Medium");
   mySeverityMenu->addOption("High");
-}
-
-
-void FuiThreshold::placeWidgets(int width, int)
-{
-  int border = 5;
-  int fieldHeight = myToggle->getHeightHint();
-  int offset = fieldHeight + border;
-  int shortw = 260;
-
-  int v1 = border;
-  int v2 = width - border;
-  int v3 = width > shortw ? width/2 - border : v2;
-  int v4 = width > shortw ? v3 + 2*border : v1;
-  int v5 = border + mySeverityLabel->getWidthHint();
-  int v6 = v5 + border;
-
-  int h = 0;
-  myToggle->setEdgeGeometry(v1, v2, h, h+fieldHeight); h += offset;
-  myDescription->setEdgeGeometry(v1, v2, h, h+fieldHeight); h += offset;
-  myValueField->setEdgeGeometry(v1, v2, h, h+fieldHeight); h += offset;
-  myMinField->setEdgeGeometry(v1, v3, h, h+fieldHeight); if (width <= shortw) h += offset;
-  mySkipField->setEdgeGeometry(v4, v2, h, h+fieldHeight); h += offset;
-  mySeverityLabel->setEdgeGeometry(v1, v5, h, h+fieldHeight);
-  mySeverityMenu->setEdgeGeometry(v6, v2, h, h+fieldHeight);
 }
 
 

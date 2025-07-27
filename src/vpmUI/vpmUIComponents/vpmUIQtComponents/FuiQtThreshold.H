@@ -8,16 +8,14 @@
 #ifndef FUI_QT_THRESHOLD_H
 #define FUI_QT_THRESHOLD_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiThreshold.H"
 
 
-class FuiQtThreshold : public virtual FFuQtMultUIComponent,
-                       public FuiThreshold
+class FuiQtThreshold : public FFuQtWidget, public FuiThreshold
 {
 public:
-  FuiQtThreshold(QWidget* parent, const char* name="Threshold");
-  virtual ~FuiQtThreshold() {}
+  FuiQtThreshold(QWidget* parent, const char* name = "FuiQtThreshold");
 };
 
 #endif
