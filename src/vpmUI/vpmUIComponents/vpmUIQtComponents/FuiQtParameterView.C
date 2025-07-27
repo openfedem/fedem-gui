@@ -12,27 +12,32 @@
 #include <QLabel>
 
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
-
 #include "vpmUI/vpmUIComponents/FuiParameterView.H"
 
 
-class FuiQtParameterView : public virtual FFuQtMultUIComponent,
-                           public FuiParameterView::PrmSheet
+class FuiQtParameterView : public FFuQtWidget, public FuiParameterView::PrmSheet
 {
 public:
   FuiQtParameterView(QWidget* parent, const char* name)
-    : FFuQtMultUIComponent(parent,name), xpos(0)
+    : FFuQtWidget(NULL,name), xpos(0)
   {
-    QScrollArea* mainView = new QScrollArea(this);
+    QScrollArea* mainView = new QScrollArea();
     mainView->setWidget(myMainWidget = new QWidget(mainView->viewport()));
     mainView->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     mainView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mainView->setFrameStyle(QFrame::WinPanel | QFrame::Sunken);
 
-    QLayout* mainLayout = new QVBoxLayout(this);
-    mainLayout->addWidget(mainView);
-    this->setLayout(mainLayout);
+    QLayout* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0,0,0,0);
+    layout->addWidget(mainView);
+
+    layout = parent->layout();
+    if (!layout)
+    {
+      layout = new QVBoxLayout(parent);
+      layout->setContentsMargins(3,1,3,3);
+    }
+    layout->addWidget(this);
   }
 
   virtual void setFields(const std::vector<std::string>& names,
@@ -91,8 +96,7 @@ private:
 
 
 FuiParameterView::PrmSheet*
-FuiParameterView::createSheet(FFuMultUIComponent* parent, const char* name)
+FuiParameterView::createSheet(FFuComponentBase* parent, const char* name)
 {
-  FFuQtMultUIComponent* qparent = dynamic_cast<FFuQtMultUIComponent*>(parent);
-  return new FuiQtParameterView(qparent,name);
+  return new FuiQtParameterView(parent->getQtWidget(),name);
 }

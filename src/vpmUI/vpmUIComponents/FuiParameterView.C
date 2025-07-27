@@ -33,9 +33,8 @@ void FuiParameterView::PrmSheet::setSensitivity(bool isSensitive)
 }
 
 
-void FuiParameterView::setFields(int idx,
-                                 const std::vector<std::string>& names,
-                                 FFuMultUIComponent* parent)
+void FuiParameterView::setFields(int idx, const std::vector<std::string>& names,
+                                 FFuComponentBase* parent)
 {
   if (myViews.find(idx) == myViews.end())
   {
@@ -75,13 +74,6 @@ int FuiParameterView::getValues(std::vector<double>& values) const
     }
 
   return -1;
-}
-
-
-void FuiParameterView::setEdgeGeometry(int v1, int v2, int h1, int h2)
-{
-  for (std::pair<const int,PrmSheet*>& view : myViews)
-    view.second->setEdgeGeometry(v1,v2,h1,h2);
 }
 
 
