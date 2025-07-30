@@ -8,7 +8,7 @@
 #ifndef FUI_LINK_TABS_H
 #define FUI_LINK_TABS_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuLogicButtonGroup.H"
 #include "FFaLib/FFaAlgebra/FFaTensor3.H"
 #include "FFaLib/FFaAlgebra/FFaVec3.H"
@@ -25,11 +25,9 @@ class FFuToggleButton;
 class FFuOptionMenu;
 class FFuFileBrowseField;
 class FFuIOField;
-class FFuFrame;
 class FFuTable;
 class FFuScale;
 class FFuaQueryBase;
-class FuiLinkValues;
 class FuiPositionData;
 class Fui3DPoint;
 class FuiQueryInputField;
@@ -38,25 +36,114 @@ class FmIsPositionedBase;
 class FmModelMemberBase;
 
 
-class FuiLinkModelSheet : virtual public FFuMultUIComponent
+struct FuiLinkValues
+{
+  // model tab
+  bool    locked = false;
+  bool    suppressInSolver = false;
+  bool    useGenericPart = false;
+  bool    usingFEModelViz = false;
+  std::string repositoryFile;
+  std::string importedFile;
+  std::string vizFile;
+  std::string unitConversion = "No unit conversion";
+  int    reducedVersionNumber = 0;
+  double massDamping = 0.0;
+  double stiffDamping = 0.0;
+  double stiffScale = 1.0;
+  double massScale = 1.0;
+  bool   allowChange = true;
+  bool   allowChangeViz = true;
+
+  // reduction options
+  double singularityCrit = 1.0e-12;
+  double eigValTolerance = 1.0e-8;
+  bool   consistentMassMx = false;
+  bool   ignoreCheckSum   = false;
+  bool   expandModeShapes = false;
+  bool   factorStiffMx    = false;
+  int    compModes = 0;
+  int    recoveryMxPrec = 2;
+
+  // load options
+  std::vector<int>                loadCases;
+  std::vector<double>             loadFactors;
+  std::vector<double>             loadDelays;
+  std::vector<FmModelMemberBase*> selectedLoadEngines;
+  FFuaQueryBase*                  loadEngineQuery = NULL;
+
+  // generic part options
+  bool       genericPartNoCGTriad = false;
+  double     genericPartMass = 0.0;
+  int        useCalculatedMass = 0;
+  char       canCalculateMass = false;
+  FFaTensor3 genericPartInertia;
+  int        inertiaRef = 0;
+  int        genericPartStiffType = 0;
+  double     genericPartKT = 0.0;
+  double     genericPartKR = 0.0;
+
+  FFuaQueryBase*     materialQuery = NULL;
+  FmModelMemberBase* selectedMaterial = NULL;
+
+  // hydrodynamics options
+  bool   buoyancy = false;
+
+  // meshing options
+  bool   enableMeshing = false;
+  double quality = 0.0;
+  int    minSize = 0;
+  bool   parabolic = false;
+  int    noNodes = 0;
+  int    noElms = 0;
+
+  // advanced options
+  int    coordSysOption = 0;
+  int    centripOption = 0;
+  int    recoveryOption = 0;
+  char   extResSwitch = false;
+  std::string extResFileName;
+  std::string modelFilePath;
+
+  // nonlinear link options
+  int    numNonlinear = 0;
+  bool   useNonlinearSwitch = false;
+  std::string nonlinearInputFile;
+
+  // FE node data
+  int    feNode = -1;
+  FaVec3 feNodePos;
+
+  // callback functions
+  FFaDynCB1<FuiQueryInputFieldValues&> editLoadEngineCB;
+  FFaDynCB1<bool>                      linkMeshCB;
+  FFaDynCB0                            linkChangeCB;
+  FFaDynCB2<const std::string&,bool>   linkChangeVizCB;
+};
+
+
+class FuiReductionFrame : virtual public FFuComponentBase
+{
+public:
+  virtual void setReducedVersion(int redVer) = 0;
+};
+
+
+class FuiLinkModelSheet : virtual public FFuComponentBase
 {
 public:
   FuiLinkModelSheet() { IAmSensitive = ICanChange = ICanChangeViz = true; }
-  virtual ~FuiLinkModelSheet() {}
 
   void setValues(const FuiLinkValues& values);
   void getValues(FuiLinkValues& values);
 
   void setValuesChangedCB(const FFaDynCB0& aDynCB);
   void setChangeLinkCB(const FFaDynCB0& aDynCB);
-  void setUpdateLinkCB(const FFaDynCB0& aDynCB);
-
   void setChangeGPVizCB(const FFaDynCB2<const std::string&,bool>& aDynCB);
 
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   FFuRadioButton*     feModelBtn;
@@ -75,8 +162,6 @@ protected:
   FFuLabelField* stiffScaleField;
   FFuLabelField* massScaleField;
   FFuLabel*      unitConversionLabel;
-  FFuLabel*      needsReductionLabel;
-  FFuFrame*      needsReductionFrame;
   FFuPushButton* changeLinkBtn;
 
   FFuLabelFrame* vizFrame;
@@ -84,12 +169,13 @@ protected:
   FFuPushButton* vizChangeBtn;
   FFuLabel*      vizLabel;
 
+  FuiReductionFrame* reductionFrame;
+
 private:
   void onSuppressInSolverToggeled(bool);
   void onLinkTypeToggeled(int, bool);
   void onDoubleChanged(double);
   void onIntChanged(int);
-  void onChangeLink();
   void onChangeViz();
   void onVizFileTyped(const std::string&);
   void update();
@@ -99,39 +185,27 @@ private:
   bool ICanChangeViz;
   FFaDynCB0 valuesChangedCB;
   FFaDynCB0 changeLinkCB;
-  FFaDynCB0 updateLinkCB;
   FFaDynCB2<const std::string&,bool> changeGPViz;
 };
 
 
-class FuiLinkOriginSheet : virtual public FFuMultUIComponent
+/*!
+  The Link Origin Sheet consists only of the FuiPositionData widget.
+  Therefore, defining an alias directly to this class name
+  instead of a separate widget class with a single member.
+*/
+using FuiLinkOriginSheet = FuiPositionData;
+
+
+class FuiLinkNodeSheet : virtual public FFuComponentBase
 {
 public:
-  FuiLinkOriginSheet() {}
-  virtual ~FuiLinkOriginSheet() {}
-
-  void setEditedObjs(const std::vector<FmModelMemberBase*>& objs = {});
-
-  virtual void setSensitivity(bool sensitivity);
-
-protected:
-  virtual void placeWidgets(int width, int height);
-
-  FuiPositionData* posData;
-};
-
-
-class FuiLinkNodeSheet : virtual public FFuMultUIComponent
-{
-public:
-  FuiLinkNodeSheet() {}
-  virtual ~FuiLinkNodeSheet() {}
+  FuiLinkNodeSheet() { myViewedObj = NULL; }
 
   void setViewedObj(FmIsPositionedBase* obj) { myViewedObj = obj; }
   void setValues(const FuiLinkValues& values);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   FFuLabelField* myFENodeField;
@@ -145,11 +219,10 @@ private:
 };
 
 
-class FuiLinkRedOptSheet : virtual public FFuMultUIComponent
+class FuiLinkRedOptSheet : virtual public FFuComponentBase
 {
 public:
   FuiLinkRedOptSheet() { IAmLocked = false; IAmSensitive = true; }
-  virtual ~FuiLinkRedOptSheet() {}
 
   void setValues(const FuiLinkValues& values);
   void getValues(FuiLinkValues& values);
@@ -159,11 +232,8 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
-  FFuLabelFrame* eigValFactFrame;
-  FFuLabelFrame* recoveryMatrixPrecisionFrame;
   FFuLabelField* singCriterionField;
   FFuLabelField* componentModesField;
   FFuLabelField* eigValToleranceField;
@@ -176,8 +246,7 @@ protected:
   FFuToggleButton* consistentMassBtn;
   FFuToggleButton* ignoreCSBtn;
   FFuToggleButton* expandMSBtn;
-  FFuLabel* needsReductionLabel;
-  FFuFrame* needsReductionFrame;
+  FuiReductionFrame* reductionFrame;
 
 private:
   void onDoubleChanged(double);
@@ -185,7 +254,6 @@ private:
   void onBtnToggeled(bool);
   void onBtnToggeled(int, bool);
   void onIgnoreCSBtnToggeled(bool);
-  void updateSensitivity();
 
   bool IAmLocked;
   bool IAmSensitive;
@@ -193,30 +261,27 @@ private:
 };
 
 
-class FuiLinkLoadSheet : virtual public FFuMultUIComponent
+class FuiLinkLoadSheet : virtual public FFuComponentBase
 {
 public:
   FuiLinkLoadSheet() { IAmSensitive = true; }
-  virtual ~FuiLinkLoadSheet() {}
 
-  void buildDynamicWidgets(const FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
   void getValues(FuiLinkValues& values);
 
   void setValuesChangedCB(const FFaDynCB0& aDynCB);
 
+  virtual void buildDynamicWidgets(const FuiLinkValues& values) = 0;
   virtual void setSensitivity(bool sensitivity);
 
 protected:
+  void initWidgets(const FuiLinkValues& values);
+
   virtual void setNoLoadCases(unsigned int nlc) = 0;
 
-  virtual void placeWidgets(int width, int height);
-  void initWidgets();
-
-  FFuLabel*                   label;
-  FFuTable*                   table;
-  std::vector<FuiQueryInputField*> loadFact;
+  std::vector<FFuLabel*>           loadCase;
   std::vector<FFuIOField*>         delay;
+  std::vector<FuiQueryInputField*> loadFact;
 
 private:
   void onDoubleChanged(double);
@@ -227,11 +292,10 @@ private:
 };
 
 
-class FuiGenericPartCGSheet : virtual public FFuMultUIComponent
+class FuiGenericPartCGSheet : virtual public FFuComponentBase
 {
 public:
   FuiGenericPartCGSheet() { IAmUsingCalculatedMass = IAmSensitive = true; }
-  virtual ~FuiGenericPartCGSheet() {}
 
   void getValues(FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
@@ -242,7 +306,6 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   FuiPositionData* posData;
@@ -258,11 +321,10 @@ private:
 };
 
 
-class FuiGenericPartMassSheet : virtual public FFuMultUIComponent
+class FuiGenericPartMassSheet : virtual public FFuComponentBase
 {
 public:
   FuiGenericPartMassSheet() { IAmSensitive = true; ICanCalculateMass = false; }
-  virtual ~FuiGenericPartMassSheet() {}
 
   void getValues(FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
@@ -272,7 +334,6 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   FFuRadioButton* calculateMassPropExplicitBtn;
@@ -280,21 +341,16 @@ protected:
   FFuRadioButton* calculateMassPropGeoBtn;
   FFuLogicButtonGroup calculateMassPropGroup;
 
-  FFuLabel*           materialLabel;
 public:
   FuiQueryInputField* materialField;
 
 protected:
-  FFuLabel*      inertiaRefLabel;
   FFuOptionMenu* inertiaRefMenu;
-
-  FFuLabelFrame* massInertiaFrame;
   FFuLabelField* massField;
 
   enum {IXX, IYY, IZZ, IXY, IXZ, IYZ, NINERTIAS};
 
   std::array<FFuIOField*,NINERTIAS> inertias;
-  std::array<FFuLabel*,NINERTIAS> inertiaLabels;
 
 private:
   void onDoubleChanged(double);
@@ -308,12 +364,9 @@ private:
 };
 
 
-class FuiGenericPartStiffSheet : virtual public FFuMultUIComponent
+class FuiGenericPartStiffSheet : virtual public FFuComponentBase
 {
 public:
-  FuiGenericPartStiffSheet() {}
-  virtual ~FuiGenericPartStiffSheet() {}
-
   void getValues(FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
 
@@ -322,11 +375,8 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
-  FFuLabelFrame* stiffTypeFrame;
-  FFuLabelFrame* stiffPropFrame;
   FFuLabelField* ktField;
   FFuLabelField* krField;
 
@@ -347,12 +397,9 @@ private:
 };
 
 
-class FuiHydrodynamicsSheet : virtual public FFuMultUIComponent
+class FuiHydrodynamicsSheet : virtual public FFuComponentBase
 {
 public:
-  FuiHydrodynamicsSheet() {}
-  virtual ~FuiHydrodynamicsSheet() {}
-
   void getValues(FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
 
@@ -361,7 +408,6 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   FFuToggleButton* buoyancyToggle;
@@ -374,12 +420,9 @@ private:
 };
 
 
-class FuiMeshingSheet : virtual public FFuMultUIComponent
+class FuiMeshingSheet : virtual public FFuComponentBase
 {
 public:
-  FuiMeshingSheet() {}
-  virtual ~FuiMeshingSheet() {}
-
   void getValues(FuiLinkValues& values);
   void setValues(const FuiLinkValues& values);
 
@@ -389,22 +432,19 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
 public:
   FuiQueryInputField* materialField;
 
 protected:
-  FFuLabel*           materialLabel;
   FFuLabelField*      minsizeField;
 
   FFuRadioButton*     linearBtn;
   FFuRadioButton*     parabolicBtn;
   FFuLogicButtonGroup orderBtnGroup;
 
-  FFuScale*               qualityScale;
-  std::array<FFuLabel*,3> qualityLabel;
+  FFuScale* qualityScale;
 
   FFuPushButton* meshBtn;
 
@@ -421,11 +461,10 @@ private:
 };
 
 
-class FuiAdvancedLinkOptsSheet : virtual public FFuMultUIComponent
+class FuiAdvancedLinkOptsSheet : virtual public FFuComponentBase
 {
 public:
-  FuiAdvancedLinkOptsSheet() { IAmSensitive = true; ICanRecover = showExtRes = false; }
-  virtual ~FuiAdvancedLinkOptsSheet() {}
+  FuiAdvancedLinkOptsSheet() { IAmSensitive = true; ICanRecover = false; }
 
   void setValues(const FuiLinkValues& values);
   void getValues(FuiLinkValues& values);
@@ -435,13 +474,9 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
-  FFuLabel*      coordSysLabel;
   FFuOptionMenu* coordSysOptionMenu;
-
-  FFuLabel*      centripLabel;
   FFuOptionMenu* centripOptionMenu;
 
   FFuToggleButton* recoverStressToggle;
@@ -460,15 +495,13 @@ private:
 
   bool IAmSensitive;
   char ICanRecover;
-  bool showExtRes;
 };
 
 
-class FuiNonlinearLinkOptsSheet : virtual public FFuMultUIComponent
+class FuiNonlinearLinkOptsSheet : virtual public FFuComponentBase
 {
 public:
   FuiNonlinearLinkOptsSheet() { IAmSensitive = true; }
-  virtual ~FuiNonlinearLinkOptsSheet() {}
 
   void setValues(const FuiLinkValues& values);
   void getValues(FuiLinkValues& values);
@@ -478,10 +511,8 @@ public:
   virtual void setSensitivity(bool sensitivity);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
-  FFuLabel*           nonlinearDescrLabel;
   FFuToggleButton*    useNonlinearToggle;
   FFuLabelField*      numberOfSolutionsField;
   FFuFileBrowseField* nonlinearInputFileField;
@@ -495,141 +526,6 @@ private:
   FFaDynCB0 valuesChangedCB;
 
   bool IAmSensitive;
-};
-
-
-class FuiLinkValues
-{
-public:
-  FuiLinkValues() {
-    locked = false;
-    suppressInSolver = false;
-    useGenericPart = false;
-    usingFEModelViz = false;
-    unitConversion = "No unit conversion";
-    reducedVersionNumber = 0;
-    massDamping = 0.0;
-    stiffDamping = 0.0;
-    stiffScale = 1.0;
-    massScale = 1.0;
-    allowChange = true;
-    allowChangeViz = true;
-    singularityCrit = 1e-12;
-    compModes = 0;
-    eigValTolerance = 1e-8;
-    consistentMassMx = false;
-    ignoreCheckSum = false;
-    expandModeShapes = false;
-    factorStiffMx = false;
-    recoveryMxPrec = 2;
-    loadEngineQuery = NULL;
-    genericPartNoCGTriad = false;
-    genericPartMass = 0.0;
-    useCalculatedMass = 0;
-    canCalculateMass = false;
-    inertiaRef = 0;
-    genericPartStiffType = 0;
-    genericPartKT = 0.0;
-    genericPartKR = 0.0;
-    materialQuery = NULL;
-    selectedMaterial = NULL;
-    buoyancy = false;
-    enableMeshing = false;
-    quality = 0.0;
-    minSize = 0;
-    parabolic = false;
-    noNodes = 0;
-    noElms = 0;
-    coordSysOption = 0;
-    centripOption = 0;
-    recoveryOption = 0;
-    extResSwitch = false;
-    numNonlinear = 0;
-    useNonlinearSwitch = false;
-    feNode = -1;
-  }
-
-  // model tab
-  bool   locked;
-  bool   suppressInSolver;
-  bool   useGenericPart;
-  std::string repositoryFile;
-  std::string importedFile;
-  std::string vizFile;
-  bool   usingFEModelViz;
-  std::string unitConversion;
-  int    reducedVersionNumber;
-  double massDamping;
-  double stiffDamping;
-  double stiffScale;
-  double massScale;
-  bool   allowChange;
-  bool   allowChangeViz;
-
-  // reduction options
-  double singularityCrit;
-  int    compModes;
-  double eigValTolerance;
-  bool   consistentMassMx;
-  bool   ignoreCheckSum;
-  bool   expandModeShapes;
-  bool   factorStiffMx;
-  int    recoveryMxPrec;
-
-  // load options
-  std::vector<int>                loadCases;
-  std::vector<double>             loadFactors;
-  std::vector<double>             loadDelays;
-  std::vector<FmModelMemberBase*> selectedLoadEngines;
-  FFuaQueryBase*                  loadEngineQuery;
-
-  // generic part options
-  bool       genericPartNoCGTriad;
-  double     genericPartMass;
-  int        useCalculatedMass;
-  char       canCalculateMass;
-  FFaTensor3 genericPartInertia;
-  int        inertiaRef;
-  int        genericPartStiffType;
-  double     genericPartKT;
-  double     genericPartKR;
-
-  FFuaQueryBase*     materialQuery;
-  FmModelMemberBase* selectedMaterial;
-
-  // hydrodynamics options
-  bool   buoyancy;
-
-  // meshing options
-  bool   enableMeshing;
-  double quality;
-  int    minSize;
-  bool   parabolic;
-  int    noNodes;
-  int    noElms;
-
-  // advanced options
-  int    coordSysOption;
-  int    centripOption;
-  int    recoveryOption;
-  char   extResSwitch;
-  std::string extResFileName;
-  std::string modelFilePath;
-
-  // nonlinear link options
-  int    numNonlinear;
-  bool   useNonlinearSwitch;
-  std::string nonlinearInputFile;
-
-  // FE node data
-  int    feNode;
-  FaVec3 feNodePos;
-
-  // callback functions
-  FFaDynCB1<FuiQueryInputFieldValues&> editLoadEngineCB;
-  FFaDynCB1<bool>                      linkMeshCB;
-  FFaDynCB0                            linkChangeCB;
-  FFaDynCB2<const std::string&,bool>   linkChangeVizCB;
 };
 
 #endif

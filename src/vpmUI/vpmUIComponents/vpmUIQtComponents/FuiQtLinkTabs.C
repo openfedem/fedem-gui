@@ -5,8 +5,11 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+
 #include "FFuLib/FFuQtComponents/FFuQtScale.H"
-#include "FFuLib/FFuQtComponents/FFuQtFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtTable.H"
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
@@ -24,228 +27,505 @@
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtLinkTabs.H"
 
 
-FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+FuiQtReductionFrame::FuiQtReductionFrame()
 {
-  this->suppressInSolverLabel = new FFuQtLabel(this);
-  this->suppressInSolverToggle = new FFuQtToggleButton(this);
+  this->setFrameStyle(QFrame::Panel | QFrame::Sunken);
 
-  this->feModelFrame = new FFuQtLabelFrame(this);
-  this->structDampFrame = new FFuQtLabelFrame(this);
-  this->dynPropFrame = new FFuQtLabelFrame(this);
+  myLabel = new QLabel();
+  myLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+  myLabel->setMinimumWidth(60);
 
-  this->feModelBtn = new FFuQtRadioButton(this);
-  this->genPartBtn = new FFuQtRadioButton(this);
-
-  this->repositoryFileField = new FFuQtLabelField(this);
-  this->changeLinkBtn = new FFuQtPushButton(this);
-  this->importedFileField = new FFuQtLabelField(this);
-  this->unitConversionLabel = new FFuQtLabel(this);
-  this->needsReductionFrame = new FFuQtFrame(this);
-
-  this->vizFrame = new FFuQtLabelFrame(this);
-  this->vizField = new FFuQtLabelField(this);
-  this->vizChangeBtn = new FFuQtPushButton(this);
-  this->vizLabel = new FFuQtLabel(this);
-
-  FFuQtLabel* lab;
-  this->needsReductionLabel = lab = new FFuQtLabel(this);
-  lab->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-
-  this->massProportionalField = new FFuQtLabelField(this);
-  this->stiffProportionalField = new FFuQtLabelField(this);
-
-  this->stiffScaleField = new FFuQtLabelField(this);
-  this->massScaleField = new FFuQtLabelField(this);
-
-  this->initWidgets();
+  QLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(myLabel);
 }
 
 
-FuiQtLinkOriginSheet::FuiQtLinkOriginSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+void FuiQtReductionFrame::setReducedVersion(int redVer)
 {
-  this->posData = new FuiQtPositionData(this);
+  if (redVer > 0)
+  {
+    std::string reduced = "Reduced\n[" + std::to_string(redVer) + "]";
+    myLabel->setText(reduced.c_str());
+  }
+  else
+    myLabel->setText("Needs\nreduction");
+}
+
+
+FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
+{
+  feModelBtn = new FFuQtRadioButton();
+  genPartBtn = new FFuQtRadioButton();
+
+  suppressInSolverLabel = new FFuQtLabel();
+  suppressInSolverToggle = new FFuQtToggleButton();
+
+  feModelFrame = new FFuQtLabelFrame();
+  structDampFrame = new FFuQtLabelFrame();
+  dynPropFrame = new FFuQtLabelFrame();
+
+  repositoryFileField = new FFuQtLabelField();
+  changeLinkBtn = new FFuQtPushButton();
+  importedFileField = new FFuQtLabelField();
+  unitConversionLabel = new FFuQtLabel();
+  reductionFrame = new FuiQtReductionFrame();
+
+  vizFrame = new FFuQtLabelFrame();
+  vizField = new FFuQtLabelField();
+  vizChangeBtn = new FFuQtPushButton();
+  vizLabel = new FFuQtLabel();
+
+  massProportionalField = new FFuQtLabelField();
+  stiffProportionalField = new FFuQtLabelField();
+
+  stiffScaleField = new FFuQtLabelField();
+  massScaleField = new FFuQtLabelField();
+
+  this->initWidgets();
+
+  QWidget* qButtons = new QWidget();
+  QBoxLayout* layout = new QVBoxLayout(qButtons);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(feModelBtn->getQtWidget());
+  layout->addWidget(genPartBtn->getQtWidget());
+  layout->addWidget(suppressInSolverToggle->getQtWidget());
+
+  QWidget* qRepoFld = new QWidget();
+  layout = new QHBoxLayout(qRepoFld);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(repositoryFileField->getQtWidget());
+  layout->addWidget(changeLinkBtn->getQtWidget());
+
+  QWidget* qImportFld = new QWidget();
+  layout = new QHBoxLayout(qImportFld);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(importedFileField->getQtWidget());
+  layout->addWidget(unitConversionLabel->getQtWidget());
+
+  layout = new QVBoxLayout(feModelFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(qRepoFld);
+  layout->addWidget(qImportFld);
+
+  QWidget* qVizFld = new QWidget();
+  layout = new QHBoxLayout(qVizFld);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(vizField->getQtWidget());
+  layout->addWidget(vizChangeBtn->getQtWidget());
+
+  layout = new QVBoxLayout(vizFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(qVizFld);
+  layout->addWidget(vizLabel->getQtWidget());
+
+  QWidget* qUpper = new QWidget();
+  layout = new QHBoxLayout(qUpper);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qButtons);
+  layout->addWidget(feModelFrame->getQtWidget());
+  layout->addWidget(vizFrame->getQtWidget());
+  layout->addWidget(reductionFrame->getQtWidget());
+
+  layout = new QVBoxLayout(structDampFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(massProportionalField->getQtWidget());
+  layout->addWidget(stiffProportionalField->getQtWidget());
+
+  layout = new QVBoxLayout(dynPropFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(stiffScaleField->getQtWidget());
+  layout->addWidget(massScaleField->getQtWidget());
+
+  QGridLayout* mainLayout = new QGridLayout(this);
+  mainLayout->setContentsMargins(5,5,5,5);
+  mainLayout->addWidget(qUpper, 0,0, 1,2);
+  mainLayout->addWidget(structDampFrame->getQtWidget(), 1,0);
+  mainLayout->addWidget(dynPropFrame->getQtWidget(), 1,1);
+  mainLayout->addWidget(suppressInSolverLabel->getQtWidget(), 2,0,1,2);
 }
 
 
 FuiQtLinkNodeSheet::FuiQtLinkNodeSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+  : FFuQtWidget(parent,name)
 {
-  this->myFENodeField = new FFuQtLabelField(this);
-  this->myNodePosition = new FuiQt3DPoint(this);
+  myFENodeField = new FFuQtLabelField();
+  myNodePosition = new FuiQt3DPoint();
 
   this->initWidgets();
+
+  QLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(myFENodeField->getQtWidget());
+  layout->addWidget(myNodePosition->getQtWidget());
 }
 
 
 FuiQtLinkRedOptSheet::FuiQtLinkRedOptSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+  : FFuQtWidget(parent,name)
 {
-  this->eigValFactFrame = new FFuQtLabelFrame(this);
-  this->recoveryMatrixPrecisionFrame = new FFuQtLabelFrame(this);
+  singCriterionField = new FFuQtLabelField();
+  componentModesField = new FFuQtLabelField();
+  eigValToleranceField = new FFuQtLabelField();
 
-  this->singCriterionField = new FFuQtLabelField(this);
-  this->componentModesField = new FFuQtLabelField(this);
-  this->eigValToleranceField = new FFuQtLabelField(this);
+  consistentMassBtn = new FFuQtToggleButton();
+  ignoreCSBtn = new FFuQtToggleButton();
+  expandMSBtn = new FFuQtToggleButton();
 
-  this->consistentMassBtn = new FFuQtToggleButton(this);
-  this->ignoreCSBtn = new FFuQtToggleButton(this);
-  this->expandMSBtn = new FFuQtToggleButton(this);
+  massFactBtn = new FFuQtRadioButton();
+  stiffFactBtn = new FFuQtRadioButton();
 
-  this->massFactBtn = new FFuQtRadioButton(this);
-  this->stiffFactBtn = new FFuQtRadioButton(this);
+  singlePrecisionBtn = new FFuQtRadioButton();
+  doublePrecisionBtn = new FFuQtRadioButton();
 
-  this->singlePrecisionBtn = new FFuQtRadioButton(this);
-  this->doublePrecisionBtn = new FFuQtRadioButton(this);
-
-  this->needsReductionFrame = new FFuQtFrame(this);
-  FFuQtLabel* lab;
-  this->needsReductionLabel = lab = new FFuQtLabel(this);
-  lab->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+  reductionFrame = new FuiQtReductionFrame();
 
   this->initWidgets();
+
+  QWidget* qLeft = new QWidget();
+  QBoxLayout* layout = new QVBoxLayout(qLeft);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(singCriterionField->getQtWidget());
+  layout->addWidget(componentModesField->getQtWidget());
+  layout->addWidget(eigValToleranceField->getQtWidget());
+  layout->addWidget(consistentMassBtn->getQtWidget());
+  layout->addWidget(ignoreCSBtn->getQtWidget());
+  layout->addWidget(expandMSBtn->getQtWidget());
+
+  QGroupBox* eigValFactFrame = new QGroupBox("Eigenvalue Factorization");
+  layout = new QVBoxLayout(eigValFactFrame);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(massFactBtn->getQtWidget());
+  layout->addWidget(stiffFactBtn->getQtWidget());
+
+  QGroupBox* recPrecFrame = new QGroupBox("Recovery matrix storage precision");
+  layout = new QVBoxLayout(recPrecFrame);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(singlePrecisionBtn->getQtWidget());
+  layout->addWidget(doublePrecisionBtn->getQtWidget());
+
+  QWidget* qTopRight = new QWidget();
+  layout = new QHBoxLayout(qTopRight);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(eigValFactFrame,1);
+  layout->addWidget(reductionFrame->getQtWidget());
+
+  QWidget* qRight = new QWidget();
+  layout = new QVBoxLayout(qRight);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qTopRight);
+  layout->addWidget(recPrecFrame);
+
+  layout = new QHBoxLayout(this);
+  layout->setContentsMargins(5,5,5,5);
+  layout->addWidget(qLeft);
+  layout->addWidget(qRight,1);
 }
 
 
 FuiQtLinkLoadSheet::FuiQtLinkLoadSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+  : FFuQtTable(parent,name)
 {
-  this->label = new FFuQtLabel(this);
-  this->table = new FFuQtTable(this);
-
-  this->initWidgets();
+  this->showRowHeader(false);
+  this->showColumnHeader(true);
+  this->FFuTable::setNumberColumns(3,true);
+  this->FFuTable::setColumnLabel(0,"Load Case"     ,1.0);
+  this->FFuTable::setColumnLabel(1,"Delay"         ,1.0);
+  this->FFuTable::setColumnLabel(2,"Load Amplitude",6.0);
+  this->setSelectionPolicy(FFuTable::NO_SELECTION);
 }
 
-void FuiQtLinkLoadSheet::setNoLoadCases(unsigned int nlc)
+
+void FuiQtLinkLoadSheet::buildDynamicWidgets(const FuiLinkValues& values)
 {
-  QWidget* qPtr = dynamic_cast<QWidget*>(this->table);
+  if (values.loadCases.empty()) return; // don't touch if no load cases at all
 
-  unsigned int olc = this->loadFact.size();
-  this->loadFact.resize(nlc,NULL);
-  this->delay.resize(nlc,NULL);
+  int numCols = this->getNumberColumns();
+  int numRows = this->getNumberRows();
+  size_t numLC = values.loadCases.size();
+  for (int row = numLC; row < numRows; row++)
+    for (int col = 0; col < numCols; col++)
+      this->clearCellContents(row, col);
 
-  for (unsigned int i = olc; i < nlc; i++) {
-    this->delay[i] = new FFuQtIOField(qPtr);
-    this->loadFact[i] = new FuiQtQueryInputField(qPtr);
-    this->loadFact[i]->setBehaviour(FuiQueryInputField::REF_NUMBER);
+  this->setNoLoadCases(numLC);
+  this->setNumberRows(numLC);
+  this->initWidgets(values);
+
+  for (size_t i = numRows; i < numLC; i++)
+  {
+    this->insertWidget(i, 0, loadCase[i]);
+    this->insertWidget(i, 1, delay[i]);
+    this->insertWidget(i, 2, loadFact[i]);
+    this->setRowHeight(i, 20);
   }
 }
 
 
-FuiQtGenericPartCGSheet::FuiQtGenericPartCGSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+void FuiQtLinkLoadSheet::setNoLoadCases(unsigned int nlc)
 {
-  this->posData = new FuiQtPositionData(this);
-  this->condenseCGToggle = new FFuQtToggleButton(this);
+  unsigned int olc = loadFact.size();
+  loadCase.resize(nlc,NULL);
+  loadFact.resize(nlc,NULL);
+  delay.resize(nlc,NULL);
 
-  this->initWidgets();
+  for (unsigned int i = olc; i < nlc; i++)
+  {
+    loadCase[i] = new FFuQtLabel(this);
+    loadFact[i] = new FuiQtQueryInputField(this);
+    loadFact[i]->setBehaviour(FuiQueryInputField::REF_NUMBER);
+    delay[i] = new FFuQtIOField(this);
+  }
 }
 
 
-FuiQtGenericPartMassSheet::FuiQtGenericPartMassSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+void FuiQtLinkLoadSheet::resizeEvent(QResizeEvent* e)
 {
-  this->massField = new FFuQtLabelField(this);
-  this->inertiaRefLabel = new FFuQtLabel(this);
-  this->massInertiaFrame = new FFuQtLabelFrame(this);
-  this->inertiaRefMenu = new FFuQtOptionMenu(this);
-  this->calculateMassPropExplicitBtn = new FFuQtRadioButton(this);
-  this->calculateMassPropFEBtn = new FFuQtRadioButton(this);
-  this->calculateMassPropGeoBtn = new FFuQtRadioButton(this);
-  this->materialLabel = new FFuQtLabel(this);
-  this->materialField = new FuiQtQueryInputField(this);
-
-  for (FFuIOField*& field : this->inertias)
-    field = new FFuQtIOField(this);
-
-  for (FFuLabel*& label : this->inertiaLabels)
-    label = new FFuQtLabel(this);
-
-  this->initWidgets();
+  this->QWidget::resizeEvent(e);
+  this->updateColumnWidths();
 }
 
 
-FuiQtGenericPartStiffSheet::FuiQtGenericPartStiffSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+FuiQtGenericPartCGSheet::FuiQtGenericPartCGSheet(QWidget* parent,
+                                                 const char* name)
+  : FFuQtWidget(parent,name)
 {
-  this->stiffTypeFrame = new FFuQtLabelFrame(this);
-  this->stiffPropFrame = new FFuQtLabelFrame(this);
-
-  this->defaultStiffTypeBtn = new FFuQtRadioButton(this);
-  this->nodeStiffTypeBtn    = new FFuQtRadioButton(this);
-
-  this->ktField = new FFuQtLabelField(this);
-  this->krField = new FFuQtLabelField(this);
-
-  this->stiffDescrLabel = new FFuQtLabel(this);
+  posData = new FuiQtPositionData();
+  condenseCGToggle = new FFuQtToggleButton();
 
   this->initWidgets();
+
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(posData->getQtWidget());
+  layout->addWidget(condenseCGToggle->getQtWidget(),1,
+                    Qt::AlignVCenter | Qt::AlignHCenter);
 }
 
 
-FuiQtHydrodynamicsSheet::FuiQtHydrodynamicsSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+FuiQtGenericPartMassSheet::FuiQtGenericPartMassSheet(QWidget* parent,
+                                                     const char* name)
+  : FFuQtWidget(parent,name)
 {
-  this->buoyancyToggle = new FFuQtToggleButton(this);
-  this->buoyancyLabel = new FFuQtLabel(this);
+  calculateMassPropExplicitBtn = new FFuQtRadioButton();
+  calculateMassPropFEBtn = new FFuQtRadioButton();
+  calculateMassPropGeoBtn = new FFuQtRadioButton();
+  materialField = new FuiQtQueryInputField(NULL);
+  inertiaRefMenu = new FFuQtOptionMenu();
+
+  massField = new FFuQtLabelField();
+  for (FFuIOField*& field : inertias)
+    field = new FFuQtIOField();
 
   this->initWidgets();
+
+  QWidget* qLeft = new QWidget();
+  QBoxLayout* layout = new QVBoxLayout(qLeft);
+  layout->setContentsMargins(0,0,0,0);
+  layout->setSpacing(1);
+  layout->addWidget(calculateMassPropExplicitBtn->getQtWidget());
+  layout->addWidget(calculateMassPropFEBtn->getQtWidget());
+  layout->addWidget(calculateMassPropGeoBtn->getQtWidget());
+  layout->addStretch(2);
+  layout->addWidget(new QLabel("Material"));
+  layout->addWidget(materialField->getQtWidget());
+  layout->addStretch(1);
+  layout->addWidget(new QLabel("Inertia reference"));
+  layout->addWidget(inertiaRefMenu->getQtWidget());
+
+  QGroupBox* qRight = new QGroupBox("Mass and inertias");
+  QGridLayout* gl = new QGridLayout(qRight);
+  gl->setContentsMargins(5,0,5,5);
+  gl->setHorizontalSpacing(10);
+  gl->addWidget(massField->getQtWidget(), 0,0,1,4);
+  gl->addWidget(new QLabel("Ixx"), 1,0);
+  gl->addWidget(new QLabel("Ixy"), 2,0);
+  gl->addWidget(new QLabel("Ixz"), 3,0);
+  gl->addWidget(new QLabel("Iyy"), 2,1);
+  gl->addWidget(new QLabel("Iyz"), 3,1);
+  gl->addWidget(new QLabel("Izz"), 3,2);
+  gl->addWidget(inertias[IXX]->getQtWidget(), 1,3);
+  gl->addWidget(inertias[IXY]->getQtWidget(), 2,3);
+  gl->addWidget(inertias[IXZ]->getQtWidget(), 3,3);
+  gl->addWidget(inertias[IYY]->getQtWidget(), 2,4);
+  gl->addWidget(inertias[IYZ]->getQtWidget(), 3,4);
+  gl->addWidget(inertias[IZZ]->getQtWidget(), 3,5);
+
+  layout = new QHBoxLayout(this);
+  layout->addWidget(qLeft,2);
+  layout->addWidget(qRight,3);
+}
+
+
+FuiQtGenericPartStiffSheet::FuiQtGenericPartStiffSheet(QWidget* parent,
+                                                       const char* name)
+  : FFuQtWidget(parent,name)
+{
+  defaultStiffTypeBtn = new FFuQtRadioButton();
+  nodeStiffTypeBtn    = new FFuQtRadioButton();
+
+  ktField = new FFuQtLabelField();
+  krField = new FFuQtLabelField();
+
+  stiffDescrLabel = new FFuQtLabel();
+
+  this->initWidgets();
+
+  QGroupBox* stiffTypeFrame = new QGroupBox("Type");
+  QBoxLayout* layout = new QVBoxLayout(stiffTypeFrame);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(defaultStiffTypeBtn->getQtWidget());
+  layout->addWidget(nodeStiffTypeBtn->getQtWidget());
+
+  QGroupBox* stiffPropsFrame = new QGroupBox("Properties");
+  layout = new QVBoxLayout(stiffPropsFrame);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(ktField->getQtWidget());
+  layout->addWidget(krField->getQtWidget());
+  layout->addWidget(stiffDescrLabel->getQtWidget());
+
+  layout = new QHBoxLayout(this);
+  layout->addWidget(stiffTypeFrame,2);
+  layout->addWidget(stiffPropsFrame,3);
+}
+
+
+FuiQtHydrodynamicsSheet::FuiQtHydrodynamicsSheet(QWidget* parent,
+                                                 const char* name)
+  : FFuQtWidget(parent,name)
+{
+  buoyancyToggle = new FFuQtToggleButton();
+  buoyancyLabel = new FFuQtLabel();
+
+  this->initWidgets();
+
+  QLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(buoyancyToggle->getQtWidget());
+  layout->addWidget(buoyancyLabel->getQtWidget());
 }
 
 
 FuiQtMeshingSheet::FuiQtMeshingSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+  : FFuQtWidget(parent,name)
 {
-  this->materialLabel = new FFuQtLabel(this);
-  this->materialField = new FuiQtQueryInputField(this);
-  this->minsizeField = new FFuQtLabelField(this);
+  materialField = new FuiQtQueryInputField(NULL);
+  minsizeField = new FFuQtLabelField();
 
-  this->linearBtn = new FFuQtRadioButton(this);
-  this->parabolicBtn = new FFuQtRadioButton(this);
+  linearBtn = new FFuQtRadioButton();
+  parabolicBtn = new FFuQtRadioButton();
 
   FFuQtScale* qtScale;
-  this->qualityScale = qtScale = new FFuQtScale(this);
+  qualityScale = qtScale = new FFuQtScale();
   qtScale->setOrientation(Qt::Horizontal);
 
-  for (FFuLabel*& label : this->qualityLabel)
-    label = new FFuQtLabel(this);
+  meshBtn = new FFuQtPushButton();
 
-  this->meshBtn = new FFuQtPushButton(this);
-
-  this->noElmsLabel = new FFuQtLabel(this);
-  this->noNodesLabel = new FFuQtLabel(this);
+  noElmsLabel = new FFuQtLabel();
+  noNodesLabel = new FFuQtLabel();
 
   this->initWidgets();
+
+  QWidget* qLeft = new QWidget();
+  QBoxLayout* layout = new QVBoxLayout(qLeft);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(new QLabel("Material"));
+  layout->addWidget(materialField->getQtWidget());
+  layout->addWidget(noElmsLabel->getQtWidget());
+  layout->addWidget(noNodesLabel->getQtWidget());
+  layout->addStretch(1);
+
+  QWidget* qQuality = new QWidget();
+  QGridLayout* gl = new QGridLayout(qQuality);
+  gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(20);
+  gl->setColumnStretch(1,1);
+  gl->setColumnStretch(2,1);
+  gl->addWidget(new QLabel("Loose"), 0,1);
+  gl->addWidget(new QLabel("Strong"), 0,2, Qt::AlignRight);
+  gl->addWidget(new QLabel("Angle control"), 1,0);
+  gl->addWidget(qtScale, 1,1,1,2);
+
+  QWidget* qGenerate = new QWidget();
+  gl = new QGridLayout(qGenerate);
+  gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(20);
+  gl->addWidget(meshBtn->getQtWidget(), 0,0,2,1);
+  gl->addWidget(linearBtn->getQtWidget(), 0,1);
+  gl->addWidget(parabolicBtn->getQtWidget(), 1,1);
+
+  QWidget* qRight = new QWidget();
+  layout = new QVBoxLayout(qRight);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qQuality);
+  layout->addWidget(minsizeField->getQtWidget());
+  layout->addWidget(qGenerate);
+  layout->addStretch(1);
+
+  layout = new QHBoxLayout(this);
+  layout->setSpacing(20);
+  layout->addWidget(qLeft);
+  layout->addWidget(qRight);
 }
 
 
-FuiQtAdvancedLinkOptsSheet::FuiQtAdvancedLinkOptsSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+FuiQtAdvancedLinkOptsSheet::FuiQtAdvancedLinkOptsSheet(QWidget* parent,
+                                                       const char* name)
+  : FFuQtWidget(parent,name)
 {
-  this->coordSysLabel = new FFuQtLabel(this);
-  this->coordSysOptionMenu = new FFuQtOptionMenu(this);
+  coordSysOptionMenu = new FFuQtOptionMenu();
+  centripOptionMenu = new FFuQtOptionMenu();
 
-  this->centripLabel = new FFuQtLabel(this);
-  this->centripOptionMenu = new FFuQtOptionMenu(this);
+  recoverStressToggle = new FFuQtToggleButton();
+  recoverGageToggle = new FFuQtToggleButton();
 
-  this->recoverStressToggle = new FFuQtToggleButton(this);
-  this->recoverGageToggle = new FFuQtToggleButton(this);
-
-  this->extResToggle = new FFuQtToggleButton(this);
-  this->extResField = new FFuQtFileBrowseField(this);
+  extResToggle = new FFuQtToggleButton();
+  extResField = new FFuQtFileBrowseField(NULL);
 
   this->initWidgets();
+
+  QWidget* qCoordSysMenu = new QWidget();
+  QLabel* qCoordSysLabel = new QLabel("Positioning algorithm for the co-\n"
+                                      "rotated reference coordinate system:");
+  coordSysOptionMenu->setMinHeight(qCoordSysLabel->sizeHint().height()-3);
+  QBoxLayout* layout = new QHBoxLayout(qCoordSysMenu);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qCoordSysLabel);
+  layout->addWidget(coordSysOptionMenu->getQtWidget(),1);
+
+  QWidget* qCentripMenu = new QWidget();
+  layout = new QHBoxLayout(qCentripMenu);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(new QLabel("Centripital force correction:"));
+  layout->addWidget(centripOptionMenu->getQtWidget(),1);
+
+  QWidget* qExtRes = new QWidget();
+  layout = new QHBoxLayout(qExtRes);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(extResToggle->getQtWidget());
+  layout->addWidget(extResField->getQtWidget());
+
+  layout = new QVBoxLayout(this);
+  layout->setSpacing(1);
+  layout->addWidget(qCoordSysMenu);
+  layout->addWidget(qCentripMenu);
+  layout->addWidget(recoverStressToggle->getQtWidget());
+  layout->addWidget(recoverGageToggle->getQtWidget());
+  layout->addWidget(qExtRes);
 }
 
 
-FuiQtNonlinearLinkOptsSheet::FuiQtNonlinearLinkOptsSheet(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent, name)
+FuiQtNonlinearLinkOptsSheet::FuiQtNonlinearLinkOptsSheet(QWidget* parent,
+                                                         const char* name)
+  : FFuQtWidget(parent,name)
 {
-  this->nonlinearDescrLabel = new FFuQtLabel(this);
-  this->useNonlinearToggle = new FFuQtToggleButton(this);
-  this->numberOfSolutionsField = new FFuQtLabelField(this);
-  this->nonlinearInputFileField = new FFuQtFileBrowseField(this);
+  useNonlinearToggle = new FFuQtToggleButton();
+  numberOfSolutionsField = new FFuQtLabelField();
+  nonlinearInputFileField = new FFuQtFileBrowseField(NULL);
 
   this->initWidgets();
+
+  QLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(new QLabel("Capturing nonlinear behaviour using CFEM"));
+  layout->addWidget(useNonlinearToggle->getQtWidget());
+  layout->addWidget(numberOfSolutionsField->getQtWidget());
+  layout->addWidget(nonlinearInputFileField->getQtWidget());
 }
