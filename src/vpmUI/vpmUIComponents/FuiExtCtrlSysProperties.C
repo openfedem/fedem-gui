@@ -46,7 +46,6 @@ void FuiExtCtrlSysProperties::setEngineSelectedCB(const FFaDynCB1<FuiQueryInputF
 
 //----------------------------------------------------------------------------
 
-
 /*!
   Called when a, possibly, new file has been selected
   Will update DB values, as well as building the UI again with new engines
@@ -55,25 +54,6 @@ void FuiExtCtrlSysProperties::onFileOpened(const std::string&, int)
 {
   this->updateDBValues(false);
 }
-//----------------------------------------------------------------------------
-
-/*!
-  Geometry management
-*/
-void FuiExtCtrlSysProperties::placeWidgets(int width, int height)
-{
-  int fieldHeight = 3*height/20;
-  int border = 3*fieldHeight/10;
-  int fileFieldCenterY = border + fieldHeight/2;
-  int scrollWinTop = fileFieldCenterY + fieldHeight/2 + border;
-  int scrollWinBottom = height;
-
-  this->fileBrowseField->setCenterYGeometry(0, fileFieldCenterY, width, fieldHeight);
-  this->myTable->setEdgeGeometry(0, width, scrollWinTop, scrollWinBottom);
-
-  for (int i = 0; i < myTable->getNumberRows(); i++)
-    myTable->setRowHeight(i, fieldHeight);
-}
 
 //-----------------------------------------------------------------------------
 
@@ -81,6 +61,7 @@ FFuaUIValues* FuiExtCtrlSysProperties::createValuesObject()
 {
   return new FuaExtCtrlSysPropertiesValues();
 }
+
 //----------------------------------------------------------------------------
 
 void FuiExtCtrlSysProperties::getUIValues(FFuaUIValues* values)
@@ -137,7 +118,6 @@ void FuiExtCtrlSysProperties::setUIValues(const FFuaUIValues* values)
     this->myInpEngineFields[i]->setSelectedRef(externalValues->mySelectedQueries[i]);
     this->myInpEngineFields[i]->setSensitivity(IAmSensitive);
   }
-  this->placeWidgets(this->getWidth(), this->getHeight());
 }
 
 //----------------------------------------------------------------------------
