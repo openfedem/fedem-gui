@@ -5,25 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQSNCURVESELCTOR_H
-#define FUIQSNCURVESELCTOR_H
+#ifndef FUI_QT_SN_CURVE_SELCTOR_H
+#define FUI_QT_SN_CURVE_SELCTOR_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiSNCurveSelector.H"
 
 
-class FuiQtSNCurveSelector : public virtual FFuQtMultUIComponent,
-			     public FuiSNCurveSelector
+class FuiQtSNCurveSelector : public FFuQtWidget, public FuiSNCurveSelector
 {
 public:
-  FuiQtSNCurveSelector(QWidget* parent = 0,
-		       int xpos =100, int ypos =100,
-		       int width=800, int height=35,
-		       const char* name="SN-curve selector");
-  virtual ~FuiQtSNCurveSelector() {}
+  FuiQtSNCurveSelector(QWidget* parent,
+                       const char* name = "FuiQtSNCurveSelector");
 
-  virtual void setSensitivity(bool sensitive)
-  { FuiSNCurveSelector::setSensitivity(sensitive); }
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiSNCurveSelector::setSensitivity(isSensitive);
+  }
 };
 
 #endif

@@ -5,21 +5,26 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QHBoxLayout>
+#include <QLabel>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtSNCurveSelector.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
 
 
-FuiQtSNCurveSelector::FuiQtSNCurveSelector(QWidget* parent,
-					   int xpos, int ypos,
-					   int width, int height,
-					   const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQtSNCurveSelector::FuiQtSNCurveSelector(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
 {
-  stdLabel      = new FFuQtLabel(this);
-  curveLabel    = new FFuQtLabel(this);
-  stdTypeMenu   = new FFuQtOptionMenu(this);
-  curveTypeMenu = new FFuQtOptionMenu(this);
+  stdTypeMenu   = new FFuQtOptionMenu();
+  curveTypeMenu = new FFuQtOptionMenu();
 
   this->initWidgets();
+
+  QBoxLayout* layout = new QHBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(new QLabel("Standard"));
+  layout->addWidget(stdTypeMenu->getQtWidget());
+  layout->addSpacing(10);
+  layout->addWidget(new QLabel("S-N curve"));
+  layout->addWidget(curveTypeMenu->getQtWidget());
 }
