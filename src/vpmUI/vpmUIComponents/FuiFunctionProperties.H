@@ -9,7 +9,7 @@
 #define FUI_FUNCTION_PROPERTIES_H
 
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include "vpmUI/vpmUIComponents/FuiFunctionDomain.H"
@@ -20,10 +20,10 @@ class FuiParameterView;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
 class FFuIOField;
+class FFuFileBrowseField;
 class FFuOptionMenu;
 class FFuPushButton;
 class FFuLabelFrame;
-class FFuTable;
 class FFuMemo;
 class FFuFrame;
 class FFuLabel;
@@ -40,18 +40,18 @@ class FmModelMemberBase;
 class FuaFunctionPropertiesValues;
 
 
-class FuiFunctionProperties : public virtual FFuMultUIComponent,
-			      public FFuUAExistenceHandler,
-			      public FFuUADataHandler
+class FuiFunctionProperties : public virtual FFuComponentBase,
+                              public FFuUAExistenceHandler,
+                              public FFuUADataHandler
 {
 public:
   FuiFunctionProperties();
-  virtual ~FuiFunctionProperties() {}
 
   void setUIValues(const FFuaUIValues* values);
   void buildDynamicWidgets(const FFuaUIValues* values);
   void setSensitivity(bool isSensitive);
   void setCBs(const FFuaUIValues* values);
+  void placeExpandButton();
 
   void setChannelList(const std::vector<std::string>& channels);
   void popUpChannelList();
@@ -63,8 +63,6 @@ public:
   int  getSelectedFunctionIndex() const;
 
 protected:
-  virtual void placeWidgets(int width, int height);
-  virtual void setNoArgs(size_t narg) = 0;
 
   // Initialisation to be called by UILib-dependent subclass
 
@@ -83,22 +81,13 @@ private:
   void onParameterValueChanged(double) { this->onValuesChanged(); }
   void onToggleChanged(bool) { this->onValuesChanged(); }
   void onOutputToggled(bool) { this->onValuesChanged(true); }
-  void onSensorPicked()  { myPickSensorCB.invoke(0); }
-  void onSensor1Picked() { myPickSensorCB.invoke(1); }
-  void onSensor2Picked() { myPickSensorCB.invoke(2); }
-  void onSensor3Picked() { myPickSensorCB.invoke(3); }
-  void onSensor4Picked() { myPickSensorCB.invoke(4); }
-  void onSensor5Picked() { myPickSensorCB.invoke(5); }
-  void onSensor6Picked() { myPickSensorCB.invoke(6); }
-  void onSensor7Picked() { myPickSensorCB.invoke(7); }
-  void onSensor8Picked() { myPickSensorCB.invoke(8); }
-  void onSensor9Picked() { myPickSensorCB.invoke(9); }
+  void onSensorPicked() { myPickSensorCB.invoke(0); }
   void onXAccepted(double);
   void onYAccepted(double);
   void onAddButtonActivated();
   void onDeleteButtonActivated();
   void onParameterSelected(int);
-  void onBrowseFileOpened(const std::string&, int);
+  void onBrowseFileOpened(const std::string&,int) { this->onValuesChanged(); }
   void onChannelDialogOK(int);
   void onChannelDialogCancel(int);
   void onChannelDialogApply(int);
@@ -119,99 +108,115 @@ protected:
 
   FuiQueryInputField* myEngineFunction;
   FuiInputSelector*   myInputSelector;
-
-  FFuTable*                      myArgumentTable;
-  std::vector<FuiInputSelector*> myArguments;
+  FuiInputSelectors*  myInputSelectors;
 
   FFuToggleButton* myOutputToggle;
   FFuLabelFrame*   myThresholdFrame;
   FuiThreshold*    myThresholds;
   FuiThreshold*    myThreshold2;
 
-  FFuFrame      * myHelpFrame;
-  FFuLabel      * myHelpLabel;
+  FFuFrame* myHelpFrame;
+  FFuLabel* myHelpLabel;
 
-  FFuLabelFrame * myParameterFrame;
+  enum { LIST, VIEW, FILE, UDWS, MATH, NPRM };
+  std::array<FFuLabelFrame*,NPRM> myParameterFrames;
 
-  FFuLabel      * myExprLabel;
-  FFuMemo       * myExprMemo;
-  FFuPushButton * myExprApplyButton;
-  FFuLabel      * myNumArgLabel;
-  FFuSpinBox    * myNumArgBox;
+  FFuMemo*       myExprMemo;
+  FFuLabel*      myExprLabel;
+  FFuPushButton* myExprApplyButton;
 
-  FFuPushButton*      myFileBrowseButton;
+  FFuLabel*   myNumArgLabel;
+  FFuSpinBox* myNumArgBox;
+
   FuiQueryInputField* myFileRefQueryField;
-  FFuLabel*           myFileBrowseLabel;
-  FFuLabelField*      myActualFileInfoLabel;
+  FFuPushButton*      myFileBrowseButton;
 
-  FFuLabelField * myChannelNameField;
-  FFuPushButton * myChannelBrowseButton;
+  FFuIOField*    myChannelNameField;
+  FFuPushButton* myChannelBrowseButton;
 
-  FFuScrolledListDialog * myChannelSelectUI;
+  FFuScrolledListDialog* myChannelSelectUI;
 
-  FFuLabelField   * myScaleFactorField;
-  FFuLabelFrame   * myVerticalShiftFrame;
-  FFuLabelField   * myVerticalShiftField;
-  FFuToggleButton * myZeroAdjustToggle;
+  FFuIOField*      myScaleFactorField;
+  FFuLabelField*   myVerticalShiftField;
+  FFuToggleButton* myZeroAdjustToggle;
 
   FuiParameterView* myParameterView;
   FFuPushButton*    myExpandButton;
 
-  FFuScrolledList * myParameterList;
-  FFuIOField    * myXValueInputField;
-  FFuIOField    * myYValueInputField;
-  FFuLabel      * myXLabel;
-  FFuLabel      * myYLabel;
-  FFuLabel      * myExtrapolationLabel;
-  FFuOptionMenu * myExtrapolationSwitch;
+  FFuScrolledList* myParameterList;
+  FFuIOField*      myXValueInputField;
+  FFuIOField*      myYValueInputField;
+  FFuPushButton*   myAddButton;
+  FFuPushButton*   myDeleteButton;
+  FFuOptionMenu*   myExtrapolationSwitch;
 
-  FFuPushButton * myAddButton;
-  FFuPushButton * myDeleteButton;
+  class FuiJonswapAdvanced : public virtual FFuComponentBase
+  {
+  public:
+    void initWidgets(const FFaDynCB1<double>& doubleCB,
+                     const FFaDynCB1<int>& intCB,
+                     const FFaDynCB1<bool>& boolCB);
+
+    FFuLabelField*   mySpectralPeakednessField;
+    FFuToggleButton* mySpectralPeakednessToggle;
+    FFuLabelField*   myWaveComponentsField;
+    FFuLabelField*   myRandomSeedField;
+    FFuLabelField*   myWaveDirsField;
+    FFuLabelField*   mySpreadExpField;
+  };
+
+  class FuiJonswapBasic : public virtual FFuComponentBase
+  {
+  public:
+    void initWidgets(const FFaDynCB1<double>& doubleCB,
+                     const FFaDynCB1<bool>& boolCB);
+
+    FFuLabelField*   myHsField;
+    FFuLabelField*   myTpField;
+    FFuToggleButton* myCutOffToggle;
+    FFuLabelField*   myTLowField;
+    FFuLabelField*   myTHighField;
+  };
+
+  class FuiWaveSpectrum : public virtual FFuComponentBase
+  {
+  public:
+    void initWidgets(const FFaDynCB1<int>& intCB,
+                     const FFaDynCB2<const std::string&,int>& strCB);
+
+    FFuFileBrowseField* myFileField;
+    FFuLabelField*      myRandomSeedField;
+    FFuLabelField*      myHsField;
+    FFuLabelField*      myTpField;
+  };
+
+  FuiJonswapAdvanced* myJonswapA;
+  FuiJonswapBasic*    myJonswapB;
+  FuiWaveSpectrum*    myWaveSpec;
 
 #ifdef FT_HAS_PREVIEW
   FFuPushButton*   myPreviewButton;
   FFuToggleButton* myUseSmartPointsToggle;
-  FFuLabel*        myX0Label;
-  FFuLabel*        myDXLabel;
   FFuIOField*      myX0Field;
   FFuIOField*      myXNField;
   FFuIOField*      myDXField;
 #endif
 
-  // Jonswap wave spectrum
-  FFuLabelFrame   * myJonswapAdvancedFrame;
-  FFuLabelField   * myJonswapSpectralPeakednessField;
-  FFuToggleButton * myJonswapSpectralPeakednessToggle;
-  FFuLabelField   * myJonswapWaveComponentsField;
-  FFuLabelField   * myJonswapRandomSeedField;
-  FFuLabelField   * myJonswapWaveDirsField;
-  FFuLabelField   * myJonswapSpreadExpField;
-  FFuLabelFrame   * myJonswapBasicFrame;
-  FFuLabelField   * myJonswapHsField;
-  FFuLabelField   * myJonswapTpField;
-  FFuLabelFrame   * myJonswapCutOffFrame;
-  FFuToggleButton * myJonswapCutOffToggle;
-  FFuLabelField   * myJonswapTLowField;
-  FFuLabelField   * myJonswapTHighField;
-
   FFuTabbedWidgetStack* myTabStack;
 
 private:
-  char IAmShowingParameterList;
-  char IAmShowingParameterView;
-  char IAmShowingFileView;
+  bool IAmSensitive;
+  bool IAmAllowingTopolChange;
+
+  std::array<char,NPRM> IAmShowingPrmView{};
+
   bool IAmShowingTypeSwitch;
-  bool IAmShowingMathExpr;
   bool IAmShowingCurvePreview;
   char IAmShowingArgument;
   char IAmShowingOutput;
   bool IAmShowingLinkToFields;
   bool IAmShowingHelpPixmap;
   bool IAmShowingJonswap;
-  int  myMinParameterWidth;
-
-  bool IAmSensitive;
-  bool IAmAllowingTopolChange;
 
   // Callbacks
 
@@ -233,88 +238,46 @@ private:
 class FuaFunctionPropertiesValues : public FFuaUIValues
 {
 public:
-  FuaFunctionPropertiesValues()
-    {
-      showTypeSwitch    = false;
-      showArgument      = false;
-      showLinkToFields  = false;
-      showParameterList = false;
-      showParameterView = false;
-      showFileView      = false;
-      showMathExpr      = false;
-      showCurvePreview  = false;
-      showJonswapView   = false;
-
-      mySelectedFunctionTypeIdx = 0;
-      useAsOutputSensor = -1;
-      mySelectedLinkFunction = NULL;
-
-      mySelectedValueIdx = 0;
-      myExtrapolationType = 0;
-
-      isMultiChannel  = false;
-      myChannelName   = "Not set";
-      myScaleFactor   = 1.0;
-      myVerticalShift = 0.0;
-      myZeroAdjust    = false;
-      myExtFunc       = 0;
-
-      fileRefQuery    = NULL;
-      selectedFileRef = NULL;
-
-      myHelpPixmap = NULL;
-
-      allowTopolChange = true;
-
-      myJonswapHs = myJonswapTp = 0.0;
-      myJonswapAutoCalcCutoff = false;
-      myJonswapRange = { 0.0, 0.0 };
-      myJonswapAutoCalcSpectralPeakedness = false;
-      myJonswapSpectralPeakedness = 0.0;
-      myJonswapNComp = 0;
-      myJonswapRandomSeed = 0;
-      myJonswapNDir = 1;
-      myJonswapSprExp = 2;
-    }
+  bool allowTopolChange = true;
 
   // Type switch
 
-  bool           showTypeSwitch;
+  bool           showTypeSwitch = false;
   std::vector<std::string> myFunctionTypes;
-  int            mySelectedFunctionTypeIdx;
+  int            mySelectedFunctionTypeIdx = 0;
   FFaDynCB1<int> myFuncTypeSwitchedCB;
 
   // Argument
 
-  bool           showArgument;
+  bool           showArgument = false;
   std::vector<FuiInputSelectorValues> myArgumentValues;
   FFaDynCB1<int> myPickSensorCB;
 
   // Digital twin output sensor settings
 
-  char            useAsOutputSensor;
+  char            useAsOutputSensor = -1;
   ThresholdValues myThreshold;
 
   // Link to other function
 
-  bool               showLinkToFields;
-  FFuaQueryBase*     myLinkFunctionQuery;
-  FmModelMemberBase* mySelectedLinkFunction;
+  bool               showLinkToFields = false;
+  FFuaQueryBase*     myLinkFunctionQuery = NULL;
+  FmModelMemberBase* mySelectedLinkFunction = NULL;
 
   FFaDynCB1<FuiQueryInputFieldValues&> myEditLinkFunctionCB;
 
   // Parameter view
 
-  bool                     showParameterView;
+  bool                     showParameterView = false;
   std::vector<std::string> myParameterNames;
   std::vector<double>      myParameterValues;
 
   // Scrolled list of values
 
-  char                showParameterList;
+  char                showParameterList = false;
   std::vector<double> myXValues;
   std::vector<double> myYValues;
-  int                 mySelectedValueIdx;
+  int                 mySelectedValueIdx = 0;
 
   FFaDynCB1<double>        myAddNumberCB;
   FFaDynCB2<double,double> myAddNumbersCB;
@@ -324,58 +287,58 @@ public:
 
   // Extrapolation switch
 
-  int            myExtrapolationType;
+  int            myExtrapolationType = 0;
   FFaDynCB1<int> myExtrapolationTypeSwitchedCB;
 
   // External device parameters
 
-  bool        showFileView;
+  bool        showFileView = false;
   std::string fileName;
-  bool        isMultiChannel;
-  std::string myChannelName;
-  double      myScaleFactor;
-  double      myVerticalShift;
-  bool        myZeroAdjust;
-  int         myExtFunc;
+  std::string modelFilePath;
+  bool        isMultiChannel = false;
+  std::string myChannelName = "Not set";
+  double      myScaleFactor = 1.0;
+  double      myVerticalShift = 0.0;
+  bool        myZeroAdjust = false;
+  int         myExtFunc = 0;
 
-  FFuaQueryBase*     fileRefQuery;
-  FmModelMemberBase* selectedFileRef;
+  FFuaQueryBase*     fileRefQuery = NULL;
+  FmModelMemberBase* selectedFileRef = NULL;
 
   FFaDynCB0          myFilesBrowseCB;
   FFaDynCB0          myGetChannelListCB;
 
   // Math expression
 
-  bool        showMathExpr;
+  bool        showMathExpr = false;
   std::string myExpression;
   FFaDynCB0   myAcceptExprCB;
 
+  // Jonswap wave spectrum
+
+  bool   showJonswapView = false;
+  double myJonswapHs = 0.0;
+  double myJonswapTp = 0.0;
+  bool   myJonswapAutoCalcCutoff = false;
+  std::pair<double,double> myJonswapRange = { 0.0, 0.0 };
+  bool   myJonswapAutoCalcSpectralPeakedness = false;
+  double myJonswapSpectralPeakedness = 0.0;
+  int    myJonswapNComp = 0;
+  int    myJonswapRandomSeed = 0;
+  int    myJonswapNDir = 1;
+  int    myJonswapSprExp = 2;
+
   // Help picture
 
-  const char** myHelpPixmap;
+  const char** myHelpPixmap = NULL;
 
   // Function preview
-  bool              showCurvePreview;
+
+  bool              showCurvePreview = false;
 #ifdef FT_HAS_PREVIEW
   FuaFunctionDomain previewDomain;
   FFaDynCB0         myPreviewCB;
 #endif
-
-  bool allowTopolChange;
-
-  // Jonswap wave spectrum
-
-  bool   showJonswapView;
-  double myJonswapHs;
-  double myJonswapTp;
-  bool   myJonswapAutoCalcCutoff;
-  std::pair<double,double> myJonswapRange;
-  bool   myJonswapAutoCalcSpectralPeakedness;
-  double myJonswapSpectralPeakedness;
-  int    myJonswapNComp;
-  int    myJonswapRandomSeed;
-  int    myJonswapNDir;
-  int    myJonswapSprExp;
 };
 
 #endif
