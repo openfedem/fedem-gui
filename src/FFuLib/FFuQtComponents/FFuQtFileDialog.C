@@ -77,27 +77,26 @@ void FFuQtFileDialog::setFileFilter()
   QStringList filters;
 
   // workaround Qt problem in setting a remembered filter
+  std::string memFilt;
   std::map<std::string,Memory>::const_iterator it = ourMemory.find(myMemorizer);
-  if (it != ourMemory.end())
-  {
-    const std::string& memFilt = it->second.currentFilter;
-    for (const std::pair<const std::string,FileFilter>& filter : myFilterMap)
-      if (filter.first != memFilt)
-      {
-        if (myDefaultFilter != filter.first)
-          filters.append(filter.first.c_str());
-        else
-          filters.prepend(filter.first.c_str());
-      }
+  if (it != ourMemory.end()) memFilt = it->second.currentFilter;
 
-    if (myFilterMap.find(memFilt) != myFilterMap.end())
-      filters.prepend(memFilt.c_str());
-
-    if (showAllFilesFilter && memFilt == allFiles)
+  for (const std::pair<const std::string,FileFilter>& filter : myFilterMap)
+    if (filter.first != memFilt)
     {
-      filters.prepend(allFiles);
-      appendAllFilter = false;
+      if (filter.first == myDefaultFilter)
+        filters.prepend(filter.first.c_str());
+      else
+        filters.append(filter.first.c_str());
     }
+
+  if (myFilterMap.find(memFilt) != myFilterMap.end())
+    filters.prepend(memFilt.c_str());
+
+  if (showAllFilesFilter && memFilt == allFiles)
+  {
+    filters.prepend(allFiles);
+    appendAllFilter = false;
   }
 
   if (appendAllFilter)
