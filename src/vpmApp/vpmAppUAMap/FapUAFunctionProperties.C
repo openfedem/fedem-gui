@@ -756,15 +756,14 @@ void FapUAFunctionProperties::pasteCB(const std::string& data)
       numbers.push_back(x);
   }
 
-  FmfMultiVarBase* mvf = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction());
-  FmfLinVelVar*    lvf = mvf ? NULL : dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
-
-  if (mvf)
-    for (size_t i = 0; i+1 < numbers.size(); i += 2)
-      mvf->addXYset(numbers[i],numbers[i+1]);
-  else if (lvf)
+  FmfMultiVarBase* mvf;
+  FmfLinVelVar* lvf = dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
+  if (lvf)
     for (double number : numbers)
       lvf->addIntervalBreak(number);
+  else if ((mvf = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction())))
+    for (size_t i = 0; i+1 < numbers.size(); i += 2)
+      mvf->addXYset(numbers[i],numbers[i+1]);
 
   this->updateUIValues();
 
@@ -778,13 +777,12 @@ void FapUAFunctionProperties::deleteNumberCB(int idx)
 {
   if (idx >= 0)
   {
-    FmfMultiVarBase* mvf = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction());
-    FmfLinVelVar*    lvf = mvf ? NULL : dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
-
-    if (mvf)
-      mvf->removeXYset(idx);
-    else if (lvf)
+    FmfMultiVarBase* mvf;
+    FmfLinVelVar* lvf = dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
+    if (lvf)
       lvf->removeIntervalBreak(idx);
+    else if ((mvf = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction())))
+      mvf->removeXYset(idx);
   }
 
   this->updateUIValues();
