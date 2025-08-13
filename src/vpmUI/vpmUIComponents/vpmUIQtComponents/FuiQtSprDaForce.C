@@ -21,7 +21,7 @@ FuiQtSprDaForce::FuiQtSprDaForce(QWidget* parent, const char* name)
 
   myFunctionLabel = new FFuQtLabel();
   myFunctionField = new FuiQtQueryInputField(NULL);
-  myScaleField    = new FuiQtQueryInputField(NULL);
+  myScaleField    = new FuiQtQueryInputField(NULL,"Scale");
   myDmpToggle     = new FFuQtToggleButton();
 
   this->initWidgets();
@@ -30,20 +30,14 @@ FuiQtSprDaForce::FuiQtSprDaForce(QWidget* parent, const char* name)
   myScaleField->setMaxHeight(20);
 
   QWidget* qFunc = new QWidget();
-  QBoxLayout* layout = new QHBoxLayout(qFunc);
+  QLayout* layout = new QHBoxLayout(qFunc);
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(static_cast<FFuQtLabel*>(myFunctionLabel));
-  layout->addWidget(static_cast<FuiQtQueryInputField*>(myFunctionField));
-
-  QWidget* qScale = new QWidget();
-  layout = new QHBoxLayout(qScale);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(new QLabel("Scale"));
-  layout->addWidget(static_cast<FuiQtQueryInputField*>(myScaleField));
+  layout->addWidget(myFunctionLabel->getQtWidget());
+  layout->addWidget(myFunctionField->getQtWidget());
 
   layout = new QVBoxLayout(this);
   layout->setContentsMargins(5,5,5,5);
   layout->addWidget(qFunc);
-  layout->addWidget(qScale);
-  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(myDmpToggle));
+  layout->addWidget(myScaleField->getQtWidget());
+  layout->addWidget(myDmpToggle->getQtWidget());
 }
