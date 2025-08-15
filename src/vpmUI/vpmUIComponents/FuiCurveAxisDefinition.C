@@ -8,73 +8,99 @@
 #include "vpmUI/vpmUIComponents/FuiCurveAxisDefinition.H"
 #include "FFuLib/FFuPushButton.H"
 #include "FFuLib/FFuOptionMenu.H"
+#include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuLabel.H"
-
 
 //----------------------------------------------------------------------------
 
 FuiCurveAxisDefinition::FuiCurveAxisDefinition()
 {
-  this->resultLabel = 0;
-  this->editButton = 0;
-  this->operMenu = 0;
+  resultLabel = NULL;
+  this->editButton = NULL;
+  this->operMenu = NULL;
 }
 //----------------------------------------------------------------------------
 
 void FuiCurveAxisDefinition::initWidgets()
 {
-  this->operMenu->setOptionChangedCB(FFaDynCB1M(FuiCurveAxisDefinition,this,
-						onOperMenuSelected,std::string));
-
-  this->editButton->setActivateCB(FFaDynCB0M(FuiCurveAxisDefinition,this,
-					     onEditButtonClicked));
-  this->editButton->setLabel("Edit...");
+  operMenu->setOptionChangedCB(FFaDynCB1M(FFaDynCBstr,&operSelectedCB,invoke,
+                                          std::string));
+  editButton->setActivateCB(FFaDynCB0M(FFaDynCB0,&editResultCB,invoke));
+  editButton->setLabel("Edit...");
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 //----------------------------------------------------------------------------
 
 void FuiCurveAxisDefinition::setUIValues(const std::string& result,
-					 const std::vector<std::string>& opers,
+					 const Strings& opers,
 					 const std::string& selOper)
 {
-  this->resultLabel->setLabel(result.c_str());
+  resultLabel->setLabel(result.c_str());
 
-  this->operMenu->clearOptions();
-  for (unsigned int i = 0; i < opers.size(); i++)
-    this->operMenu->addOption(opers[i].c_str());
+  operMenu->clearOptions();
+  for (const std::string& oper : opers)
+    operMenu->addOption(oper.c_str());
 
   if (!selOper.empty())
-    this->operMenu->selectOption(selOper);
+    operMenu->selectOption(selOper);
 
-  this->operMenu->setSensitivity(!opers.empty());
-
-  this->placeWidgets(this->getWidth(),this->getHeight());
+  operMenu->setSensitivity(!opers.empty());
 }
 //-----------------------------------------------------------------------------
 
-void FuiCurveAxisDefinition::placeWidgets(int width, int height)
+FuiCurveTimeRange::FuiCurveTimeRange()
 {
-  int buttonWidth = this->editButton->getWidthHint();
-  int textHeight = this->resultLabel->getHeightHint();
-  int labelCenterY = height/5;
-  int btnHeight = height/2;
-  if (btnHeight > 28) btnHeight = 28;
+  spaceObj = NULL;
+  minField = maxField = NULL;
+  operMenu = NULL;
+}
+//----------------------------------------------------------------------------
 
-  this->resultLabel->setCenterYGeometry(0, labelCenterY, width, textHeight);
-  this->editButton->setEdgeGeometry(0, buttonWidth, height - btnHeight, height);
-  this->operMenu->setEdgeGeometry(width - 3*buttonWidth/2, width, height - btnHeight, height);
+void FuiCurveTimeRange::initWidgets()
+{
+  minField->setMaxWidth(80);
+  minField->setAcceptedCB(FFaDynCB1M(FuiCurveTimeRange,this,
+                                     onDoubleChanged,double));
+  maxField->setMaxWidth(80);
+  maxField->setAcceptedCB(FFaDynCB1M(FuiCurveTimeRange,this,
+                                     onDoubleChanged,double));
+
+  operMenu->addOption("None");
+  operMenu->addOption("Min");
+  operMenu->addOption("Max");
+  operMenu->addOption("Absolute Max");
+  operMenu->addOption("Mean");
+  operMenu->addOption("RMS");
+  operMenu->setOptionChangedCB(FFaDynCB1M(FuiCurveTimeRange,this,
+                                          onOperSelected,std::string));
+}
+//----------------------------------------------------------------------------
+
+void FuiCurveTimeRange::setObjLabel(const std::string& label)
+{
+  spaceObj->setLabel(label.c_str());
+}
+//----------------------------------------------------------------------------
+
+void FuiCurveTimeRange::setUIValues(double tmin, double tmax,
+                                    const std::string& selOper)
+{
+  minField->setValue(tmin);
+  maxField->setValue(tmax);
+
+  if (!selOper.empty())
+    operMenu->selectOption(selOper);
+
+  maxField->setSensitivity(selOper != "None");
 }
 //-----------------------------------------------------------------------------
 
-void FuiCurveAxisDefinition::onOperMenuSelected(std::string oper)
+void FuiCurveTimeRange::getUIValues(double& tmin, double& tmax,
+                                    std::string& selOper)
 {
-  this->operSelectedCB.invoke(oper);
-}
-//-----------------------------------------------------------------------------
-
-void FuiCurveAxisDefinition::onEditButtonClicked()
-{
-  this->editResultCB.invoke();
+  tmin    = minField->getDouble();
+  tmax    = maxField->getDouble();
+  selOper = operMenu->getSelectedOptionStr();
 }
 //-----------------------------------------------------------------------------

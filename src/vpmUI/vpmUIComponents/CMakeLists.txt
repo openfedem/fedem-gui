@@ -36,7 +36,7 @@ set ( COMPONENT_FILE_LIST  Fui3DPoint FuiAnimationDefine
 
 if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FuiCurveAxisDefinition FuiCurveDefine
-                                    FuiCurveTimeRange FuiScaleShiftWidget
+                                    FuiScaleShiftWidget
                                     FuiGraphDefine FuiSNCurveSelector )
 endif ( Qwt_LIBRARY )
 

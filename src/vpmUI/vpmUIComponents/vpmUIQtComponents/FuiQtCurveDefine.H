@@ -8,91 +8,84 @@
 #ifndef FUI_QT_CURVE_DEFINE_H
 #define FUI_QT_CURVE_DEFINE_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiCurveDefine.H"
 
 
-class FuiQtCurveDefine : public FFuQtMultUIComponent, public FuiCurveDefine
-{
- public:
-  FuiQtCurveDefine(QWidget* parent = 0, const char* name = "FuiQtCurveDefine");
-  virtual ~FuiQtCurveDefine() {}
-
- private:
-  virtual void setSensitivity(bool) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////
-
-class FuiQtCurveDefSheet : public FFuQtMultUIComponent, public FuiCurveDefSheet
-{
- public:
-  FuiQtCurveDefSheet(QWidget* parent = 0, const char* name = "FuiQtCurveDefSheet");
-  virtual ~FuiQtCurveDefSheet() {}
-
- protected:
-  virtual void setNoComps(unsigned int nc);
-
- private:
-  virtual void setSensitivity(bool) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////
-
-class FuiQtCurveAnalysisSheet : public FFuQtMultUIComponent, public FuiCurveAnalysisSheet
-{
- public:
-  FuiQtCurveAnalysisSheet(QWidget* parent = 0, const char* name = "FuiQtCurveAnaylsisSheet");
-  virtual ~FuiQtCurveAnalysisSheet() {}
-
- private:
-  virtual void setSensitivity(bool) {}
-};
-
-
-/////////////////////////////////////////////////////////////////////////////
-
-class FuiQtCurveAppearanceSheet : public FFuQtMultUIComponent, public FuiCurveAppearanceSheet
-{
- public:
-  FuiQtCurveAppearanceSheet(QWidget* parent = 0, const char* name = "FuiQtCurveAppearance");
-  virtual ~FuiQtCurveAppearanceSheet();
-
- private:
-  virtual void setSensitivity(bool) {}
-};
-/////////////////////////////////////////////////////////////////////////////
-
-class FuiQtCurveInfoSheet : public FFuQtMultUIComponent, public FuiCurveInfoSheet
-{
- public:
-  FuiQtCurveInfoSheet(QWidget* parent = 0, const char* name = "FuiQtCurveInfo");
-  virtual ~FuiQtCurveInfoSheet() {}
-
- private:
-  virtual void setSensitivity(bool) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////
-
-class FuiQtCurveScaleSheet : public FFuQtMultUIComponent, public FuiCurveScaleSheet
+class FuiQtCurveDefine : public FFuQtWidget, public FuiCurveDefine
 {
 public:
-  FuiQtCurveScaleSheet(QWidget* parent = 0, const char* name = "FuiQtcurveScaleSheet");
-  virtual ~FuiQtCurveScaleSheet() {}
+  FuiQtCurveDefine(QWidget* parent, const char* name = "FuiQtCurveDefine");
 
- private:
+protected:
+  virtual void setVisible(bool visible);
+  
+private:
   virtual void setSensitivity(bool) {}
 };
 /////////////////////////////////////////////////////////////////////////////
 
-class FuiQtCurveFatigueSheet : public FFuQtMultUIComponent, public FuiCurveFatigueSheet
+class FuiQtCurveDefSheet : public FFuQtWidget, public FuiCurveDefSheet
 {
- public:
-  FuiQtCurveFatigueSheet(QWidget* parent = 0, const char* name = "FuiQtFatigueInfo");
-  virtual ~FuiQtCurveFatigueSheet() {}
+public:
+  FuiQtCurveDefSheet(const char* name = "FuiQtCurveDefSheet");
 
- private:
+protected:
+  virtual void setNoComps(unsigned int nc);
+  virtual void setVisible(bool visible);
+
+private:
+  virtual void setSensitivity(bool) {}
+};
+/////////////////////////////////////////////////////////////////////////////
+
+class FuiQtCurveAnalysisSheet : public FFuQtWidget, public FuiCurveAnalysisSheet
+{
+public:
+  FuiQtCurveAnalysisSheet(const char* name = "FuiQtCurveAnaylsisSheet");
+
+private:
+  virtual void setSensitivity(bool) {}
+};
+/////////////////////////////////////////////////////////////////////////////
+
+class FuiQtCurveAppearanceSheet : public FFuQtWidget,
+                                  public FuiCurveAppearanceSheet
+{
+public:
+  FuiQtCurveAppearanceSheet(const char* name = "FuiQtCurveAppearance");
+
+private:
+  virtual void setSensitivity(bool) {}
+};
+/////////////////////////////////////////////////////////////////////////////
+
+class FuiQtCurveInfoSheet : public FFuQtWidget, public FuiCurveInfoSheet
+{
+public:
+  FuiQtCurveInfoSheet(const char* name = "FuiQtCurveInfo");
+
+private:
+  virtual void setSensitivity(bool) {}
+};
+/////////////////////////////////////////////////////////////////////////////
+
+class FuiQtCurveScaleSheet : public FFuQtWidget, public FuiCurveScaleSheet
+{
+public:
+  FuiQtCurveScaleSheet(const char* name = "FuiQtcurveScaleSheet");
+
+private:
+  virtual void setSensitivity(bool) {}
+};
+/////////////////////////////////////////////////////////////////////////////
+
+class FuiQtCurveFatigueSheet : public FFuQtWidget, public FuiCurveFatigueSheet
+{
+public:
+  FuiQtCurveFatigueSheet(const char* name = "FuiQtFatigueInfo");
+
+private:
   virtual void setSensitivity(bool) {}
 };
 

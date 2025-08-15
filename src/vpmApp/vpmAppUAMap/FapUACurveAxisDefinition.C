@@ -25,7 +25,7 @@ FapUACurveAxisDefinition::FapUACurveAxisDefinition(FuiCurveAxisDefinition* uic) 
   this->ui = uic;
 
   this->ui->setEditResultCB(FFaDynCB0M(FapUACurveAxisDefinition,this,editResult));
-  this->ui->setOperSelectedCB(FFaDynCB1M(FapUACurveAxisDefinition,this,onOperSelected,const std::string&));
+  this->ui->setOperSelectedCB(FFaDynCB1M(FapUACurveAxisDefinition,this,onOperSelected,std::string));
 }
 
 //----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ void FapUACurveAxisDefinition::editResult()
 
 //----------------------------------------------------------------------------
 
-void FapUACurveAxisDefinition::onOperSelected(const std::string& oper)
+void FapUACurveAxisDefinition::onOperSelected(std::string oper)
 {
   this->currentOper = oper;
   this->axisCompletedCB.invoke();
