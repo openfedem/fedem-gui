@@ -5,20 +5,17 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUI_QT_GRAPHDEFINE_H
-#define FUI_QT_GRAPHDEFINE_H
+#ifndef FUI_QT_GRAPH_DEFINE_H
+#define FUI_QT_GRAPH_DEFINE_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiGraphDefine.H"
 
 
-class FuiQtGraphDefine : public FFuQtMultUIComponent,
-			 public FuiGraphDefine
+class FuiQtGraphDefine : public FFuQtWidget, public FuiGraphDefine
 {
 public:
-  FuiQtGraphDefine(QWidget* parent = 0,
-		   const char* name = "FuiQtGraphDefine");
-  virtual ~FuiQtGraphDefine() {}
+  FuiQtGraphDefine(QWidget* parent, const char* name = "FuiQtGraphDefine");
 
 private:
   virtual void setSensitivity(bool) {}
