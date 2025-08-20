@@ -41,7 +41,6 @@ void FuiAnimationDefine::initWidgets()
   this->tabStack->addTabPage(this->fringeSheet,"Contours");
   this->tabStack->addTabPage(this->modesSheet,"Eigen Modes");
 
-  this->typeFrame->setLabel("Type");
   this->timeRadio->setLabel("Time History");
   this->eigenRadio->setLabel("Eigen Mode");
   this->summaryRadio->setLabel("Time Summary");
@@ -54,61 +53,6 @@ void FuiAnimationDefine::initWidgets()
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 //----------------------------------------------------------------------------
-
-void FuiAnimationDefine::placeWidgets(int width, int height)
-{
-  int border = 6;
-
-  int sep = 3*height/100;
-  int toggleh = height/10;
-  int buttonh = 13*height/100;
-  int frameFonth = this->typeFrame->getFontHeigth();
-
-  int tabl = this->typeFrame->getWidthHint();
-
-  if (this->timeRadio->getWidthHint() > tabl)
-    tabl = this->timeRadio->getWidthHint();
-
-  if (this->eigenRadio->getWidthHint() > tabl)
-    tabl = this->eigenRadio->getWidthHint();
-
-  if (this->loadFringeToggle->getWidthHint() > tabl)
-    tabl = this->loadFringeToggle->getWidthHint();
-
-  if (this->loadLineFringeToggle->getWidthHint() > tabl)
-    tabl = this->loadLineFringeToggle->getWidthHint();
-
-  if (this->loadDefToggle->getWidthHint() > tabl)
-    tabl = this->loadDefToggle->getWidthHint();
-
-  if (this->loadAnimButton->getWidthHint() > tabl)
-    tabl = this->loadAnimButton->getWidthHint();
-
-  tabl += 3*border/2;
-
-  int timec      = border + frameFonth + toggleh/2;
-  int eigenc     = timec  + sep + toggleh;
-  int summaryc   = eigenc  + sep + toggleh;
-  int typeframeb = summaryc + toggleh/2 + sep;
-
-  int fringec     = typeframeb + sep + toggleh/2;
-  int fringeLinec = fringec + sep + toggleh;
-  int defc        = fringeLinec + sep + toggleh;
-  int animc       = height - buttonh/2;
-
-  this->typeFrame->setEdgeGeometry(0,tabl-border,0,typeframeb);
-  this->timeRadio->setCenterYGeometryWidthHint(2*border,timec,toggleh);
-  this->eigenRadio->setCenterYGeometryWidthHint(2*border,eigenc,toggleh);
-  this->summaryRadio->setCenterYGeometryWidthHint(2*border,summaryc,toggleh);
-
-  this->loadFringeToggle->setCenterYGeometryWidthHint(0,fringec,toggleh);
-  this->loadLineFringeToggle->setCenterYGeometryWidthHint(0,fringeLinec,toggleh);
-  this->loadDefToggle->setCenterYGeometryWidthHint(0,defc,toggleh);
-  this->loadAnimButton->setCenterYGeometryWidthHint(0,animc-1,toggleh);
-
-  this->tabStack->setEdgeGeometry(tabl,width, 0,height);
-}
-//-----------------------------------------------------------------------------
 
 FFuaUIValues* FuiAnimationDefine::createValuesObject()
 {
@@ -155,10 +99,6 @@ void FuiAnimationDefine::setUIValues(const FFuaUIValues* values)
 
     this->tabStack->popUp();
     this->tabStack->setCurrentTab(tmpSel);
-
-    // Need to touch the geometry
-    this->tabStack->setWidth(this->tabStack->getWidth()+1);
-    this->tabStack->setWidth(this->tabStack->getWidth()-1);
 
     isTimeHistAnimOld = isTimeHistAnim;
     isContoursAnimOld = isContoursAnim;
@@ -224,161 +164,14 @@ void FuiFringeSheet::initWidgets()
   this->shellAngleField->setDoubleDisplayPrecision(2);
   this->shellAngleField->setZeroDisplayPrecision(1);
 
-  this->averageOperLabel->setLabel("Operation");
-  this->averageOnLabel->setLabel("on");
-  this->shellAngleLabel->setLabel("Max shell average angle");
   this->elementToggle->setLabel("Average across element type");
 
-  this->fringeFrame->setLabel("Contour Value");
-  this->resultClassLabel->setLabel("Result class");
-  this->resultLabel->setLabel("Result");
-  this->resultOperLabel->setLabel("Operation");
-
-  this->resultSetFrame->setLabel("Result Set");
   this->setByOperRadio->setLabel("By operation");
   this->setByNameRadio->setLabel("By name");
 
-  this->averageFrame->setLabel("Averaging");
-  this->multiFaceFrame->setLabel("Multiple Face Results");
   this->elemGrpOperLabel->setLabel("Operation/Element group");
 
   this->autoExportToggle->setLabel("Export animation automatically to VTF");
-}
-//----------------------------------------------------------------------------
-
-void FuiFringeSheet::placeWidgets(int width, int height)
-{
-  int border = 6;
-
-  int sep = height/100;
-  int vsplit = width/2;
-
-  int frameFonth = this->fringeFrame->getFontHeigth();
-  int toggleh = (height - 2*frameFonth - 6*sep - 4 - border)/5;
-
-  int fringeframet = 0;
-  int resclassc = fringeframet+frameFonth+toggleh/2;
-  int resc = resclassc+sep+toggleh;
-  int resoperc = resc+sep+toggleh;
-  int fringeframeb = resoperc+toggleh/2+sep+ 2;
-
-  int setframet = fringeframeb+sep;
-  int byoperc = setframet+frameFonth+toggleh/2;
-  int bynamec = byoperc+sep+toggleh;
-  int setframeb = height-border;//bynamec+toggleh/2+sep;
-
-  int averframet = fringeframet;
-  int averframeb = fringeframeb;
-
-  int multiframet = setframet;//averframeb+sep;
-  int elemoperc   = byoperc;
-  int multiframeb = height-border-toggleh;
-
-  // Compute menu widths
-
-  int fringemenuw = 0;
-  if (this->resultClassMenu->getWidthHint() > fringemenuw)
-    fringemenuw = this->resultClassMenu->getWidthHint();
-  if (this->resultMenu->getWidthHint() > fringemenuw)
-    fringemenuw = this->resultMenu->getWidthHint();
-  if (this->resultOperMenu->getWidthHint() > fringemenuw)
-    fringemenuw = this->resultOperMenu->getWidthHint();
-
-  int fringelabelw = 0;
-  if (this->resultClassLabel->getWidthHint() > fringelabelw)
-    fringelabelw = this->resultClassLabel->getWidthHint();
-  if (this->resultLabel->getWidthHint() > fringelabelw)
-    fringelabelw = this->resultLabel->getWidthHint();
-  if (this->resultOperLabel->getWidthHint() > fringelabelw)
-    fringelabelw = this->resultOperLabel->getWidthHint();
-
-  int right = vsplit - border/2;
-  int availfringemenuw = right - fringelabelw - 4*border;
-  if (fringemenuw > availfringemenuw) fringemenuw = availfringemenuw;
-
-  int setmenuw = 0;
-  if (this->setOperMenu->getWidthHint() > setmenuw)
-    setmenuw = this->setOperMenu->getWidthHint();
-  if (this->setNameMenu->getWidthHint() > setmenuw)
-    setmenuw = this->setNameMenu->getWidthHint();
-
-  int setlabelw = 0;
-  if (this->setByOperRadio->getWidthHint() > setlabelw)
-    setlabelw = this->setByOperRadio->getWidthHint();
-  if (this->setByNameRadio->getWidthHint() > setlabelw)
-    setlabelw = this->setByNameRadio->getWidthHint();
-
-  int availsetmenuw = right - setlabelw - 4*border;
-  if (setmenuw > availsetmenuw) setmenuw = availsetmenuw;
-
-  int multimenuw = 0;
-  if (this->averageOperMenu->getWidthHint() > multimenuw)
-    multimenuw = this->averageOperMenu->getWidthHint();
-  if (this->elemGrpOperMenu->getWidthHint() > multimenuw)
-    multimenuw = this->elemGrpOperMenu->getWidthHint();
-
-  int multilabelw = this->elemGrpOperLabel->getWidthHint();
-  int left = right + border;
-  int availmultimenuw = width - 4*border - multilabelw - left;
-  if (multimenuw > availmultimenuw) multimenuw = availmultimenuw;
-
-  // Set widget geometries
-
-  int menubegin = right - border - fringemenuw;
-  this->fringeFrame->setEdgeGeometry(border,right,fringeframet,fringeframeb);
-
-  this->resultClassLabel->setCenterYGeometryWidthHint(2*border,resclassc,toggleh);
-  this->resultClassMenu->setCenterYGeometry(menubegin,resclassc,fringemenuw,toggleh);
-
-  this->resultLabel->setCenterYGeometryWidthHint(2*border,resc,toggleh);
-  this->resultMenu->setCenterYGeometry(menubegin,resc,fringemenuw,toggleh);
-
-  this->resultOperLabel->setCenterYGeometryWidthHint(2*border,resoperc,toggleh);
-  this->resultOperMenu->setCenterYGeometry(menubegin,resoperc,fringemenuw,toggleh);
-
-  menubegin = right - border - setmenuw;
-  this->resultSetFrame->setEdgeGeometry(border,right,setframet,setframeb);
-
-  this->setByOperRadio->setCenterYGeometryWidthHint(2*border,byoperc,toggleh);
-  this->setOperMenu->setCenterYGeometry(menubegin,byoperc,setmenuw,toggleh);
-
-  this->setByNameRadio->setCenterYGeometryWidthHint(2*border,bynamec,toggleh);
-  this->setNameMenu->setCenterYGeometry(menubegin,bynamec,setmenuw,toggleh);
-
-  this->averageFrame->setEdgeGeometry(left,width-border,averframet,averframeb);
-  this->multiFaceFrame->setEdgeGeometry(left,width-border,multiframet,multiframeb);
-  left += border;
-
-  int y = resclassc;
-  this->averageOperLabel->setCenterYGeometry(left,y,this->averageOperLabel->getWidthHint(),toggleh);
-  menubegin = left + this->averageOperLabel->getWidthHint() + border;
-  int operMenuEnd = menubegin + multimenuw;
-  this->averageOperMenu->setCenterYGeometry(menubegin,y,multimenuw,toggleh);
-  menubegin = width - this->averageOnMenu->getWidthHint() - 2*border;
-  this->averageOnMenu->setCenterYGeometry(menubegin,y,this->averageOnMenu->getWidthHint(),toggleh);
-  menubegin -= this->averageOnLabel->getWidthHint() + border;
-  if (menubegin > operMenuEnd) {
-    this->averageOnLabel->popUp();
-    this->averageOnLabel->setCenterYGeometry(menubegin,y,this->averageOnLabel->getWidthHint(),toggleh);
-  }
-  else
-    this->averageOnLabel->popDown();
-  y += toggleh + 2*sep;
-  this->shellAngleLabel->setCenterYGeometry(left,y,this->shellAngleLabel->getWidthHint(),toggleh);
-  this->shellAngleField->setCenterYGeometry(left+this->shellAngleLabel->getWidthHint()+border,y,
-					    width-left-3*border-this->shellAngleLabel->getWidthHint(),toggleh);
-  y += toggleh + 2*sep;
-  this->elementToggle->setCenterYGeometry(left,y,this->elementToggle->getWidthHint(),toggleh);
-
-  menubegin = width - 2*border - multimenuw;
-  this->elemGrpOperLabel->setCenterYGeometryWidthHint(left,elemoperc,toggleh);
-  this->elemGrpOperMenu->setCenterYGeometry(menubegin,elemoperc,multimenuw,toggleh);
-
-  this->autoExportToggle->setCenterYGeometryWidthHint(left,height-toggleh/2,toggleh);
-  if (this->showAutoExToggle)
-    this->autoExportToggle->popUp();
-  else
-    this->autoExportToggle->popDown();
 }
 //-----------------------------------------------------------------------------
 
@@ -428,10 +221,11 @@ void FuiFringeSheet::setUIValues(const FFuaUIValues* values)
   }
   this->elemGrpOperMenu->selectOption(animValues->selElemGrpOper,false);
 
-  this->autoExportToggle->setValue(animValues->autoExport > 0);
-  this->showAutoExToggle = animValues->autoExport >= 0;
-
-  this->placeWidgets(this->getWidth(),this->getHeight());
+  autoExportToggle->setValue(animValues->autoExport > 0);
+  if (animValues->autoExport >= 0)
+    autoExportToggle->popUp();
+  else
+    autoExportToggle->popDown();
 }
 //----------------------------------------------------------------------------
 
@@ -454,8 +248,8 @@ void FuiFringeSheet::getUIValues(FFuaUIValues* values)
 
   animValues->selElemGrpOper = this->elemGrpOperMenu->getSelectedOptionStr();
 
-  if (this->showAutoExToggle)
-    animValues->autoExport = this->autoExportToggle->getValue();
+  if (autoExportToggle->isPoppedUp())
+    animValues->autoExport = autoExportToggle->getValue();
   else
     animValues->autoExport = -1;
 }
@@ -485,56 +279,10 @@ void FuiTimeSheet::initWidgets()
   this->stopField->setDoubleDisplayPrecision(6);
   this->stopField->setZeroDisplayPrecision(1);
 
-  this->timeFrame->setLabel("Time Window");
   this->completeSimRadio->setLabel("Complete simulation");
   this->timeIntRadio->setLabel("Time interval");
-  this->startLabel->setLabel("Start");
-  this->stopLabel->setLabel("Stop");
-  this->framesFrame->setLabel("Animation Frames");
   this->mostFramesRadio->setLabel("For every time step");
   this->leastFramesRadio->setLabel("Only for requested results");
-}
-//----------------------------------------------------------------------------
-
-void FuiTimeSheet::placeWidgets(int width,int height)
-{
-  int border = 6;
-
-  int sep = 3*height/100;
-  int vsplit = width/2;
-
-  int toggleh = 13*height/100;
-  int frameFonth = this->timeFrame->getFontHeigth();
-
-  int timeframet = border;
-  int completec = timeframet+frameFonth+toggleh/2;
-  int timec = completec+sep+toggleh;
-  int startc = timec+sep+toggleh;
-  int stopc = startc+sep+toggleh;
-  int timeframeb = height-border;//stopc+toggleh/2+sep;
-
-  int framesframet = timeframet;
-  int mostc = completec;
-  int leastc = timec;
-  int framesframeb = timeframeb;
-
-  this->timeFrame->setEdgeGeometry(border,vsplit-border/2,timeframet,timeframeb);
-
-  this->completeSimRadio->setCenterYGeometryWidthHint(2*border,completec,toggleh);
-  this->timeIntRadio->setCenterYGeometryWidthHint(2*border,timec,toggleh);
-
-  this->startLabel->setCenterYGeometryWidthHint(5*border,startc,toggleh);
-  int fieldl = this->startLabel->getXPos()+this->startLabel->getWidth()+border;
-  int fieldw = vsplit-3*border/2 - fieldl;
-  this->startField->setCenterYGeometry(fieldl,startc,fieldw,toggleh);
-
-  this->stopLabel->setCenterYGeometryWidthHint(5*border,stopc,toggleh);
-  this->stopField->setCenterYGeometry(fieldl,stopc,fieldw,toggleh);
-
-  this->framesFrame->setEdgeGeometry(vsplit+border/2,width-border,framesframet,framesframeb);
-
-  this->mostFramesRadio->setCenterYGeometryWidthHint(vsplit+3*border/2,mostc,toggleh);
-  this->leastFramesRadio->setCenterYGeometryWidthHint(vsplit+3*border/2,leastc,toggleh);
 }
 //-----------------------------------------------------------------------------
 
@@ -596,6 +344,7 @@ void FuiModesSheet::initWidgets()
 
   this->linkMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
   this->linkMenu->setTextForNoRefSelected("(All parts)");
+  this->linkMenu->setMaxHeight(25);
 
   this->scaleField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->scaleField->setDoubleDisplayMode(FFuIOField::AUTO);
@@ -612,14 +361,8 @@ void FuiModesSheet::initWidgets()
   this->dampedField->setInputCheckMode(FFuIOField::INTEGERCHECK);
 
   // Labels
-  this->eigenFrame->setLabel("Mode Selection");
   this->linkLabel->setLabel("Part");
   this->timeLabel->setLabel("Time");
-  this->modeLabel->setLabel("Mode");
-  this->scaleLabel->setLabel("Scale");
-
-  this->animFrame->setLabel("Frame Generation");
-  this->framesPrLabel->setLabel("Frames per cycle");
 
   this->lengthFrame->setLabel("Length");
   this->timeLengthRadio->setLabel("Time");
@@ -627,113 +370,6 @@ void FuiModesSheet::initWidgets()
   this->dampedRadio->setLabel("Until % damped");
 }
 //----------------------------------------------------------------------------
-
-void FuiModesSheet::placeWidgets(int width, int height)
-{
-  int border = 6;
-
-  int sep = 3*height/100;
-  int vsplit = 2*width/5;
-
-  int toggleh = 13*height/100;
-  int frameFonth = this->eigenFrame->getFontHeigth();
-
-  int modeframet = border;
-  int typec = modeframet + frameFonth + toggleh/2;
-  int timec = typec + sep + toggleh;
-  int modec = timec + sep + toggleh;
-  int scalec = modec + sep + toggleh;
-  int modeframeb = height - border;
-
-  int animframet = modeframet;
-  int prcycl = typec;
-  int animframeb = modeframeb;
-
-  // Set geometries
-
-  // Mode Selection frame
-  int fieldl = this->modeLabel->getWidth() + 5*border;
-  int fieldw = vsplit - 3*border/2 - fieldl;
-
-  this->eigenFrame->setEdgeGeometry(border,vsplit-border/2,modeframet,modeframeb);
-  this->typeMenu->setCenterYGeometry(2*border,typec,vsplit-7*border/2,toggleh);
-
-  // Dynamic UI depending on the selected modes type
-  if (this->showLinkMenu) {
-    // component modes or free-free reduced modes
-    this->timeLabel->popDown();
-    this->timeMenu->popDown();
-    this->linkLabel->setCenterYGeometryWidthHint(2*border,timec,toggleh);
-    this->linkMenu->setCenterYGeometry(fieldl,timec,fieldw,toggleh);
-    this->linkLabel->popUp();
-    this->linkMenu->popUp();
-  }
-  else {
-    // system modes
-    this->linkLabel->popDown();
-    this->linkMenu->popDown();
-    this->timeLabel->setCenterYGeometryWidthHint(2*border,timec,toggleh);
-    this->timeMenu->setCenterYGeometry(fieldl,timec,fieldw,toggleh);
-    this->timeLabel->popUp();
-    this->timeMenu->popUp();
-  }
-
-  this->modeLabel->setCenterYGeometryWidthHint(2*border,modec,toggleh);
-  this->modeMenu->setCenterYGeometry(fieldl,modec,fieldw,toggleh);
-
-  this->scaleLabel->setCenterYGeometryWidthHint(2*border,scalec,toggleh);
-  this->scaleField->setCenterYGeometry(fieldl,scalec,fieldw,toggleh);
-
-  // Frame Generation frame
-  this->animFrame->setEdgeGeometry(vsplit+border/2,width-border,animframet,animframeb);
-
-  this->framesPrLabel->setCenterYGeometryWidthHint(vsplit+3*border/2,prcycl,toggleh);
-
-  fieldl = this->framesPrLabel->getXPos() + this->framesPrLabel->getWidth() + border;
-  fieldw = width - 3*border - fieldl;
-  this->framesPrField->setCenterYGeometry(fieldl,prcycl,fieldw,toggleh);
-
-  // Dynamic UI depending on the selected modes type
-  if (this->showLinkMenu) {
-    // component modes or free-free reduced modes
-    this->lengthFrame->popDown();
-    this->timeLengthRadio->popDown();
-    this->timeLengthField->popDown();
-    this->nCyclRadio->popDown();
-    this->nCyclField->popDown();
-    this->dampedRadio->popDown();
-    this->dampedField->popDown();
-  }
-  else {
-    // system modes
-    int lengthframet = prcycl + sep + toggleh/2;
-    int timelengthc = lengthframet + frameFonth + toggleh/2;
-    int ncyclc = timelengthc + sep + toggleh;
-    int dampedc = ncyclc + sep + toggleh;
-    int lengthframeb = animframeb - border;
-
-    this->lengthFrame->setEdgeGeometry(vsplit+3*border/2,width-2*border,lengthframet,lengthframeb);
-
-    this->timeLengthRadio->setCenterYGeometryWidthHint(vsplit+5*border/2,timelengthc,toggleh);
-    this->nCyclRadio->setCenterYGeometryWidthHint(vsplit+5*border/2,ncyclc,toggleh);
-    this->dampedRadio->setCenterYGeometryWidthHint(vsplit+5*border/2,dampedc,toggleh);
-
-    fieldl = this->dampedRadio->getXPos() + this->dampedRadio->getWidth() + border;
-    fieldw = width - 3*border - fieldl;
-    this->timeLengthField->setCenterYGeometry(fieldl,timelengthc,fieldw,toggleh);
-    this->nCyclField->setCenterYGeometry(fieldl,ncyclc,fieldw,toggleh);
-    this->dampedField->setCenterYGeometry(fieldl,dampedc,fieldw,toggleh);
-
-    this->lengthFrame->popUp();
-    this->timeLengthRadio->popUp();
-    this->timeLengthField->popUp();
-    this->nCyclRadio->popUp();
-    this->nCyclField->popUp();
-    this->dampedRadio->popUp();
-    this->dampedField->popUp();
-  }
-}
-//-----------------------------------------------------------------------------
 
 void FuiModesSheet::setUIValues(const FFuaUIValues* values)
 {
@@ -761,13 +397,28 @@ void FuiModesSheet::setUIValues(const FFuaUIValues* values)
   this->timeLengthField->setSensitivity(animValues->timeLength);
   this->nCyclField->setSensitivity(animValues->nCycles);
   this->dampedField->setSensitivity(animValues->untilDamped);
-  this->showLinkMenu = animValues->modeTyp > 0;
 
   this->timeLengthField->setValue(animValues->timeLengthVal);
   this->nCyclField->setValue(animValues->nCyclesVal);
   this->dampedField->setValue(animValues->untilDampedVal);
 
-  this->placeWidgets(this->getWidth(),this->getHeight());
+  // Dynamic UI depending on the selected modes type
+  if (animValues->modeTyp > 0) {
+    // component modes or free-free reduced modes
+    timeLabel->popDown();
+    timeMenu->popDown();
+    linkLabel->popUp();
+    linkMenu->popUp();
+    lengthFrame->popDown();
+  }
+  else {
+    // system modes
+    linkLabel->popDown();
+    linkMenu->popDown();
+    timeLabel->popUp();
+    timeMenu->popUp();
+    lengthFrame->popUp();
+  }
 }
 //----------------------------------------------------------------------------
 

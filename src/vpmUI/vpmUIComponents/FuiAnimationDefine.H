@@ -8,7 +8,7 @@
 #ifndef FUI_ANIMATION_DEFINE_H
 #define FUI_ANIMATION_DEFINE_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include "FFuLib/FFuLogicButtonGroup.H"
@@ -32,26 +32,21 @@ class FFuaQueryBase;
 class FmModelMemberBase;
 
 
-class FuiAnimationDefine : virtual public FFuMultUIComponent,
-			   public FFuUAExistenceHandler,
-			   public FFuUADataHandler
+class FuiAnimationDefine : virtual public FFuComponentBase,
+                           public FFuUAExistenceHandler,
+                           public FFuUADataHandler
 {
 public:
-  FuiAnimationDefine() {}
-  virtual ~FuiAnimationDefine() {}
-
-  void setLoadAnimCB(const FFaDynCB0& dynCB) { this->loadAnimCB = dynCB; }
+  void setLoadAnimCB(const FFaDynCB0& dynCB) { loadAnimCB = dynCB; }
 
 protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
-
   // Inside callback functions
-  void onLoadAnimButtonClicked() { this->loadAnimCB.invoke(); }
-  void onTabSheetChanged() { this->updateDBValues(); }
-  void onButtonToggled(bool) { this->updateDBValues(); }
+  void onLoadAnimButtonClicked()     { loadAnimCB.invoke(); }
+  void onTabSheetChanged()           { this->updateDBValues(); }
+  void onButtonToggled(bool)         { this->updateDBValues(); }
   void onRadioGroupToggled(int,bool) { this->updateDBValues(); }
 
   // From datahandler
@@ -60,7 +55,6 @@ private:
   virtual void getUIValues(FFuaUIValues* values);
 
 protected:
-  FFuLabelFrame* typeFrame;
   FFuRadioButton* timeRadio;
   FFuRadioButton* eigenRadio;
   FFuRadioButton* summaryRadio;
@@ -82,13 +76,10 @@ private:
 };
 /////////////////////////////////////////////////////////////////////////////
 
-class FuiFringeSheet : virtual public FFuMultUIComponent
+class FuiFringeSheet : virtual public FFuComponentBase
 {
 public:
-  FuiFringeSheet() { showAutoExToggle = false; }
-  virtual ~FuiFringeSheet() {}
-
-  void setDataChangedCB(const FFaDynCB0& dynCB) { this->dataChangedCB = dynCB; }
+  void setDataChangedCB(const FFaDynCB0& dynCB) { dataChangedCB = dynCB; }
 
   void setUIValues(const FFuaUIValues* values);
   void getUIValues(FFuaUIValues* values);
@@ -97,40 +88,28 @@ protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
-
   // Inside callback functions
-  void onMenuSelected(int) { this->dataChangedCB.invoke(); }
-  void onButtonToggled(bool) { this->dataChangedCB.invoke(); }
-  void onRadioGroupToggled(int,bool) { this->dataChangedCB.invoke(); }
-  void onFieldValueChanged(char*) { this->dataChangedCB.invoke(); }
+  void onMenuSelected(int)           { dataChangedCB.invoke(); }
+  void onButtonToggled(bool)         { dataChangedCB.invoke(); }
+  void onRadioGroupToggled(int,bool) { dataChangedCB.invoke(); }
+  void onFieldValueChanged(char*)    { dataChangedCB.invoke(); }
 
 protected:
-  FFuLabelFrame* fringeFrame;
-  FFuLabel* resultClassLabel;
   FFuOptionMenu* resultClassMenu;
-  FFuLabel* resultLabel;
   FFuOptionMenu* resultMenu;
-  FFuLabel* resultOperLabel;
   FFuOptionMenu* resultOperMenu;
 
-  FFuLabelFrame* resultSetFrame;
   FFuRadioButton* setByOperRadio;
   FFuOptionMenu* setOperMenu;
   FFuRadioButton* setByNameRadio;
   FFuOptionMenu* setNameMenu;
   FFuLogicButtonGroup resultSetRadioGroup;
 
-  FFuLabelFrame* averageFrame;
-  FFuLabel* averageOperLabel;
   FFuOptionMenu* averageOperMenu;
-  FFuLabel* averageOnLabel;
   FFuOptionMenu* averageOnMenu;
-  FFuLabel* shellAngleLabel;
   FFuIOField* shellAngleField;
   FFuToggleButton* elementToggle;
 
-  FFuLabelFrame* multiFaceFrame;
   FFuLabel* elemGrpOperLabel;
   FFuOptionMenu* elemGrpOperMenu;
 
@@ -138,19 +117,13 @@ protected:
 
 private:
   FFaDynCB0 dataChangedCB;
-
-  bool showAutoExToggle;
 };
 /////////////////////////////////////////////////////////////////////////////
 
-class FuiTimeSheet : virtual public FFuMultUIComponent
+class FuiTimeSheet : virtual public FFuComponentBase
 {
 public:
-  FuiTimeSheet() {}
-  virtual ~FuiTimeSheet() {}
-
-public:
-  void setDataChangedCB(const FFaDynCB0& dynCB) { this->dataChangedCB = dynCB; }
+  void setDataChangedCB(const FFaDynCB0& dynCB) { dataChangedCB = dynCB; }
 
   void setUIValues(const FFuaUIValues* values);
   void getUIValues(FFuaUIValues* values);
@@ -159,15 +132,12 @@ protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
-
   // Inside callback functions
-  void onButtonToggled(bool) { this->dataChangedCB.invoke(); }
-  void onFieldValueChanged(char*) { this->dataChangedCB.invoke(); }
-  void onRadioGroupToggled(int,bool) { this->dataChangedCB.invoke(); }
+  void onButtonToggled(bool)         { dataChangedCB.invoke(); }
+  void onFieldValueChanged(char*)    { dataChangedCB.invoke(); }
+  void onRadioGroupToggled(int,bool) { dataChangedCB.invoke(); }
 
 protected:
-  FFuLabelFrame* timeFrame;
   FFuRadioButton* completeSimRadio;
   FFuRadioButton* timeIntRadio;
   FFuLogicButtonGroup timeRadioGroup;
@@ -177,7 +147,6 @@ protected:
   FFuIOField* startField;
   FFuIOField* stopField;
 
-  FFuLabelFrame* framesFrame;
   FFuRadioButton* mostFramesRadio;
   FFuRadioButton* leastFramesRadio;
   FFuLogicButtonGroup framesRadioGroup;
@@ -187,13 +156,10 @@ private:
 };
 /////////////////////////////////////////////////////////////////////////////
 
-class FuiModesSheet : virtual public FFuMultUIComponent
+class FuiModesSheet : virtual public FFuComponentBase
 {
 public:
-  FuiModesSheet() { showLinkMenu = false; }
-  virtual ~FuiModesSheet() {}
-
-  void setDataChangedCB(const FFaDynCB0& dynCB) { this->dataChangedCB = dynCB; }
+  void setDataChangedCB(const FFaDynCB0& dynCB) { dataChangedCB = dynCB; }
 
   void setUIValues(const FFuaUIValues* values);
   void getUIValues(FFuaUIValues* values);
@@ -202,28 +168,20 @@ protected:
   void initWidgets();
 
 private:
-  virtual void placeWidgets(int width, int height);
-
   // Inside callback functions
-  void onMenuSelected(int) { this->dataChangedCB.invoke(); }
-  void onButtonToggled(bool) { this->dataChangedCB.invoke(); }
-  void onFieldValueChanged(char*) { this->dataChangedCB.invoke(); }
-  void onRadioGroupToggled(int,bool) { this->dataChangedCB.invoke(); }
+  void onMenuSelected(int)           { dataChangedCB.invoke(); }
+  void onButtonToggled(bool)         { dataChangedCB.invoke(); }
+  void onFieldValueChanged(char*)    { dataChangedCB.invoke(); }
+  void onRadioGroupToggled(int,bool) { dataChangedCB.invoke(); }
 
 protected:
-  FFuLabelFrame* eigenFrame;
   FFuOptionMenu* typeMenu;
   FFuLabel* linkLabel;
   FuiQueryInputField* linkMenu;
   FFuLabel* timeLabel;
   FFuOptionMenu* timeMenu;
-  FFuLabel* modeLabel;
   FFuOptionMenu* modeMenu;
-  FFuLabel* scaleLabel;
   FFuIOField* scaleField;
-
-  FFuLabelFrame* animFrame;
-  FFuLabel* framesPrLabel;
   FFuIOField* framesPrField;
 
   FFuLabelFrame* lengthFrame;
@@ -235,8 +193,6 @@ protected:
   FFuIOField* dampedField;
   FFuLogicButtonGroup lengthRadioGroup;
 
-  bool showLinkMenu;
-
 private:
   FFaDynCB0 dataChangedCB;
 };
@@ -245,45 +201,12 @@ private:
 class FuaAnimationDefineValues : public FFuaUIValues
 {
 public:
-  FuaAnimationDefineValues() {
-    this->isModesAnim = false;
-    this->isSummaryAnim = false;
-    this->loadFringe = false;
-    this->loadLineFringe = false;
-    this->loadDef = false;
-    this->resultSetByName = false;
-    this->shellAngle = 0.0;
-    this->acrossElemType = false;
-    this->acrossMatBorder = false;
-    this->acrossPropBorder = false;
-    this->autoExport = false;
-    this->complSimul = false;
-    this->start = 0.0;
-    this->stop = 0.0;
-    this->mostFrames = false;
-    this->modeTyp = 0;
-    this->linkQuery = 0;
-    this->selLink = 0;
-    this->selTime = 0.0;
-    this->selMode = 0;
-    this->modeScale = 0.0;
-    this->framesPrCycle = 0;
-    this->timeLength = false;
-    this->timeLengthVal = 0.0;
-    this->nCycles = false;
-    this->nCyclesVal = 0;
-    this->untilDamped = false;
-    this->untilDampedVal = 0;
-  }
-  virtual ~FuaAnimationDefineValues() {}
-
-public:
   // COMMON
-  bool isModesAnim;
-  bool isSummaryAnim;
-  bool loadFringe;
-  bool loadLineFringe;
-  bool loadDef;
+  bool isModesAnim = false;
+  bool isSummaryAnim = false;
+  bool loadFringe = false;
+  bool loadLineFringe = false;
+  bool loadDef = false;
 
   // FRINGE
   // value
@@ -291,7 +214,7 @@ public:
   std::set<std::string>    results;       std::string selResult;
   std::vector<std::string> resultOpers;   std::string selResultOper;
 
-  bool resultSetByName;
+  bool resultSetByName = false;
   std::vector<std::string> resultSetOpers; std::string selResultSetOper;
   std::set<std::string>    resultSets;     std::string selResultSet;
 
@@ -299,35 +222,36 @@ public:
   std::vector<std::string> averOns;   std::string selAverOn;
   std::vector<std::string> averOpers; std::string selAverOper;
 
-  double shellAngle;
-  bool acrossElemType;
-  bool acrossMatBorder;
-  bool acrossPropBorder;
+  double shellAngle = 0.0;
+  bool acrossElemType = false;
+  bool acrossMatBorder = false;
+  bool acrossPropBorder = false;
 
   // multi face
   std::vector<std::string> elemGrps;     std::string selElemGrp;
   std::vector<std::string> elemGrpOpers; std::string selElemGrpOper;
 
-  char autoExport;
+  char autoExport = false;
 
   // TIME
-  bool   complSimul;
-  double start, stop;
-  bool   mostFrames;
+  bool   complSimul = false;
+  double start = 0.0;
+  double stop = 0.0;
+  bool   mostFrames = false;
 
   // MODES
-  int modeTyp;
-  FFuaQueryBase*     linkQuery;
-  FmModelMemberBase* selLink;
-  std::vector<double> times; double selTime;
-  std::vector<int>    modes; int    selMode;
+  int modeTyp = 0;
+  FFuaQueryBase*     linkQuery = NULL;
+  FmModelMemberBase* selLink = NULL;
+  std::vector<double> times; double selTime = 0.0;
+  std::vector<int>    modes; int    selMode = 0;
 
-  double modeScale;
-  int    framesPrCycle;
+  double modeScale = 0.0;
+  int    framesPrCycle = 0;
 
-  bool timeLength;  double timeLengthVal;
-  bool nCycles;     int nCyclesVal;
-  bool untilDamped; int untilDampedVal;
+  bool timeLength = false;  double timeLengthVal = 0.0;
+  bool nCycles = false;     int nCyclesVal = 0;
+  bool untilDamped = false; int untilDampedVal = 0;
 };
 /////////////////////////////////////////////////////////////////////////////
 
