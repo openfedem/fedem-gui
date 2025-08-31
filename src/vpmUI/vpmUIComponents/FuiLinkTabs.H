@@ -32,6 +32,7 @@ class FuiPositionData;
 class Fui3DPoint;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
+class FuiDynamicProperties;
 class FmIsPositionedBase;
 class FmModelMemberBase;
 
@@ -153,14 +154,8 @@ protected:
   FFuLabel*           suppressInSolverLabel;
 
   FFuLabelFrame* feModelFrame;
-  FFuLabelFrame* structDampFrame;
-  FFuLabelFrame* dynPropFrame;
   FFuLabelField* repositoryFileField;
   FFuLabelField* importedFileField;
-  FFuLabelField* massProportionalField;
-  FFuLabelField* stiffProportionalField;
-  FFuLabelField* stiffScaleField;
-  FFuLabelField* massScaleField;
   FFuLabel*      unitConversionLabel;
   FFuPushButton* changeLinkBtn;
 
@@ -170,6 +165,7 @@ protected:
   FFuLabel*      vizLabel;
 
   FuiReductionFrame* reductionFrame;
+  FuiDynamicProperties* dynamicProps;
 
 private:
   void onSuppressInSolverToggeled(bool);

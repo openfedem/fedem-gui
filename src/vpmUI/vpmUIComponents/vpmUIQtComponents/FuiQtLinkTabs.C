@@ -24,6 +24,7 @@
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtPositionData.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQt3DPoint.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtQueryInputField.H"
+#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtDynamicProperties.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtLinkTabs.H"
 
 
@@ -63,8 +64,6 @@ FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
   suppressInSolverToggle = new FFuQtToggleButton();
 
   feModelFrame = new FFuQtLabelFrame();
-  structDampFrame = new FFuQtLabelFrame();
-  dynPropFrame = new FFuQtLabelFrame();
 
   repositoryFileField = new FFuQtLabelField();
   changeLinkBtn = new FFuQtPushButton();
@@ -77,11 +76,7 @@ FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
   vizChangeBtn = new FFuQtPushButton();
   vizLabel = new FFuQtLabel();
 
-  massProportionalField = new FFuQtLabelField();
-  stiffProportionalField = new FFuQtLabelField();
-
-  stiffScaleField = new FFuQtLabelField();
-  massScaleField = new FFuQtLabelField();
+  dynamicProps = new FuiQtDynamicProperties();
 
   this->initWidgets();
 
@@ -128,22 +123,11 @@ FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
   layout->addWidget(vizFrame->getQtWidget());
   layout->addWidget(reductionFrame->getQtWidget());
 
-  layout = new QVBoxLayout(structDampFrame->getQtWidget());
-  layout->setContentsMargins(5,0,5,5);
-  layout->addWidget(massProportionalField->getQtWidget());
-  layout->addWidget(stiffProportionalField->getQtWidget());
-
-  layout = new QVBoxLayout(dynPropFrame->getQtWidget());
-  layout->setContentsMargins(5,0,5,5);
-  layout->addWidget(stiffScaleField->getQtWidget());
-  layout->addWidget(massScaleField->getQtWidget());
-
-  QGridLayout* mainLayout = new QGridLayout(this);
-  mainLayout->setContentsMargins(5,5,5,5);
-  mainLayout->addWidget(qUpper, 0,0, 1,2);
-  mainLayout->addWidget(structDampFrame->getQtWidget(), 1,0);
-  mainLayout->addWidget(dynPropFrame->getQtWidget(), 1,1);
-  mainLayout->addWidget(suppressInSolverLabel->getQtWidget(), 2,0,1,2);
+  layout = new QVBoxLayout(this);
+  layout->setContentsMargins(5,5,5,5);
+  layout->addWidget(qUpper);
+  layout->addWidget(dynamicProps->getQtWidget());
+  layout->addWidget(suppressInSolverLabel->getQtWidget());
 }
 
 

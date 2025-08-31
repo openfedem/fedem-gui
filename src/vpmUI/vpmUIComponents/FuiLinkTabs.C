@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmUI/vpmUIComponents/FuiLinkTabs.H"
+#include "vpmUI/vpmUIComponents/FuiDynamicProperties.H"
 #include "vpmUI/vpmUIComponents/FuiPositionData.H"
 #include "vpmUI/vpmUIComponents/Fui3DPoint.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
@@ -61,25 +62,7 @@ void FuiLinkModelSheet::initWidgets()
   this->changeLinkBtn->setActivateCB(FFaDynCB0M(FFaDynCB0,&changeLinkCB,invoke));
   this->unitConversionLabel->setLabel("No unit conversion");
 
-  this->structDampFrame->setLabel("Structural Damping");
-  this->massProportionalField->setLabel("Mass proportional");
-  this->massProportionalField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->massProportionalField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-  this->stiffProportionalField->setLabel("Stiffness proportional");
-  this->stiffProportionalField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->stiffProportionalField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-  this->massProportionalField->setLabelWidth(this->stiffProportionalField->myLabel->getWidthHint());
-
-  this->dynPropFrame->setLabel("Scaling of Dynamic Properties");
-  this->stiffScaleField->setLabel("Stiffness");
-  this->stiffScaleField->setToolTip("Scaling of stiffness");
-  this->stiffScaleField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->stiffScaleField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-  this->massScaleField->setLabel("Mass");
-  this->massScaleField->setToolTip("Scaling of mass");
-  this->massScaleField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->massScaleField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-  this->massScaleField->setLabelWidth(this->stiffScaleField->myLabel->getWidthHint());
+  dynamicProps->initWidgets(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
 }
 
 
@@ -112,10 +95,8 @@ void FuiLinkModelSheet::setValues(const FuiLinkValues& values)
   else
     this->vizLabel->setLabel("");
 
-  this->massProportionalField->setValue(values.massDamping);
-  this->stiffProportionalField->setValue(values.stiffDamping);
-  this->stiffScaleField->setValue(values.stiffScale);
-  this->massScaleField->setValue(values.massScale);
+  dynamicProps->setValues(values.massDamping,values.stiffDamping,
+                          values.stiffScale,values.massScale);
 
   reductionFrame->setReducedVersion(values.reducedVersionNumber);
 
@@ -127,10 +108,9 @@ void FuiLinkModelSheet::getValues(FuiLinkValues& values)
 {
   values.suppressInSolver = this->suppressInSolverToggle->getToggle();
   values.useGenericPart = this->genPartBtn->getToggle();
-  values.massDamping = this->massProportionalField->getValue();
-  values.stiffDamping = this->stiffProportionalField->getValue();
-  values.stiffScale = this->stiffScaleField->getValue();
-  values.massScale = this->massScaleField->getValue();
+
+  dynamicProps->getValues(values.massDamping,values.stiffDamping,
+                          values.stiffScale,values.massScale);
 }
 
 
@@ -193,10 +173,8 @@ void FuiLinkModelSheet::setSensitivity(bool s)
   this->changeLinkBtn->setSensitivity(s && this->ICanChange);
   this->vizField->setSensitivity(s && this->ICanChangeViz);
   this->vizChangeBtn->setSensitivity(s && this->ICanChangeViz);
-  this->massProportionalField->setSensitivity(s);
-  this->stiffProportionalField->setSensitivity(s);
-  this->stiffScaleField->setSensitivity(s);
-  this->massScaleField->setSensitivity(s);
+
+  dynamicProps->setSensitivity(s);
 }
 
 
@@ -214,15 +192,13 @@ void FuiLinkModelSheet::update()
   }
 
   if (suppressInSolverToggle->getToggle()) {
-    reductionFrame->popDown();
-    structDampFrame->popDown();
-    dynPropFrame->popDown();
     suppressInSolverLabel->popUp();
+    reductionFrame->popDown();
+    dynamicProps->popDown();
   }
   else {
-    structDampFrame->popUp();
-    dynPropFrame->popUp();
     suppressInSolverLabel->popDown();
+    dynamicProps->popUp();
   }
 }
 
