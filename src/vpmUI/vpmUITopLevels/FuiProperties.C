@@ -7,6 +7,7 @@
 
 #include "vpmUI/vpmUITopLevels/FuiProperties.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
+#include "vpmUI/vpmUIComponents/FuiDynamicProperties.H"
 #include "vpmUI/vpmUIComponents/FuiPointEditor.H"
 #ifdef FT_HAS_GRAPHVIEW
 #include "vpmUI/vpmUIComponents/FuiCurveDefine.H"
@@ -126,26 +127,23 @@ void FuiProperties::initWidgets()
   myDescriptionField->popDown();
   myTagField->setLabel("Tag");
   myTagField->myField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onStringChanged,const std::string&));
-  myTagField->popDown();
   myTopologyView->popDown();
 
   // Reference Plane
 
-  myRefPlanePosition->popDown();
-  myRefPlaneSizeFrame->setLabel("Size");
-  myRefPlaneSizeFrame->popDown();
   myRefPlaneHeightField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myRefPlaneHeightField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRefPlaneWidthField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myRefPlaneWidthField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
+  myRefPlane->popDown();
 
   // Higher Pairs
 
   myHPRatioFrame->setLabel("Transmission output ratio");
   myHPRatioFrame->popDown();
+  myHPRatioFrame->setMinWidth(250);
   myHPRatioField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myHPRatioField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myHPRatioField->popDown();
 
   // Spring characteristics
 
@@ -156,9 +154,8 @@ void FuiProperties::initWidgets()
 
   mySpringForce->setAsSpring(true);
   mySpringForce->setChangedCB(FFaDynCB0M(FuiProperties,this,onValuesChanged));
-  mySpringForce->popDown();
   mySpringDeflCalc->setChangedCB(FFaDynCB0M(FuiProperties,this,onValuesChanged));
-  mySpringDeflCalc->popDown();
+  mySpring->popDown();
 
   // Damper
 
@@ -198,144 +195,85 @@ void FuiProperties::initWidgets()
   myAdvancedLinkOptsSheet->setValuesChangedCB(FFaDynCB0M(FuiProperties,this,onValuesChanged));
   myNonlinearLinkOptsSheet->setValuesChangedCB(FFaDynCB0M(FuiProperties,this,onValuesChanged));
 
-  // Beam and Shaft
+  // Beam
 
-  myShaftGeneralFrame->setLabel("General");
+  const char* beamLabels[8] = {
+    "Mass", "Length",
+    "Start", "Stop",
+    "X", "Y", "Z",
+    NULL };
 
-  myShaftCrossSectionDefLabel->setLabel("Cross-section:");
-  myShaftCrossSectionDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myShaftCrossSectionDefField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myShaftCrossSectionDefField->setButtonMeaning(FuiQueryInputField::EDIT);
+  myBeamCrossSectionDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
+  myBeamCrossSectionDefField->setBehaviour(FuiQueryInputField::REF_NONE);
+  myBeamCrossSectionDefField->setButtonMeaning(FuiQueryInputField::EDIT);
+  myBeamCrossSectionDefField->setTextForNoRefSelected("");
 
-  myVisualize3DButton->setLabel("Visualize 3D");
-  myVisualize3DButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
-  myVisualize3DButton->popDown();
-  myVisualize3DStartAngleField->setLabel("Start");
-  myVisualize3DStartAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myVisualize3DStartAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myVisualize3DStartAngleField->popDown();
-  myVisualize3DStopAngleField->setLabel("Stop");
-  myVisualize3DStopAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myVisualize3DStopAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myVisualize3DStopAngleField->popDown();
-
-  myShaftSDFrame->setLabel("Structural Damping");
-
-  myShaftSDMassField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myShaftSDMassField->setLabel("Mass proportional");
-  myShaftSDMassField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-
-  myShaftSDStiffnessField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myShaftSDStiffnessField->setLabel("Stiffness proportional");
-  myShaftSDStiffnessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-
-  myShaftDPFrame->setLabel("Scaling of Dynamic Properties");
-
-  myShaftDPStiffnessField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myShaftDPStiffnessField->setLabel("Stiffness scale");
-  myShaftDPStiffnessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-
-  myShaftDPMassField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myShaftDPMassField->setLabel("Mass scale");
-  myShaftDPMassField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-
-  myShaftNoteALabel->setPixMap(info_xpm);
-  myShaftNoteBLabel->setLabel("<b>Notes</b>");
-  myShaftNoteCLabel->setLabel("Changes applied here will apply to all elements contained in this structure.<br>"
-    "Changes to individual elements can be made by editing their respective property fields.");
-
-  myShaftGeneralFrame->popDown();
-  myShaftCrossSectionDefLabel->popDown();
-  myShaftCrossSectionDefField->popDown();
-  myShaftSDFrame->popDown();
-  myShaftSDMassField->popDown();
-  myShaftSDStiffnessField->popDown();
-  myShaftDPFrame->popDown();
-  myShaftDPStiffnessField->popDown();
-  myShaftDPMassField->popDown();
-  myShaftNoteALabel->popDown();
-  myShaftNoteBLabel->popDown();
-  myShaftNoteCLabel->popDown();
+  myBeamVisualize3DButton->setLabel("Visualize 3D");
+  myBeamVisualize3DButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
+  myBeamVisualize3DButton->useUITristate(false);
 
   myBeamOrientationFrame->setLabel("Local Z-axis definition");
-  myBeamOrientationFrame->popDown();
 
-  const char* labels[4] = { "X", "Y", "Z", NULL };
-  const char** comp = labels;
-  for (FFuLabelField* field : myBeamLocalZField) {
-    field->setLabel(*(comp++));
+  const char** label = beamLabels;
+  myBeamMassField->setLabel(*(label++));
+  myBeamMassField->setSensitivity(false);
+  myBeamLengthField->setLabel(*(label++));
+  myBeamLengthField->setSensitivity(false);
+
+  for (FFuLabelField* field : myBeamVisualize3DFields)
+  {
+    field->setLabel(*(label++));
+    field->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
+    field->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
+  }
+  for (FFuLabelField* field : myBeamLocalZField)
+  {
+    field->setLabel(*(label++));
     field->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
     field->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-    field->popDown();
   }
+
+  myBeamMassField->setLabelWidth(myBeamLengthField->myLabel->getWidthHint());
+
+  myBeamDynProps->initWidgets(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
+
+  myBeam->popDown();
 
   // Turbine, Nacelle, Gearbox, etc. (shared)
 
   mySubassMassField->setLabel("Mass");
   mySubassMassField->setSensitivity(false);
-  mySubassMassField->popDown();
 
   mySubassLengthField->setLabel("Length");
   mySubassLengthField->setSensitivity(false);
-  mySubassLengthField->popDown();
+
+  mySubassMassField->setLabelWidth(mySubassLengthField->myLabel->getWidthHint());
 
   mySubassCoGFrame->setLabel("Center of Gravity");
-  mySubassCoGFrame->popDown();
   mySubassCoGField->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onCoGRefChanged,bool));
   mySubassCoGField->setSensitivity(false);
-  mySubassCoGField->popDown();
+
+  myVisualize3DButton->setLabel("Visualize 3D");
+  myVisualize3DButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
 
   // Turbine
 
   myTurbineWindRefFrame->setLabel("Wind reference point");
+  myTurbineAdvTopologyFrame->setLabel("Advanced topology settings");
 
-  myTurbineWindRefTriadDefLabel->setLabel("Reference triad");
-  myTurbineWindRefTriadDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myTurbineWindRefTriadDefField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myTurbineWindRefTriadDefField->setButtonMeaning(FuiQueryInputField::EDIT);
-
-  myTurbineWindVertOffsetLabel->setLabel("Vertical offset");
   myTurbineWindVertOffsetField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myTurbineWindVertOffsetField->setInputCheckMode(FFuIOField::DOUBLECHECK);
 
-  myTurbineAdvTopologyFrame->setLabel("Advanced topology settings");
-
-  myTurbineYawPointTriadDefLabel->setLabel("Yaw point triad");
-  myTurbineYawPointTriadDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myTurbineYawPointTriadDefField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myTurbineYawPointTriadDefField->setButtonMeaning(FuiQueryInputField::EDIT);
-
-  myTurbineHubApexTriadDefLabel->setLabel("Hub apex triad");
-  myTurbineHubApexTriadDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myTurbineHubApexTriadDefField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myTurbineHubApexTriadDefField->setButtonMeaning(FuiQueryInputField::EDIT);
-
-  myTurbineHubPartDefLabel->setLabel("Hub part");
-  myTurbineHubPartDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myTurbineHubPartDefField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myTurbineHubPartDefField->setButtonMeaning(FuiQueryInputField::EDIT);
-
-  myTurbineFirstBearingDefLabel->setLabel("First bearing");
-  myTurbineFirstBearingDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myTurbineFirstBearingDefField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myTurbineFirstBearingDefField->setButtonMeaning(FuiQueryInputField::EDIT);
-
-  myTurbineWindRefFrame->popDown();
-  myTurbineWindRefTriadDefLabel->popDown();
-  myTurbineWindRefTriadDefField->popDown();
-  myTurbineWindVertOffsetLabel->popDown();
-  myTurbineWindVertOffsetField->popDown();
-  myTurbineAdvTopologyFrame->popDown();
-  myTurbineYawPointTriadDefLabel->popDown();
-  myTurbineYawPointTriadDefField->popDown();
-  myTurbineHubApexTriadDefLabel->popDown();
-  myTurbineHubApexTriadDefField->popDown();
-  myTurbineHubPartDefLabel->popDown();
-  myTurbineHubPartDefField->popDown();
-  myTurbineFirstBearingDefLabel->popDown();
-  myTurbineFirstBearingDefField->popDown();
+  for (FuiQueryInputField* fld : myTurbineFields)
+  {
+    fld->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
+    fld->setBehaviour(FuiQueryInputField::REF_NONE);
+    fld->setButtonMeaning(FuiQueryInputField::EDIT);
+  }
 
   // Generator
+
+  myGeneratorFrame->setLabel("Generator controller");
 
   myGeneratorTorqueRadioBtn->setLabel("Torque control");
   myGeneratorVelocityRadioBtn->setLabel("Velocity control");
@@ -347,14 +285,22 @@ void FuiProperties::initWidgets()
   myGeneratorTorqueField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myGeneratorVelocityField->setBehaviour(FuiQueryInputField::REF_NUMBER);
   myGeneratorVelocityField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
-  myGeneratorTorqueRadioBtn->popDown();
-  myGeneratorVelocityRadioBtn->popDown();
-  myGeneratorTorqueField->popDown();
-  myGeneratorVelocityField->popDown();
+
+  // Shaft
+
+  myShaftCrossSectionDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
+  myShaftCrossSectionDefField->setBehaviour(FuiQueryInputField::REF_NONE);
+  myShaftCrossSectionDefField->setButtonMeaning(FuiQueryInputField::EDIT);
+  myShaftCrossSectionDefField->setTextForNoRefSelected("");
+
+  myShaftDynProps->initWidgets(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
+
+  myShaftNoteCLabel->setLabel("Changes applied to the fields above will apply to all elements contained in this structure.<br>"
+    "Changes to individual elements can be made by editing their respective property fields.");
 
   // Blades
 
-  myBladePitchControlLabel->setLabel("Pitch control");
+  myBladePitchControlFrame->setLabel("Pitch control");
 
   myBladePitchControlField->setBehaviour(FuiQueryInputField::REF_NUMBER);
   myBladePitchControlField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
@@ -363,6 +309,7 @@ void FuiProperties::initWidgets()
   myBladeFixedPitchToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
 
   myBladeIceFrame->setLabel("Ice layer");
+
   myBladeIceLayerToggle->setLabel("Add ice layer");
   myBladeIceLayerToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
 
@@ -370,35 +317,19 @@ void FuiProperties::initWidgets()
   myBladeIceThicknessField->setLabel("Thickness");
   myBladeIceThicknessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
 
-  myBladePitchControlLabel->popDown();
-  myBladePitchControlField->popDown();
-  myBladeFixedPitchToggle->popDown();
-  myBladeIceFrame->popDown();
-  myBladeIceLayerToggle->popDown();
-  myBladeIceThicknessField->popDown();
-
   // Riser, Jacket and Soil Pile
 
-  myRiserGeneralFrame->setLabel("General");
-
-  myRiserInternalToDefLabel->setLabel("Is internal to:");
   myRiserInternalToDefField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myRiserInternalToDefField->setBehaviour(FuiQueryInputField::REF_NONE);
   myRiserInternalToDefField->setButtonMeaning(FuiQueryInputField::EDIT);
   myRiserInternalToDefField->setSensitivity(false);
 
-  // TODO: For unknown reason it does not work to use the myVisualize3DButton for
-  // the riser, jacket and soil pile objects. Find out why and try to fix.
-  myRiserVisualize3DButton->setLabel("Visualize 3D");
-  myRiserVisualize3DButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
   myRiserVisualize3DStartAngleField->setLabel("Start");
   myRiserVisualize3DStartAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myRiserVisualize3DStartAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRiserVisualize3DStopAngleField->setLabel("Stop");
   myRiserVisualize3DStopAngleField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
   myRiserVisualize3DStopAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-
-  myRiserMudFrame->setLabel(" ");
 
   myRiserMudButton->setLabel("Internal Liquid");
   myRiserMudButton->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
@@ -410,17 +341,7 @@ void FuiProperties::initWidgets()
   myRiserMudLevelField->setLabel("Mud level");
   myRiserMudLevelField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myRiserMudLevelField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-
-  myRiserGeneralFrame->popDown();
-  myRiserInternalToDefLabel->popDown();
-  myRiserInternalToDefField->popDown();
-  myRiserVisualize3DButton->popDown();
-  myRiserVisualize3DStartAngleField->popDown();
-  myRiserVisualize3DStopAngleField->popDown();
-  myRiserMudFrame->popDown();
-  myRiserMudButton->popDown();
-  myRiserMudDensityField->popDown();
-  myRiserMudLevelField->popDown();
+  myRiserMudLevelField->setLabelWidth(myRiserMudDensityField->myLabel->getWidthHint());
 
   // Joints
 
@@ -519,12 +440,6 @@ void FuiProperties::initWidgets()
   myLoadMagnitude->setChangedCB(FFaDynCB2M(FuiProperties,this,onIntDoubleChanged,int,double));
   myLoadMagnitude->setBehaviour(FuiQueryInputField::REF_NUMBER);
 
-  myAttackPointFrame->setLabel("Load Target Point");
-  myDirectionFrame->setLabel("Direction");
-  myFromPointLabel->setLabel("From ");
-  myToPointLabel->setLabel("To ");
-  myMagnitudeLabel->setLabel("Magnitude");
-
   myAttackPointEditor->hideOnWhatDisplay(true);
   myAttackPointEditor->setPointChangedCB(FFaDynCB2M(FuiProperties,this,onVecBoolChanged,const FaVec3&,bool));
   myAttackPointEditor->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onBoolTouched,bool));
@@ -537,20 +452,9 @@ void FuiProperties::initWidgets()
   myToPointEditor->setPointChangedCB(FFaDynCB2M(FuiProperties,this,onVecBoolChanged,const FaVec3&,bool));
   myToPointEditor->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onBoolTouched,bool));
 
-  myMagnitudeLabel->popDown();
-  myLoadMagnitude->popDown();
-  myAttackPointFrame->popDown();
-  myDirectionFrame->popDown();
-  myAttackPointEditor->popDown();
-  myFromPointEditor->popDown();
-  myToPointEditor->popDown();
-  myFromPointLabel->popDown();
-  myToPointLabel->popDown();
+  myLoad->popDown();
 
   // Generic DB Object
-
-  myGenDBObjTypeLabel->setLabel("Type");
-  myGenDBObjDefLabel->setLabel("Definition");
 
   myGenDBObjTypeField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onStringChanged,const std::string&));
   myGenDBObjTypeField->setToolTip("Enter the keyword identifying the object type for the dynamics solver here");
@@ -560,10 +464,7 @@ void FuiProperties::initWidgets()
                                  "Remember to press the Enter key at the end, "
                                  "also when editing existing data.");
 
-  myGenDBObjTypeLabel->popDown();
-  myGenDBObjTypeField->popDown();
-  myGenDBObjDefLabel->popDown();
-  myGenDBObjDefField->popDown();
+  myGenDBObject->popDown();
 
   // File Reference
 
@@ -577,51 +478,34 @@ void FuiProperties::initWidgets()
 
   // Tire
 
-  myTireDataFileLabel->setLabel("Tire file");
   myTireDataFileField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myTireDataFileField->setBehaviour(FuiQueryInputField::REF_TEXT);
   myTireDataFileField->setEditSensitivity(false);
 
   myBrowseTireFileButton->setLabel("Browse...");
-  myRoadLabel->setLabel("Road");
   myRoadField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myRoadField->setBehaviour(FuiQueryInputField::REF_NONE);
 
-  myTireModelTypeLabel->setLabel("Tire model");
   myTireModelMenu->setOptionChangedCB(FFaDynCB1M(FuiProperties,this,onNonConstStringChanged,std::string));
 
-  mySpindelOffsetField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  mySpindelOffsetField->setLabel("Z offset");
-  mySpindelOffsetField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  mySpindelOffset->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
+  mySpindelOffset->setInputCheckMode(FFuIOField::DOUBLECHECK);
 
-  myTireDataFileLabel->popDown();
-  myTireDataFileField->popDown();
-  myBrowseTireFileButton->popDown();
-  myRoadLabel->popDown();
-  myRoadField->popDown();
-  myTireModelTypeLabel->popDown();
-  myTireModelMenu->popDown();
-  mySpindelOffsetField->popDown();
+  myTire->popDown();
 
   // Road
 
   myUseFuncRoadRadio->setLabel("Road defined by function");
-  myRoadFuncLabel->setLabel("Road function");
   myRoadFuncField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myRoadFuncField->setBehaviour(FuiQueryInputField::REF_NONE);
 
-  myRoadZShiftField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myRoadZShiftField->setLabel("Vertical shift");
-  myRoadZShiftField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRoadXOffsetField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myRoadXOffsetField->setLabel("Horizontal offset");
-  myRoadXOffsetField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myRoadZRotationField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myRoadZRotationField->setLabel("Rotation about Z axis");
-  myRoadZRotationField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  for (FFuIOField* field : myRoadFields)
+  {
+    field->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
+    field->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  }
 
   myUseFileRoadRadio->setLabel("Road defined by file");
-  myRoadDataFileLabel->setLabel("Road file");
   myRoadDataFileField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myRoadDataFileField->setBehaviour(FuiQueryInputField::REF_TEXT);
   myRoadDataFileField->setEditSensitivity(false);
@@ -633,18 +517,12 @@ void FuiProperties::initWidgets()
   myRoadTypeToggleGroup.setExclusive(true);
   myRoadTypeToggleGroup.setGroupToggleCB(FFaDynCB2M(FuiProperties,this,onIntBoolChanged,int,bool));
 
-  myUseFuncRoadRadio->popDown();
-  myUseFileRoadRadio->popDown();
-  myRoadDataFileLabel->popDown();
-  myRoadDataFileField->popDown();
-  myBrowseRoadFileButton->popDown();
-  myRoadFuncLabel->popDown();
-  myRoadFuncField->popDown();
-  myRoadZShiftField->popDown();
-  myRoadXOffsetField->popDown();
-  myRoadZRotationField->popDown();
+  myRoad->popDown();
 
   // Material properties
+
+  myMatPropFrame->setLabel("Material data");
+  myMatPropFrame->popDown();
 
   myMatPropRhoField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myMatPropRhoField->setLabel("<font face='Symbol'><font size='+1'>r</font></font>");
@@ -658,15 +536,8 @@ void FuiProperties::initWidgets()
   myMatPropGField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   myMatPropGField->setLabel("G");
   myMatPropGField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myMatPropRhoField->popDown();
-  myMatPropEField->popDown();
-  myMatPropNuField->popDown();
-  myMatPropGField->popDown();
 
   // Sea state
-  mySeaStateSizeFrame->setLabel("Size");
-  mySeaStatePositionFrame->setLabel("Position");
-  mySeaStateVisualizationFrame->setLabel("Visualization");
 
   mySeaStateWidthField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
   mySeaStateWidthField->setLabel("X-length");
@@ -693,16 +564,7 @@ void FuiProperties::initWidgets()
   mySeaStateShowSolidToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
   mySeaStateShowSolidToggle->setLabel("Show solid");
 
-  mySeaStateSizeFrame->popDown();
-  mySeaStatePositionFrame->popDown();
-  mySeaStateVisualizationFrame->popDown();
-  mySeaStateWidthField->popDown();
-  mySeaStateHeightField->popDown();
-  mySeaStateWidthPosField->popDown();
-  mySeaStateHeightPosField->popDown();
-  mySeaStateNumPoints->popDown();
-  mySeaStateShowGridToggle->popDown();
-  mySeaStateShowSolidToggle->popDown();
+  mySeaState->popDown();
 
   // Beam properties
 
@@ -721,59 +583,39 @@ void FuiProperties::initWidgets()
 
   // Strain rosette
 
-  myStrRosTypeLabel->popDown();
-  myStrRosTypeLabel->setLabel("Rosette type");
-  myStrRosTypeMenu->popDown();
   myStrRosTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiProperties,this,onIntChanged,int));
 
-  myStrRosNodesField->popDown();
-  myStrRosNodesField->setLabel("Nodes");
   myStrRosNodesField->setSensitivity(false);
-  myStrRosEditNodesButton->popDown();
   myStrRosEditNodesButton->setLabel("Edit");
 
-  myStrRosAngleField->popDown();
   myStrRosAngleField->setLabel("Angle offset [Deg]");
   myStrRosAngleField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myStrRosAngleField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myStrRosEditDirButton->popDown();
   myStrRosEditDirButton->setLabel("Edit reference direction");
 
-  myStrRosHeightField->popDown();
   myStrRosHeightField->setLabel("Height");
   myStrRosHeightField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myStrRosHeightField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myStrRosUseFEHeightToggle->popDown();
   myStrRosUseFEHeightToggle->setLabel("Use thickness from FE Mesh");
   myStrRosUseFEHeightToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
-  myStrRosFlipZButton->popDown();
   myStrRosFlipZButton->setLabel("Change side");
+  myStrRosFlipZButton->setMaxWidth(150);
 
-  myStrRosEmodField->popDown();
   myStrRosEmodField->setLabel("E-Module");
   myStrRosEmodField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myStrRosEmodField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myStrRosNuField->popDown();
   myStrRosNuField->setLabel("Poissons ratio");
   myStrRosNuField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myStrRosNuField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myStrRosUseFEMatToggle->popDown();
+  myStrRosEmodField->setLabelWidth(myStrRosNuField->myLabel->getWidthHint());
   myStrRosUseFEMatToggle->setLabel("Use material from FE Mesh");
   myStrRosUseFEMatToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
 
-  myResetStartStrainsToggle->popDown();
   myResetStartStrainsToggle->setLabel("Set start strains to zero");
   myResetStartStrainsToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
+  myStrRosEditDirButton->setMinWidth(myResetStartStrainsToggle->getWidthHint()-5);
 
-  myMaterialFrame->setLabel("Material");
-  myMaterialFrame->toBack();
-  myMaterialFrame->popDown();
-  myLayerFrame->setLabel("Layer position");
-  myLayerFrame->toBack();
-  myLayerFrame->popDown();
-  myOrientationFrame->setLabel("Orientation");
-  myOrientationFrame->toBack();
-  myOrientationFrame->popDown();
+  myStrainRosette->popDown();
 
   // Element group
 
@@ -784,11 +626,9 @@ void FuiProperties::initWidgets()
   myFatigueToggle->setToolTip("Calculation of damage and life in the Strain Coat Recovery"
 			      "\non this element group, based on the selected S-N curve");
   myFatigueToggle->setToggleCB(FFaDynCB1M(FuiProperties,this,onBoolChanged,bool));
-  myFatigueToggle->popDown();
 
 #ifdef FT_HAS_GRAPHVIEW
   mySNSelector->setDataChangedCB(FFaDynCB0M(FuiProperties,this,onValuesChanged));
-  mySNSelector->popDown();
 #endif
 
   myScfField->setLabel("Stress concentration factor");
@@ -797,53 +637,41 @@ void FuiProperties::initWidgets()
   myScfField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myScfField->myField->setDoubleDisplayMode(FFuIOField::AUTO,6,1);
   myScfField->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myScfField->popDown();
 
   // RAO vessel motion
 
-  myRAOFileLabel->setLabel("RAO file");
-  myRAOFileLabel->popDown();
   myRAOFileField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myRAOFileField->setBehaviour(FuiQueryInputField::REF_TEXT);
   myRAOFileField->setEditSensitivity(false);
-  myRAOFileField->popDown();
   myBrowseRAOFileButton->setLabel("Browse...");
-  myBrowseRAOFileButton->popDown();
 
-  myWaveFuncLabel->setLabel("Wave function");
-  myWaveFuncLabel->popDown();
   myWaveFuncField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myWaveFuncField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myWaveFuncField->popDown();
 
-  myWaveDirLabel->setLabel("Wave direction");
-  myWaveDirLabel->popDown();
   myWaveDirMenu->setOptionSelectedCB(FFaDynCB1M(FuiProperties,this,onIntChanged,int));
   myWaveDirMenu->setToolTip("Angle (in degrees) between the local X-axis of the"
 			    "\nVessel Triad and the propagating wave direction,"
 			    "\ni.e., a zero angle means the waves propagate in"
 			    "\nthe direction of the positive local X-axis.");
-  myWaveDirMenu->popDown();
 
-  myMotionScaleLabel->setLabel("Motion scale");
-  myMotionScaleLabel->popDown();
   myMotionScaleField->setChangedCB(FFaDynCB1M(FuiProperties,this,onQIFieldChanged,FuiQueryInputField*));
   myMotionScaleField->setBehaviour(FuiQueryInputField::REF_NONE);
-  myMotionScaleField->popDown();
+
+  myRAO->popDown();
 
   // Simulation event
 
   myEventProbability->setLabel("Event probability");
   myEventProbability->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myEventProbability->setAcceptedCB(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
-  myEventProbability->popDown();
   mySelectEventButton->setLabel("Set as active event");
   mySelectEventButton->setActivateCB(FFaDynCB0M(FuiProperties,this,onEventActivated));
-  mySelectEventButton->popDown();
+  mySelectEventButton->setMaxWidth(200);
   myActiveEventLabel->setLabel("This is the current active event.\n"
 			       "All graph plotting and animations "
 			       "will use the results of this event.");
-  myActiveEventLabel->popDown();
+
+  mySimEvent->popDown();
 
   // Subassembly
 
@@ -855,8 +683,8 @@ void FuiProperties::initWidgets()
   mySubassFileField->setFileOpenedCB(FFaDynCB2M(FuiProperties,this,onFileRefChanged,const std::string&,int));
   mySubassFileField->setToolTip("The objects of this Subassembly will be saved"
 				"\nin this model file when saving the model");
-  mySubassFileField->popDown();
-  mySubassPosition->popDown();
+
+  mySubassembly->popDown();
 
   // Function properties
 
@@ -875,35 +703,11 @@ void FuiProperties::initWidgets()
 
   // Start guide
 
-  if ((IAmShowingStartGuide = this->initStartGuide()))
-  {
-    myTypeField->popDown();
-    myIdField->popDown();
-    mySGLogoImage->popUp();
-    mySGLogoBorderTop->popUp();
-    mySGLogoBorderRight->popUp();
-    mySGHeading->popUp();
-    mySGFillWhite->popUp();
-    mySGBorderTop->popUp();
-    mySGBorderRight->popUp();
-    mySGBorderBottom->popUp();
-    mySGContentLabel->popUp();
-  }
+  IAmShowingStartGuide = myStartGuide->initWidgets() ? 1 : -1;
+  if (IAmShowingStartGuide > 0)
+    myStartGuide->popUp();
   else
-  {
-    mySGLogoImage->popDown();
-    mySGLogoBorderTop->popDown();
-    mySGLogoBorderRight->popDown();
-    mySGHeading->popDown();
-    mySGFillWhite->popDown();
-    mySGBorderTop->popDown();
-    mySGBorderRight->popDown();
-    mySGBorderBottom->popDown();
-    mySGContentLabel->popDown();
-    myTypeField->popUp();
-    myIdField->popUp();
-    IAmShowingStartGuide = -1; // Start guide not available
-  }
+    myStartGuide->popDown();
 
   // Create the UA class to communicate with the application
 
@@ -911,1008 +715,79 @@ void FuiProperties::initWidgets()
 }
 
 
-///////////////////////////////////////////////
-//
-// Place widgets : Geometry management
-//
-///////
-
 void FuiProperties::placeWidgets(int width, int height)
 {
-  int fontHeigth = this->getFontHeigth();
-  int fieldHeight = getGridLinePos(height,100);
-  if (fieldHeight > fontHeigth+5) fieldHeight = fontHeigth+5;
-  int hBorder = getGridLinePos(width,4);
-  int vBorder = getGridLinePos(height,10);
+  if (IAmShowingStartGuide > 0)
+    myStartGuide->placeWidgets(width,height);
 
-  int headingBottom = vBorder + fieldHeight;
-  int leftPartSeparator = 2*hBorder + getGridLinePos(width,270);
-  int aThreePart = (width - leftPartSeparator)/3;
-
-  int textHeight = myDescriptionField->myLabel->getHeightHint();
-
-  // Heading
-
-  int glv1 = hBorder;
-  int glv2 = glv1 + getGridLinePos(width,230);
-  int glv3 = glv2 + hBorder;
-  int glv4 = glv3 + getGridLinePos(width,40);
-  int glh1 = vBorder;
-  int glh2 = glh1 + fieldHeight;
-  if (IAmShowingStartGuide < 1)
-    {
-      myTypeField->setEdgeGeometry(glv1, glv2, glh1, glh2);
-      myIdField->  setEdgeGeometry(glv3, glv4, glh1, glh2);
-    }
+  const int border = 2;
+  int fieldHeight = myDescriptionField->getHeightHint();
+  int xpos = width - fieldHeight - border;
+  int ypos = fieldHeight + 2*border;
+  helpBtn->setSizeGeometry(xpos, border, fieldHeight, fieldHeight);
+  xpos -= fieldHeight + border;
+  forwardBtn->setSizeGeometry(xpos, border, fieldHeight, fieldHeight);
+  xpos -= fieldHeight + border;
+  backBtn->setSizeGeometry(xpos, border, fieldHeight, fieldHeight);
 
   if (IAmShowingHeading)
-    {
-      int glv5 = glv4 + hBorder;
-      int glv8 = width - 2 * hBorder - 3 * fieldHeight;
-      int glv6 = glv5 + (glv8 - glv5)*2/3 - hBorder;
-      int glv7 = glv6 + 2*hBorder;
-      int glh3 = height;
-      if (IAmShowingSwapTriadButton || IAmShowingAddMasterButton || IAmShowingRevMasterButton)
-        glh3 -= 3*fieldHeight/2 + 2*vBorder;
-
-      myDescriptionField->setEdgeGeometry(glv5, glv6, glh1, glh2);
-      myTagField->        setEdgeGeometry(glv7, glv8, glh1, glh2);
-      myTopologyView->    setEdgeGeometry(0,leftPartSeparator,glh2,glh3);
-    }
-
-  backBtn->setEdgeGeometry(width-3*fieldHeight, width-2*fieldHeight, vBorder, vBorder+fieldHeight);
-  forwardBtn->setEdgeGeometry(width-2*fieldHeight, width-fieldHeight, vBorder, vBorder+fieldHeight);
-  helpBtn->setEdgeGeometry(width-fieldHeight, width, vBorder, vBorder+fieldHeight);
-
-  // Reference Plane
-
-  if (IAmShowingRefPlane)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v4 = leftPartSeparator + aThreePart - hBorder;
-      int v5 = width - 2*hBorder;
-      int h0 = headingBottom + 2*vBorder;
-      myRefPlanePosition->setEdgeGeometry(v1,v5,h0,height);
-
-      v1 += 2;
-      int h1 = h0 + myRefPlanePosition->getLeftHeightHint() + 2*vBorder;
-      int h6 = h1 + myRefPlaneSizeFrame->getHeightHint();
-      if (h6 > height) h6 = height;
-
-      myRefPlaneSizeFrame->setEdgeGeometry(v1,v4,h1,h6);
-    }
-
-  // Higher Pair
-
-  if (IAmShowingHPRatio)
-    {
-      int glv1 = leftPartSeparator + 2*hBorder;
-      int glv2 = leftPartSeparator + aThreePart - hBorder;
-      int glh1 = headingBottom + 5*vBorder;
-      int glh2 = glh1+textHeight+ 2*vBorder;
-      int glh3 = glh2 + fieldHeight;
-      int glh4 = glh3 + 2*vBorder;
-
-      myHPRatioFrame->setEdgeGeometry(glv1,glv2,glh1,glh4);
-      myHPRatioField->setEdgeGeometry(glv1 + 2*hBorder,glv2 - 2*hBorder,glh2 , glh3);
-    }
-
-  // Axial Damper
-
-  if(IAmShowingAxialDamper)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      myDamperForce->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  // Axial Spring
-
-  if(IAmShowingAxialSpring)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = glv1 + (width - glv1)/2;
-      int glv3 = glv2 + hBorder;
-      int glv4 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      mySpringForce   ->setEdgeGeometry(glv3, glv4, glh1, glh2);
-      mySpringDeflCalc->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  // Advanced Spring Characteristics
-
-  if(IAmShowingSpringChar)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      mySpringChar->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  // Part
-
-  if(IAmShowingLinkData)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      myLinkTabs->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  // Beam and Shaft
-
-  if (IAmShowingBeamData || IAmShowingShaftData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int hDelta = (width-v1)/3;
-      int h1 = headingBottom + 2*vBorder;
-      int y = fieldHeight+vBorder;
-      int rEdge = v1+hDelta-10;
-
-      myShaftGeneralFrame->setEdgeGeometry(v1, rEdge, h1, h1+130+fieldHeight+vBorder);
-      if (myShaftCrossSectionDefLabel->isPoppedUp()) {
-        myShaftCrossSectionDefLabel->setEdgeGeometry(v1+10, rEdge-10, h1+y, h1+fieldHeight+y);
-        y += fieldHeight+vBorder;
-        myShaftCrossSectionDefField->setEdgeGeometry(v1+10, rEdge-10, h1+y, h1+fieldHeight+y);
-        y += fieldHeight+vBorder+5;
-      }
-      mySubassMassField->setEdgeGeometry(v1+10, rEdge-10, h1+y, h1+fieldHeight+y);
-      y += fieldHeight+vBorder;
-      mySubassLengthField->setEdgeGeometry(v1+10, rEdge-10, h1+y, h1+fieldHeight+y);
-      y += fieldHeight+vBorder;
-      myVisualize3DButton->setEdgeGeometry(v1+10, rEdge-10, h1+y, h1+fieldHeight+y);
-      y += fieldHeight+vBorder;
-      myVisualize3DStartAngleField->setEdgeGeometry(v1+10, v1+10+60, h1+y, h1+fieldHeight+y);
-      myVisualize3DStopAngleField->setEdgeGeometry(v1+10+70, v1+10+70+60, h1+y, h1+fieldHeight+y);
-    }
-
-  if (IAmShowingUDEData || IAmShowingBeamData || IAmShowingShaftData || IAmShowingBladeData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int hDelta = (width-v1)/(IAmShowingUDEData ? 2 : 3);
-      int v2     = v1 + (IAmShowingUDEData ? 0 : hDelta);
-      int v3     = v2 + hDelta;
-      int rEdge  = v2 + hDelta-10;
-
-      int y = headingBottom + 2*vBorder;
-      int yy = y+3*fieldHeight+4*vBorder;
-      myShaftSDFrame->setEdgeGeometry(v2, rEdge, y, yy);
-      y += fieldHeight+vBorder;
-      myShaftSDMassField->setEdgeGeometry(v2+10, rEdge-10, y, y+fieldHeight);
-      y += fieldHeight+vBorder;
-      myShaftSDStiffnessField->setEdgeGeometry(v2+10, rEdge-10, y, y+fieldHeight);
-
-      y = headingBottom + 2*vBorder;
-      rEdge = v3+hDelta-10;
-      myShaftDPFrame->setEdgeGeometry(v3, rEdge, y, yy);
-      y += fieldHeight+vBorder;
-      myShaftDPStiffnessField->setEdgeGeometry(v3+10, rEdge-10, y, y+fieldHeight);
-      y += fieldHeight+vBorder;
-      myShaftDPMassField->setEdgeGeometry(v3+10, rEdge-10, y, y+fieldHeight);
-
-      myShaftSDMassField->setLabelWidth(110);
-      myShaftSDStiffnessField->setLabelWidth(110);
-      myShaftDPStiffnessField->setLabelWidth(80);
-      myShaftDPMassField->setLabelWidth(80);
-
-      if (IAmShowingUDEData) {
-	yy += 2*vBorder;
-	mySubassMassField->setEdgeGeometry(v2+10, v3-20, yy, yy+fieldHeight);
-      }
-    }
-
-  if (IAmShowingBeamData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1+(width-v1)/3;
-      int y = headingBottom + 3*fieldHeight + 10*vBorder;
-      int hDelta = (width-10-v2)/3;
-      myBeamOrientationFrame->setEdgeGeometry(v2, width-10, y, y+2*fieldHeight+3*vBorder);
-      y += fieldHeight+vBorder;
-      for (FFuLabelField* field : myBeamLocalZField) {
-	field->setEdgeGeometry(v2+10, v2+hDelta-10, y, y+fieldHeight);
-	v2 += hDelta;
-      }
-    }
-
-  if (IAmShowingShaftData || IAmShowingBladeData)
-    {
-      int h1 = height - vBorder - 3*fieldHeight;
-      int h2 = h1 + fieldHeight;
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + (width-v1)/3;
-      myShaftNoteALabel->setEdgeGeometry(v2,v2+16,h1,h1+fieldHeight);
-      myShaftNoteBLabel->setEdgeGeometry(v2+20,width,h1,h2);
-      myShaftNoteCLabel->setEdgeGeometry(v2,width,h2,h2+2*fieldHeight);
-    }
-
-  // Turbine, Nacelle, Gearbox, etc. (shared)
-
-  if (IAmShowingTowerData ||
-      IAmShowingNacelleData ||
-      IAmShowingGearboxData ||
-      IAmShowingRotorData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + 140;
-      int y = headingBottom + 2*vBorder;
-      mySubassMassField->setEdgeGeometry(v1, v2, y, y+fieldHeight);
-      y += fieldHeight + 2*vBorder;
-      mySubassCoGFrame->setEdgeGeometry(v1-hBorder, v2, y, y+fontHeigth+4*fieldHeight+vBorder);
-      y += fontHeigth;
-      mySubassCoGField->setEdgeGeometry(v1, v2-hBorder, y, y+4*fieldHeight);
-    }
-  if (IAmShowingTowerData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int y = headingBottom + 6*vBorder + 5*fieldHeight + fontHeigth;
-      myVisualize3DButton->setEdgeGeometry(v1, v1+140, y, y+fieldHeight);
-    }
-  if (IAmShowingTurbineData)
-    {
-      int v1 = leftPartSeparator + hBorder;
-      int v2 = width - hBorder;
-      int v3 = v1 + 140;
-
-      // mass field
-      int y = headingBottom + 2*vBorder;
-      mySubassMassField->setEdgeGeometry(v1+hBorder, v3+hBorder, y, y+fieldHeight);
-      // center of gravity field
-      y += fieldHeight + 2*vBorder;
-      mySubassCoGFrame->setEdgeGeometry(v1, v3+hBorder, y, y+fontHeigth+4*fieldHeight+vBorder);
-      y += fontHeigth;
-      mySubassCoGField->setEdgeGeometry(v1+hBorder, v3, y, y+4*fieldHeight);
-
-      // position fields
-      int spHeight = mySubassPosition->getHeightHint();
-      mySubassPosition->setEdgeGeometry(v3+3*hBorder, v2, headingBottom, headingBottom+spHeight);
-
-      // adv topology settings
-      int x1 = v3+3*hBorder;
-      y = headingBottom + spHeight;
-      int cmbWidth = (v2-x1-20)/3;
-      myTurbineWindRefFrame->setEdgeGeometry(x1, x1+cmbWidth+20, y, height);
-      y += 14;
-      x1 += 10;
-      int x2 = x1 + cmbWidth;
-      myTurbineWindRefTriadDefLabel->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineWindRefTriadDefField->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineWindVertOffsetLabel->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineWindVertOffsetField->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-
-      x1 += cmbWidth + 4 + 20;
-      x2 += cmbWidth + 4;
-      y = headingBottom + spHeight + 14;
-      myTurbineAdvTopologyFrame->setEdgeGeometry(x1-10, v2, y-14, height);
-      myTurbineYawPointTriadDefLabel->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineYawPointTriadDefField->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineHubApexTriadDefLabel->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineHubApexTriadDefField->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-
-      x1 += cmbWidth + 4;
-      x2 += cmbWidth + 4;
-      y = headingBottom + spHeight + 14;
-      myTurbineHubPartDefLabel->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineHubPartDefField->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineFirstBearingDefLabel->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-      y += fieldHeight;
-      myTurbineFirstBearingDefField->setEdgeGeometry(x1, x2, y, y+fieldHeight);
-    }
-  if (IAmShowingGeneratorData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + 140;
-      int y = headingBottom + 2*vBorder;
-      mySubassMassField->setEdgeGeometry(v1, v2, y, y+fieldHeight);
-      y += fieldHeight + 2*vBorder;
-      mySubassCoGFrame->setEdgeGeometry(v1-hBorder, v2, y, y+fontHeigth+4*fieldHeight+vBorder);
-      y += fontHeigth;
-      mySubassCoGField->setEdgeGeometry(v1, v2-hBorder, y, y+4*fieldHeight);
-      y = headingBottom + 2*vBorder;
-      v1 = v2 + 2*hBorder;
-      myGeneratorTorqueRadioBtn->setEdgeGeometry(v1, v1+100, y, y+fieldHeight);
-      myGeneratorTorqueField->setEdgeGeometry(v1+110, v1+310, y, y+fieldHeight);
-      y += fieldHeight+10;
-      myGeneratorVelocityRadioBtn->setEdgeGeometry(v1, v1+100, y, y+fieldHeight);
-      myGeneratorVelocityField->setEdgeGeometry(v1+110, v1+310, y, y+fieldHeight);
-      y += fieldHeight+10;
-    }
-  if (IAmShowingBladeData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int hDelta = (width-v1)/3;
-      int v2 = v1+hDelta;
-      int y = headingBottom + 2*vBorder;
-      int rEdge = v1+hDelta-10;
-      myBladePitchControlLabel->setEdgeGeometry(v1, v1+100, y, y+fieldHeight);
-      y += fieldHeight+0;
-      myBladePitchControlField->setEdgeGeometry(v1, rEdge, y, y+fieldHeight);
-      y += fieldHeight+4;
-      myBladeFixedPitchToggle->setEdgeGeometry(v1, rEdge, y, y+fieldHeight);
-      y += fieldHeight+14;
-      mySubassMassField->setEdgeGeometry(v1, v1+(hDelta/2)-10, y, y+fieldHeight);
-      mySubassLengthField->setEdgeGeometry(v1+(hDelta/2), v1+hDelta-10, y, y+fieldHeight);
-      y += fieldHeight+14;
-      myBladeIceFrame->setEdgeGeometry(v1, rEdge, y, y+75);
-      y += fieldHeight+4;
-      myBladeIceLayerToggle->setEdgeGeometry(v1+10, v1+110, y, y+fieldHeight);
-      y += fieldHeight+4;
-      myBladeIceThicknessField->setEdgeGeometry(v1+10, v1+140, y, y+fieldHeight);
-
-      rEdge = v2+hDelta-10;
-      y = headingBottom + 3*fieldHeight+5*vBorder+14;
-      myVisualize3DButton->setEdgeGeometry(v2, rEdge, y, y+fieldHeight);
-    }
-  if (IAmShowingRiserData || IAmShowingJacketData || IAmShowingSoilPileData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int hDelta = (width-v1)/4;
-      int v2 = v1 + hDelta-10;
-      int v3 = v2 + hDelta-20;
-      int v4 = v3 + hDelta+30;
-      int rEdge1 = v2-10;
-      int rEdge2 = v3-10;
-      int rEdge3 = v4-10;
-
-      int h1 = headingBottom + 2*vBorder;
-      int h3 = h1 + fieldHeight + 3*vBorder;
-      int h2 = h3 + fontHeigth + 4*fieldHeight + 6*vBorder;
-      if (IAmShowingRiserData)
-	h2 += 2*fieldHeight + 2*vBorder;
-      else if (IAmShowingJacketData)
-	h2 += fontHeigth + 2*fieldHeight - vBorder;
-      int h4 = h3 + 3*fieldHeight + 4*vBorder;
-
-      myRiserGeneralFrame->setEdgeGeometry(v1, rEdge1, h3, h2);
-
-      int y = h3 + fontHeigth+vBorder;
-      if (IAmShowingRiserData) {
-        myRiserInternalToDefLabel->setEdgeGeometry(v1+10, rEdge1-10, y, y+fieldHeight);
-        y += fieldHeight+vBorder;
-        myRiserInternalToDefField->setEdgeGeometry(v1+10, rEdge1-10, y, y+fieldHeight);
-        y += fieldHeight+vBorder;
-      }
-      mySubassMassField->setEdgeGeometry(v1+10, rEdge1-10, y, y+fieldHeight);
-      y += fieldHeight+vBorder;
-      if (IAmShowingJacketData) {
-	int h5 = y + fontHeigth;
-	mySubassCoGFrame->setEdgeGeometry(v1+hBorder, rEdge1-hBorder, y, h5+4*fieldHeight+vBorder);
-	mySubassCoGField->setEdgeGeometry(v1+2*hBorder, rEdge1-2*hBorder, h5, h5+4*fieldHeight);
-	y = h5 + 4*fieldHeight + 2*vBorder;
-      }
-      else {
-        mySubassLengthField->setEdgeGeometry(v1+10, rEdge1-10, y, y+fieldHeight);
-        y += fieldHeight+vBorder;
-      }
-      myRiserVisualize3DButton->setEdgeGeometry(v1+10, rEdge1-10, y, y+fieldHeight);
-      y += fieldHeight+vBorder;
-      myRiserVisualize3DStartAngleField->setEdgeGeometry(v1+10, v1+10+60, y, y+fieldHeight);
-      myRiserVisualize3DStopAngleField->setEdgeGeometry(v1+10+70, v1+10+70+60, y, y+fieldHeight);
-
-      myRiserMudFrame->setEdgeGeometry(v2, rEdge2, h3, h4);
-
-      myRiserMudButton->setEdgeGeometry(v2+10, v2+100, h3, h3+fieldHeight);
-      y = h3 + fieldHeight+vBorder;
-      myRiserMudDensityField->setEdgeGeometry(v2+10, rEdge2-10, y, y+fieldHeight);
-      y += fieldHeight+vBorder;
-      myRiserMudLevelField->setEdgeGeometry(v2+10, rEdge2-10, y, y+fieldHeight);
-
-      mySubassFileField->setEdgeGeometry(v1,width,h1,h1+fieldHeight);
-
-      int nSDDPOffsetX = IAmShowingJacketData ? v3 - v2 : 0;
-      myShaftSDFrame->setEdgeGeometry(v3-nSDDPOffsetX, rEdge3-nSDDPOffsetX, h3, h4);
-
-      y = fieldHeight+vBorder;
-      myShaftSDMassField->setEdgeGeometry(v3+10-nSDDPOffsetX, rEdge3-10-nSDDPOffsetX, h3+y, h3+fieldHeight+y);
-      y += fieldHeight+vBorder;
-      myShaftSDStiffnessField->setEdgeGeometry(v3+10-nSDDPOffsetX, rEdge3-10-nSDDPOffsetX, h3+y, h3+fieldHeight+y);
-
-      myShaftDPFrame->setEdgeGeometry(v4-nSDDPOffsetX, width-nSDDPOffsetX, h3, h4);
-
-      y = fieldHeight+vBorder;
-      myShaftDPStiffnessField->setEdgeGeometry(v4+10-nSDDPOffsetX, width-10-nSDDPOffsetX, h3+y, h3+fieldHeight+y);
-      y += fieldHeight+vBorder;
-      myShaftDPMassField->setEdgeGeometry(v4+10-nSDDPOffsetX, width-10-nSDDPOffsetX, h3+y, h3+fieldHeight+y);
-      y += fieldHeight+vBorder+20;
-
-      // position fields
-      int spHeight = mySubassPosition->getHeightHint();
-      mySubassPosition->setEdgeGeometry(v2, width, h4+vBorder, h4+vBorder+spHeight);
-
-      myShaftSDMassField->setLabelWidth(110);
-      myShaftSDStiffnessField->setLabelWidth(110);
-      myShaftDPStiffnessField->setLabelWidth(80);
-      myShaftDPMassField->setLabelWidth(80);
-      myRiserMudDensityField->setLabelWidth(60);
-      myRiserMudLevelField->setLabelWidth(60);
-    }
-
-  if (IAmShowingRiserData || IAmShowingSoilPileData ||
-      IAmShowingShaftData || IAmShowingBeamData || IAmShowingUDEData)
   {
-    mySubassMassField->setLabelWidth(60);
-    mySubassLengthField->setLabelWidth(60);
+    myHeading->setSizeGeometry(0, border, xpos-border, fieldHeight);
+    myTopology->setSizeGeometry(0,ypos,width/4,height-ypos);
+    myProperty->setSizeGeometry(width/4+border,ypos,width*3/4,height-ypos);
   }
-  else
+}
+
+
+void FuiStartGuide::placeWidgets(int width, int height)
+{
+  const int cx2 = width*2/11;
+
+  // Adjust start guide font size (seems not working)
+  std::string text = myContentLabel->getLabel();
+  size_t ipos = text.find("font-size:");
+  if (ipos != std::string::npos)
   {
-    mySubassMassField->setLabelWidth(30);
-    mySubassLengthField->setLabelWidth(34);
+    int nFontSize, w = width-cx2, h = height-27;
+    if (w >= 1105 && h >= 260)
+      nFontSize = 12;
+    else if (w >= 1015 && h >= 247)
+      nFontSize = 11;
+    else if (w >= 900 && h >= 220)
+      nFontSize = 10;
+    else if (w >= 860 && h >= 195)
+      nFontSize = 9;
+    else
+      nFontSize = 8;
+
+    char buf[16];
+    sprintf(buf,"font-size:%dpt;",nFontSize);
+    if (text.find(buf) != ipos)
+    {
+      size_t jpos = text.find("pt;",ipos);
+      text.replace(ipos,jpos-ipos+3,buf);
+      myContentLabel->setLabel(text);
+    }
   }
 
-  // Joints
-
-  if(IAmShowingJointData)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      myJointTabs->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  if(IAmShowingPipeSurfaceData)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width/2;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = glh1 + fieldHeight;
-
-      myPipeRadiusField->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  if(IAmShowingSwapTriadButton)
-    {
-      int glv1 = hBorder;
-      int glv2 = getGridLinePos(width,200);
-      int glh2 = height;
-      int glh1 = glh2 - 3*fieldHeight/2;
-
-      mySwapTriadButton->setEdgeGeometry(glv1,glv2,glh1,glh2);
-    }
-
-  if(IAmShowingAddMasterButton)
-    {
-      int glv1 = hBorder;
-      int glv2 = getGridLinePos(width, IAmShowingRevMasterButton ? 135 : 150);
-      int glh2 = height;
-      int glh1 = glh2 - 3*fieldHeight/2;
-
-      myAddMasterButton->setEdgeGeometry(glv1,glv2,glh1,glh2);
-
-      if (IAmShowingRevMasterButton)
-      {
-        glv1 += hBorder + glv2;
-        glv2 = hBorder + getGridLinePos(width,270);
-        myRevMasterButton->setEdgeGeometry(glv1,glv2,glh1,glh2);
-      }
-    }
-  else if (IAmShowingRevMasterButton)
-    {
-      int glv1 = hBorder;
-      int glv2 = getGridLinePos(width,150);
-      int glh2 = height;
-      int glh1 = glh2 - 3*fieldHeight/2;
-
-      myRevMasterButton->setEdgeGeometry(glv1,glv2,glh1,glh2);
-    }
-
-  // Triad
-
-  if(IAmShowingTriadData)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      myTriadTabs->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  // Load
-
-  if(IAmShowingLoadData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + 2*hBorder;
-      int v3 = leftPartSeparator + aThreePart - 2*hBorder;
-      int v4 = v3 + 2*hBorder;
-      int v5 = v4 + 2*hBorder;
-      int v6 = v5 + 2*hBorder;
-      int v7 = leftPartSeparator + 2*aThreePart - hBorder;
-      int v8 = v7 + 2*hBorder;
-      int v10 = width;
-      int v9 = v10 - hBorder;
-
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + textHeight + vBorder;
-      int h3 = h2 + fieldHeight;
-      int h31 = h3 + 2*vBorder;
-      int h32 = h31 + vBorder;
-      int h4 = h32 + textHeight + vBorder;
-      int h6 = height;
-      int h5 = h6 - vBorder;
-
-      myLoadMagnitude->    setEdgeGeometry(v2, v3, h2, h3);
-      myMagnitudeLabel->   setEdgeGeometry(v1,v4, h1, h31);
-
-      myAttackPointFrame-> setEdgeGeometry(v1, v4, h32, h6);
-      myAttackPointEditor->setEdgeGeometry(v2, v3, h4, h5);
-
-      myDirectionFrame->   setEdgeGeometry(v5, v10,h1, h6);
-
-      myFromPointLabel->   setEdgeGeometry(v6, v7, h2, h3);
-      myToPointLabel->     setEdgeGeometry(v8, v9, h2, h3);
-
-      myFromPointEditor->  setEdgeGeometry(v6, v7, h3, h5);
-      myToPointEditor->    setEdgeGeometry(v8, v9, h3, h5);
-    }
-
-  // Generic DB Object
-
-  if (IAmShowingGenDBObjData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + 2*hBorder +  this->myGenDBObjDefLabel->getWidthHint();
-      int v3 = width;
-      int h1 = headingBottom + 2*hBorder;
-      int h2 = h1 + fieldHeight;
-      int h3 = h2 + vBorder;
-      int h35 = h3 + textHeight;
-      int h4 = height - vBorder;
-
-      myGenDBObjTypeLabel->setEdgeGeometry(v1, v2, h1, h2);
-      myGenDBObjTypeField->setEdgeGeometry(v2, v3, h1, h2);
-      myGenDBObjDefLabel->setEdgeGeometry(v1, v2, h3, h35);
-      myGenDBObjDefField->setEdgeGeometry(v2, v3, h3, h4);
-    }
-
-  // File Reference
-
-  if (IAmShowingFileReference)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width - hBorder;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-
-      myFileReferenceBrowseField->setEdgeGeometry(v1, v2, h1, h2);
-    }
-
-  // Tire
-
-  if(IAmShowingTireData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 +  this->getFontWidth("Tire model   ");
-      int v4 = width - this->getFontWidth(" Browse...   ");
-      int v5 = width;
-
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-      int h3 = h2 + vBorder;
-      int h4 = h3 + fieldHeight;
-      int h5 = h4 + vBorder;
-      int h6 = h5 + fieldHeight;
-      int h7 = h6 + vBorder;
-      int h8 = h7 + fieldHeight;
-
-      myTireDataFileLabel->   setEdgeGeometry(v1, v2, h1, h2);
-      myTireDataFileField->   setEdgeGeometry(v2, v4, h1, h2);
-      myBrowseTireFileButton->setEdgeGeometry(v4, v5, h1, h2);
-      myRoadLabel->           setEdgeGeometry(v1, v2, h3, h4);
-      myRoadField->           setEdgeGeometry(v2, v4, h3, h4);
-      myTireModelTypeLabel->  setEdgeGeometry(v1, v2, h5, h6);
-      myTireModelMenu->       setEdgeGeometry(v2, v4, h5, h6);
-      mySpindelOffsetField->  setEdgeGeometry(v1, v4, h7, h8);
-      mySpindelOffsetField->setLabelWidth(v2-v1);
-    }
-
-  // Road
-
-  if(IAmShowingRoadData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v1_5 = v1 + 5*hBorder;
-      int v2 = v1_5 + this->getFontWidth(" Function argument ");
-      int v4 = width - this->getFontWidth(" Browse... ");
-      int v5 = width;
-
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-      int h3 = h2 + vBorder;
-      int h4 = h3 + fieldHeight;
-      int h5 = h4 + vBorder;
-      int h5_1 = h5 + fieldHeight;
-      int h5_2 = h5_1 + vBorder;
-      int h5_3 = h5_2 + fieldHeight;
-      int h5_4 = h5_3 + vBorder;
-      int h5_5 = h5_4 + fieldHeight;
-      int h6 = h5_5;
-      int h7 = h6 + 3*vBorder;
-      int h8 = h7 + fieldHeight;
-      int h9 = h8 + vBorder;
-      int h10 = h9 + fieldHeight;
-
-      myUseFuncRoadRadio->  setEdgeGeometry(v1,   v5, h1, h2);
-      myRoadFuncLabel->     setEdgeGeometry(v1_5, v2, h3, h4);
-      myRoadFuncField->     setEdgeGeometry(v2,   v5, h3, h4);
-
-      myRoadZShiftField->setLabelWidth(myRoadZRotationField->getLabelWidth());
-      myRoadXOffsetField->setLabelWidth(myRoadZRotationField->getLabelWidth());
-      myRoadZRotationField->setLabelWidth(myRoadZRotationField->getLabelWidth());
-
-      myRoadZRotationField-> setEdgeGeometry(v2, v5, h5, h5_1);
-      myRoadZShiftField->    setEdgeGeometry(v2, v5, h5_2, h5_3);
-      myRoadXOffsetField->   setEdgeGeometry(v2, v5 ,h5_4, h5_5);
-
-      myUseFileRoadRadio->     setEdgeGeometry(v1,   v5, h7, h8);
-      myRoadDataFileLabel->    setEdgeGeometry(v1_5, v2, h9, h10);
-      myRoadDataFileField->    setEdgeGeometry(v2,   v4, h9, h10);
-      myBrowseRoadFileButton-> setEdgeGeometry(v4,   v5, h9, h10);
-    }
-
-  // Material properties
-
-  if(IAmShowingMatPropData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1+200;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-      int y = 0;
-
-      myMatPropRhoField->setLabelWidth(20);
-      myMatPropEField->setLabelWidth(20);
-      myMatPropNuField->setLabelWidth(20);
-      myMatPropGField->setLabelWidth(20);
-
-      myMatPropRhoField->setEdgeGeometry(v1, v2, h1+y, h2+y);
-      y += fieldHeight+vBorder;
-      myMatPropEField->setEdgeGeometry(v1, v2, h1+y, h2+y);
-      y += fieldHeight+vBorder;
-      myMatPropNuField->setEdgeGeometry(v1, v2, h1+y, h2+y);
-      y += fieldHeight+vBorder;
-      myMatPropGField->setEdgeGeometry(v1, v2, h1+y, h2+y);
-    }
-
-  // Sea state
-
-  if(IAmShowingSeaStateData)
+  const float aspectRatio = 8.0f/4.13f;
+  const int hwide = cx2/aspectRatio;
+  if (hwide > height) // wide container
+    myLogoImage->setSizeGeometry(0, 0, cx2, hwide);
+  else // tall container
   {
-    int v1 = leftPartSeparator + 2*hBorder;
-    int v2 = v1+200;
-    int v3 = v1+vBorder;
-    int v4 = v2-vBorder;
-    int h1 = headingBottom + 2*vBorder;
-    int h2 = h1 + fieldHeight;
-    int y = 0;
-
-    mySeaStateWidthField->setLabelWidth(55);
-    mySeaStateHeightField->setLabelWidth(55);
-
-    mySeaStateWidthPosField->setLabelWidth(10);
-    mySeaStateHeightPosField->setLabelWidth(10);
-
-    mySeaStateNumPoints->setLabelWidth(90);
-
-    mySeaStatePositionFrame->setEdgeGeometry(v1,v2,h1+y,h1+3*(fieldHeight+vBorder)+y);
-    y += fieldHeight+vBorder;
-    mySeaStateWidthPosField->setEdgeGeometry(v3, v4, h1+y, h2+y);
-    y += fieldHeight+vBorder;
-    mySeaStateHeightPosField->setEdgeGeometry(v3, v4, h1+y, h2+y);
-    y += fieldHeight+vBorder;
-    mySeaStateSizeFrame->setEdgeGeometry(v1,v2,h1+y,h1+3*(fieldHeight+vBorder)+y);
-    y += fieldHeight+vBorder;
-    mySeaStateWidthField->setEdgeGeometry(v3, v4, h1+y, h2+y);
-    y += fieldHeight+vBorder;
-    mySeaStateHeightField->setEdgeGeometry(v3, v4, h1+y, h2+y);
-
-    y=0;
-
-    mySeaStateVisualizationFrame->setEdgeGeometry(v2+hBorder,v2+300+2*hBorder,h1+y,h1+5*(fieldHeight+vBorder)+y);
-    y += fieldHeight+vBorder;
-    mySeaStateNumPoints->setEdgeGeometry(v2+2*hBorder, v2+300, h1+y, h2+y);
-    y += fieldHeight+vBorder;
-    mySeaStateShowSolidToggle->setEdgeGeometry(v2+2*hBorder, v2+300, h1+y, h2+y);
-    y += fieldHeight+vBorder;
-    mySeaStateShowGridToggle->setEdgeGeometry(v2+2*hBorder, v2+300, h1+y, h2+y);
+    int w = height*aspectRatio;
+    myLogoImage->setSizeGeometry(cx2-w, 0, w, height);
   }
 
-  // Beam properties
-
-  if(IAmShowingBeamPropData)
-    {
-      int glv1 = leftPartSeparator + hBorder;
-      int glv2 = width;
-      int glh1 = headingBottom + vBorder;
-      int glh2 = height;
-
-      myBeamPropTabs->setEdgeGeometry(glv1, glv2, glh1, glh2);
-    }
-
-  // Strain rosette
-
-  if(IAmShowingStrainRosetteData)
-    {
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-      int h3 = h2 + vBorder;
-      int h4 = h3 + fieldHeight;
-      int h5 = h4 + vBorder;
-      int h6 = h5 + 4*fieldHeight/5;
-      int h7 = h6 + fieldHeight;
-      int h8 = h7 + fieldHeight/5;
-      int h9 = h8 + vBorder;
-      int h10 = h9 + 4*fieldHeight/5;
-      int h11 = h10 + fieldHeight;
-      int h12 = h11 + vBorder;
-      int h13 = h12 + fieldHeight;
-      int h14 = h13 + vBorder;
-      int h15 = h14 + fieldHeight;
-      int h16 = h15 + fieldHeight/5;
-
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + 2*hBorder;
-      int v3 = v2 + this->getFontWidth("Angle offset [Deg]M ");
-      int v4 = v2 + this->getFontWidth("xMChange SideMx");
-      int v5 = v4 + myStrRosHeightField->myField->getFontWidth("0.12345678901e-200");
-      int v6 = v5 + 2*hBorder;
-      int v7 = v6 + 2*hBorder;
-      int v8 = v7 + 2*hBorder;
-      int v11 = v3 + myStrRosNodesField->myField->getFontWidth(" 5000000, 5000000, 5000000, 5000000 ");
-      int v12 = v11 + 2*hBorder;
-      int v14 = v12 + myStrRosEditNodesButton->getWidthHint();
-      int v13 = v8 + this->getFontWidth("Poissons ratio ");
-
-      int v16 = width - 2*hBorder;
-      int v15 = v16 - 2*hBorder;
-      int v10  = v15 - myStrRosEditDirButton->getWidthHint();
-      int v9  = v10 - 2*hBorder;
-
-      int bAdd = vBorder/2;
-
-      myStrRosTypeLabel        ->setEdgeGeometry(v2, v3, h1, h2);
-      myStrRosTypeMenu         ->setEdgeGeometry(v3, v11, h1, h2);
-      myResetStartStrainsToggle->setEdgeGeometry(v12, v15, h1, h2);
-
-      myStrRosNodesField       ->setEdgeGeometry(v2, v11, h3, h4);
-      myStrRosNodesField->setLabelWidth(v3-v2);
-      myStrRosEditNodesButton  ->setEdgeGeometry(v12, v14, h3-bAdd, h4+bAdd);
-
-      myOrientationFrame       ->setEdgeGeometry(v1, v16, h5, h8);
-      myStrRosAngleField       ->setEdgeGeometry(v2, v9, h6, h7);
-      myStrRosAngleField->setLabelWidth(v3-v2);
-      myStrRosEditDirButton    ->setEdgeGeometry(v10, v15, h6-bAdd, h7+bAdd);
-
-      myLayerFrame->setEdgeGeometry(v1, v6, h9, h16);
-      myStrRosUseFEHeightToggle->setEdgeGeometry(v2, v5, h10, h11);
-      myStrRosHeightField      ->setEdgeGeometry(v2, v5, h12, h13);
-      myStrRosHeightField->setLabelWidth(this->getFontWidth("HeightM"));
-      myStrRosFlipZButton      ->setEdgeGeometry(v2, v4, h14-bAdd, h15+bAdd);
-
-      myMaterialFrame->setEdgeGeometry(v7, v16, h9, h16);
-      myStrRosUseFEMatToggle   ->setEdgeGeometry(v8, v15, h10, h11);
-      myStrRosEmodField        ->setEdgeGeometry(v8, v15, h12, h13);
-      myStrRosEmodField->setLabelWidth(v13-v8);
-      myStrRosNuField          ->setEdgeGeometry(v8, v15, h14,h15);
-      myStrRosNuField->setLabelWidth(v13-v8);
-    }
-
-  // Element group
-
-  if (IAmShowingGroupData)
-    {
-      int left = leftPartSeparator + 2*hBorder;
-      int right = width;
-      int snLeft = left + 2*hBorder;
-      int snRight = snLeft + 3*(right-left)/5;
-      int scfLeft = snRight + 3*hBorder;
-      int scfRight = right - 2*hBorder;
-      int top = headingBottom + 2*vBorder;
-      int fatTop = top + fieldHeight;
-      int fatBottom = fatTop + fieldHeight;
-      int snTop = fatBottom + vBorder;
-      int snBottom = snTop + fieldHeight;
-      int bottom = snBottom + 3*vBorder;
-
-      this->myFatigueFrame->setEdgeGeometry(left, right, top, bottom);
-      this->myFatigueToggle->setEdgeGeometry(snLeft, snRight, fatTop, fatBottom);
-#ifdef FT_HAS_GRAPHVIEW
-      this->mySNSelector->setEdgeGeometry(snLeft, snRight, snTop, snBottom);
-#endif
-      this->myScfField->setEdgeGeometry(scfLeft, scfRight, snTop, snBottom);
-    }
-
-  // RAO vessel motion
-
-  if (IAmShowingRAOData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = v1 + this->getFontWidth("Wave function  ");
-      int v3 = width - this->myBrowseRAOFileButton->getWidthHint();
-      int v4 = v3 - this->getFontWidth("Wave direction ");
-      int v5 = v4 - 2*hBorder;
-      int v6 = width;
-
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-      int h3 = h2 + 2*vBorder;
-      int h4 = h3 + fieldHeight;
-      int h5 = h4 + 2*vBorder;
-      int h6 = h5 + fieldHeight;
-
-      myRAOFileLabel->       setEdgeGeometry(v1, v2, h1, h2);
-      myRAOFileField->       setEdgeGeometry(v2, v3, h1, h2);
-      myBrowseRAOFileButton->setEdgeGeometry(v3, v6, h1, h2);
-      myWaveFuncLabel->      setEdgeGeometry(v1, v2, h3, h4);
-      myWaveFuncField->      setEdgeGeometry(v2, v5, h3, h4);
-      myWaveDirLabel->       setEdgeGeometry(v4, v3, h3, h4);
-      myWaveDirMenu->        setEdgeGeometry(v3, v6, h3, h4);
-      myMotionScaleLabel->   setEdgeGeometry(v1, v2, h5, h6);
-      myMotionScaleField->   setEdgeGeometry(v2, v6, h5, h6);
-    }
-
-  // Simulation event
-
-  if (IAmShowingEventData)
-    {
-      int left = leftPartSeparator + 2*hBorder;
-      int right = width;
-      int fieldTop = headingBottom + 2*vBorder;
-      int fieldWidth = (right-left)/2;
-      int fieldHeight = 25;
-      int buttonWidth = this->mySelectEventButton->getWidthHint();
-      this->myEventProbability->setEdgeGeometry(left, left+fieldWidth, fieldTop, fieldTop+fieldHeight);
-      fieldTop += fieldHeight + 5*vBorder;
-      this->mySelectEventButton->setEdgeGeometry(left, left+buttonWidth, fieldTop, fieldTop+fieldHeight);
-      fieldTop += fieldHeight + 5*vBorder;
-      this->myActiveEventLabel->setEdgeGeometry(left, right, fieldTop, fieldTop+2*fieldHeight);
-    }
-
-  // Subassembly
-
-  if (IAmShowingSubAssData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int v3 = v1 + 140;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = h1 + fieldHeight;
-      int h3 = h2 + 3*vBorder;
-      int h4 = h3 + fieldHeight + 2*vBorder;
-      mySubassFileField->setEdgeGeometry(v1,v2,h1,h2);
-      mySubassPosition->setEdgeGeometry(v3+hBorder,v2,h3,height);
-      mySubassMassField->setEdgeGeometry(v1,v3,h3,h3+fieldHeight);
-      mySubassCoGFrame->setEdgeGeometry(v1-hBorder,v3,h4,height);
-      mySubassCoGField->setEdgeGeometry(v1,v3-hBorder,h4+fontHeigth,height-vBorder);
-    }
-
-  // Function properties
-
-  if (IAmShowingFunctionData)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = height;
-
-      myFunctionProperties->setEdgeGeometry(v1,v2,h1,h2);
-    }
-
-  // Control system properties
-
-  if (IAmShowingCtrlData && myCtrlElementProperties)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = height;
-
-      myCtrlElementProperties->setEdgeGeometry(v1,v2,h1,h2);
-    }
-
-  if (IAmShowingAnimationData && myAnimationDefine)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = height;
-
-      myAnimationDefine->setEdgeGeometry(v1,v2,h1,h2);
-    }
-
-  if (IAmShowingGraphData && myGraphDefine)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = height;
-
-      myGraphDefine->setEdgeGeometry(v1,v2,h1,h2);
-    }
-
-  if (IAmShowingCurveData && myCurveDefine)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = height;
-
-      myCurveDefine->setEdgeGeometry(v1,v2,h1,h2);
-    }
-
-  if (IAmShowingExtCtrlSysData && myExtCtrlSysProperties)
-    {
-      int v1 = leftPartSeparator + 2*hBorder;
-      int v2 = width;
-      int h1 = headingBottom + 2*vBorder;
-      int h2 = height;
-
-      myExtCtrlSysProperties->setEdgeGeometry(v1,v2,h1,h2);
-    }
-
-  if (IAmShowingStartGuide > 0)
-    {
-      const float logoAspectRatio = 8.0f/4.13f;
-      int cx2 = width*2/11;
-      if (cx2 > height*logoAspectRatio) // wide container
-        mySGLogoImage->setEdgeGeometry(0, cx2, 0, cx2/logoAspectRatio);
-      else // tall container
-        mySGLogoImage->setEdgeGeometry(cx2-height*logoAspectRatio, cx2, 0, height);
-
-      mySGLogoBorderTop->setEdgeGeometry(0, cx2, 0, 3); // blue border above logo image
-      mySGLogoBorderRight->setEdgeGeometry(cx2, cx2+4, 0, 27); // blue short-border on the right of the logo image
-      mySGHeading->setEdgeGeometry(cx2+8, width-70, 3, 25);
-      mySGFillWhite->setEdgeGeometry(cx2, width, 27, height);
-      mySGBorderTop->setEdgeGeometry(cx2+1, width, 24, 27);
-      mySGBorderRight->setEdgeGeometry(width-1, width, 27, height);
-      mySGBorderBottom->setEdgeGeometry(cx2, width-1, height-1, height);
-      mySGContentLabel->setEdgeGeometry(cx2+3, width, 27, height);
-
-      // font size
-      std::string text = mySGContentLabel->getLabel();
-      size_t ipos = text.find("font-size:");
-      if (ipos != std::string::npos) {
-        int nFontSize, w = width-cx2, h = height-27;
-        if (w >= 1105 && h >= 260)
-          nFontSize = 12;
-        else if (w >= 1015 && h >= 247)
-          nFontSize = 11;
-        else if (w >= 900 && h >= 220)
-          nFontSize = 10;
-        else if (w >= 860 && h >= 195)
-          nFontSize = 9;
-        else
-          nFontSize = 8;
-        char buf[16];
-        sprintf(buf,"font-size:%dpt;",nFontSize);
-        if (text.find(buf) == ipos) {
-          size_t jpos = text.find("pt;",ipos);
-          text.replace(ipos,jpos-ipos+3,buf);
-          mySGContentLabel->setLabel(text);
-        }
-      }
-
-      // Note: We should enable resizing of this area when we have more content to show..
-    }
+  this->setSizeGeometry(0, 0, width, height);
+  myHeading->setSizeGeometry(cx2+8, 3, width-cx2-78, 22);
+  myContentLabel->setSizeGeometry(cx2+3, 27, width-cx2-4, height-28);
+  myLogoBorderTop->setSizeGeometry(0, 0, cx2, 3);
+  myLogoBorderRight->setSizeGeometry(cx2, 0, 4, 27);
+  myBorderTop->setSizeGeometry(cx2+1, 24, width-cx2-1, 3);
+  myBorderRight->setSizeGeometry(width-3, 27, 3, height);
+  myBorderBottom->setSizeGeometry(cx2, height-1, width-cx2-3, 1);
 }
 
 
@@ -1991,16 +866,20 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (pv->showHeading)
   {
+    myIdField->popUp();
     myDescriptionField->popUp();
     myTagField->popUp();
     myTopologyView->popUp();
     myTopologyView->setTree(pv->myTopology);
+    myProperty->popUp();
   }
   else
   {
+    myIdField->popDown();
     myDescriptionField->popDown();
     myTagField->popDown();
     myTopologyView->popDown();
+    myProperty->popDown();
   }
 
   // Reference Plane
@@ -2008,32 +887,20 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   if (pv->showRefPlane)
   {
     myRefPlanePosition->setEditedObjs(pv->objsToPosition);
-    myRefPlanePosition->popUp();
-    myRefPlaneSizeFrame->popUp();
-    myRefPlaneHeightField->popUp();
-    myRefPlaneWidthField->popUp();
+    myRefPlane->popUp();
   }
   else
   {
     myRefPlanePosition->setEditedObjs();
-    myRefPlanePosition->popDown();
-    myRefPlaneSizeFrame->popDown();
-    myRefPlaneHeightField->popDown();
-    myRefPlaneWidthField->popDown();
+    myRefPlane->popDown();
   }
 
   // Higher Pair
 
   if (pv->showHPRatio)
-  {
     myHPRatioFrame->popUp();
-    myHPRatioField->popUp();
-  }
   else
-  {
     myHPRatioFrame->popDown();
-    myHPRatioField->popDown();
-  }
 
   // Spring characteristics
 
@@ -2047,15 +914,11 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   if (pv->showAxialSpring)
   {
     mySpringForce->buildDynamicWidgets(pv->myAxialSprForceValues);
-    mySpringForce->popUp();
     mySpringDeflCalc->buildDynamicWidgets(pv->myAxialSpringDefCalcValues);
-    mySpringDeflCalc->popUp();
+    mySpring->popUp();
   }
   else
-  {
-    mySpringForce->popDown();
-    mySpringDeflCalc->popDown();
-  }
+    mySpring->popDown();
 
   // Axial Damper
 
@@ -2082,203 +945,114 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myLinkTabs->popDown();
   }
 
-  // Beam and Shaft
-
-  if (pv->showBeamData || pv->showShaftData)
-  {
-    myShaftGeneralFrame->popUp();
-    if (pv->myHideCrossSection) {
-      myShaftCrossSectionDefLabel->popDown();
-      myShaftCrossSectionDefField->popDown();
-    }
-    else {
-      myShaftCrossSectionDefLabel->popUp();
-      myShaftCrossSectionDefField->popUp();
-    }
-  }
-  else
-  {
-    myShaftGeneralFrame->popDown();
-    myShaftCrossSectionDefLabel->popDown();
-    myShaftCrossSectionDefField->popDown();
-  }
-
-  bool showBladeOrShaft = pv->showBladeData || pv->showShaftData;
-  bool showBeamstring = pv->showJacketData || pv->showSoilPileData || pv->showRiserData;
-  if (showBladeOrShaft || showBeamstring || pv->showBeamData || pv->showUDEData)
-  {
-    myShaftSDFrame->popUp();
-    myShaftSDMassField->popUp();
-    myShaftSDStiffnessField->popUp();
-    myShaftDPFrame->popUp();
-    myShaftDPStiffnessField->popUp();
-    myShaftDPMassField->popUp();
-  }
-  else
-  {
-    myShaftSDFrame->popDown();
-    myShaftSDMassField->popDown();
-    myShaftSDStiffnessField->popDown();
-    myShaftDPFrame->popDown();
-    myShaftDPStiffnessField->popDown();
-    myShaftDPMassField->popDown();
-  }
+  // Beam or User-defined element
 
   if (pv->showBeamData)
   {
+    myBeam->popUp();
+    if (pv->myHideCrossSection)
+      myBeamCrossSectionDefField->popDown();
+    else
+      myBeamCrossSectionDefField->popUp();
+    myBeamLengthField->popUp();
+    myBeamVisualize3DButton->popUp();
+    myBeamVisualize3DFields[0]->popUp();
+    myBeamVisualize3DFields[1]->popUp();
     myBeamOrientationFrame->popUp();
-    for (FFuLabelField* f : myBeamLocalZField) f->popUp();
+  }
+  else if (pv->showUDEData)
+  {
+    myBeam->popUp();
+    myBeamCrossSectionDefField->popDown();
+    myBeamLengthField->popDown();
+    myBeamVisualize3DButton->popDown();
+    myBeamVisualize3DFields[0]->popDown();
+    myBeamVisualize3DFields[1]->popDown();
+    myBeamOrientationFrame->popDown();
   }
   else
-  {
-    myBeamOrientationFrame->popDown();
-    for (FFuLabelField* f : myBeamLocalZField) f->popDown();
-  }
+    myBeam->popDown();
+
+  // Shaft
+
+  if (pv->showShaftData)
+    myShaftCrossSectionDefField->popUp();
+  else
+    myShaftCrossSectionDefField->popDown();
+
+  bool showBladeOrShaft = pv->showBladeData || pv->showShaftData;
+  bool showBeamstring = pv->showJacketData || pv->showSoilPileData || pv->showRiserData;
+  if (showBladeOrShaft || showBeamstring)
+    myShaftDynProps->popUp();
+  else
+    myShaftDynProps->popDown();
 
   if (showBladeOrShaft)
   {
     myShaftNoteALabel->popUp();
-    myShaftNoteBLabel->popUp();
     myShaftNoteCLabel->popUp();
   }
   else
   {
     myShaftNoteALabel->popDown();
-    myShaftNoteBLabel->popDown();
     myShaftNoteCLabel->popDown();
   }
 
-  // Turbine, Nacelle, Gearbox, etc. (shared fields) :
+  // Turbine, Nacelle, Gearbox, etc. (shared fields)
 
-  bool showSubassMassCog = pv->showSubassemblyData && pv->showSubassPos;
-  if (showSubassMassCog ||
-      pv->showTurbineData ||
-      pv->showTowerData ||
-      pv->showNacelleData ||
-      pv->showGeneratorData ||
-      pv->showGearboxData ||
-      pv->showRotorData ||
-      pv->showShaftData ||
-      pv->showBladeData ||
-      pv->showRiserData ||
-      pv->showJacketData ||
-      pv->showSoilPileData ||
-      pv->showBeamData ||
-      pv->showUDEData)
-    mySubassMassField->popUp();
-  else
-    mySubassMassField->popDown();
-
-  if (showSubassMassCog ||
-      pv->showTurbineData ||
-      pv->showTowerData ||
-      pv->showNacelleData ||
-      pv->showGeneratorData ||
-      pv->showGearboxData ||
-      pv->showRotorData ||
-      pv->showJacketData)
+  bool showTurbine = (pv->showTurbineData || pv->showTowerData || pv->showNacelleData ||
+                      pv->showGeneratorData || pv->showGearboxData || pv->showRotorData);
+  if (pv->showSubassemblyData || showTurbine || showBladeOrShaft || showBeamstring)
   {
+    mySubassembly->popUp();
+    if (!pv->showSubassemblyData || pv->showSubassPos)
+      mySubassMassField->popUp();
+    else
+      mySubassMassField->popDown();
+  }
+  else
+    mySubassembly->popDown();
+
+  if ((pv->showSubassemblyData && pv->showSubassPos) || pv->showJacketData || showTurbine)
     mySubassCoGFrame->popUp();
-    mySubassCoGField->popUp();
-  }
   else
-  {
     mySubassCoGFrame->popDown();
-    mySubassCoGField->popDown();
-  }
 
-  if (pv->showShaftData ||
-      pv->showBladeData ||
-      pv->showRiserData ||
-      pv->showSoilPileData ||
-      pv->showBeamData)
+  if (showBladeOrShaft || pv->showRiserData || pv->showSoilPileData)
     mySubassLengthField->popUp();
   else
     mySubassLengthField->popDown();
 
-  if (showBladeOrShaft || pv->showTowerData || pv->showBeamData)
+  if (showBladeOrShaft || showBeamstring || pv->showTowerData)
     myVisualize3DButton->popUp();
   else
     myVisualize3DButton->popDown();
 
-  if (pv->showBeamData)
-  {
-    myVisualize3DStartAngleField->popUp();
-    myVisualize3DStopAngleField->popUp();
-  }
-  else
-  {
-    myVisualize3DStartAngleField->popDown();
-    myVisualize3DStopAngleField->popDown();
-  }
-
   if (pv->showTurbineData)
   {
     myTurbineWindRefFrame->popUp();
-    myTurbineWindRefTriadDefLabel->popUp();
-    myTurbineWindRefTriadDefField->popUp();
-    myTurbineWindVertOffsetLabel->popUp();
-    myTurbineWindVertOffsetField->popUp();
     myTurbineAdvTopologyFrame->popUp();
-    myTurbineYawPointTriadDefLabel->popUp();
-    myTurbineYawPointTriadDefField->popUp();
-    myTurbineHubApexTriadDefLabel->popUp();
-    myTurbineHubApexTriadDefField->popUp();
-    myTurbineHubPartDefLabel->popUp();
-    myTurbineHubPartDefField->popUp();
-    myTurbineFirstBearingDefLabel->popUp();
-    myTurbineFirstBearingDefField->popUp();
   }
   else
   {
     myTurbineWindRefFrame->popDown();
-    myTurbineWindRefTriadDefLabel->popDown();
-    myTurbineWindRefTriadDefField->popDown();
-    myTurbineWindVertOffsetLabel->popDown();
-    myTurbineWindVertOffsetField->popDown();
     myTurbineAdvTopologyFrame->popDown();
-    myTurbineYawPointTriadDefLabel->popDown();
-    myTurbineYawPointTriadDefField->popDown();
-    myTurbineHubApexTriadDefLabel->popDown();
-    myTurbineHubApexTriadDefField->popDown();
-    myTurbineHubPartDefLabel->popDown();
-    myTurbineHubPartDefField->popDown();
-    myTurbineFirstBearingDefLabel->popDown();
-    myTurbineFirstBearingDefField->popDown();
   }
 
   if (pv->showGeneratorData)
-  {
-    myGeneratorTorqueRadioBtn->popUp();
-    myGeneratorVelocityRadioBtn->popUp();
-    myGeneratorTorqueField->popUp();
-    myGeneratorVelocityField->popUp();
-  }
+    myGeneratorFrame->popUp();
   else
-  {
-    myGeneratorTorqueRadioBtn->popDown();
-    myGeneratorVelocityRadioBtn->popDown();
-    myGeneratorTorqueField->popDown();
-    myGeneratorVelocityField->popDown();
-  }
+    myGeneratorFrame->popDown();
 
   if (pv->showBladeData)
   {
-    myBladePitchControlLabel->popUp();
-    myBladePitchControlField->popUp();
-    myBladeFixedPitchToggle->popUp();
+    myBladePitchControlFrame->popUp();
     myBladeIceFrame->popUp();
-    myBladeIceLayerToggle->popUp();
-    myBladeIceThicknessField->popUp();
   }
   else
   {
-    myBladePitchControlLabel->popDown();
-    myBladePitchControlField->popDown();
-    myBladeFixedPitchToggle->popDown();
+    myBladePitchControlFrame->popDown();
     myBladeIceFrame->popDown();
-    myBladeIceLayerToggle->popDown();
-    myBladeIceThicknessField->popDown();
   }
 
   // Riser, Soil Pile or Jacket :
@@ -2288,15 +1062,10 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myRiserMudButton->setLabel("Internal Liquid");
     myRiserMudDensityField->setLabel("Mud density");
 
-    myRiserGeneralFrame->popUp();
-    myRiserInternalToDefLabel->popUp();
     myRiserInternalToDefField->popUp();
-    myRiserVisualize3DButton->popUp();
     myRiserVisualize3DStartAngleField->popUp();
     myRiserVisualize3DStopAngleField->popUp();
     myRiserMudFrame->popUp();
-    myRiserMudButton->popUp();
-    myRiserMudDensityField->popUp();
     myRiserMudLevelField->popUp();
   }
   else if (pv->showSoilPileData)
@@ -2304,42 +1073,18 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myRiserMudButton->setLabel("Internal Soil");
     myRiserMudDensityField->setLabel("Soil density");
 
-    myRiserGeneralFrame->popUp();
-    myRiserVisualize3DButton->popUp();
+    myRiserInternalToDefField->popDown();
     myRiserVisualize3DStartAngleField->popUp();
     myRiserVisualize3DStopAngleField->popUp();
-    myRiserInternalToDefLabel->popDown();
-    myRiserInternalToDefField->popDown();
     myRiserMudFrame->popUp();
-    myRiserMudButton->popUp();
-    myRiserMudDensityField->popUp();
-    myRiserMudLevelField->popDown();
-  }
-  else if (pv->showJacketData)
-  {
-    myRiserGeneralFrame->popUp();
-    myRiserVisualize3DButton->popUp();
-    myRiserVisualize3DStartAngleField->popDown();
-    myRiserVisualize3DStopAngleField->popDown();
-    myRiserInternalToDefLabel->popDown();
-    myRiserInternalToDefField->popDown();
-    myRiserMudFrame->popDown();
-    myRiserMudButton->popDown();
-    myRiserMudDensityField->popDown();
     myRiserMudLevelField->popDown();
   }
   else
   {
-    myRiserGeneralFrame->popDown();
-    myRiserInternalToDefLabel->popDown();
     myRiserInternalToDefField->popDown();
-    myRiserVisualize3DButton->popDown();
     myRiserVisualize3DStartAngleField->popDown();
     myRiserVisualize3DStopAngleField->popDown();
     myRiserMudFrame->popDown();
-    myRiserMudButton->popDown();
-    myRiserMudDensityField->popDown();
-    myRiserMudLevelField->popDown();
   }
 
   // Swap Master and Slave :
@@ -2512,46 +1257,16 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
   // Load
 
   if (pv->showLoadData)
-  {
-    myMagnitudeLabel->popUp();
-    myLoadMagnitude->popUp();
-    myAttackPointFrame->popUp();
-    myDirectionFrame->popUp();
-    myAttackPointEditor->popUp();
-    myFromPointEditor->popUp();
-    myToPointEditor->popUp();
-    myFromPointLabel->popUp();
-    myToPointLabel->popUp();
-  }
+    myLoad->popUp();
   else
-  {
-    myMagnitudeLabel->popDown();
-    myLoadMagnitude->popDown();
-    myAttackPointFrame->popDown();
-    myDirectionFrame->popDown();
-    myAttackPointEditor->popDown();
-    myFromPointEditor->popDown();
-    myToPointEditor->popDown();
-    myFromPointLabel->popDown();
-    myToPointLabel->popDown();
-  }
+    myLoad->popDown();
 
   // Generic DB object
 
   if (pv->showGenDBObj)
-  {
-    myGenDBObjTypeLabel->popUp();
-    myGenDBObjTypeField->popUp();
-    myGenDBObjDefLabel->popUp();
-    myGenDBObjDefField->popUp();
-  }
+    myGenDBObject->popUp();
   else
-  {
-    myGenDBObjTypeLabel->popDown();
-    myGenDBObjTypeField->popDown();
-    myGenDBObjDefLabel->popDown();
-    myGenDBObjDefField->popDown();
-  }
+    myGenDBObject->popDown();
 
   // File reference
 
@@ -2564,107 +1279,38 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (pv->showTireData)
   {
-    myTireDataFileLabel->popUp();
-    myTireDataFileField->popUp();
+    myTire->popUp();
     myTireDataFileField->setQuery(pv->myTireDataFileRefQuery);
-    myBrowseTireFileButton->popUp();
-    myRoadLabel->popUp();
-    myRoadField->popUp();
     myRoadField->setQuery(pv->myRoadQuery);
-    myTireModelTypeLabel->popUp();
-    myTireModelMenu->popUp();
     myTireModelMenu->setOptions(pv->myTireTypes);
-    mySpindelOffsetField->popUp();
   }
   else
-  {
-    myTireDataFileLabel->popDown();
-    myTireDataFileField->popDown();
-    myBrowseTireFileButton->popDown();
-    myRoadLabel->popDown();
-    myRoadField->popDown();
-    myTireModelTypeLabel->popDown();
-    myTireModelMenu->popDown();
-    mySpindelOffsetField->popDown();
-  }
+    myTire->popDown();
 
   // Road
 
   if (pv->showRoadData)
   {
-    myUseFuncRoadRadio->popUp();
-    myRoadFuncLabel->popUp();
-    myRoadFuncField->popUp();
+    myRoad->popUp();
     myRoadFuncField->setQuery(pv->myRoadFunctionQuery);
-    myRoadZShiftField->popUp();
-    myRoadXOffsetField->popUp();
-    myRoadZRotationField->popUp();
-    myUseFileRoadRadio->popUp();
-    myRoadDataFileLabel->popUp();
-    myRoadDataFileField->popUp();
     myRoadDataFileField->setQuery(pv->myRoadDataFileRefQuery);
-    myBrowseRoadFileButton->popUp();
   }
   else
-  {
-    myUseFuncRoadRadio->popDown();
-    myRoadFuncLabel->popDown();
-    myRoadFuncField->popDown();
-    myRoadZShiftField->popDown();
-    myRoadXOffsetField->popDown();
-    myRoadZRotationField->popDown();
-    myUseFileRoadRadio->popDown();
-    myRoadDataFileLabel->popDown();
-    myRoadDataFileField->popDown();
-    myUseFileRoadRadio->popDown();
-    myRoadDataFileLabel->popDown();
-    myRoadDataFileField->popDown();
-    myBrowseRoadFileButton->popDown();
-  }
+    myRoad->popDown();
 
   // Material properties
 
   if (pv->showMatPropData)
-  {
-    myMatPropRhoField->popUp();
-    myMatPropEField->popUp();
-    myMatPropNuField->popUp();
-    myMatPropGField->popUp();
-  }
+    myMatPropFrame->popUp();
   else
-  {
-    myMatPropRhoField->popDown();
-    myMatPropEField->popDown();
-    myMatPropNuField->popDown();
-    myMatPropGField->popDown();
-  }
+    myMatPropFrame->popDown();
 
-  // Sea State
+  // Sea state
+
   if (pv->showSeaStateData)
-  {
-    mySeaStateSizeFrame->popUp();
-    mySeaStatePositionFrame->popUp();
-    mySeaStateVisualizationFrame->popUp();
-    mySeaStateWidthField->popUp();
-    mySeaStateHeightField->popUp();
-    mySeaStateWidthPosField->popUp();
-    mySeaStateHeightPosField->popUp();
-    mySeaStateNumPoints->popUp();
-    mySeaStateShowGridToggle->popUp();
-    mySeaStateShowSolidToggle->popUp();
-  }
-  else {
-    mySeaStateSizeFrame->popDown();
-    mySeaStatePositionFrame->popDown();
-    mySeaStateVisualizationFrame->popDown();
-    mySeaStateWidthField->popDown();
-    mySeaStateHeightField->popDown();
-    mySeaStateWidthPosField->popDown();
-    mySeaStateHeightPosField->popDown();
-    mySeaStateNumPoints->popDown();
-    mySeaStateShowGridToggle->popDown();
-    mySeaStateShowSolidToggle->popDown();
-  }
+    mySeaState->popUp();
+  else 
+    mySeaState->popDown();
 
   // Beam properties
 
@@ -2681,24 +1327,8 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (pv->showStrainRosetteData)
   {
-    myStrRosTypeLabel->popUp();
-    myStrRosTypeMenu->popUp();
+    myStrainRosette->popUp();
     myStrRosTypeMenu->setOptions(pv->myStrainRosetteTypes);
-    myStrRosNodesField->popUp();
-    myStrRosEditNodesButton->popUp();
-    myStrRosAngleField->popUp();
-    myStrRosEditDirButton->popUp();
-    myStrRosHeightField->popUp();
-    myStrRosUseFEHeightToggle->popUp();
-    myStrRosFlipZButton->popUp();
-    myStrRosEmodField->popUp();
-    myStrRosNuField->popUp();
-    myStrRosUseFEMatToggle->popUp();
-    myResetStartStrainsToggle->popUp();
-    myMaterialFrame->popUp();
-    myLayerFrame->popUp();
-    myOrientationFrame->popUp();
-
     myStrRosTypeMenu->setSensitivity(pv->myStrRosIsEditable);
     myStrRosEditNodesButton->setSensitivity(pv->myStrRosIsEditable);
     myStrRosAngleField->setSensitivity(pv->myStrRosIsEditable);
@@ -2709,89 +1339,33 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myResetStartStrainsToggle->setSensitivity(pv->myStrRosIsEditable);
   }
   else
-  {
-    myStrRosTypeLabel->popDown();
-    myStrRosTypeMenu->popDown();
-    myStrRosNodesField->popDown();
-    myStrRosEditNodesButton->popDown();
-    myStrRosAngleField->popDown();
-    myStrRosEditDirButton->popDown();
-    myStrRosHeightField->popDown();
-    myStrRosUseFEHeightToggle->popDown();
-    myStrRosFlipZButton->popDown();
-    myStrRosEmodField->popDown();
-    myStrRosNuField->popDown();
-    myStrRosUseFEMatToggle->popDown();
-    myResetStartStrainsToggle->popDown();
-    myMaterialFrame->popDown();
-    myLayerFrame->popDown();
-    myOrientationFrame->popDown();
-  }
+    myStrainRosette->popDown();
 
   // Element group
 
   if (pv->showGroupData)
-  {
     myFatigueFrame->popUp();
-    myFatigueToggle->popUp();
-#ifdef FT_HAS_GRAPHVIEW
-    mySNSelector->popUp();
-#endif
-    myScfField->popUp();
-  }
   else
-  {
     myFatigueFrame->popDown();
-    myFatigueToggle->popDown();
-#ifdef FT_HAS_GRAPHVIEW
-    mySNSelector->popDown();
-#endif
-    myScfField->popDown();
-  }
 
   // RAO vessel motion
 
   if (pv->showRAOData)
   {
-    myRAOFileLabel->popUp();
-    myRAOFileField->popUp();
+    myRAO->popUp();
     myRAOFileField->setQuery(pv->myRAOFileRefQuery);
-    myBrowseRAOFileButton->popUp();
-    myWaveFuncLabel->popUp();
-    myWaveFuncField->popUp();
     myWaveFuncField->setQuery(pv->myWaveFunctionQuery);
-    myWaveDirLabel->popUp();
-    myWaveDirMenu->popUp();
-    myMotionScaleLabel->popUp();
-    myMotionScaleField->popUp();
     myMotionScaleField->setQuery(pv->myMotionScaleQuery);
   }
   else
-  {
-    myRAOFileLabel->popDown();
-    myRAOFileField->popDown();
-    myBrowseRAOFileButton->popDown();
-    myWaveFuncLabel->popDown();
-    myWaveFuncField->popDown();
-    myWaveDirLabel->popDown();
-    myWaveDirMenu->popDown();
-    myMotionScaleLabel->popDown();
-    myMotionScaleField->popDown();
-  }
+    myRAO->popDown();
 
   // Simulation event
 
   if (pv->showSimEventData)
-  {
-    myEventProbability->popUp();
-    mySelectEventButton->popUp();
-  }
+    mySimEvent->popUp();
   else
-  {
-    myEventProbability->popDown();
-    mySelectEventButton->popDown();
-    myActiveEventLabel->popDown();
-  }
+    mySimEvent->popDown();
 
   // Subassembly
 
@@ -2855,31 +1429,18 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (IAmShowingStartGuide > 0)
   {
-    myTypeField->popDown();
-    myIdField->popDown();
-    mySGLogoImage->popUp();
-    mySGLogoBorderTop->popUp();
-    mySGLogoBorderRight->popUp();
-    mySGHeading->popUp();
-    mySGFillWhite->popUp();
-    mySGBorderTop->popUp();
-    mySGBorderRight->popUp();
-    mySGBorderBottom->popUp();
-    mySGContentLabel->popUp();
+    myHeading->popDown();
+    myTopology->popDown();
+    myProperty->popDown();
+    myStartGuide->popUp();
+    myStartGuide->placeWidgets(this->getWidth(),this->getHeight());
   }
   else
   {
-    mySGLogoImage->popDown();
-    mySGLogoBorderTop->popDown();
-    mySGLogoBorderRight->popDown();
-    mySGHeading->popDown();
-    mySGFillWhite->popDown();
-    mySGBorderTop->popDown();
-    mySGBorderRight->popDown();
-    mySGBorderBottom->popDown();
-    mySGContentLabel->popDown();
-    myTypeField->popUp();
-    myIdField->popUp();
+    myStartGuide->popDown();
+    myHeading->popUp();
+    myTopology->popUp();
+    myProperty->popUp();
   }
 }
 
@@ -3016,9 +1577,29 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myNonlinearLinkOptsSheet->setValues(pv->myLinkValues);
   }
 
-  // Beam and Shaft :
+  // Beam and User-defined element :
 
-  if (pv->showBeamData || pv->showShaftData)
+  if (pv->showBeamData)
+  {
+    myBeamCrossSectionDefField->setQuery(pv->myCrossSectionQuery);
+    myBeamCrossSectionDefField->setSelectedRef(pv->mySelectedCS);
+    myBeamVisualize3DButton->setValue(pv->myVisualize3D);
+    myBeamVisualize3DFields[0]->myField->setValue(pv->myVisualize3DAngles.first);
+    myBeamVisualize3DFields[1]->myField->setValue(pv->myVisualize3DAngles.second);
+    for (int i = 0; i < 3; i++)
+      myBeamLocalZField[i]->setValue(pv->myOrientation[i]);
+  }
+  if (pv->showBeamData || pv->showUDEData)
+  {
+    myBeamMassField->setValue(pv->myTotalMass);
+    myBeamLengthField->setValue(pv->myTotalLength);
+    myBeamDynProps->setValues(pv->myMassPropDamp,pv->myStifPropDamp,
+                              pv->myScaleStiff,pv->myScaleMass);
+  }
+
+  // Shaft :
+
+  if (pv->showShaftData)
   {
     mySubassLengthField->setValue(pv->myTotalLength);
     mySubassMassField->setValue(pv->myTotalMass);
@@ -3030,42 +1611,12 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
       myShaftCrossSectionDefField->setQuery(pv->myCrossSectionQuery);
       myShaftCrossSectionDefField->setSelectedRef(pv->mySelectedCS);
     }
-    if (pv->myBlankFieldsFlags & 0x0002)
-      myShaftSDMassField->setValue("");
-    else
-      myShaftSDMassField->setValue(pv->myMassPropDamp);
-    if (pv->myBlankFieldsFlags & 0x0004)
-      myShaftSDStiffnessField->setValue("");
-    else
-      myShaftSDStiffnessField->setValue(pv->myStifPropDamp);
-    if (pv->myBlankFieldsFlags & 0x0008)
-      myShaftDPMassField->setValue("");
-    else
-      myShaftDPMassField->setValue(pv->myScaleMass);
-    if (pv->myBlankFieldsFlags & 0x0010)
-      myShaftDPStiffnessField->setValue("");
-    else
-      myShaftDPStiffnessField->setValue(pv->myScaleStiff);
+    myShaftDynProps->setValues(pv->myMassPropDamp, pv->myStifPropDamp,
+                               pv->myScaleStiff, pv->myScaleMass,
+                               pv->myBlankFieldsFlags);
   }
-  else if (pv->showUDEData)
-  {
-    mySubassMassField->setValue(pv->myTotalMass);
-    myShaftSDMassField->setValue(pv->myMassPropDamp);
-    myShaftSDStiffnessField->setValue(pv->myStifPropDamp);
-    myShaftDPMassField->setValue(pv->myScaleMass);
-    myShaftDPStiffnessField->setValue(pv->myScaleStiff);
- }
 
-  if (pv->showBeamData) {
-    for (int i = 0; i < 3; i++)
-      myBeamLocalZField[i]->setValue(pv->myOrientation[i]);
-    myVisualize3DButton->useUITristate(false);
-    myVisualize3DButton->setValue(pv->myVisualize3D);
-    myVisualize3DButton->setSensitivity(true);
-    myVisualize3DStartAngleField->myField->setValue(pv->myVisualize3DAngles.first);
-    myVisualize3DStopAngleField->myField->setValue(pv->myVisualize3DAngles.second);
-  }
-  else if (pv->showShaftData || pv->showBladeData || pv->showTowerData) {
+  if (pv->showShaftData || pv->showBladeData || pv->showTowerData) {
     myVisualize3DButton->useUITristate(true);
     myVisualize3DButton->setUITristateValue(pv->myVisualize3Dts);
     myVisualize3DButton->setSensitivity(pv->myVisualize3DEnabled);
@@ -3089,17 +1640,17 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     mySubassCoGField->setValue(pv->myCoG);
     mySubassCoGField->setGlobal();
 
-    myTurbineWindRefTriadDefField->setQuery(pv->myTurbineWindRefTriadDefQuery);
-    myTurbineWindRefTriadDefField->setSelectedRef(pv->myTurbineWindRefTriadDefSelected);
+    myTurbineFields[0]->setQuery(pv->myTurbineWindRefTriadDefQuery);
+    myTurbineFields[0]->setSelectedRef(pv->myTurbineWindRefTriadDefSelected);
     myTurbineWindVertOffsetField->setValue(pv->myTurbineWindVertOffset);
-    myTurbineYawPointTriadDefField->setQuery(pv->myTurbineYawPointTriadDefQuery);
-    myTurbineYawPointTriadDefField->setSelectedRef(pv->myTurbineYawPointTriadDefSelected);
-    myTurbineHubApexTriadDefField->setQuery(pv->myTurbineHubApexTriadDefQuery);
-    myTurbineHubApexTriadDefField->setSelectedRef(pv->myTurbineHubApexTriadDefSelected);
-    myTurbineHubPartDefField->setQuery(pv->myTurbineHubPartDefQuery);
-    myTurbineHubPartDefField->setSelectedRef(pv->myTurbineHubPartDefSelected);
-    myTurbineFirstBearingDefField->setQuery(pv->myTurbineFirstBearingDefQuery);
-    myTurbineFirstBearingDefField->setSelectedRef(pv->myTurbineFirstBearingDefSelected);
+    myTurbineFields[1]->setQuery(pv->myTurbineYawPointTriadDefQuery);
+    myTurbineFields[1]->setSelectedRef(pv->myTurbineYawPointTriadDefSelected);
+    myTurbineFields[2]->setQuery(pv->myTurbineHubApexTriadDefQuery);
+    myTurbineFields[2]->setSelectedRef(pv->myTurbineHubApexTriadDefSelected);
+    myTurbineFields[3]->setQuery(pv->myTurbineHubPartDefQuery);
+    myTurbineFields[3]->setSelectedRef(pv->myTurbineHubPartDefSelected);
+    myTurbineFields[4]->setQuery(pv->myTurbineFirstBearingDefQuery);
+    myTurbineFields[4]->setSelectedRef(pv->myTurbineFirstBearingDefSelected);
   }
   else
     mySelectedSubass = NULL;
@@ -3163,23 +1714,9 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myBladePitchControlField->setSelectedRef(pv->myBladePitchControlSelectedEngine);
     myBladePitchControlField->setButtonCB(pv->myEditButtonCB);
 
-    // These fields are reused from Shaft
-    if (pv->myBlankFieldsFlags & 0x0002)
-      myShaftSDMassField->setValue("");
-    else
-      myShaftSDMassField->setValue(pv->myMassPropDamp);
-    if (pv->myBlankFieldsFlags & 0x0004)
-      myShaftSDStiffnessField->setValue("");
-    else
-      myShaftSDStiffnessField->setValue(pv->myStifPropDamp);
-    if (pv->myBlankFieldsFlags & 0x0008)
-      myShaftDPMassField->setValue("");
-    else
-      myShaftDPMassField->setValue(pv->myScaleMass);
-    if (pv->myBlankFieldsFlags & 0x0010)
-      myShaftDPStiffnessField->setValue("");
-    else
-      myShaftDPStiffnessField->setValue(pv->myScaleStiff);
+    myShaftDynProps->setValues(pv->myMassPropDamp, pv->myStifPropDamp,
+                               pv->myScaleStiff, pv->myScaleMass,
+                               pv->myBlankFieldsFlags);
   }
 
   // Riser, Jacket or Soil Pile :
@@ -3194,7 +1731,7 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     }
     else
       mySubassLengthField->setValue(pv->myTotalLength);
-    myRiserVisualize3DButton->setUITristateValue(pv->myVisualize3Dts);
+    myVisualize3DButton->setUITristateValue(pv->myVisualize3Dts);
     myRiserVisualize3DStartAngleField->myField->setValue(pv->myVisualize3DAngles.first);
     myRiserVisualize3DStopAngleField->myField->setValue(pv->myVisualize3DAngles.second);
     myRiserMudButton->setValue(pv->myIntFluid);
@@ -3203,23 +1740,9 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myRiserMudLevelField->setValue(pv->myIntFluidLevel);
     myRiserMudLevelField->setSensitivity(IAmSensitive && pv->myIntFluid);
 
-    // These fields are reused from Shaft
-    if (pv->myBlankFieldsFlags & 0x0002)
-      myShaftSDMassField->setValue("");
-    else
-      myShaftSDMassField->setValue(pv->myMassPropDamp);
-    if (pv->myBlankFieldsFlags & 0x0004)
-      myShaftSDStiffnessField->setValue("");
-    else
-      myShaftSDStiffnessField->setValue(pv->myStifPropDamp);
-    if (pv->myBlankFieldsFlags & 0x0008)
-      myShaftDPMassField->setValue("");
-    else
-      myShaftDPMassField->setValue(pv->myScaleMass);
-    if (pv->myBlankFieldsFlags & 0x0010)
-      myShaftDPStiffnessField->setValue("");
-    else
-      myShaftDPStiffnessField->setValue(pv->myScaleStiff);
+    myShaftDynProps->setValues(pv->myMassPropDamp, pv->myStifPropDamp,
+                               pv->myScaleStiff, pv->myScaleMass,
+                               pv->myBlankFieldsFlags);
   }
 
   // Joints :
@@ -3404,7 +1927,7 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myTireDataFileField->setText(pv->myTireDataFileName);
     myRoadField->setSelectedRef(pv->mySelectedRoad);
     myTireModelMenu->selectOption(pv->mySelectedTireModelType,false);
-    mySpindelOffsetField->setValue(pv->mySpindelTriadOffset);
+    mySpindelOffset->setValue(pv->mySpindelTriadOffset);
 
     // Set read-only if no tire license available
     if (!FapLicenseManager::checkTireLicense()) {
@@ -3412,7 +1935,7 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
       myBrowseTireFileButton->setSensitivity(false);
       myRoadField->setSensitivity(false);
       myTireModelMenu->setSensitivity(false);
-      mySpindelOffsetField->setSensitivity(false);
+      mySpindelOffset->setSensitivity(false);
     }
   }
 
@@ -3422,9 +1945,9 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
   {
     myUseFuncRoadRadio->setValue(!pv->iAmUsingExtRoadData);
     myRoadFuncField->setSelectedRef(pv->mySelectedRoadFunc);
-    myRoadZShiftField->setValue(pv->myRoadZShift);
-    myRoadXOffsetField->setValue(pv->myRoadXOffset);
-    myRoadZRotationField->setValue(pv->myRoadZRotation);
+    myRoadFields[0]->setValue(pv->myRoadZRotation);
+    myRoadFields[1]->setValue(pv->myRoadZShift);
+    myRoadFields[2]->setValue(pv->myRoadXOffset);
 
     myUseFileRoadRadio->setValue(pv->iAmUsingExtRoadData);
     myRoadDataFileField->setSelectedRef(pv->mySelectedRoadDataFileRef);
@@ -3434,20 +1957,16 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     if (!FapLicenseManager::checkTireLicense()) {
       myUseFuncRoadRadio->setSensitivity(false);
       myRoadFuncField->setSensitivity(false);
-      myRoadZShiftField->setSensitivity(false);
-      myRoadXOffsetField->setSensitivity(false);
-      myRoadZRotationField->setSensitivity(false);
-
+      for (FFuIOField* fld : myRoadFields)
+	fld->setSensitivity(false);
       myUseFileRoadRadio->setSensitivity(false);
       myRoadDataFileField->setSensitivity(false);
       myBrowseRoadFileButton->setSensitivity(false);
     }
     else if (myUseFuncRoadRadio->getSensitivity()) {
       myRoadFuncField->setSensitivity(!pv->iAmUsingExtRoadData);
-      myRoadZShiftField->setSensitivity(!pv->iAmUsingExtRoadData);
-      myRoadXOffsetField->setSensitivity(!pv->iAmUsingExtRoadData);
-      myRoadZRotationField->setSensitivity(!pv->iAmUsingExtRoadData);
-
+      for (FFuIOField* fld : myRoadFields)
+	fld->setSensitivity(!pv->iAmUsingExtRoadData);
       myRoadDataFileField->setSensitivity(pv->iAmUsingExtRoadData);
       myBrowseRoadFileButton->setSensitivity(pv->iAmUsingExtRoadData);
     }
@@ -3461,20 +1980,6 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myMatPropEField->setValue(pv->myMatPropE);
     myMatPropNuField->setValue(pv->myMatPropNu);
     myMatPropGField->setValue(pv->myMatPropG);
-  }
-
-  // Sea State
-
-  if (pv->showSeaStateData)
-  {
-    mySeaStateWidthField->setValue(pv->mySeaStateWidth);
-    mySeaStateHeightField->setValue(pv->mySeaStateHeight);
-
-    mySeaStateWidthPosField->setValue(pv->mySeaStateWidthPos);
-    mySeaStateHeightPosField->setValue(pv->mySeaStateHeightPos);
-    mySeaStateNumPoints->setValue(pv->mySeaStateNumPoints);
-    mySeaStateShowGridToggle->setValue(pv->mySeaStateShowGrid);
-    mySeaStateShowSolidToggle->setValue(pv->mySeaStateShowSolid);
   }
 
   // Beam properties
@@ -3541,6 +2046,19 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myWaveDirMenu->setOptions(pv->myWaveDirections);
     myWaveDirMenu->selectIntOption(pv->mySelectedWaveDir);
     myMotionScaleField->setSelectedRef(pv->mySelectedScale);
+  }
+
+  // Sea state
+
+  if (pv->showSeaStateData)
+  {
+    mySeaStateWidthField->setValue(pv->mySeaStateWidth);
+    mySeaStateHeightField->setValue(pv->mySeaStateHeight);
+    mySeaStateWidthPosField->setValue(pv->mySeaStateWidthPos);
+    mySeaStateHeightPosField->setValue(pv->mySeaStateHeightPos);
+    mySeaStateNumPoints->setValue(pv->mySeaStateNumPoints);
+    mySeaStateShowGridToggle->setValue(pv->mySeaStateShowGrid);
+    mySeaStateShowSolidToggle->setValue(pv->mySeaStateShowSolid);
   }
 
   // Simulation event
@@ -3617,10 +2135,10 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   // Axial Spring :
 
   if (IAmShowingAxialSpring)
-    {
-      mySpringForce->getValues(pv->myAxialSprForceValues);
-      mySpringDeflCalc->getValues(pv->myAxialSpringDefCalcValues);
-    }
+  {
+    mySpringForce->getValues(pv->myAxialSprForceValues);
+    mySpringDeflCalc->getValues(pv->myAxialSpringDefCalcValues);
+  }
 
   // Spring Characteristics:
 
@@ -3635,69 +2153,60 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   // Part :
 
   if (IAmShowingLinkData)
-    {
-      pv->selectedTab = mySelectedTabIndex;
-      myLinkModelSheet->getValues(pv->myLinkValues);
-      myLinkRedOptSheet->getValues(pv->myLinkValues);
-      myLinkLoadSheet->getValues(pv->myLinkValues);
-      myGenericPartCGSheet->getValues(pv->myLinkValues);
-      myGenericPartMassSheet->getValues(pv->myLinkValues);
-      myGenericPartStiffSheet->getValues(pv->myLinkValues);
-      myHydrodynamicsSheet->getValues(pv->myLinkValues);
-      myMeshingSheet->getValues(pv->myLinkValues);
-      myAdvancedLinkOptsSheet->getValues(pv->myLinkValues);
-      myNonlinearLinkOptsSheet->getValues(pv->myLinkValues);
-    }
+  {
+    pv->selectedTab = mySelectedTabIndex;
+    myLinkModelSheet->getValues(pv->myLinkValues);
+    myLinkRedOptSheet->getValues(pv->myLinkValues);
+    myLinkLoadSheet->getValues(pv->myLinkValues);
+    myGenericPartCGSheet->getValues(pv->myLinkValues);
+    myGenericPartMassSheet->getValues(pv->myLinkValues);
+    myGenericPartStiffSheet->getValues(pv->myLinkValues);
+    myHydrodynamicsSheet->getValues(pv->myLinkValues);
+    myMeshingSheet->getValues(pv->myLinkValues);
+    myAdvancedLinkOptsSheet->getValues(pv->myLinkValues);
+    myNonlinearLinkOptsSheet->getValues(pv->myLinkValues);
+  }
 
-  // User-defined element, Beam and Shaft
+  // Beam and User-defined element :
 
-  if (IAmShowingUDEData || IAmShowingBeamData || IAmShowingShaftData)
-    {
-      pv->myMassPropDamp = myShaftSDMassField->getValue();
-      pv->myStifPropDamp = myShaftSDStiffnessField->getValue();
-      pv->myScaleMass    = myShaftDPMassField->getValue();
-      pv->myScaleStiff   = myShaftDPStiffnessField->getValue();
-    }
-
-  if (IAmShowingBeamData || IAmShowingShaftData)
-    pv->mySelectedCS = myShaftCrossSectionDefField->getSelectedRef();
-
-  if (IAmShowingShaftData)
-    {
-      // Get blank fields
-      pv->myBlankFieldsFlags = 0x0000;
-      if (myShaftCrossSectionDefField->getSelectedRef() == NULL)
-        pv->myBlankFieldsFlags |= 0x0001;
-      if (myShaftSDMassField->getText().length() == 0)
-        pv->myBlankFieldsFlags |= 0x0002;
-      if (myShaftSDStiffnessField->getText().length() == 0)
-        pv->myBlankFieldsFlags |= 0x0004;
-      if (myShaftDPMassField->getText().length() == 0)
-        pv->myBlankFieldsFlags |= 0x0008;
-      if (myShaftDPStiffnessField->getText().length() == 0)
-        pv->myBlankFieldsFlags |= 0x0010;
-    }
-
-  if (IAmShowingBeamData) {
+  if (IAmShowingBeamData)
+  {
+    pv->mySelectedCS  = myBeamCrossSectionDefField->getSelectedRef();
+    pv->myVisualize3D = myBeamVisualize3DButton->getValue();
+    pv->myVisualize3DAngles.first  = myBeamVisualize3DFields[0]->myField->getIntFromText();
+    pv->myVisualize3DAngles.second = myBeamVisualize3DFields[1]->myField->getIntFromText();
     for (int i = 0; i < 3; i++)
       pv->myOrientation[i] = myBeamLocalZField[i]->getValue();
-    pv->myVisualize3D = myVisualize3DButton->getValue();
-    pv->myVisualize3DAngles.first = myVisualize3DStartAngleField->myField->getIntFromText();
-    pv->myVisualize3DAngles.second = myVisualize3DStopAngleField->myField->getIntFromText();
   }
-  else if (IAmShowingShaftData || IAmShowingBladeData || IAmShowingTowerData)
+  if (IAmShowingBeamData || IAmShowingUDEData)
+    myBeamDynProps->getValues(pv->myMassPropDamp,pv->myStifPropDamp,
+                              pv->myScaleStiff,pv->myScaleMass);
+
+  // Shaft :
+
+  if (IAmShowingShaftData)
+  {
+    pv->mySelectedCS = myShaftCrossSectionDefField->getSelectedRef();
+    pv->myBlankFieldsFlags = pv->mySelectedCS ? 0x0001 : 0x0000;
+    pv->myBlankFieldsFlags |= myShaftDynProps->getValues(pv->myMassPropDamp,
+                                                         pv->myStifPropDamp,
+                                                         pv->myScaleStiff,
+                                                         pv->myScaleMass);
+  }
+
+  if (IAmShowingShaftData || IAmShowingBladeData || IAmShowingTowerData)
     pv->myVisualize3Dts = myVisualize3DButton->getTristateValue();
 
   // Turbine :
 
   if (IAmShowingTurbineData)
   {
-    pv->myTurbineWindRefTriadDefSelected   = myTurbineWindRefTriadDefField->getSelectedRef();
-    pv->myTurbineWindVertOffset            = myTurbineWindVertOffsetField->getDouble();
-    pv->myTurbineYawPointTriadDefSelected  = myTurbineYawPointTriadDefField->getSelectedRef();
-    pv->myTurbineHubApexTriadDefSelected   = myTurbineHubApexTriadDefField->getSelectedRef();
-    pv->myTurbineHubPartDefSelected        = myTurbineHubPartDefField->getSelectedRef();
-    pv->myTurbineFirstBearingDefSelected   = myTurbineFirstBearingDefField->getSelectedRef();
+    pv->myTurbineWindRefTriadDefSelected  = myTurbineFields[0]->getSelectedRef();
+    pv->myTurbineWindVertOffset           = myTurbineWindVertOffsetField->getDouble();
+    pv->myTurbineYawPointTriadDefSelected = myTurbineFields[1]->getSelectedRef();
+    pv->myTurbineHubApexTriadDefSelected  = myTurbineFields[2]->getSelectedRef();
+    pv->myTurbineHubPartDefSelected       = myTurbineFields[3]->getSelectedRef();
+    pv->myTurbineFirstBearingDefSelected  = myTurbineFields[4]->getSelectedRef();
   }
 
   // Generator :
@@ -3724,28 +2233,17 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
     pv->myBladePitchControlConstValue = myBladePitchControlField->getValue();
     pv->myBladePitchControlSelectedEngine = myBladePitchControlField->getSelectedRef();
 
-    // These fields are reused from Shaft
-    pv->myMassPropDamp = myShaftSDMassField->getValue();
-    pv->myStifPropDamp = myShaftSDStiffnessField->getValue();
-    pv->myScaleMass = myShaftDPMassField->getValue();
-    pv->myScaleStiff = myShaftDPStiffnessField->getValue();
-    // flags
-    pv->myBlankFieldsFlags = 0x0000;
-    if (myShaftSDMassField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0002;
-    if (myShaftSDStiffnessField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0004;
-    if (myShaftDPMassField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0008;
-    if (myShaftDPStiffnessField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0010;
+    pv->myBlankFieldsFlags = myShaftDynProps->getValues(pv->myMassPropDamp,
+                                                        pv->myStifPropDamp,
+                                                        pv->myScaleStiff,
+                                                        pv->myScaleMass);
   }
 
   // Riser, Jacket and Soil Pile :
 
   if (IAmShowingRiserData || IAmShowingJacketData || IAmShowingSoilPileData)
   {
-    pv->myVisualize3Dts = myRiserVisualize3DButton->getTristateValue();
+    pv->myVisualize3Dts = myVisualize3DButton->getTristateValue();
     pv->myVisualize3DAngles.first = myRiserVisualize3DStartAngleField->myField->getIntFromText();
     pv->myVisualize3DAngles.second = myRiserVisualize3DStopAngleField->myField->getIntFromText();
 
@@ -3753,21 +2251,10 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
     pv->myIntFluidDensity = myRiserMudDensityField->getValue();
     pv->myIntFluidLevel = myRiserMudLevelField->getValue();
 
-    // These fields are reused from Shaft
-    pv->myMassPropDamp = myShaftSDMassField->getValue();
-    pv->myStifPropDamp = myShaftSDStiffnessField->getValue();
-    pv->myScaleMass = myShaftDPMassField->getValue();
-    pv->myScaleStiff = myShaftDPStiffnessField->getValue();
-    // flags
-    pv->myBlankFieldsFlags = 0x0000;
-    if (myShaftSDMassField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0002;
-    if (myShaftSDStiffnessField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0004;
-    if (myShaftDPMassField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0008;
-    if (myShaftDPStiffnessField->getText().length() == 0)
-      pv->myBlankFieldsFlags |= 0x0010;
+    pv->myBlankFieldsFlags = myShaftDynProps->getValues(pv->myMassPropDamp,
+                                                        pv->myStifPropDamp,
+                                                        pv->myScaleStiff,
+                                                        pv->myScaleMass);
   }
 
   // Joints :
@@ -3860,27 +2347,27 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   // Load
 
   if (IAmShowingLoadData)
-    {
-      pv->myLoadMagnitude= myLoadMagnitude->getValue();
-      pv->mySelectedLoadMagnitudeEngine= myLoadMagnitude->getSelectedRef();
+  {
+    pv->myLoadMagnitude = myLoadMagnitude->getValue();
+    pv->mySelectedLoadMagnitudeEngine = myLoadMagnitude->getSelectedRef();
 
-      pv->myAttackPoint= myAttackPointEditor->getValue();
-      pv->myAttackPointIsGlobal= myAttackPointEditor->isGlobal();
+    pv->myAttackPoint = myAttackPointEditor->getValue();
+    pv->myAttackPointIsGlobal = myAttackPointEditor->isGlobal();
 
-      pv->myFromPoint= myFromPointEditor->getValue();
-      pv->myFromPointIsGlobal= myFromPointEditor->isGlobal();
+    pv->myFromPoint = myFromPointEditor->getValue();
+    pv->myFromPointIsGlobal = myFromPointEditor->isGlobal();
 
-      pv->myToPoint= myToPointEditor->getValue();
-      pv->myToPointIsGlobal= myToPointEditor->isGlobal();
-    }
+    pv->myToPoint = myToPointEditor->getValue();
+    pv->myToPointIsGlobal = myToPointEditor->isGlobal();
+  }
 
   // Generic DB Object
 
   if (IAmShowingGenDBObjData)
-    {
-      pv->myGenDBObjType = myGenDBObjTypeField->getValue();
-      myGenDBObjDefField->getText(pv->myGenDBObjDef);
-    }
+  {
+    pv->myGenDBObjType = myGenDBObjTypeField->getValue();
+    myGenDBObjDefField->getText(pv->myGenDBObjDef);
+  }
 
   // File reference
 
@@ -3890,132 +2377,114 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   // Tire
 
   if (IAmShowingTireData)
-    {
-      pv->mySpindelTriadOffset = mySpindelOffsetField->getValue();
-      pv->mySelectedTireModelType = myTireModelMenu->getSelectedOptionStr();
-      pv->mySelectedRoad = myRoadField->getSelectedRef();
+  {
+    pv->mySpindelTriadOffset = mySpindelOffset->getDouble();
+    pv->mySelectedTireModelType = myTireModelMenu->getSelectedOptionStr();
+    pv->mySelectedRoad = myRoadField->getSelectedRef();
 
-      if (myTireDataFileField->isAConstant())
-        {
-          pv->mySelectedTireDataFileRef = NULL;
-          pv->myTireDataFileName = myTireDataFileField->getText();
-        }
-      else
-        {
-          pv->myTireDataFileName = "";
-          pv->mySelectedTireDataFileRef = myTireDataFileField->getSelectedRef();
-        }
-    }
+    if (myTireDataFileField->isAConstant())
+      pv->myTireDataFileName = myTireDataFileField->getText();
+    else
+      pv->mySelectedTireDataFileRef = myTireDataFileField->getSelectedRef();
+  }
 
   // Road
 
   if (IAmShowingRoadData)
-    {
-      pv->iAmUsingExtRoadData = myUseFileRoadRadio->getValue();
-      pv->mySelectedRoadFunc  = myRoadFuncField->getSelectedRef();
-      pv->myRoadZShift        = myRoadZShiftField->getValue();
-      pv->myRoadXOffset       = myRoadXOffsetField->getValue();
-      pv->myRoadZRotation     = myRoadZRotationField->getValue();
+  {
+    pv->iAmUsingExtRoadData = myUseFileRoadRadio->getValue();
+    pv->mySelectedRoadFunc  = myRoadFuncField->getSelectedRef();
+    pv->myRoadZRotation     = myRoadFields[0]->getDouble();
+    pv->myRoadZShift        = myRoadFields[1]->getDouble();
+    pv->myRoadXOffset       = myRoadFields[2]->getDouble();
 
-      if (myRoadDataFileField->isAConstant())
-        {
-          pv->mySelectedRoadDataFileRef = NULL;
-          pv->myRoadDataFileName = myRoadDataFileField->getText();
-        }
-      else
-        {
-          pv->myRoadDataFileName = "";
-          pv->mySelectedRoadDataFileRef = myRoadDataFileField->getSelectedRef();
-        }
-    }
+    if (myRoadDataFileField->isAConstant())
+      pv->myRoadDataFileName = myRoadDataFileField->getText();
+    else
+      pv->mySelectedRoadDataFileRef = myRoadDataFileField->getSelectedRef();
+  }
 
   // Material properties
 
   if (IAmShowingMatPropData)
-    {
-      pv->myMatPropRho        = myMatPropRhoField->getValue();
-      pv->myMatPropE          = myMatPropEField->getValue();
-      pv->myMatPropNu         = myMatPropNuField->getValue();
-      pv->myMatPropG          = myMatPropGField->getValue();
-    }
-
-  // Sea state
-
-  if (IAmShowingSeaStateData)
-    {
-      pv->mySeaStateWidth  = mySeaStateWidthField->getValue();
-      pv->mySeaStateHeight = mySeaStateHeightField->getValue();
-
-      pv->mySeaStateWidthPos = mySeaStateWidthPosField->getValue();
-      pv->mySeaStateHeightPos = mySeaStateHeightPosField->getValue();
-
-      pv->mySeaStateNumPoints = mySeaStateNumPoints->getValue();
-      pv->mySeaStateShowGrid = mySeaStateShowGridToggle->getValue();
-      pv->mySeaStateShowSolid = mySeaStateShowSolidToggle->getValue();
-    }
+  {
+    pv->myMatPropRho = myMatPropRhoField->getValue();
+    pv->myMatPropE   = myMatPropEField->getValue();
+    pv->myMatPropNu  = myMatPropNuField->getValue();
+    pv->myMatPropG   = myMatPropGField->getValue();
+  }
 
   // Beam properties
 
   if (IAmShowingBeamPropData)
-    {
-      pv->selectedTab = mySelectedTabIndex;
-      pv->myBeamCrossSectionType = myBeamPropSummary->myCrossSectionTypeMenu->getSelectedOption();
-      pv->mySelectedMaterial = myBeamPropSummary->myMaterialDefField->getSelectedRef();
-      pv->myBeamBreakDependence = myBeamPropSummary->myDependencyButton->getValue();
-      myBeamPropSummary->getValues(pv->myBeamProp);
-      pv->myBeamHydroToggle = myBeamPropHydro->getValues(pv->myHydroProp);
-    }
+  {
+    pv->selectedTab = mySelectedTabIndex;
+    pv->myBeamCrossSectionType = myBeamPropSummary->myCrossSectionTypeMenu->getSelectedOption();
+    pv->mySelectedMaterial = myBeamPropSummary->myMaterialDefField->getSelectedRef();
+    pv->myBeamBreakDependence = myBeamPropSummary->myDependencyButton->getValue();
+    myBeamPropSummary->getValues(pv->myBeamProp);
+    pv->myBeamHydroToggle = myBeamPropHydro->getValues(pv->myHydroProp);
+  }
 
   // Strain rosette
 
   if (IAmShowingStrainRosetteData)
-    {
-      pv->mySelectedRosetteType = myStrRosTypeMenu->getSelectedOptionStr();
+  {
+    pv->mySelectedRosetteType = myStrRosTypeMenu->getSelectedOptionStr();
 
-      pv->myStrRosAngle = myStrRosAngleField->getValue();
-      pv->IAmResettingStartStrains = myResetStartStrainsToggle->getValue();
+    pv->myStrRosAngle = myStrRosAngleField->getValue();
+    pv->IAmResettingStartStrains = myResetStartStrainsToggle->getValue();
 
-      pv->IAmUsingFEHeight = myStrRosUseFEHeightToggle->getValue();
-      if (!pv->IAmUsingFEHeight)
-        pv->myStrRosHeight = myStrRosHeightField->getValue();
+    pv->IAmUsingFEHeight = myStrRosUseFEHeightToggle->getValue();
+    if (!pv->IAmUsingFEHeight)
+      pv->myStrRosHeight = myStrRosHeightField->getValue();
 
-      pv->IAmUsingFEMaterial = myStrRosUseFEMatToggle->getValue();
-      if (!pv->IAmUsingFEMaterial) {
-        pv->myStrRosEMod = myStrRosEmodField->getValue();
-        pv->myStrRosNu = myStrRosNuField->getValue();
-      }
+    pv->IAmUsingFEMaterial = myStrRosUseFEMatToggle->getValue();
+    if (!pv->IAmUsingFEMaterial) {
+      pv->myStrRosEMod = myStrRosEmodField->getValue();
+      pv->myStrRosNu = myStrRosNuField->getValue();
     }
+  }
 
   // Element group
 
   if (IAmShowingGroupData)
-    {
-      pv->doFatigue = myFatigueToggle->getValue();
+  {
+    pv->doFatigue = myFatigueToggle->getValue();
 #ifdef FT_HAS_GRAPHVIEW
-      mySNSelector->getValues(pv->mySNStd,pv->mySNCurve);
+    mySNSelector->getValues(pv->mySNStd,pv->mySNCurve);
 #endif
-      pv->mySCF = myScfField->getValue();
-    }
+    pv->mySCF = myScfField->getValue();
+  }
 
   // RAO vessel motion
 
   if (IAmShowingRAOData)
-    {
-      if (myRAOFileField->isAConstant())
-        {
-          pv->mySelectedRAOFileRef = NULL;
-          pv->myRAOFileName = myRAOFileField->getText();
-        }
-      else
-        {
-          pv->mySelectedRAOFileRef = myRAOFileField->getSelectedRef();
-          pv->myRAOFileName = "";
-	}
+  {
+    if (myRAOFileField->isAConstant())
+      pv->myRAOFileName = myRAOFileField->getText();
+    else
+      pv->mySelectedRAOFileRef = myRAOFileField->getSelectedRef();
 
-      pv->mySelectedWaveFunc = myWaveFuncField->getSelectedRef();
-      pv->mySelectedWaveDir = myWaveDirMenu->getSelectedInt();
-      pv->mySelectedScale = myMotionScaleField->getSelectedRef();
-    }
+    pv->mySelectedWaveFunc = myWaveFuncField->getSelectedRef();
+    pv->mySelectedWaveDir = myWaveDirMenu->getSelectedInt();
+    pv->mySelectedScale = myMotionScaleField->getSelectedRef();
+  }
+
+  // Sea state
+
+  if (IAmShowingSeaStateData)
+  {
+    pv->mySeaStateWidth  = mySeaStateWidthField->getValue();
+    pv->mySeaStateHeight = mySeaStateHeightField->getValue();
+
+    pv->mySeaStateWidthPos = mySeaStateWidthPosField->getValue();
+    pv->mySeaStateHeightPos = mySeaStateHeightPosField->getValue();
+
+    pv->mySeaStateNumPoints = mySeaStateNumPoints->getValue();
+    pv->mySeaStateShowGrid = mySeaStateShowGridToggle->getValue();
+    pv->mySeaStateShowSolid = mySeaStateShowSolidToggle->getValue();
+  }
 
   // Simulation event
 
@@ -4084,13 +2553,11 @@ void FuiProperties::setCBs(const FFuaUIValues* values)
 
   myBeamPropSummary->myMaterialDefField->setButtonCB(pv->myEditButtonCB);
 
+  myBeamCrossSectionDefField->setButtonCB(pv->myEditButtonCB);
   myShaftCrossSectionDefField->setButtonCB(pv->myEditButtonCB);
 
-  myTurbineWindRefTriadDefField->setButtonCB(pv->myEditButtonCB);
-  myTurbineYawPointTriadDefField->setButtonCB(pv->myEditButtonCB);
-  myTurbineHubApexTriadDefField->setButtonCB(pv->myEditButtonCB);
-  myTurbineHubPartDefField->setButtonCB(pv->myEditButtonCB);
-  myTurbineFirstBearingDefField->setButtonCB(pv->myEditButtonCB);
+  for (FuiQueryInputField* fld : myTurbineFields)
+    fld->setButtonCB(pv->myEditButtonCB);
 
   myLoadMagnitude->setButtonCB(pv->myEditButtonCB);
 
@@ -4278,14 +2745,13 @@ void FuiProperties::setSensitivity(bool makeSensitive)
   myBrowseTireFileButton->setSensitivity(tireSensitivity);
   myRoadField->setSensitivity(tireSensitivity);
   myTireModelMenu->setSensitivity(tireSensitivity);
-  mySpindelOffsetField->setSensitivity(tireSensitivity);
+  mySpindelOffset->setSensitivity(tireSensitivity);
 
   // Road
 
   myRoadFuncField->setSensitivity(tireSensitivity);
-  myRoadZShiftField->setSensitivity(tireSensitivity);
-  myRoadXOffsetField->setSensitivity(tireSensitivity);
-  myRoadZRotationField->setSensitivity(tireSensitivity);
+  for (FFuIOField* fld : myRoadFields)
+    fld->setSensitivity(tireSensitivity);
 
   myUseFuncRoadRadio->setSensitivity(tireSensitivity);
   myUseFileRoadRadio->setSensitivity(tireSensitivity);
@@ -4304,23 +2770,17 @@ void FuiProperties::setSensitivity(bool makeSensitive)
   myBeamPropSummary->setPropSensitivity(makeSensitive);
   myBeamPropHydro->setPropSensitivity(makeSensitive);
 
-  // RAO vessel motion
+  // Beam
 
-  myRAOFileField->setSensitivity(makeSensitive);
-  myBrowseRAOFileButton->setSensitivity(makeSensitive);
-  myWaveFuncField->setSensitivity(makeSensitive);
-  myWaveDirMenu->setSensitivity(makeSensitive);
-  myMotionScaleField->setSensitivity(makeSensitive);
-
-  // Shaft, Beam & Blade
-
-  myShaftCrossSectionDefField->setSensitivity(makeSensitive);
-  myShaftSDMassField->setSensitivity(makeSensitive);
-  myShaftSDStiffnessField->setSensitivity(makeSensitive);
-  myShaftDPStiffnessField->setSensitivity(makeSensitive);
-  myShaftDPMassField->setSensitivity(makeSensitive);
+  myBeamCrossSectionDefField->setSensitivity(makeSensitive);
+  myBeamDynProps->setSensitivity(makeSensitive);
   for (FFuLabelField* field : myBeamLocalZField)
     field->setSensitivity(makeSensitive);
+
+  // Shaft & Blade
+
+  myShaftCrossSectionDefField->setSensitivity(makeSensitive);
+  myShaftDynProps->setSensitivity(makeSensitive);
 
   // Riser
 
@@ -4330,12 +2790,9 @@ void FuiProperties::setSensitivity(bool makeSensitive)
 
   // Turbine
 
-  myTurbineWindRefTriadDefField->setSensitivity(makeSensitive);
   myTurbineWindVertOffsetField->setSensitivity(makeSensitive);
-  myTurbineYawPointTriadDefField->setSensitivity(makeSensitive);
-  myTurbineHubApexTriadDefField->setSensitivity(makeSensitive);
-  myTurbineHubPartDefField->setSensitivity(makeSensitive);
-  myTurbineFirstBearingDefField->setSensitivity(makeSensitive);
+  for (FuiQueryInputField* fld : myTurbineFields)
+    fld->setSensitivity(makeSensitive);
 
   // Generator
 
@@ -4352,6 +2809,14 @@ void FuiProperties::setSensitivity(bool makeSensitive)
   bool bIceLayer = myBladeIceLayerToggle->getValue();
   myBladeIceLayerToggle->setSensitivity(makeSensitive);
   myBladeIceThicknessField->setSensitivity(makeSensitive && bIceLayer);
+
+  // RAO vessel motion
+
+  myRAOFileField->setSensitivity(makeSensitive);
+  myBrowseRAOFileButton->setSensitivity(makeSensitive);
+  myWaveFuncField->setSensitivity(makeSensitive);
+  myWaveDirMenu->setSensitivity(makeSensitive);
+  myMotionScaleField->setSensitivity(makeSensitive);
 
   // Subassembly
 

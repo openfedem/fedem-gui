@@ -8,7 +8,7 @@
 #ifndef FUI_PROPERTIES_H
 #define FUI_PROPERTIES_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include "FFuLib/FFuBase/FFuUACommandHandler.H"
@@ -24,6 +24,7 @@
 #include <array>
 
 class FuiQueryInputField;
+class FuiDynamicProperties;
 class FuiPointEditor;
 class FuiPositionData;
 class FuiTriadSummary;
@@ -49,7 +50,26 @@ class FmAssemblyBase;
 class FmModelMemberBase;
 
 
-class FuiProperties : virtual public FFuMultUIComponent,
+class FuiStartGuide : virtual public FFuComponentBase
+{
+public:
+  virtual bool initWidgets() = 0;
+
+  void placeWidgets(int width, int height);
+
+protected:
+  FFuLabel* myLogoImage;
+  FFuLabel* myLogoBorderTop;
+  FFuLabel* myLogoBorderRight;
+  FFuLabel* myHeading;
+  FFuLabel* myBorderTop;
+  FFuLabel* myBorderRight;
+  FFuLabel* myBorderBottom;
+  FFuLabel* myContentLabel;
+};
+
+
+class FuiProperties : virtual public FFuComponentBase,
                       public FFuUAExistenceHandler,
                       public FFuUADataHandler,
                       public FFuUACommandHandler
@@ -79,37 +99,40 @@ public:
 
 protected:
   void initWidgets();
-
-  static void showPDF(const char* url);
-
-  virtual bool initStartGuide() = 0;
-
-  virtual void placeWidgets(int width, int height);
-
-  virtual void onPoppedUp() { this->updateUIValues(); }
+  void placeWidgets(int width, int height);
 
   virtual void setUICommands(const FFuaUICommands*) {}
   virtual void updateUICommandsToggle(const FFuaUICommands*) {}
   virtual void updateUICommandsSensitivity(const FFuaUICommands*);
 
+private:
+  static void showPDF(const char* url);
+
+protected:
+
   // Component "shadow" members
+
+  FuiStartGuide* myStartGuide;
+  FFuComponentBase* myProperty;
+  FFuComponentBase* myTopology;
+  FuiTopologyView* myTopologyView;
 
   // Heading
 
+  FFuComponentBase* myHeading;
   FFuIOField*    myTypeField;
   FFuIOField*    myIdField;
   FFuLabelField* myDescriptionField;
   FFuLabelField* myTagField;
 
-  FuiTopologyView* myTopologyView;
-  FFuToolButton*   backBtn;
-  FFuToolButton*   forwardBtn;
-  FFuToolButton*   helpBtn;
+  FFuToolButton* backBtn;
+  FFuToolButton* forwardBtn;
+  FFuToolButton* helpBtn;
 
-  // Reference Plane
+  // Reference plane
 
+  FFuComponentBase* myRefPlane;
   FuiPositionData* myRefPlanePosition;
-  FFuLabelFrame*   myRefPlaneSizeFrame;
   FFuIOField*      myRefPlaneHeightField;
   FFuIOField*      myRefPlaneWidthField;
 
@@ -124,6 +147,7 @@ protected:
 
   // Spring & Damper
 
+  FFuComponentBase* mySpring;
   FuiSprDaForce*    mySpringForce;
   FuiSpringDefCalc* mySpringDeflCalc;
   FuiSprDaForce*    myDamperForce;
@@ -147,54 +171,44 @@ protected:
   FuiAdvancedLinkOptsSheet*  myAdvancedLinkOptsSheet;
   FuiNonlinearLinkOptsSheet* myNonlinearLinkOptsSheet;
 
-  // Beam and Shaft
+  // Beam
 
-  FFuLabelFrame*      myShaftGeneralFrame;
-  FFuLabel*           myShaftCrossSectionDefLabel;
-  FuiQueryInputField* myShaftCrossSectionDefField;
-  FFuLabelFrame*      myShaftSDFrame;
-  FFuLabelField*      myShaftSDMassField;
-  FFuLabelField*      myShaftSDStiffnessField;
-  FFuLabelFrame*      myShaftDPFrame;
-  FFuLabelField*      myShaftDPStiffnessField;
-  FFuLabelField*      myShaftDPMassField;
-  FFuLabel*           myShaftNoteALabel;
-  FFuLabel*           myShaftNoteBLabel;
-  FFuLabel*           myShaftNoteCLabel;
-  FFuToggleButton*    myVisualize3DButton;
-  FFuLabelField*      myVisualize3DStartAngleField;
-  FFuLabelField*      myVisualize3DStopAngleField;
-  FFuLabelFrame*      myBeamOrientationFrame;
+  FFuComponentBase*            myBeam;
+  FuiQueryInputField*          myBeamCrossSectionDefField;
+  FFuLabelField*               myBeamMassField;
+  FFuLabelField*               myBeamLengthField;
+  FFuToggleButton*             myBeamVisualize3DButton;
+  std::array<FFuLabelField*,2> myBeamVisualize3DFields;
+  FuiDynamicProperties*        myBeamDynProps;
+  FFuLabelFrame*               myBeamOrientationFrame;
   std::array<FFuLabelField*,3> myBeamLocalZField;
 
   // Turbine
 
   FFuLabelFrame*      myTurbineWindRefFrame;
-  FFuLabel*           myTurbineWindRefTriadDefLabel;
-  FuiQueryInputField* myTurbineWindRefTriadDefField;
-  FFuLabel*           myTurbineWindVertOffsetLabel;
-  FFuIOField*         myTurbineWindVertOffsetField;
   FFuLabelFrame*      myTurbineAdvTopologyFrame;
-  FFuLabel*           myTurbineYawPointTriadDefLabel;
-  FuiQueryInputField* myTurbineYawPointTriadDefField;
-  FFuLabel*           myTurbineHubApexTriadDefLabel;
-  FuiQueryInputField* myTurbineHubApexTriadDefField;
-  FFuLabel*           myTurbineHubPartDefLabel;
-  FuiQueryInputField* myTurbineHubPartDefField;
-  FFuLabel*           myTurbineFirstBearingDefLabel;
-  FuiQueryInputField* myTurbineFirstBearingDefField;
+  std::array<FuiQueryInputField*,5> myTurbineFields;
+  FFuIOField*         myTurbineWindVertOffsetField;
 
   // Generator
 
+  FFuLabelFrame*      myGeneratorFrame;
   FFuRadioButton*     myGeneratorTorqueRadioBtn;
   FFuRadioButton*     myGeneratorVelocityRadioBtn;
   FFuLogicButtonGroup myGeneratorRadioGroup;
   FuiQueryInputField* myGeneratorTorqueField;
   FuiQueryInputField* myGeneratorVelocityField;
 
+  // Shaft
+
+  FuiQueryInputField*   myShaftCrossSectionDefField;
+  FuiDynamicProperties* myShaftDynProps;
+  FFuComponentBase*     myShaftNoteALabel;
+  FFuLabel*             myShaftNoteCLabel;
+
   // Blade
 
-  FFuLabel*           myBladePitchControlLabel;
+  FFuLabelFrame*      myBladePitchControlFrame;
   FuiQueryInputField* myBladePitchControlField;
   FFuToggleButton*    myBladeFixedPitchToggle;
   FFuLabelFrame*      myBladeIceFrame;
@@ -203,10 +217,7 @@ protected:
 
   // Riser
 
-  FFuLabelFrame*      myRiserGeneralFrame;
-  FFuLabel*           myRiserInternalToDefLabel;
   FuiQueryInputField* myRiserInternalToDefField;
-  FFuToggleButton*    myRiserVisualize3DButton;
   FFuLabelField*      myRiserVisualize3DStartAngleField;
   FFuLabelField*      myRiserVisualize3DStopAngleField;
   FFuLabelFrame*      myRiserMudFrame;
@@ -230,7 +241,7 @@ protected:
   FuiJointTabAdvanced* myJointAdvancedTab;
   FuiJointResults*     myJointResults;
 
-  // Pipe Surface
+  // Pipe surface
 
   FFuLabelField* myPipeRadiusField;
 
@@ -248,21 +259,16 @@ protected:
 
   // Load
 
+  FFuComponentBase*   myLoad;
   FuiQueryInputField* myLoadMagnitude;
-  FFuLabel*           myFromPointLabel;
-  FFuLabel*           myToPointLabel;
-  FFuLabelFrame*      myMagnitudeLabel;
-  FFuLabelFrame*      myAttackPointFrame;
-  FFuLabelFrame*      myDirectionFrame;
   FuiPointEditor*     myAttackPointEditor;
   FuiPointEditor*     myFromPointEditor;
   FuiPointEditor*     myToPointEditor;
 
   // Generic DB Object
 
-  FFuLabel*   myGenDBObjTypeLabel;
+  FFuComponentBase* myGenDBObject;
   FFuIOField* myGenDBObjTypeField;
-  FFuLabel*   myGenDBObjDefLabel;
   FFuMemo*    myGenDBObjDefField;
 
   // File reference
@@ -271,36 +277,27 @@ protected:
 
   // Tire
 
-  FFuLabel*           myTireDataFileLabel;
+  FFuComponentBase*   myTire;
   FuiQueryInputField* myTireDataFileField;
   FFuPushButton*      myBrowseTireFileButton;
-  FFuLabel*           myRoadLabel;
   FuiQueryInputField* myRoadField;
-  FFuLabel*           myTireModelTypeLabel;
   FFuOptionMenu*      myTireModelMenu;
-  FFuLabelField*      mySpindelOffsetField;
+  FFuIOField*         mySpindelOffset;
 
   // Road
 
+  FFuComponentBase*   myRoad;
   FFuLogicButtonGroup myRoadTypeToggleGroup;
-
   FFuRadioButton*     myUseFuncRoadRadio;
-  FFuLabel*           myRoadFuncLabel;
-  FuiQueryInputField* myRoadFuncField;
-  FFuLabelField*      myRoadZShiftField;
-  FFuLabelField*      myRoadXOffsetField;
-  FFuLabelField*      myRoadZRotationField;
-
-  FFuLabel*           myRoadFuncTypeLabel;
-  FFuOptionMenu*      myRoadFuncTypeMenu;
-
   FFuRadioButton*     myUseFileRoadRadio;
-  FFuLabel*           myRoadDataFileLabel;
-  FuiQueryInputField* myRoadDataFileField;
   FFuPushButton*      myBrowseRoadFileButton;
+  FuiQueryInputField* myRoadFuncField;
+  FuiQueryInputField* myRoadDataFileField;
+  std::array<FFuIOField*,3> myRoadFields;
 
   // Material properties
 
+  FFuLabelFrame*      myMatPropFrame;
   FFuLabelField*      myMatPropRhoField;
   FFuLabelField*      myMatPropEField;
   FFuLabelField*      myMatPropNuField;
@@ -313,11 +310,11 @@ protected:
   FuiBeamPropSummary*   myBeamPropSummary;
   FuiBeamPropHydro*     myBeamPropHydro;
 
-  // Strain Rosette
+  // Strain rosette
 
-  FFuLabel*           myStrRosTypeLabel;
+  FFuComponentBase*   myStrainRosette;
   FFuOptionMenu*      myStrRosTypeMenu;
-  FFuLabelField*      myStrRosNodesField;
+  FFuIOField*         myStrRosNodesField;
   FFuPushButton*      myStrRosEditNodesButton;
   FFuLabelField*      myStrRosAngleField;
   FFuPushButton*      myStrRosEditDirButton;
@@ -329,10 +326,6 @@ protected:
   FFuToggleButton*    myStrRosUseFEMatToggle;
   FFuToggleButton*    myResetStartStrainsToggle;
 
-  FFuLabelFrame*      myMaterialFrame;
-  FFuLabelFrame*      myLayerFrame;
-  FFuLabelFrame*      myOrientationFrame;
-
   // Element group
 
   FFuLabelFrame*      myFatigueFrame;
@@ -342,21 +335,16 @@ protected:
 
   // RAO vessel motion
 
-  FFuLabel*           myRAOFileLabel;
+  FFuComponentBase*   myRAO;
   FuiQueryInputField* myRAOFileField;
   FFuPushButton*      myBrowseRAOFileButton;
-  FFuLabel*           myWaveFuncLabel;
   FuiQueryInputField* myWaveFuncField;
-  FFuLabel*           myWaveDirLabel;
   FFuOptionMenu*      myWaveDirMenu;
-  FFuLabel*           myMotionScaleLabel;
   FuiQueryInputField* myMotionScaleField;
 
-  // Sea State
+  // Sea state
 
-  FFuLabelFrame*      mySeaStateSizeFrame;
-  FFuLabelFrame*      mySeaStatePositionFrame;
-  FFuLabelFrame*      mySeaStateVisualizationFrame;
+  FFuComponentBase*   mySeaState;
   FFuLabelField*      mySeaStateWidthField;
   FFuLabelField*      mySeaStateHeightField;
   FFuLabelField*      mySeaStateWidthPosField;
@@ -367,12 +355,14 @@ protected:
 
   // Simulation event
 
+  FFuComponentBase*   mySimEvent;
   FFuLabelField*      myEventProbability;
   FFuPushButton*      mySelectEventButton;
   FFuLabel*           myActiveEventLabel;
 
   // Subassembly
 
+  FFuComponentBase*   mySubassembly;
   FFuFileBrowseField* mySubassFileField;
   FuiPositionData*    mySubassPosition;
   FmAssemblyBase*     mySelectedSubass;
@@ -380,6 +370,7 @@ protected:
   FFuLabelFrame*      mySubassCoGFrame;
   Fui3DPoint*         mySubassCoGField;
   FFuLabelField*      mySubassLengthField;
+  FFuToggleButton*    myVisualize3DButton;
 
   // Function properties
 
@@ -395,17 +386,6 @@ protected:
   FFuComponentBase* myAnimationDefine;
   FFuComponentBase* myGraphDefine;
   FFuComponentBase* myCurveDefine;
-
-  // Start guide
-  FFuLabel* mySGLogoImage;
-  FFuLabel* mySGLogoBorderTop;
-  FFuLabel* mySGLogoBorderRight;
-  FFuLabel* mySGHeading;
-  FFuLabel* mySGFillWhite;
-  FFuLabel* mySGBorderTop;
-  FFuLabel* mySGBorderRight;
-  FFuLabel* mySGBorderBottom;
-  FFuLabel* mySGContentLabel;
 
 private:
   bool IAmSensitive;
