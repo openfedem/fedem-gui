@@ -17,6 +17,22 @@ FuiScaleShiftWidget::FuiScaleShiftWidget() : readingDBonly(false)
 }
 
 
+void FuiScaleShiftWidget::initWidgets()
+{
+  scaleField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  scaleField->setAcceptedCB(FFaDynCB1M(FuiScaleShiftWidget,this,
+                                       dblChanged,double));
+
+  shiftField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  shiftField->setAcceptedCB(FFaDynCB1M(FuiScaleShiftWidget,this,
+                                       dblChanged,double));
+
+  zeroOutBtn->setLabel("Shift values to zero out first value");
+  zeroOutBtn->setToggleCB(FFaDynCB1M(FuiScaleShiftWidget,this,
+                                     btnToggled,bool));
+}
+
+
 void FuiScaleShiftWidget::getValues(double& scale, bool& onOff, double& shift)
 {
   scale = scaleField->getDouble();

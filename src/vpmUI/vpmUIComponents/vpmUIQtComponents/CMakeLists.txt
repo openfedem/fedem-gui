@@ -44,7 +44,7 @@ set ( SOURCE_FILE_LIST FuiQtSummaryTable FuiQtParameterView )
 
 
 ## Header files to be moc'ed
-set ( QT_MOC_HEADER_FILE_LIST FuiQtItemsListView FuiQtScaleShiftWidget FuiQtWorkSpace )
+set ( QT_MOC_HEADER_FILE_LIST FuiQtWorkSpace )
 
 
 foreach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
@@ -80,8 +80,7 @@ set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 # Dependencies and system libraries
 #
 
-set ( FT_GUI_LIBRARIES vpmUIComponents FFuQtComponents FFuQtBaseClasses )
-set ( DEPENDENCY_LIST ${FT_GUI_LIBRARIES} )
+set ( DEPENDENCY_LIST vpmUIComponents FFuQtComponents FFuQtBaseClasses )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${SOURCE_FILES} ${HEADER_FILES} )

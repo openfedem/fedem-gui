@@ -18,8 +18,6 @@ class QDropEvent;
 
 class FuiQtItemsListView : public FFuQtListView, virtual public FuiItemsListView
 {
-  Q_OBJECT
-
 protected:
   FuiQtItemsListView(QWidget* parent, const char* name);
 

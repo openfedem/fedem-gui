@@ -1098,11 +1098,6 @@ void FuiCurveScaleSheet::getUIValues(FuaCurveDefineValues* v) const
 
 void FuiCurveScaleSheet::initWidgets()
 {
-  XScale->setFrameTitles("X Axis Scale and Shift",
-                         "Horizontal shift after scale");
-  YScale->setFrameTitles("Y Axis Scale and Shift",
-                         "Vertical shift after scale");
-
   XScale->setDataChangedCB(FFaDynCB0M(FFaDynCB0,&dataChangedCB,invoke));
   YScale->setDataChangedCB(FFaDynCB0M(FFaDynCB0,&dataChangedCB,invoke));
 }

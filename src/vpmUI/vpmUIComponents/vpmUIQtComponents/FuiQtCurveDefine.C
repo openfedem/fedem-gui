@@ -368,8 +368,8 @@ FuiQtCurveInfoSheet::FuiQtCurveInfoSheet(const char* name)
 FuiQtCurveScaleSheet::FuiQtCurveScaleSheet(const char* name)
   : FFuQtWidget(NULL,name)
 {
-  XScale = new FuiQtScaleShiftWidget(NULL,"XScale");
-  YScale = new FuiQtScaleShiftWidget(NULL,"YScale");
+  XScale = new FuiQtScaleShiftWidget(NULL,'X');
+  YScale = new FuiQtScaleShiftWidget(NULL,'Y');
 
   this->initWidgets();
 
