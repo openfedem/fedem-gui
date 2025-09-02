@@ -48,7 +48,6 @@ set ( COMPONENT_FILE_LIST  FFuQtButton
                            FFuQtToolBar
                            FFuQtToolButton
                            FFuQtUserDialog
-                           FFuQtDropDownBox
     )
 
 ## Pure header files, i.e., header files without a corresponding source file

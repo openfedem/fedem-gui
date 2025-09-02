@@ -17,7 +17,6 @@ endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
 set ( COMPONENT_FILE_LIST  FFuQtComponentBase
                            FFuQtMDIWindow
                            FFuQtModalDialog
-                           FFuQtMultUIComponent
                            FFuQtTopLevelShell
 )
 ## Pure header files, i.e., header files without a corresponding source file

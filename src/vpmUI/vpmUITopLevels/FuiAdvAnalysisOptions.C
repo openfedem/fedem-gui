@@ -83,7 +83,7 @@ void FuiAdvAnalysisOptions::initWidgets()
 
   // Set basic mode stuff
   this->labImgTop->setPixMap(solverSetup_xpm);
-  this->labImgTop->setEdgeGeometry(0,421,0,106);
+  this->labImgTop->setSizeGeometry(0,0,421,106);
 
   this->labNotesText->setLabel("Click \"Advanced\" for more settings");
 

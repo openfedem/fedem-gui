@@ -33,21 +33,7 @@ public:
 
   // Geometry management:
 
-  void setEdgeGeometry(int left,    int right,   int top,   int bottom);
-
-  void setCenterGeometry(int centerX, int centerY, int width, int height);
-  void setCenterGeometrySizeHint(int centerX, int centerY)
-    {this->setCenterGeometry(centerX,centerY,this->getWidthHint(),this->getHeightHint());}
-
-  void setCenterYGeometry(int leftX, int centerY, int width, int height);
-  void setCenterYGeometrySizeHint(int leftX, int centerY)
-    {this->setCenterYGeometry(leftX,centerY,this->getWidthHint(),this->getHeightHint());}
-  void setCenterYGeometryWidthHint(int leftX, int centerY,int height)
-    {this->setCenterYGeometry(leftX,centerY,this->getWidthHint(),height);}
-
   virtual void setSizeGeometry(int leftX, int topY, int width, int height) = 0;
-  void setSizeGeometrySizeHint(int leftX, int topY)
-    {this->setSizeGeometry(leftX,topY,this->getWidthHint(),this->getHeightHint());}
 
   virtual void setWidth(int){}
   virtual void setHeight(int){}
@@ -68,15 +54,10 @@ public:
   virtual int getXPos(){return 0;}
   virtual int getYPos(){return 0;}
 
-  int getXRightPos() {return this->getXPos()+this->getWidth();}
+  // Get hints about the size this widget needs :
 
-  // Get hints abut the size this widget needs.
-  // Useful for widget using fonts, and text.
-  // Reimplement them in MultipleComponents to get compound
-  // size hints :
-
-  virtual int getWidthHint(){return this->getBasicWidthHint();}
-  virtual int getHeightHint(){return this->getBasicHeightHint();}
+  virtual int getWidthHint() const = 0;
+  virtual int getHeightHint() const = 0;
 
   // Method to "Gray out" Widget :
 
@@ -111,7 +92,7 @@ public:
 
   virtual const char* getName() const { return NULL; }
 
-  // Returns the top-level widget for this widget, i.e. the next ancestor
+  // Returns the top-level widget for this widget, i.e., the next ancestor
   // widget that has a window-system frame (or at least may have one).
   // If the widget is a top-level, the widget itself is returned.
   virtual FFuComponentBase* getTopLevelWidget() { return NULL; }
@@ -126,12 +107,6 @@ public:
 protected:
   virtual void blockLibSignals(bool) {}
   virtual bool areLibSignalsBlocked() {return false;}
-
-private:
-  // Methods to be reimplemented in GUILib dependent code
-  // in basic GUI components
-  virtual int getBasicWidthHint(){return 0;}
-  virtual int getBasicHeightHint(){return 0;}
 };
 
 #endif

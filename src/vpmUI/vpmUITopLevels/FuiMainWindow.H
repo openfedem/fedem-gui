@@ -29,12 +29,8 @@ class FFuaCmdItem;
 /*!
   \brief The Fedem main window.
 
-  The main window is not a FFuMultUIComponent although it look like.
-  That is because it doesn't need any placeWidgets() geometry management, since
-  that is managed by the splitters. Hence the central widget is a splitter.
-  If one depreciates the use of splitters, this class should also inherit
-  FFuMultUIComponent (but not with Qt branch) and QtMainWin should
-  reimplement the resize event. See UserDialog for similarities.
+  The geometry management for this class is handled by splitters.
+  Thus, the central widget is a splitter.
 
   \author Dag R. Christensen
 */
@@ -46,7 +42,6 @@ class FuiMainWindow : virtual public FFuComponentBase,
 {
 public:
   FuiMainWindow();
-  virtual ~FuiMainWindow() {}
 
   static FuiMainWindow* create(int xpos =100, int ypos  =100,
 			       int width=100, int height=100,
@@ -134,9 +129,6 @@ protected:
 class FuaMainWindowCommands : public FFuaUICommands
 {
 public:
-  FuaMainWindowCommands() {}
-  virtual ~FuaMainWindowCommands() {}
-
   std::vector<FFuaCmdItem*> menuBar;
   std::array<std::vector<FFuaCmdItem*>,FuiMainWindow::NTOOLBARS> toolBars;
 };

@@ -47,6 +47,9 @@ public:
   virtual void setMaxWidth(int width);
   virtual void setMaxHeight(int height);
 
+  virtual int  getWidthHint() const;
+  virtual int  getHeightHint() const;
+
   // Access size of widget :
 
   virtual int  getWidth();
@@ -105,9 +108,6 @@ protected:
   virtual bool areLibSignalsBlocked();
 
 private:
-  virtual int  getBasicWidthHint();
-  virtual int  getBasicHeightHint();
-
   QWidget* myWidget;
 };
 
