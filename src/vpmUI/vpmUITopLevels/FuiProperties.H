@@ -36,6 +36,7 @@ class FuiSNCurveSelector;
 class Fui3DPoint;
 class FFuTabbedWidgetStack;
 class FFuIOField;
+class FFuNotes;
 class FFuLabel;
 class FFuLabelFrame;
 class FFuLabelField;
@@ -203,8 +204,7 @@ protected:
 
   FuiQueryInputField*   myShaftCrossSectionDefField;
   FuiDynamicProperties* myShaftDynProps;
-  FFuComponentBase*     myShaftNoteALabel;
-  FFuLabel*             myShaftNoteCLabel;
+  FFuNotes*             myShaftNote;
 
   // Blade
 

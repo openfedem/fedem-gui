@@ -199,8 +199,7 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   myShaftCrossSectionDefField = new FuiQtQueryInputField(NULL,"Cross section:",
                                                          true);
   myShaftDynProps             = new FuiQtDynamicProperties();
-  myShaftNoteALabel           = new FFuQtNotesLabel();
-  myShaftNoteCLabel           = new FFuQtLabel();
+  myShaftNote                 = new FFuQtNotes();
 
   // Blades :
 
@@ -393,6 +392,7 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   ////////////////////////////////////////////////////////
 
   QBoxLayout* layout;
+  QBoxLayout* layout2;
   QGridLayout* gLayout;
 
   // Heading
@@ -436,11 +436,10 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
 
   // Beam
 
-  QWidget* qViz3DRange = new QWidget();
-  layout = new QHBoxLayout(qViz3DRange);
-  layout->setContentsMargins(0,0,0,0);
+  QLayout* layout3 = new QHBoxLayout();
+  layout3->setContentsMargins(0,0,0,0);
   for (FFuLabelField* field : myBeamVisualize3DFields)
-    layout->addWidget(field->getQtWidget());
+    layout3->addWidget(field->getQtWidget());
 
   QGroupBox* qGeneral = new QGroupBox("General");
   layout = new QVBoxLayout(qGeneral);
@@ -451,24 +450,23 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   layout->addWidget(myBeamLengthField->getQtWidget());
   layout->addStretch(1);
   layout->addWidget(myBeamVisualize3DButton->getQtWidget());
-  layout->addWidget(qViz3DRange);
+  layout->addLayout(layout3);
 
   layout = new QHBoxLayout(myBeamOrientationFrame->getQtWidget());
   layout->setContentsMargins(5,0,5,5);
   for (FFuLabelField* field : myBeamLocalZField)
     layout->addWidget(field->getQtWidget());
 
-  QWidget* qRight = new QWidget();
-  layout = new QVBoxLayout(qRight);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(myBeamDynProps->getQtWidget());
-  layout->addWidget(myBeamOrientationFrame->getQtWidget());
-  layout->addStretch(1);
+  layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(myBeamDynProps->getQtWidget());
+  layout2->addWidget(myBeamOrientationFrame->getQtWidget());
+  layout2->addStretch(1);
 
   layout = new QHBoxLayout(myBeam->getQtWidget());
   layout->setContentsMargins(0,0,0,0);
   layout->addWidget(qGeneral,1);
-  layout->addWidget(qRight,2);
+  layout->addLayout(layout2,2);
 
   // Turbine
 
@@ -501,18 +499,16 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
 
   // Shaft
 
-  QWidget* qShaftDP = new QWidget();
-  layout = new QHBoxLayout(qShaftDP);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(myRiserMudFrame->getQtWidget());
-  layout->addWidget(myShaftDynProps->getQtWidget());
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(myRiserMudFrame->getQtWidget());
+  layout2->addWidget(myShaftDynProps->getQtWidget());
 
   QWidget* qShaftRight = new QWidget();
   layout = new QVBoxLayout(qShaftRight);
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qShaftDP);
-  layout->addWidget(myShaftNoteALabel->getQtWidget());
-  layout->addWidget(myShaftNoteCLabel->getQtWidget());
+  layout->addLayout(layout2);
+  layout->addWidget(myShaftNote->getQtWidget());
   layout->addStretch(1);
 
   // Blades
@@ -556,15 +552,14 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   gLayout->addWidget(myFromPointEditor->getQtWidget(), 1,0);
   gLayout->addWidget(myToPointEditor->getQtWidget(), 1,1);
 
-  QWidget* qLeft = new QWidget();
-  layout = new QVBoxLayout(qLeft);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qMagnitude);
-  layout->addWidget(qLoadTarget);
+  layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(qMagnitude);
+  layout2->addWidget(qLoadTarget);
 
   layout = new QHBoxLayout(myLoad->getQtWidget());
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qLeft);
+  layout->addLayout(layout2);
   layout->addWidget(qDirection);
 
   // Generic DB object
@@ -714,14 +709,13 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   gLayout->addWidget(qSeaSize, 1,0);
   gLayout->addWidget(qSeaViz, 0,1,2,1);
 
-  QWidget* qEventProb = new QWidget();
-  layout = new QHBoxLayout(qEventProb);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(myEventProbability->getQtWidget(),1);
-  layout->addStretch(1);
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(myEventProbability->getQtWidget(),1);
+  layout2->addStretch(1);
   layout = new QVBoxLayout(mySimEvent->getQtWidget());
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qEventProb);
+  layout->addLayout(layout2);
   layout->addWidget(mySelectEventButton->getQtWidget());
   layout->addWidget(myActiveEventLabel->getQtWidget());
 
@@ -731,13 +725,12 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   layout->setContentsMargins(5,0,5,5);
   layout->addWidget(mySubassCoGField->getQtWidget());
 
-  qViz3DRange = new QWidget();
-  layout = new QHBoxLayout(qViz3DRange);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(myRiserVisualize3DStartAngleField->getQtWidget());
-  layout->addWidget(myRiserVisualize3DStopAngleField->getQtWidget());
+  layout3 = new QHBoxLayout();
+  layout3->setContentsMargins(0,0,0,0);
+  layout3->addWidget(myRiserVisualize3DStartAngleField->getQtWidget());
+  layout3->addWidget(myRiserVisualize3DStopAngleField->getQtWidget());
 
-  qLeft = new QWidget();
+  QWidget* qLeft = new QWidget();
   layout = new QVBoxLayout(qLeft);
   layout->setContentsMargins(0,0,0,0);
   layout->addWidget(myBladePitchControlFrame->getQtWidget());
@@ -751,9 +744,9 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   layout->addWidget(myBladeIceFrame->getQtWidget());
   layout->addStretch(1);
   layout->addWidget(myVisualize3DButton->getQtWidget());
-  layout->addWidget(qViz3DRange);
+  layout->addLayout(layout3);
 
-  qRight = new QWidget();
+  QWidget* qRight = new QWidget();
   layout = new QVBoxLayout(qRight);
   layout->setContentsMargins(0,0,0,0);
   layout->addWidget(qShaftRight);
@@ -762,30 +755,27 @@ FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
   layout->addWidget(myGeneratorFrame->getQtWidget());
   layout->addStretch(1);
 
-  QWidget* qSubass = new QWidget();
-  layout = new QHBoxLayout(qSubass);
-  layout->setContentsMargins(0,0,0,0);
-  layout->setSpacing(15);
-  layout->addWidget(qLeft);
-  layout->addWidget(qRight);
-
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->setSpacing(15);
+  layout2->addWidget(qLeft);
+  layout2->addWidget(qRight);
   layout = new QVBoxLayout(mySubassembly->getQtWidget());
   layout->setContentsMargins(0,0,0,0);
   layout->addWidget(mySubassFileField->getQtWidget());
-  layout->addWidget(qSubass);
+  layout->addLayout(layout2);
 
   // Topology view
 
-  QWidget* qButtons = new QWidget();
-  layout = new QHBoxLayout(qButtons);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(mySwapTriadButton->getQtWidget());
-  layout->addWidget(myAddMasterButton->getQtWidget());
-  layout->addWidget(myRevMasterButton->getQtWidget());
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(mySwapTriadButton->getQtWidget());
+  layout2->addWidget(myAddMasterButton->getQtWidget());
+  layout2->addWidget(myRevMasterButton->getQtWidget());
   layout = new QVBoxLayout(myTopology->getQtWidget());
   layout->setContentsMargins(2,0,0,0);
   layout->addWidget(myTopologyView->getQtWidget());
-  layout->addWidget(qButtons);
+  layout->addLayout(layout2);
 
   // Property panel
 

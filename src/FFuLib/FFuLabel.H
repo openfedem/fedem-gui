@@ -10,31 +10,31 @@
 
 #include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
+#include <string>
 
 
 class FFuLabel : virtual public FFuComponentBase
 {
+  using DynCB1 = FFaDynCB1<const std::string&>;
+
 public:
-  FFuLabel() {}
-  virtual ~FFuLabel() {}
-
-  // Methods to set what to show :
-
   virtual void setPixMap(const char** pixmap, bool stretch = false) = 0;
   virtual void setLabel(const char* label) = 0;
 
   void setLabel(const std::string& label) { this->setLabel(label.c_str()); }
-
-  // Get the text of the label :
-
   virtual std::string getLabel() const = 0;
 
-  // Sets callbacks :
-
-  void setLinkActivatedCB(const FFaDynCB1<const std::string&>& cb) { myLinkActivatedCB = cb; }
+  void setLinkActivatedCB(const DynCB1& cb) { myLinkActivatedCB = cb; }
 
 protected:
-  FFaDynCB1<const std::string&> myLinkActivatedCB;
+  DynCB1 myLinkActivatedCB;
+};
+
+
+class FFuNotes : virtual public FFuComponentBase
+{
+public:
+  virtual void setText(const char* text) = 0;
 };
 
 #endif

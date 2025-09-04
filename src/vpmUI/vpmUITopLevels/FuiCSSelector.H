@@ -13,7 +13,7 @@
 
 class FuiCrossSectionListView;
 class FuiMaterialListView;
-class FFuLabel;
+class FFuNotes;
 class FFuPushButton;
 
 
@@ -40,7 +40,7 @@ public:
   FuiMaterialListView*     lvMat;
 
 protected:
-  FFuLabel*      notesText;
+  FFuNotes*      notes;
   FFuPushButton* importButton;
   FFuPushButton* closeButton;
 

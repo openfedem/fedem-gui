@@ -12,7 +12,7 @@
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUAFinishHandler.H"
 
-class FFuLabel;
+class FFuNotes;
 class FFuTable;
 class FFuIOField;
 class FFuToggleButton;
@@ -49,7 +49,7 @@ public:
   FFuIOField*       stopTimeField;
   FFuIOField*       standardField;
   FFuIOField*       snCurveField;
-  FFuLabel*         notesText;
+  FFuNotes*         notes;
   FFuDialogButtons* dialogButtons;
 };
 

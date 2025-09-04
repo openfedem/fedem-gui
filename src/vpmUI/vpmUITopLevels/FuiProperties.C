@@ -295,7 +295,7 @@ void FuiProperties::initWidgets()
 
   myShaftDynProps->initWidgets(FFaDynCB1M(FuiProperties,this,onDoubleChanged,double));
 
-  myShaftNoteCLabel->setLabel("Changes applied to the fields above will apply to all elements contained in this structure.<br>"
+  myShaftNote->setText("Changes applied to the fields above will apply to all elements contained in this structure. "
     "Changes to individual elements can be made by editing their respective property fields.");
 
   // Blades
@@ -988,15 +988,9 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
     myShaftDynProps->popDown();
 
   if (showBladeOrShaft)
-  {
-    myShaftNoteALabel->popUp();
-    myShaftNoteCLabel->popUp();
-  }
+    myShaftNote->popUp();
   else
-  {
-    myShaftNoteALabel->popDown();
-    myShaftNoteCLabel->popDown();
-  }
+    myShaftNote->popDown();
 
   // Turbine, Nacelle, Gearbox, etc. (shared fields)
 

@@ -29,7 +29,7 @@ FuiRDBSelector::FuiRDBSelector()
 
   lvRes = NULL;
   lvPos = NULL;
-  notesText = NULL;
+  notes = NULL;
   dialogButtons = NULL;
 }
 //----------------------------------------------------------------------------
@@ -38,8 +38,8 @@ void FuiRDBSelector::initWidgets()
 {
   dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiRDBSelector,this,
                                                onDialogButtonClicked,int));
-  notesText->setLabel(
-    "You can \"drag and drop\" these fields to the results viewer\n"
+  notes->setText(
+    "You can \"drag and drop\" these fields to the results viewer "
     "(i.e., the Results tree on the left side of the main window).");
 
   this->setOkCancelDialog(true);

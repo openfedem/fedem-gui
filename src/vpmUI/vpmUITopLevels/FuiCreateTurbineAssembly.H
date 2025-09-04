@@ -17,6 +17,7 @@
 class FFuLabel;
 class FFuLabelFrame;
 class FFuLabelField;
+class FFuNotes;
 class FFuIOField;
 class FFuFileBrowseField;
 class FFuOptionMenu;
@@ -98,7 +99,7 @@ private:
 protected:
   FFuLabel*           headerImage;
   FFuLabel*           modelImage;
-  FFuLabel*           notesText;
+  FFuNotes*           notes;
   FFuOptionMenu*      drivelineTypeMenu;
   FFuOptionMenu*      bearingsMenu;
   FFuLabelFrame*      towerBaseFrame;

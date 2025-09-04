@@ -29,25 +29,23 @@ FuiQtCSSelector::FuiQtCSSelector(int xpos, int ypos, int width, int height,
 {
   lvCS = new FuiQtCrossSectionListView(NULL);
   lvMat = new FuiQtMaterialListView(NULL);
-  notesText = new FFuQtLabel();
+  notes = new FFuQtNotes();
   importButton = new FFuQtPushButton();
   closeButton = new FFuQtPushButton();
 
   this->initWidgets();
 
-  QWidget* buttons = new QWidget();
-  QBoxLayout* layout = new QHBoxLayout(buttons);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(importButton));
-  layout->addStretch(1);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(closeButton));
+  QBoxLayout* buttonLayout = new QHBoxLayout();
+  buttonLayout->setContentsMargins(0,0,0,0);
+  buttonLayout->addWidget(importButton->getQtWidget());
+  buttonLayout->addStretch(1);
+  buttonLayout->addWidget(closeButton->getQtWidget());
 
-  layout = new QVBoxLayout(this);
+  QBoxLayout* layout = new QVBoxLayout(this);
   layout->addWidget(new QLabel("Beam cross sections"));
-  layout->addWidget(static_cast<FuiQtCrossSectionListView*>(lvCS),3);
+  layout->addWidget(lvCS->getQtWidget(),3);
   layout->addWidget(new QLabel("Material"));
-  layout->addWidget(static_cast<FuiQtMaterialListView*>(lvMat),1);
-  layout->addWidget(new FFuQtNotesLabel());
-  layout->addWidget(static_cast<FFuQtLabel*>(notesText));
-  layout->addWidget(buttons);
+  layout->addWidget(lvMat->getQtWidget(),1);
+  layout->addWidget(notes->getQtWidget());
+  layout->addLayout(buttonLayout);
 }

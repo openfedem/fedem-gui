@@ -46,50 +46,38 @@ FuiQtRDBMEFatigue::FuiQtRDBMEFatigue(int xpos, int ypos,
   standardField = new FFuQtIOField();
   snCurveField = new FFuQtIOField();
   copyDataButton = new FFuQtPushButton();
-  notesText = new FFuQtLabel();
+  notes = new FFuQtNotes();
   dialogButtons = new FFuQtDialogButtons();
 
   this->initWidgets();
 
-  QWidget* qButtons = new QWidget();
-  QBoxLayout* layout = new QHBoxLayout(qButtons);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(useProbToggle),1);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(copyDataButton));
+  QBoxLayout* buttonLayout = new QHBoxLayout();
+  buttonLayout->setContentsMargins(0,0,0,0);
+  buttonLayout->addWidget(useProbToggle->getQtWidget(),1);
+  buttonLayout->addWidget(copyDataButton->getQtWidget());
 
-  QWidget* qFields = new QWidget();
-  QGridLayout* gl = new QGridLayout(qFields);
+  QGridLayout* gl = new QGridLayout();
   gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(10);
   gl->setVerticalSpacing(2);
+  gl->setColumnStretch(2,1);
   gl->addWidget(new QLabel("Start time"),0,0);
   gl->addWidget(new QLabel("Stop time"), 1,0);
   gl->addWidget(new QLabel("Standard"),  2,0);
   gl->addWidget(new QLabel("S-N curve"), 3,0);
-  gl->addWidget(static_cast<FFuQtIOField*>(startTimeField),0,1);
-  gl->addWidget(static_cast<FFuQtIOField*>(stopTimeField), 1,1);
-  gl->addWidget(static_cast<FFuQtIOField*>(standardField), 2,1);
-  gl->addWidget(static_cast<FFuQtIOField*>(snCurveField),  3,1);
+  gl->addWidget(startTimeField->getQtWidget(),0,1);
+  gl->addWidget(stopTimeField->getQtWidget(), 1,1);
+  gl->addWidget(standardField->getQtWidget(), 2,1);
+  gl->addWidget(snCurveField->getQtWidget(),  3,1);
 
-  QWidget* qHalf = new QWidget();
-  layout = new QVBoxLayout(qHalf);
-  layout->setContentsMargins(0,0,0,0);
-  layout->setSpacing(0);
-  layout->addWidget(qFields);
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(tableMain->getQtWidget(),1);
+  layout->addLayout(buttonLayout);
+  layout->addLayout(gl);
   layout->addSpacing(10);
-  layout->addWidget(new FFuQtNotesLabel());
-  layout->addWidget(static_cast<FFuQtLabel*>(notesText));
+  layout->addWidget(notes->getQtWidget());
   layout->addSpacing(5);
-  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons));
-  QWidget* qFull = new QWidget();
-  layout = new QHBoxLayout(qFull);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qHalf,1);
-  layout->addStretch(1);
-
-  layout = new QVBoxLayout(this);
-  layout->addWidget(static_cast<FFuQtTable*>(tableMain),1);
-  layout->addWidget(qButtons);
-  layout->addWidget(qFull);
+  layout->addWidget(dialogButtons->getQtWidget());
 }
 
 

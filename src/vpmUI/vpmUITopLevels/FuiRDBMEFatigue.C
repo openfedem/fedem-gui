@@ -46,9 +46,8 @@ void FuiRDBMEFatigue::initWidgets()
 
   this->copyDataButton->setActivateCB(FFaDynCB0M(FuiRDBMEFatigue,this,onCopyDataClicked));
 
-  this->notesText->setLabel
-    ("This table shows a fatigue summary of all events and curves.\n"
-     "Click to toggle whether the row is included in the sum.");
+  notes->setText("This table shows a fatigue summary of all events and curves. "
+                 "Click to toggle whether the row is included in the sum.");
 
   this->dialogButtons->setButtonLabel(DONE,"Close");
   this->dialogButtons->setButtonLabel(HELP,"Help");

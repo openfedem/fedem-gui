@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QPixmap>
 
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
@@ -64,4 +65,20 @@ FFuQtNotesLabel::FFuQtNotesLabel(QWidget* parent) : QWidget(parent)
   layout->setAlignment(Qt::AlignLeft);
   layout->addWidget(qImage);
   layout->addWidget(new QLabel("<b>Notes</b>"));
+}
+
+
+FFuQtNotes::FFuQtNotes(QWidget* parent, const char* text,
+                       int margin, int spacing) : QWidget(parent)
+{
+  this->setWidget(this);
+
+  myLabel = new QLabel(text);
+  myLabel->setWordWrap(true);
+
+  QLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(margin,0,margin,0);
+  layout->setSpacing(spacing);
+  layout->addWidget(new FFuQtNotesLabel());
+  layout->addWidget(myLabel);
 }

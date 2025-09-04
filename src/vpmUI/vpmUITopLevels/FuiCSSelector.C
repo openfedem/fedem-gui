@@ -20,7 +20,7 @@ FuiCSSelector::FuiCSSelector()
 {
   Fmd_CONSTRUCTOR_INIT(FuiCSSelector);
 
-  notesText = NULL;
+  notes = NULL;
   importButton = closeButton = NULL;
 }
 //----------------------------------------------------------------------------
@@ -30,8 +30,8 @@ void FuiCSSelector::initWidgets()
   importButton->setActivateCB(FFaDynCB0M(FFaDynCB0,&importCB,invoke));
   closeButton->setActivateCB(FFaDynCB0M(FFuComponentBase,this,popDown));
 
-  notesText->setLabel(
-    "Select one or more cross sections and one material from the above,\n"
+  notes->setText(
+    "Select one or more cross sections and one material from the above, "
     "then press the \"Import\" button to create beam cross section objects.");
 
   importButton->setLabel("Import");

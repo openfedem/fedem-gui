@@ -14,8 +14,7 @@
 FFuScrolledListDialog::FFuScrolledListDialog()
 {
   myItemSelector  = NULL;
-  myNotesLabel    = NULL;
-  myNotesText     = NULL;
+  myNotes         = NULL;
   myDialogButtons = NULL;
 }
 
@@ -26,12 +25,7 @@ void FFuScrolledListDialog::initWidgets()
   myDialogButtons->setButtonLabel(FFuDialogButtons::MIDBUTTON, "Apply");
   myDialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON, "Cancel");
 
-  if (myNotesText)
-  {
-    myNotesText->setLabel("No notes yet");
-    myNotesLabel->popDown();
-    myNotesText->popDown();
-  }
+  if (myNotes) myNotes->popDown();
 
   myDialogButtons->setButtonClickedCB(FFaDynCB1M(FFuScrolledListDialog,this,
                                                  onDlgButtonClicked,int));
@@ -40,11 +34,10 @@ void FFuScrolledListDialog::initWidgets()
 
 void FFuScrolledListDialog::setNotesText(const char* text)
 {
-  if (myNotesText)
+  if (myNotes)
   {
-    myNotesText->setLabel(text);
-    myNotesLabel->popUp();
-    myNotesText->popUp();
+    myNotes->setText(text);
+    myNotes->popUp();
   }
 }
 
@@ -55,34 +48,34 @@ int FFuScrolledListDialog::getItem() const
 }
 
 
-void FFuScrolledListDialog::setOkButtonClickedCB(const FFaDynCB1<int>& aDynCB)
+void FFuScrolledListDialog::setOkButtonClickedCB(const DynCB1& aDynCB)
 {
   myOkButtonClickedCB = aDynCB;
 }
 
-void FFuScrolledListDialog::setOkButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB)
+void FFuScrolledListDialog::setOkButtonClickedCB(const DynCB2& aDynCB)
 {
   myOkButtonClickedWPtrCB = aDynCB;
 }
 
 
-void FFuScrolledListDialog::setCancelButtonClickedCB(const FFaDynCB1<int>& aDynCB)
+void FFuScrolledListDialog::setCancelButtonClickedCB(const DynCB1& aDynCB)
 {
   myCancelButtonClickedCB = aDynCB;
 }
 
-void FFuScrolledListDialog::setCancelButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB)
+void FFuScrolledListDialog::setCancelButtonClickedCB(const DynCB2& aDynCB)
 {
   myCancelButtonClickedWPtrCB = aDynCB;
 }
 
 
-void FFuScrolledListDialog::setApplyButtonClickedCB(const FFaDynCB1<int>& aDynCB)
+void FFuScrolledListDialog::setApplyButtonClickedCB(const DynCB1& aDynCB)
 {
   myApplyButtonClickedCB = aDynCB;
 }
 
-void FFuScrolledListDialog::setApplyButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB)
+void FFuScrolledListDialog::setApplyButtonClickedCB(const DynCB2& aDynCB)
 {
   myApplyButtonClickedWPtrCB = aDynCB;
 }

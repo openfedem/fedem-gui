@@ -34,74 +34,52 @@ FuiQtCreateBeamstringPair::FuiQtCreateBeamstringPair(int xpos, int ypos,
   : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,
                        title,name,Qt::MSWindowsFixedSizeDialogHint)
 {
-  headerImage            = new FFuQtLabel();
-  beamstringMenu1        = new FuiQtQueryInputField(NULL);
-  beamstringMenu2        = new FuiQtQueryInputField(NULL);
-  stiffnessFunctionMenu  = new FuiQtQueryInputField(NULL);
-  useRadialSpringsToggle = new FFuQtToggleButton();
-  notesText              = new FFuQtLabel();
-  createButton           = new FFuQtPushButton();
-  eraseButton            = new FFuQtPushButton();
-  closeButton            = new FFuQtPushButton();
-  helpButton             = new FFuQtPushButton();
+  // Lambda function creating a pull-down selection menu with a label above.
+  auto newMenu = [](const char* label)
+  {
+    return new FuiQtQueryInputField(NULL,label,true);
+  };
+
+  headerImage     = new FFuQtLabel();
+  beamstringMenu1 = newMenu("First beamstring");
+  beamstringMenu2 = newMenu("Second beamstring");
+  stiffnessMenu   = newMenu("Contact stiffness function");
+  beamstringNotes = new FFuQtNotes(NULL,"Beamstring",10,3);
+  radialToggle    = new FFuQtToggleButton();
+  createButton    = new FFuQtPushButton();
+  eraseButton     = new FFuQtPushButton();
+  closeButton     = new FFuQtPushButton();
+  helpButton      = new FFuQtPushButton();
 
   this->initWidgets();
 
-  QWidget* qMenu1 = new QWidget();
-  QBoxLayout* layout = new QVBoxLayout(qMenu1);
-  layout->setContentsMargins(0,0,0,0);
-  layout->setSpacing(0);
-  layout->addWidget(new QLabel("First beamstring"));
-  layout->addWidget(static_cast<FuiQtQueryInputField*>(beamstringMenu1));
-
-  QWidget* qMenu2 = new QWidget();
-  layout = new QVBoxLayout(qMenu2);
-  layout->setContentsMargins(0,0,0,0);
-  layout->setSpacing(0);
-  layout->addWidget(new QLabel("Second beamstring"));
-  layout->addWidget(static_cast<FuiQtQueryInputField*>(beamstringMenu2));
-
-  QWidget* qMenu3 = new QWidget();
-  layout = new QVBoxLayout(qMenu3);
-  layout->setContentsMargins(0,0,0,0);
-  layout->setSpacing(0);
-  layout->addWidget(new QLabel("Contact stiffness function"));
-  layout->addWidget(static_cast<FuiQtQueryInputField*>(stiffnessFunctionMenu));
-
-  QWidget* qMenus = new QWidget();
-  QGridLayout* l2 = new QGridLayout(qMenus);
-  l2->setContentsMargins(10,5,10,0);
-  l2->setHorizontalSpacing(20);
-  l2->setRowMinimumHeight(0,45);
-  l2->addWidget(qMenu1,0,0);
-  l2->addWidget(qMenu2,0,1);
-  l2->addWidget(qMenu3,0,2);
-  l2->addWidget(dynamic_cast<FFuQtToggleButton*>(useRadialSpringsToggle),1,2);
-
-  QWidget* qNotes = new QWidget();
-  layout = new QVBoxLayout(qNotes);
-  layout->setContentsMargins(10,0,10,0);
-  layout->setSpacing(0);
-  layout->addWidget(new FFuQtNotesLabel());
-  layout->addWidget(static_cast<FFuQtLabel*>(notesText));
+  QGridLayout* menuLayout = new QGridLayout();
+  menuLayout->setContentsMargins(10,5,10,0);
+  menuLayout->setHorizontalSpacing(20);
+  menuLayout->setRowMinimumHeight(0,45);
+  menuLayout->addWidget(beamstringMenu1->getQtWidget(),0,0);
+  menuLayout->addWidget(beamstringMenu2->getQtWidget(),0,1);
+  menuLayout->addWidget(stiffnessMenu->getQtWidget(),0,2);
+  menuLayout->addWidget(radialToggle->getQtWidget(),1,2);
 
   int hspace = headerImage->getWidthHint()/10;
-  QWidget* qButtons = new QWidget();
-  layout = new QHBoxLayout(qButtons);
-  layout->setContentsMargins(10,0,10,0);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(createButton));
-  layout->addSpacing(hspace);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(eraseButton));
-  layout->addSpacing(hspace);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(closeButton));
-  layout->addSpacing(hspace);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(helpButton));
+  QBoxLayout* buttonLayout = new QHBoxLayout();
+  buttonLayout->setContentsMargins(10,0,10,0);
+  buttonLayout->addWidget(createButton->getQtWidget());
+  buttonLayout->addSpacing(hspace);
+  buttonLayout->addWidget(eraseButton->getQtWidget());
+  buttonLayout->addSpacing(hspace);
+  buttonLayout->addWidget(closeButton->getQtWidget());
+  buttonLayout->addSpacing(hspace);
+  buttonLayout->addWidget(helpButton->getQtWidget());
 
-  layout = new QVBoxLayout(this);
+  QBoxLayout* layout = new QVBoxLayout(this);
   layout->setContentsMargins(0,0,0,10);
-  layout->addWidget(static_cast<FFuQtLabel*>(headerImage));
-  layout->addWidget(qMenus);
-  layout->addWidget(qNotes);
+  layout->addWidget(headerImage->getQtWidget());
+  layout->addLayout(menuLayout);
+  layout->addStretch(1);
+  layout->addWidget(beamstringNotes->getQtWidget());
+  layout->addStretch(1);
   layout->addWidget(new FFuQtSeparator());
-  layout->addWidget(qButtons);
+  layout->addLayout(buttonLayout);
 }

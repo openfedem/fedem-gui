@@ -17,6 +17,7 @@
 class FFuLabel;
 class FFuLabelFrame;
 class FFuLabelField;
+class FFuNotes;
 class FFuDialogButtons;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
@@ -61,7 +62,7 @@ private:
 protected:
   FFuLabel*           headerImage;
   FFuLabel*           modelImage;
-  FFuLabel*           notesText;
+  FFuNotes*           notes;
   FFuLabelFrame*      towerGeometryFrame;
   FFuLabelField*      towerGeometryD1Field;
   FFuLabelField*      towerGeometryD2Field;
@@ -80,6 +81,7 @@ protected:
   FFuLabelField*      towerMaterialGField;
   FFuDialogButtons*   dialogButtons;
 };
+
 
 class FuaCreateTurbineTowerValues : public FFuaUIValues
 {

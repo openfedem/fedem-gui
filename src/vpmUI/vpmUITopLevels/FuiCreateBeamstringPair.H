@@ -14,6 +14,7 @@
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuLabel;
+class FFuNotes;
 class FFuPushButton;
 class FFuToggleButton;
 class FFuaQueryBase;
@@ -45,7 +46,7 @@ public:
 
   virtual void setSensitivity(bool isSensitive);
 
-  void setCBs(const FuiCreateBeamstringPairCBs& cb) { this->myCBs = cb; }
+  void setCBs(const FuiCreateBeamstringPairCBs& cb) { myCBs = cb; }
 
 protected:
   void initWidgets();
@@ -67,11 +68,9 @@ protected:
   FFuLabel*           headerImage;
   FuiQueryInputField* beamstringMenu1;
   FuiQueryInputField* beamstringMenu2;
-  FuiQueryInputField* stiffnessFunctionMenu;
-  FFuToggleButton*    useRadialSpringsToggle;
-  FFuLabel*           notesImage;
-  FFuLabel*           notesLabel;
-  FFuLabel*           notesText;
+  FuiQueryInputField* stiffnessMenu;
+  FFuToggleButton*    radialToggle;
+  FFuNotes*           beamstringNotes;
   FFuPushButton*      createButton;
   FFuPushButton*      eraseButton;
   FFuPushButton*      closeButton;

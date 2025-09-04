@@ -14,8 +14,7 @@
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 
 
-class FFuQtLabel : public QLabel, public FFuLabel,
-		   public FFuQtComponentBase
+class FFuQtLabel : public QLabel, public FFuLabel, public FFuQtComponentBase
 {
   Q_OBJECT
 
@@ -36,6 +35,19 @@ class FFuQtNotesLabel : public QWidget, public FFuQtComponentBase
 {
 public:
   FFuQtNotesLabel(QWidget* parent = NULL);
+};
+
+
+class FFuQtNotes : public QWidget, public FFuNotes, public FFuQtComponentBase
+{
+public:
+  FFuQtNotes(QWidget* parent = NULL, const char* text = "No notes yet",
+             int margin = 0, int spacing = 5);
+
+  virtual void setText(const char* text) { myLabel->setText(text); }
+
+private:
+  QLabel* myLabel;
 };
 
 #endif

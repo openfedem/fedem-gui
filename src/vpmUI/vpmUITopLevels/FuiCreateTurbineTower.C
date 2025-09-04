@@ -117,8 +117,9 @@ void FuiCreateTurbineTower::initWidgets()
   this->towerMaterialGField->myField->setDoubleDisplayPrecision(6);
   this->towerMaterialGField->setSensitivity(false);
 
-  this->notesText->setLabel("You can update the tower definition of the current wind turbine\n"
-                            "model here. Click 'Update tower' to update the existing model.");
+  notes->setText("You can update the tower definition of the current wind "
+                 "turbine\nmodel here. Click 'Update tower' to update the "
+                 "existing model.");
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
