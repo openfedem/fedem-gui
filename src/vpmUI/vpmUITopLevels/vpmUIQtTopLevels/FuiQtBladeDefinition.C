@@ -5,6 +5,13 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QCheckBox>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QSignalMapper>
 #include <QDir>
 #include <QMessageBox>
 #include <QFileDialog>
@@ -13,12 +20,15 @@
 #include <QCloseEvent>
 
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtBladeDefinition.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuCustom/inputTables/InputTable.H"
 #include "FFuLib/FFuCustom/components/DataNode.H"
 #include "FFuLib/FFuCustom/components/Blade.H"
 #include "FFuLib/FFuCustom/components/BladeDrawer.H"
 #include "FFuLib/FFuCustom/components/guiComponents/BladeSelector.H"
 #include "FFuLib/FFuCustom/mvcModels/BladeSelectionModel.H"
+#include "FFuLib/FFuCustom/components/renderers/BladeView.H"
+#include "FFuLib/FFuCustom/components/renderers/AirfoilView.H"
 #include "FFuLib/FFuCustom/inputTables/delegates/FileFieldDelegate.H"
 #include "FFuLib/FFuCustom/inputTables/delegates/DoubleFieldDelegate.H"
 #include "vpmDB/FmBladeProperty.H"
@@ -29,23 +39,22 @@
 #include "vpmPM/FpPM.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
 
-extern const char* info_xpm[];
 
-
-FuiBladeDefinition* FuiBladeDefinition::create(int xpos, int ypos, int width, int height, const char* title, const char* name) {
-	return new FuiQtBladeDefinition(0, xpos, ypos, width, height, title, name);
+FuiBladeDefinition* FuiBladeDefinition::create(int xpos, int ypos, int width, int height, const char* title, const char* name)
+{
+  return new FuiQtBladeDefinition(xpos, ypos, width, height, title, name);
 }
 
-FuiQtBladeDefinition::FuiQtBladeDefinition(QWidget* parent,
-		int xpos, int ypos, int width, int height, const char* title,
-		const char* name) :
-		FFuQtTopLevelShell(parent, xpos, ypos, width, height, title, name) {
+
+FuiQtBladeDefinition::FuiQtBladeDefinition(int xpos, int ypos, int width, int height,
+                                           const char* title, const char* name)
+  : FFuQtTopLevelShell(NULL, xpos, ypos, width, height, title, name)
+{
 	std::string fedemFolderPath = FpPM::getFullFedemPath("Properties");
 
 	//**********Create Widgets**********
 	apTabWidget = new QTabWidget(this);
 	apBladeDrawer = new BladeDrawer(this);
-	apNameLabel = new QLabel("Description:");
 	apNameEdit = new QLineEdit("Insert description");
 	apBladeSelector = new BladeSelector(fedemFolderPath,this);
 	apSaveButton = new QPushButton("&Save");
@@ -54,11 +63,10 @@ FuiQtBladeDefinition::FuiQtBladeDefinition(QWidget* parent,
 	apAddSegmentButton = new QPushButton("&Add Segment");
 	apRemoveSegmentButton = new QPushButton("&Remove Segment");
 	apCreateBladeButton = new QPushButton("&New Blade");
-	apNotesLabel = new QLabel("<b>Note<\b>",this);
-	apNotesLabelImage = new QLabel(this);
-	apNotesLabelImage->setPixmap(QPixmap(info_xpm));
-	apNotesText = new QLabel("Use this dialog to edit blade-definition files. You can create new blades, or browse folders containing blade-definitions. Selected airfoils will be copied to the folder [blade name]_airfoils.");
-	apNotesText->setWordWrap(true);
+	QWidget* apNotes = new FFuQtNotes(this,
+					  "Use this dialog to edit blade-definition files. "
+					  "You can create new blades, or browse folders containing blade-definitions. "
+					  "Selected airfoils will be copied to the folder [blade name]_airfoils.",5);
 
 	apStructureTab = new QWidget(this);
 
@@ -148,28 +156,18 @@ FuiQtBladeDefinition::FuiQtBladeDefinition(QWidget* parent,
 	apStructureTable->ResizeToContents();
 
 	//**********Create layouts**********
-	apMainLayout = new QVBoxLayout();
-	apViewLayout = new QHBoxLayout();
-	apBladeSelectorLayout = new QHBoxLayout();
-	apDialogButtonLayout = new QHBoxLayout();
-	apCheckBoxLayout = new QHBoxLayout();
-	apStiffnessLayout = new QVBoxLayout();
-	apNotesLabelLayout = new QHBoxLayout;
-	apNotesLayout = new QVBoxLayout;
+	QBoxLayout* apMainLayout = new QVBoxLayout(this);
+	QBoxLayout* apViewLayout = new QHBoxLayout();
+	QBoxLayout* apBladeSelectorLayout = new QHBoxLayout();
+	QBoxLayout* apDialogButtonLayout = new QHBoxLayout();
+	QBoxLayout* apCheckBoxLayout = new QHBoxLayout();
+	QBoxLayout* apStiffnessLayout = new QVBoxLayout();
 
 	//**********Initialize layouts**********
 	apViewLayout->addWidget(apBladeDrawer);
 	apViewLayout->setContentsMargins(0,0,0,0);
 
-	apNotesLabel->setAlignment(Qt::AlignTop);
-	apNotesLabelImage->setAlignment(Qt::AlignTop);
-	apNotesLabelLayout->addWidget(apNotesLabelImage);
-	apNotesLabelLayout->addWidget(apNotesLabel);
-	apNotesLabelLayout->addStretch(-1);
-	apNotesLayout->addLayout(apNotesLabelLayout);
-	apNotesLayout->addWidget(apNotesText);
-
-	apBladeSelectorLayout->addWidget(apNameLabel);
+	apBladeSelectorLayout->addWidget(new QLabel("Description:"));
 	apBladeSelectorLayout->addWidget(apNameEdit);
 	apBladeSelectorLayout->insertSpacing(-1,30);
 	apBladeSelectorLayout->addWidget(apAddSegmentButton);
@@ -181,7 +179,8 @@ FuiQtBladeDefinition::FuiQtBladeDefinition(QWidget* parent,
 	apDialogButtonLayout->addWidget(apSaveButton);
 	apDialogButtonLayout->addWidget(apCloseButton);
 	apDialogButtonLayout->addWidget(apHelpButton);
-	apDialogButtonLayout->insertStretch(-1);
+	apDialogButtonLayout->addStretch(1);
+	apDialogButtonLayout->setContentsMargins(5, 0, 5, 5);
 
 	apCheckBoxLayout->addWidget(apBendingStiffnesCheck);
 	apCheckBoxLayout->addWidget(apAxialStiffnesCheck);
@@ -198,9 +197,9 @@ FuiQtBladeDefinition::FuiQtBladeDefinition(QWidget* parent,
 	apMainLayout->addWidget(apBladeSelector);
 	apMainLayout->addLayout(apBladeSelectorLayout);
 	apMainLayout->addWidget(apTabWidget);
-	apMainLayout->addLayout(apNotesLayout);
+	apMainLayout->addWidget(apNotes);
 	apMainLayout->addLayout(apDialogButtonLayout);
-	apMainLayout->setContentsMargins(2, 0, 0, 0);
+	apMainLayout->setContentsMargins(2, 0, 2, 0);
 
 	setLayout(apMainLayout);
 
@@ -411,7 +410,7 @@ void FuiQtBladeDefinition::connections() {
 	QObject::connect(apStructureTable->GetModel(), SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentModelChanged()));
 
 	//Checkboxes
-	QObject::connect(apCheckboxMapper, SIGNAL(mapped(int)), this, SLOT(checkBoxChanged(int)));
+	QObject::connect(apCheckboxMapper, SIGNAL(mappedInt(int)), this, SLOT(checkBoxChanged(int)));
 	QObject::connect(apShearStiffnesCheck, SIGNAL(stateChanged(int)), apCheckboxMapper, SLOT(map()));
 	QObject::connect(apTorsionStiffnesCheck, SIGNAL(stateChanged(int)), apCheckboxMapper, SLOT(map()));
 	QObject::connect(apBendingStiffnesCheck, SIGNAL(stateChanged(int)), apCheckboxMapper, SLOT(map()));
@@ -711,8 +710,8 @@ void FuiQtBladeDefinition::closeEvent(QCloseEvent* event)
   // Check for unsaved blades, and pop-up save-dialog
   for (Blade* blade : apBlades)
     if (blade->Touched())
-      switch (QMessageBox::warning(this, tr("Closing"),
-                                   tr(("Do you want to save changes to "+ blade->GetName() +"?").c_str()),
+      switch (QMessageBox::warning(this, "Closing",
+                                   ("Do you want to save changes to "+ blade->GetName() +"?").c_str(),
                                    QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel)) {
       case QMessageBox::Cancel:
         event->ignore();

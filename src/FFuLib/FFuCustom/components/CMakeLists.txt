@@ -11,7 +11,6 @@ if ( USE_WINDPOW )
   file ( GLOB_RECURSE HPP_HEADER_FILES *.H )
 
   set ( QT_MOC_HEADER_FILES
-	BladeDrawer.H
 	guiComponents/AirfoilSelector.H
 	guiComponents/BladeSelector.H
 	renderers/AirfoilView.H

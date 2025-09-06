@@ -9,29 +9,25 @@
 #define BLADE_DRAWER_H
 
 #include <QWidget>
-#include <QHBoxLayout>
 
-#include "FFuLib/FFuCustom/components/Blade.H"
-#include "FFuLib/FFuCustom/components/renderers/BladeView.H"
-#include "FFuLib/FFuCustom/components/renderers/AirfoilView.H"
+class Blade;
+class BladeView;
+class AirfoilView;
 
-class BladeDrawer : public QWidget {
-	Q_OBJECT
 
+class BladeDrawer : public QWidget
+{
 public:
-	BladeDrawer( QWidget *parent=0 );
-	~BladeDrawer();
+  BladeDrawer(QWidget* parent = NULL);
 
-	void setBlade( Blade* aBlade );
-	Blade* getBlade(){ return apBlade; }
+  void setBlade(Blade* aBlade);
+  Blade* getBlade() const { return apBlade; }
 
-	AirfoilView* apAirfoilView;
-	BladeView* apBladeView;
+  AirfoilView* apAirfoilView;
+  BladeView* apBladeView;
+
 private:
-	Blade* apBlade;
-
-	QHBoxLayout* apMainLayout;
-
+  Blade* apBlade;
 };
 
 #endif
