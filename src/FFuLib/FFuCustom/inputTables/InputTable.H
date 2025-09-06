@@ -14,11 +14,12 @@
 #ifndef INPUT_TABLE_H
 #define INPUT_TABLE_H
 
+#include <QWidget>
+
 #include "FFuLib/FFuCustom/mvcModels/TableModel.H"
 
 class QAction;
 class QTableView;
-class QVBoxLayout;
 
 
 /*!
@@ -30,8 +31,7 @@ class InputTable : public QWidget
   Q_OBJECT
 
 public:
-  InputTable(int rows, int columns, TableOrdering orderingType,
-             QWidget* parent = NULL);
+  InputTable(int rows, int cols, TableOrdering oType, QWidget* parent = NULL);
   virtual ~InputTable() {}
 
   TableModel* GetModel() { return apTableModel; }
@@ -62,9 +62,8 @@ public slots:
   virtual void contextMenuHorizontalHeader(const QPoint& pos);
 
 protected:
-  TableModel*  apTableModel;
-  QTableView*  apTableView;
-  QVBoxLayout* apLayout;
+  TableModel* apTableModel;
+  QTableView* apTableView;
 };
 
 #endif

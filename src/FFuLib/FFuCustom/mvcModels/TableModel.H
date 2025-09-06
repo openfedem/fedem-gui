@@ -11,32 +11,31 @@
  *      Author: runarhr
  */
 
-#ifndef TABLEMODEL_HPP
-#define TABLEMODEL_HPP
+#ifndef TABLE_MODEL_HPP
+#define TABLE_MODEL_HPP
 
+#include <QSize>
 #include <QVector>
 #include <QVariant>
-#include <QStandardItem>
 #include <QAbstractTableModel>
-#include <QPushButton>
-#include <QDoubleValidator>
 
 class QRegularExpressionValidator;
 
 
-enum TableOrdering{ ROW_DOMINANT, COLUMN_DOMINANT};
+enum TableOrdering { ROW_DOMINANT, COLUMN_DOMINANT};
 
 class TableModel : public QAbstractTableModel
 {
-	Q_OBJECT
-public:
-    TableModel(int rows, int columns, TableOrdering order, QObject *parent=0);
-	virtual ~TableModel();
+  Q_OBJECT
 
-	//! Inherited from QAbstractTableModel
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const;
-    Qt::ItemFlags flags(const QModelIndex &index) const;
+public:
+  TableModel(int rows, int columns, TableOrdering order, QObject* parent=NULL);
+  virtual ~TableModel();
+
+  //! Inherited from QAbstractTableModel
+  int rowCount(const QModelIndex& = QModelIndex()) const override;
+  int columnCount(const QModelIndex& = QModelIndex()) const override;
+  Qt::ItemFlags flags(const QModelIndex& index) const override;
 
     bool insertRow(int row, const QModelIndex &parent = QModelIndex());
     bool insertRows(int row, int count, const QModelIndex & parent = QModelIndex());
