@@ -46,6 +46,7 @@ FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name, bool refMenu)
     layout->addWidget(new QLabel("Reference"));
     layout->addWidget(static_cast<FFuQtOptionMenu*>(myRefMenu));
     layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0,0,0,0);
     layout->addWidget(qRef);
     layout->addWidget(qPoint);
   }

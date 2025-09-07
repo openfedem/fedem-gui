@@ -32,6 +32,7 @@ protected:
   FFuQtComponentBase() : myWidget(NULL) {}
 
 public:
+  virtual QWidget* getQtWidget() { return myWidget; }
 
   // Geometry management :
 
@@ -45,6 +46,9 @@ public:
 
   virtual void setMaxWidth(int width);
   virtual void setMaxHeight(int height);
+
+  virtual int  getWidthHint() const;
+  virtual int  getHeightHint() const;
 
   // Access size of widget :
 
@@ -104,9 +108,6 @@ protected:
   virtual bool areLibSignalsBlocked();
 
 private:
-  virtual int  getBasicWidthHint();
-  virtual int  getBasicHeightHint();
-
   QWidget* myWidget;
 };
 

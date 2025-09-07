@@ -5,21 +5,25 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTEXTCTRLSYSPROPERTIES_H
-#define FUIQTEXTCTRLSYSPROPERTIES_H
+#ifndef FUI_QT_EXT_CTRL_SYS_PROPERTIES_H
+#define FUI_QT_EXT_CTRL_SYS_PROPERTIES_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiExtCtrlSysProperties.H"
 
-class FFuLabelField;
 
-class FuiQtExtCtrlSysProperties : public virtual FFuQtMultUIComponent, 
-				  public FuiExtCtrlSysProperties
+class FuiQtExtCtrlSysProperties : public FFuQtWidget,
+                                  public FuiExtCtrlSysProperties
 {
 public:
-  FuiQtExtCtrlSysProperties(QWidget* parent=0, const char* name = "FuiQtExtCtrlSysProperties");
-  virtual ~FuiQtExtCtrlSysProperties();
+  FuiQtExtCtrlSysProperties(QWidget* parent);
+
   void makeNewFields();
-  virtual void setSensitivity(bool isSensitive); 
+
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiExtCtrlSysProperties::setSensitivity(isSensitive);
+  }
 };
+
 #endif

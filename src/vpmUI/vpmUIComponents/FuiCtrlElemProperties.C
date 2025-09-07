@@ -7,14 +7,13 @@
 
 #include "vpmUI/vpmUIComponents/FuiCtrlElemProperties.H"
 #include "vpmUI/vpmUIComponents/FuiParameterView.H"
-#include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuLabel.H"
-#include "FFuLib/FFuLabelField.H"
 #include "FFuLib/FFuLabelFrame.H"
 
 
 void FuiCtrlElemProperties::initWidgets()
 {
+  myElemFrame->setLabel("Element definition");
   myParameterFrame->setLabel("Parameters");
 
   myParameterView = new FuiParameterView();
@@ -22,22 +21,6 @@ void FuiCtrlElemProperties::initWidgets()
                                             onValueChanged,double));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
-}
-
-
-void FuiCtrlElemProperties::placeWidgets(int width, int height)
-{
-  int glh1 = getGridLinePos(height, 3, FROM_START);
-  int glh2 = myParameterFrame->getFontHeigth();
-  int glh3 = getGridLinePos(height, 3, FROM_END);
-
-  int glv1 = getGridLinePos(width, 3, FROM_START);
-  int glv2 = getGridLinePos(width, 300);
-  int glv3 = glv2 + 3;
-
-  myElemPixmap->setEdgeGeometry(glv1,glv2,glh1,glh3);
-  myParameterFrame->setEdgeGeometry(glv3,width,0,height);
-  myParameterView->setEdgeGeometry(glv3+5,width-5,glh2,glh3);
 }
 
 
@@ -67,11 +50,13 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
   const FuaCtrlElemPropertiesValues* data = dynamic_cast<const FuaCtrlElemPropertiesValues*>(values);
   if (!data) return;
 
+  if (data->pixmap)
+    myElemFrame->popUp();
+  else
+    myElemFrame->popDown();
+
   if (data->parameters.empty())
-  {
     myParameterFrame->popDown();
-    myParameterView->popDown();
-  }
   else
   {
     myParameterFrame->popUp();
@@ -80,10 +65,9 @@ void FuiCtrlElemProperties::buildDynamicWidgets(const FFuaUIValues* values)
     fields.reserve(data->parameters.size());
     for (const std::pair<std::string,double>& param : data->parameters)
       fields.push_back(param.first);
-    myParameterView->setFields(data->ctrlTypeIdx,fields,this);
-  }
 
-  this->placeWidgets(this->getWidth(), this->getHeight());
+    myParameterView->setFields(data->ctrlTypeIdx,fields,myParameterFrame);
+  }
 }
 
 

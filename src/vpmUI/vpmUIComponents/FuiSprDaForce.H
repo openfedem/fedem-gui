@@ -8,29 +8,48 @@
 #ifndef FUI_SPR_DA_FORCE_H
 #define FUI_SPR_DA_FORCE_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <string>
 
 class FFuLabel;
-class FFuLabelFrame;
 class FFuToggleButton;
 class FFuaQueryBase;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
-class FuiSprDaForceValues;
 class FmModelMemberBase;
 
 
-class FuiSprDaForce : public virtual FFuMultUIComponent
+struct FuiSprDaForceValues
+{
+  bool isDefDamper   = false;
+  char showDefDamper = false; // -1: visible but insensitive, 0: invisible, 1: sensitive
+
+  FFuaQueryBase*     functionQuery = NULL;
+  bool               isConstant = true;
+  FmModelMemberBase* selectedFunction = NULL;
+  std::string        functionUIString;
+  double             constFunction = 0.0;
+  FFaDynCB1<FuiQueryInputFieldValues&> myFunctionQIFieldButtonCB;
+
+  FFuaQueryBase*     engineQuery = NULL;
+  FmModelMemberBase* selectedScaleEngine = NULL;
+  std::string        scaleEngUIString;
+  double             constScale = 0.0;
+  FFaDynCB1<FuiQueryInputFieldValues&> myEngineQIFieldButtonCB;
+};
+
+
+class FuiSprDaForce : public virtual FFuComponentBase
 {
 public:
-  FuiSprDaForce() { IAmSensitive = IAmSpringUI = true; }
-  virtual ~FuiSprDaForce() {}
+  FuiSprDaForce() { IAmSensitive = IAmSpringUI = false; }
 
   // Setting Up :
 
   void setAsSpring(bool yesOrNo);
+
+  virtual void setLabel(const char* text) = 0;
   virtual void setSensitivity(bool isSensitive);
 
   // Callbacks :
@@ -46,18 +65,15 @@ public:
   void getValues(FuiSprDaForceValues& values);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   // Shadow pointers from subclass.
   // Subclass is responsible to set them up:
 
-  FFuLabelFrame*      myFrame;
   FFuLabel*           myFunctionLabel;
   FuiQueryInputField* myFunctionField;
-  FFuLabel*           myScaleLabel;
   FuiQueryInputField* myScaleField;
-  FFuToggleButton*    myIsDefDamperToggle;
+  FFuToggleButton*    myDmpToggle;
 
 private:
 
@@ -71,43 +87,10 @@ private:
   FFaDynCB1<FuiSprDaForceValues&> myValuesChangedCB;
   FFaDynCB0                       myChangedCB;
 
-  // Internal Vars/methods
-
-  void updateSprDaLabels();
+  // Internal Vars
 
   bool IAmSensitive;
   bool IAmSpringUI;
-};
-
-
-class FuiSprDaForceValues
-{
-public:
-  FuiSprDaForceValues()
-    {
-      isDefDamper = false;
-      showDefDamper = false;
-      isConstant = true;
-      constFunction = constScale = 0.0;
-      functionQuery = engineQuery = 0;
-      selectedFunction = selectedScaleEngine = 0;
-    }
-
-  bool isDefDamper;
-  char showDefDamper; // -1: visible but insensitive, 0: invisible, 1: sensitive
-
-  FFuaQueryBase     * functionQuery;
-  bool                isConstant;
-  FmModelMemberBase * selectedFunction;
-  std::string              functionUIString;
-  double              constFunction;
-  FFaDynCB1<FuiQueryInputFieldValues&> myFunctionQIFieldButtonCB;
-
-  FFuaQueryBase     * engineQuery;
-  FmModelMemberBase * selectedScaleEngine;
-  std::string              scaleEngUIString;
-  double              constScale;
-  FFaDynCB1<FuiQueryInputFieldValues&> myEngineQIFieldButtonCB;
 };
 
 #endif

@@ -8,23 +8,17 @@
 #ifndef FUI_SN_CURVE_SELECTOR_H
 #define FUI_SN_CURVE_SELECTOR_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <string>
 
-class FFuLabel;
 class FFuOptionMenu;
 
 
-class FuiSNCurveSelector : virtual public FFuMultUIComponent
+class FuiSNCurveSelector : virtual public FFuComponentBase
 {
 public:
-  FuiSNCurveSelector()
-  {
-    stdLabel = curveLabel = NULL;
-    stdTypeMenu = curveTypeMenu = NULL;
-  }
-  virtual ~FuiSNCurveSelector() {}
+  FuiSNCurveSelector() { stdTypeMenu = curveTypeMenu = NULL; }
 
   virtual void setSensitivity(bool isSensitive);
 
@@ -39,7 +33,6 @@ public:
 protected:
   void initWidgets();
 
-  virtual void placeWidgets(int width, int height);
   virtual void onPoppedUpFromMem();
 
 private:
@@ -48,9 +41,6 @@ private:
   void populateCurveMenu(const std::string& stdName);
 
 protected:
-  FFuLabel* stdLabel;
-  FFuLabel* curveLabel;
-
   FFuOptionMenu* stdTypeMenu;
   FFuOptionMenu* curveTypeMenu;
 

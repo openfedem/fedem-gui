@@ -45,7 +45,7 @@ FuiQtCreateTurbineAssembly::FuiQtCreateTurbineAssembly(int xpos, int ypos,
 {
   headerImage = new FFuQtLabel();
   modelImage  = new FFuQtLabel();
-  notesText   = new FFuQtLabel();
+  notes       = new FFuQtNotes();
 
   towerBaseFrame = new FFuQtLabelFrame();
   hubFrame       = new FFuQtLabelFrame();
@@ -79,81 +79,81 @@ FuiQtCreateTurbineAssembly::FuiQtCreateTurbineAssembly(int xpos, int ypos,
   QGridLayout* gl = NULL;
   int i, row = 0;
 
-  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(towerBaseFrame));
+  layout = new QVBoxLayout(towerBaseFrame->getQtWidget());
   for (i = FWP::TOWER_X; i <= FWP::TOWER_T; i++)
-    layout->addWidget(static_cast<FFuQtLabelField*>(myFields[i]));
+    layout->addWidget(myFields[i]->getQtWidget());
 
-  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(hubFrame));
+  layout = new QVBoxLayout(hubFrame->getQtWidget());
   layout->setContentsMargins(10,2,10,10);
   layout->setSpacing(2);
   for (i = FWP::H1; i <= FWP::BETA; i++)
-    layout->addWidget(static_cast<FFuQtLabelField*>(myFields[i]));
+    layout->addWidget(myFields[i]->getQtWidget());
 
-  gl = new QGridLayout(static_cast<FFuQtLabelFrame*>(drivelineFrame));
+  gl = new QGridLayout(drivelineFrame->getQtWidget());
   gl->setContentsMargins(10,2,10,10);
   gl->setHorizontalSpacing(20);
   gl->setVerticalSpacing(2);
   for (i = FWP::D1, row = 0; i <= FWP::D5; i++)
-    gl->addWidget(static_cast<FFuQtLabelField*>(myFields[i]),row++,0);
+    gl->addWidget(myFields[i]->getQtWidget(),row++,0);
   for (i = FWP::D6, row = 0; i <= FWP::THETA; i++)
-    gl->addWidget(static_cast<FFuQtLabelField*>(myFields[i]),row++,1);
+    gl->addWidget(myFields[i]->getQtWidget(),row++,1);
 
-  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(nacelleFrame));
+  layout = new QVBoxLayout(nacelleFrame->getQtWidget());
   for (i = FWP::COG_X; i <= FWP::COG_Z; i++)
   {
     myFields[i]->setLabelWidth(30);
-    layout->addWidget(static_cast<FFuQtLabelField*>(myFields[i]));
+    layout->addWidget(myFields[i]->getQtWidget());
   }
   
-  QWidget* qCopyPaste = new QWidget();
-  layout = new QVBoxLayout(qCopyPaste);
-  layout->setContentsMargins(10,10,0,0);
-  layout->addStretch();
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(copyButton));
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(pasteButton));
+  QBoxLayout* cpLayout = new QVBoxLayout();
+  cpLayout->setContentsMargins(10,10,0,0);
+  cpLayout->addStretch(1);
+  cpLayout->addWidget(copyButton->getQtWidget());
+  cpLayout->addWidget(pasteButton->getQtWidget());
 
-  QWidget* qNumBlades = new QWidget();
-  layout = new QHBoxLayout(qNumBlades);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(new QLabel("Number of blades"));
-  layout->addWidget(static_cast<FFuQtSpinBox*>(bladesNumField));
-  layout->addSpacing(20);
-  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(incCtrlSysToggle));
+  QBoxLayout* bLayout = new QHBoxLayout();
+  bLayout->setContentsMargins(0,5,0,10);
+  bLayout->addWidget(new QLabel("Number of blades"));
+  bLayout->addWidget(bladesNumField->getQtWidget());
+  bLayout->addSpacing(20);
+  bLayout->addWidget(incCtrlSysToggle->getQtWidget());
 
-  QWidget* qLeft = new QWidget();
-  gl = new QGridLayout(qLeft);
+  gl = new QGridLayout();
   gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(10);
   for (int col = 0; col < 3; col++)
     gl->setColumnStretch(col,1);
   gl->addWidget(new QLabel("Driveline type"), row=0,0);
   gl->addWidget(new QLabel("Bearings"), row,1);
   gl->addWidget(new QLabel("Name"), row++,2);
-  gl->addWidget(static_cast<FFuQtOptionMenu*>(drivelineTypeMenu), row,0);
-  gl->addWidget(static_cast<FFuQtOptionMenu*>(bearingsMenu), row,1);
-  gl->addWidget(static_cast<FFuQtIOField*>(nameField), row++,2);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(towerBaseFrame), row,0);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(drivelineFrame), row++,1,1,-1);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(hubFrame), row,0);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(nacelleFrame), row,1);
-  gl->addWidget(qCopyPaste, row++,2);
-  gl->addWidget(static_cast<FFuQtFileBrowseField*>(bladesDesignField),
-		row++,0,1,-1);
-  gl->addWidget(qNumBlades, row++,0,1,-1);
-  gl->addWidget(new FFuQtNotesLabel(), row++,0);
-  gl->addWidget(static_cast<FFuQtLabel*>(notesText), row++,0,1,-1);
-  gl->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons), row++,0,1,-1);
+  gl->addWidget(drivelineTypeMenu->getQtWidget(), row,0);
+  gl->addWidget(bearingsMenu->getQtWidget(), row,1);
+  gl->addWidget(nameField->getQtWidget(), row++,2);
+  gl->addWidget(towerBaseFrame->getQtWidget(), row,0);
+  gl->addWidget(drivelineFrame->getQtWidget(), row++,1,1,-1);
+  gl->addWidget(hubFrame->getQtWidget(), row,0);
+  gl->addWidget(nacelleFrame->getQtWidget(), row,1);
+  gl->addLayout(cpLayout, row++,2);
 
-  QWidget* qMain = new QWidget();
-  layout = new QHBoxLayout(qMain);
-  layout->setSpacing(0);
-  layout->setContentsMargins(10,0,0,10);
-  layout->addWidget(qLeft);
-  layout->addWidget(static_cast<FFuQtLabel*>(modelImage));
+  layout = new QVBoxLayout();
+  layout->setContentsMargins(0,0,0,0);
+  layout->addLayout(gl);
+  layout->addSpacing(5);
+  layout->addWidget(bladesDesignField->getQtWidget());
+  layout->addLayout(bLayout);
+  layout->addWidget(notes->getQtWidget());
+  layout->addWidget(dialogButtons->getQtWidget());
+
+  QBoxLayout* mainLayout = new QHBoxLayout();
+  mainLayout->setSpacing(0);
+  mainLayout->setContentsMargins(10,0,0,10);
+  mainLayout->addLayout(layout);
+  mainLayout->addWidget(modelImage->getQtWidget());
 
   layout = new QVBoxLayout(this);
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(static_cast<FFuQtLabel*>(headerImage));
-  layout->addWidget(qMain);
+  layout->addWidget(headerImage->getQtWidget());
+  layout->addLayout(mainLayout);
 }
 //----------------------------------------------------------------------------
 

@@ -8,12 +8,11 @@
 #ifndef FUI_EXT_CTRL_SYS_PROPERTIES_H
 #define FUI_EXT_CTRL_SYS_PROPERTIES_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
-
-#include <vector>
 #include <string>
+#include <vector>
 
 class FFuFileBrowseField;
 class FFuTable;
@@ -24,14 +23,14 @@ class FuiQueryInputFieldValues;
 class FmModelMemberBase;
 
 
-class FuiExtCtrlSysProperties : virtual public FFuMultUIComponent,
-				public FFuUAExistenceHandler,
-				public FFuUADataHandler
+class FuiExtCtrlSysProperties : virtual public FFuComponentBase,
+                                public FFuUAExistenceHandler,
+                                public FFuUADataHandler
 {
 public:
   FuiExtCtrlSysProperties() { IAmSensitive = true; }
-  virtual ~FuiExtCtrlSysProperties() {}
 
+  virtual void buildDynamicWidgets(const FFuaUIValues* values);
   virtual void setUIValues(const FFuaUIValues* values);
   virtual void getUIValues(FFuaUIValues* values);
   virtual void setSensitivity(bool isSensitive);
@@ -43,15 +42,12 @@ protected:
   virtual void makeNewFields() = 0;
 
   // UI objects
-  FFuFileBrowseField*         fileBrowseField;
-  FFuTable*                   myTable;
+  FFuFileBrowseField*              fileBrowseField;
+  FFuTable*                        myTable;
   std::vector<FFuLabel*>           myNameLabels;
   std::vector<FuiQueryInputField*> myInpEngineFields;
 
 private:
-  virtual void placeWidgets(int width, int height);
-  virtual void buildDynamicWidgets(const FFuaUIValues* values);
-
   // CBs from query input field
   void onEngineButtonPressed(FuiQueryInputFieldValues& query);
   void onFieldSelectionChanged(int);
@@ -66,13 +62,13 @@ private:
   FFaDynCB1<FuiQueryInputFieldValues&> myButtonPressedCB;
 };
 
+
 class FuaExtCtrlSysPropertiesValues : public FFuaUIValues
 {
 public:
-  FuaExtCtrlSysPropertiesValues() { myEngineQuery = 0; }
-  virtual ~FuaExtCtrlSysPropertiesValues() {}
+  FuaExtCtrlSysPropertiesValues() { myEngineQuery = NULL; }
 
-  FFuaQueryBase*             myEngineQuery;
+  FFuaQueryBase*                  myEngineQuery;
   std::vector<FmModelMemberBase*> mySelectedQueries;
   std::string filePath;
   std::string modelFilePath;

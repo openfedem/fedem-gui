@@ -13,9 +13,6 @@ option ( USE_FREQDOMAIN "Build Fedem GUI with frequency-domain settings" true )
 if ( USE_WINDPOW )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_WND" )
 endif ( USE_WINDPOW )
-if ( USE_NCODE_INTERFACE )
-  string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_NCODE" )
-endif ( USE_NCODE_INTERFACE )
 
 
 foreach ( FOLDER ${LIB_ID_LIST} )

@@ -16,15 +16,20 @@ class FuiQtQueryInputField : public FFuQtWidget, public FuiQueryInputField
 {
 public:
   FuiQtQueryInputField(QWidget* parent,
+                       const char* label = NULL, bool above = false,
                        const char* name = "FuiQtQueryInputField");
 
   virtual void setBehaviour(Policy behaviour, bool noButton);
 
   virtual void setToolTip(const char* tip)
-  { this->FuiQueryInputField::setToolTip(tip); }
+  {
+    this->FuiQueryInputField::setToolTip(tip);
+  }
 
-  virtual void setSensitivity(bool makeSensitive)
-  { this->FuiQueryInputField::setSensitivity(makeSensitive); }
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiQueryInputField::setSensitivity(isSensitive);
+  }
 
 protected:
   void resizeEvent(QResizeEvent* e);

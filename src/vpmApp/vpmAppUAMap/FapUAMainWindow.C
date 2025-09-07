@@ -527,12 +527,8 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveStress"));
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveModes"));
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveRosette"));
-  if (FapLicenseManager::hasFeature("FA-DRB")) {
+  if (FapLicenseManager::hasFeature("FA-DRB"))
     this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveStrainCoat"));
-#ifdef FT_HAS_NCODE
-    this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveDutyCycle"));
-#endif
-  }
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveAll"));
   if (FapLicenseManager::hasFeature("FA-SEV"))
     this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveEvents"));
@@ -542,12 +538,8 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveStress"));
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveModes"));
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveRosette"));
-  if (FapLicenseManager::hasFeature("FA-DRB")) {
+  if (FapLicenseManager::hasFeature("FA-DRB"))
     this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveStrainCoat"));
-#ifdef FT_HAS_NCODE
-    this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveDutyCycle"));
-#endif
-  }
   this->solveMainHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_tools_preferences"));
 
   this->solveMainHeader.push_back(&this->separator);
@@ -581,12 +573,8 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   this->resultHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_deleteStressResults"));
   this->resultHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_deleteModesResults"));
   this->resultHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_deleteRosetteResults"));
-  if (FapLicenseManager::hasFeature("FA-DRB")) {
+  if (FapLicenseManager::hasFeature("FA-DRB"))
     this->resultHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_deleteStrainCoatResults"));
-#ifdef FT_HAS_NCODE
-    this->resultHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_deleteDutyCycleResults"));
-#endif
-  }
 #endif
   this->resultHeader.push_back(&this->separator);
   this->resultHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_addResultsProbe"));
@@ -666,9 +654,6 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   this->modesHeader.clear();
   this->rosetteHeader.clear();
   this->strainCoatHeader.clear();
-#ifdef FT_HAS_NCODE
-  this->dutyCycleHeader.clear();
-#endif
 
 #ifdef FT_HAS_SOLVERS
   cmds->toolBars[FuiMainWindow::SOLVE].push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveDynamicsBasic"));
@@ -689,11 +674,6 @@ FFuaUICommands* FapUAMainWindow::getCommands()
     cmds->toolBars[FuiMainWindow::SOLVE].push_back(&this->strainCoatHeader);
     this->strainCoatHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveStrainCoat"));
     this->strainCoatHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveStrainCoat"));
-#ifdef FT_HAS_NCODE
-    cmds->toolBars[FuiMainWindow::SOLVE].push_back(&this->dutyCycleHeader);
-    this->dutyCycleHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveDutyCycle"));
-    this->dutyCycleHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_solve_manageSolveDutyCycle"));
-#endif
   }
 
   cmds->toolBars[FuiMainWindow::SOLVE].push_back(FFuaCmdItem::getCmdItem("cmdId_solve_solveAll"));

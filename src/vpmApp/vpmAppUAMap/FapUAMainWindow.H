@@ -66,7 +66,6 @@ private:
   FFuaCmdHeaderItem modesHeader;
   FFuaCmdHeaderItem rosetteHeader;
   FFuaCmdHeaderItem strainCoatHeader;
-  FFuaCmdHeaderItem dutyCycleHeader;
 
   //mechToolBar
   FFuaCmdHeaderItem mechCreateSingleJointHeader;

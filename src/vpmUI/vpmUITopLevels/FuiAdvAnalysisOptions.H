@@ -58,18 +58,14 @@ class FuiAdvAnalysisOptions : public FuiTopLevelDialog
   Fmd_HEADER_INIT();
 
 protected:
-  FuiAdvAnalysisOptions(bool basicMode);
+  FuiAdvAnalysisOptions();
 
 public:
   // Static create method to use instead of constructor
   // Implementation in GUILib-dependent implementation file
-  static FuiAdvAnalysisOptions* create(int xpos = 100, int ypos  = 100,
-				       int width= 100, int height= 100,
-				       bool basicMode = false,
-				       const char* title= "Solver",
-				       const char* name = "FuiAdvAnalysisOptions");
-
-  void setBasicMode(bool bMode) { myBasicMode = !bMode; this->onAdvBtnClicked(); }
+  static FuiAdvAnalysisOptions* create(int xpos, int ypos,
+                                       int width, int height,
+                                       bool basicMode = false);
 
   enum { // Options
     BASICOPTIONS,
@@ -217,6 +213,8 @@ public:
     OVERWRITE
   };
 
+  void setBasicMode(bool basicMode);
+
   //Field Settings
   //see FFuIOField for mode and policy
   void setAllFieldAcceptPolicy(int policy);
@@ -226,9 +224,10 @@ public:
   virtual void setSensitivity(bool sens);
 
 protected:
-  virtual void initWidgets();
+  void initWidgets(bool basicMode);
+  void showBasicMode(bool doShow);
   void placeAdvancedButton(int width, int height);
-  virtual void onAdvBtnClicked();
+  void onAdvBtnClicked();
 
 private:
   void setAlphaLabel(int iop, const char* sub, double a1, double a2);
@@ -318,8 +317,6 @@ private:
 
 protected:
   FFuLabel* labImgTop;
-  FFuLabel* labNotesText;
-  FFuComponentBase* notesLabel;
   FFuPushButton* btnAdvanced;
   FFuPushButton* btnRunCloud;
   FFuPushButton* btnHelp;
@@ -348,11 +345,8 @@ protected:
   FFuFileBrowseField* autoCurveExportField;
   FFuFileBrowseField* autoVTFField;
 
-  bool myBasicMode; //!< If \e true, the Basic options sheet is shown
-
 private:
-  int myBasicTab;   //!< Tab index of the Basic options sheet
-  int myCurrentTab; //!< For remembering the last selected tab
+  bool myBasicMode; //!< If \e true, the Basic options sheet is shown
   bool hasVTFfield; //!< If \e true, automatic VTF export is licensed
 };
 

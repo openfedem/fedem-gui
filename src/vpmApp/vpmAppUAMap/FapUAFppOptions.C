@@ -80,16 +80,6 @@ void FapUAFppOptions::getDBValues(FFuaUIValues* values)
   fppValues->pvxGate = dbfppOptions->pvxGate.getValue();
   fppValues->biaxGate = dbfppOptions->biaxGate.getValue();
 
-#ifdef FT_HAS_NCODE
-  fppValues->histType = dbfppOptions->histType.getValue() - 1;
-  fppValues->max = dbfppOptions->histRange.getValue().second;
-  fppValues->min = dbfppOptions->histRange.getValue().first;
-  fppValues->nBins = dbfppOptions->histNBins.getValue();
-#else
-  // Hide nCode fields, feature not available
-  fppValues->histType = -1;
-#endif
-
   // Delete the temporary fpp options object
   if (!FmDB::getFppOptions(false)) dbfppOptions->erase();
 }

@@ -12,31 +12,33 @@
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class FFuScrolledList;
-class FFuLabel;
+class FFuNotes;
 class FFuDialogButtons;
 
 
 class FFuScrolledListDialog : virtual public FFuTopLevelShell
 {
+  using DynCB1 = FFaDynCB1<int>;
+  using DynCB2 = FFaDynCB2<int,FFuComponentBase*>;
+
 public:
   FFuScrolledListDialog();
   void setNotesText(const char* text);
 
   int getItem() const;
 
-  void setOkButtonClickedCB(const FFaDynCB1<int>& aDynCB);
-  void setCancelButtonClickedCB(const FFaDynCB1<int>& aDynCB);
-  void setApplyButtonClickedCB(const FFaDynCB1<int>& aDynCB);
+  void setOkButtonClickedCB(const DynCB1& aDynCB);
+  void setCancelButtonClickedCB(const DynCB1& aDynCB);
+  void setApplyButtonClickedCB(const DynCB1& aDynCB);
 
-  void setOkButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB);
-  void setCancelButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB);
-  void setApplyButtonClickedCB(const FFaDynCB2<int,FFuComponentBase*>& aDynCB);
+  void setOkButtonClickedCB(const DynCB2& aDynCB);
+  void setCancelButtonClickedCB(const DynCB2& aDynCB);
+  void setApplyButtonClickedCB(const DynCB2& aDynCB);
 
   FFuScrolledList*  myItemSelector;
 
 protected:
-  FFuComponentBase* myNotesLabel;
-  FFuLabel*         myNotesText;
+  FFuNotes*         myNotes;
   FFuDialogButtons* myDialogButtons;
 
   void onDlgButtonClicked(int);
@@ -44,13 +46,13 @@ protected:
   void initWidgets();
 
 private:
-  FFaDynCB1<int> myOkButtonClickedCB;
-  FFaDynCB1<int> myCancelButtonClickedCB;
-  FFaDynCB1<int> myApplyButtonClickedCB;
+  DynCB1 myOkButtonClickedCB;
+  DynCB1 myCancelButtonClickedCB;
+  DynCB1 myApplyButtonClickedCB;
 
-  FFaDynCB2<int,FFuComponentBase*> myOkButtonClickedWPtrCB;
-  FFaDynCB2<int,FFuComponentBase*> myCancelButtonClickedWPtrCB;
-  FFaDynCB2<int,FFuComponentBase*> myApplyButtonClickedWPtrCB;
+  DynCB2 myOkButtonClickedWPtrCB;
+  DynCB2 myCancelButtonClickedWPtrCB;
+  DynCB2 myApplyButtonClickedWPtrCB;
 };
 
 #endif

@@ -5,7 +5,12 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QGridLayout>
+
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtProperties.H"
+#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtDynamicProperties.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtTopologyView.H"
 #include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
@@ -66,60 +71,82 @@
 #endif
 #include <iostream>
 
-FuiQtProperties::FuiQtProperties(QWidget* parent,
-                                 int xpos, int ypos,
-                                 int width, int height,
-                                 const char* name)
-  : FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+
+FuiQtStartGuide::FuiQtStartGuide(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
 {
-  FFuQtLabelFrame* qFrame;
-  FFuQtIOField* qField[2];
+  myLogoImage = new FFuQtLabel(this);
+  myLogoBorderTop = new FFuQtLabel(this);
+  myLogoBorderRight = new FFuQtLabel(this);
+  myHeading = new FFuQtLabel(this);
+  myBorderRight = new FFuQtLabel(this);
+  myBorderBottom = new FFuQtLabel(this);
+  myBorderTop = new FFuQtLabel(this);
+
+  FFuQtLabel* qLabel;
+  myContentLabel = qLabel = new FFuQtLabel(this);
+  qLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+}
+
+
+class FuiQtProperty : public FFuQtWidget
+{
+public:
+  FuiQtProperty(QWidget* parent, const char* name) : FFuQtWidget(parent,name) {}
+};
+
+
+FuiQtProperties::FuiQtProperties(QWidget* parent, const char* name)
+  : FFuQtWidget(parent,name)
+{
+  myStartGuide = new FuiQtStartGuide(this);
+  myProperty = new FuiQtProperty(this,"Properties");
+
+  myTopology = new FuiQtProperty(this,"Topology");
+  myTopologyView = new FuiQtTopologyView(NULL);
 
   // Heading :
 
-  myTypeField = new FFuQtIOField(this);
-  myIdField = new FFuQtIOField(this);
-  myDescriptionField = new FFuQtLabelField(this);
-  myTagField = new FFuQtLabelField(this);
-  myTopologyView = new FuiQtTopologyView(this);
+  myHeading = new FuiQtProperty(this,"Heading");
+  myTypeField = new FFuQtIOField();
+  myIdField = new FFuQtIOField();
+  myDescriptionField = new FFuQtLabelField();
+  myTagField = new FFuQtLabelField();
+
   backBtn = new FFuQtToolButton(this,FFuaCmdItem::getCmdItem("cmdId_backward_select"));
   forwardBtn = new FFuQtToolButton(this,FFuaCmdItem::getCmdItem("cmdId_forward_select"));
   helpBtn = new FFuQtToolButton(this,FFuaCmdItem::getCmdItem("cmdId_contextHelp_select"));
 
   // Reference plane :
 
-  myRefPlanePosition = new FuiQtPositionData(this);
-  myRefPlaneSizeFrame = qFrame = new FFuQtLabelFrame(this);
-  myRefPlaneHeightField = qField[0] = new FFuQtIOField();
-  myRefPlaneWidthField  = qField[1] = new FFuQtIOField();
-  QGridLayout* gLayout = new QGridLayout(qFrame);
-  gLayout->addWidget(new QLabel("Height"), 0,0);
-  gLayout->addWidget(new QLabel("Width"),  1,0);
-  for (int i = 0; i < 2; i++)
-    gLayout->addWidget(qField[i], i,1);
+  myRefPlane = new FuiQtProperty(NULL,"Reference plane");
+  myRefPlanePosition = new FuiQtPositionData();
+  myRefPlaneHeightField = new FFuQtIOField();
+  myRefPlaneWidthField  = new FFuQtIOField();
 
   // HPs :
 
-  myHPRatioFrame = new FFuQtLabelFrame(this);
-  myHPRatioField = new FFuQtIOField(this);
+  myHPRatioFrame = new FFuQtLabelFrame();
+  myHPRatioField = new FFuQtIOField();
 
   // Advanced spring characteristics :
 
-  mySpringChar = new FuiQtSpringChar(this);
+  mySpringChar = new FuiQtSpringChar(NULL);
 
   // Spring :
 
-  mySpringForce    = new FuiQtSprDaForce(this);
-  mySpringDeflCalc = new FuiQtSpringDefCalc(this);
+  mySpring = new FuiQtProperty(NULL,"Axial spring");
+  mySpringForce = new FuiQtSprDaForce(NULL);
+  mySpringDeflCalc = new FuiQtSpringDefCalc(NULL);
 
   // Damper :
 
-  myDamperForce = new FuiQtSprDaForce(this);
+  myDamperForce = new FuiQtSprDaForce(NULL);
 
   // Part :
 
   FFuQtTabbedWidgetStack* qTabs;
-  myLinkTabs = qTabs = new FFuQtTabbedWidgetStack(this);
+  myLinkTabs = qTabs = new FFuQtTabbedWidgetStack(NULL);
   myLinkModelSheet   = new FuiQtLinkModelSheet(qTabs);
   myLinkOriginSheet  = new FuiQtLinkOriginSheet(qTabs);
   myLinkFEnodeSheet  = new FuiQtLinkNodeSheet(qTabs);
@@ -133,77 +160,70 @@ FuiQtProperties::FuiQtProperties(QWidget* parent,
   myAdvancedLinkOptsSheet = new FuiQtAdvancedLinkOptsSheet(qTabs);
   myNonlinearLinkOptsSheet = new FuiQtNonlinearLinkOptsSheet(qTabs);
 
-  // Beam and Shaft :
+  // Beam :
 
-  myShaftGeneralFrame         = new FFuQtLabelFrame(this);
-  myShaftCrossSectionDefLabel = new FFuQtLabel(this);
-  myShaftCrossSectionDefField = new FuiQtQueryInputField(this);
-  myShaftCrossSectionDefField->setTextForNoRefSelected("");
-  myShaftSDFrame              = new FFuQtLabelFrame(this);
-  myShaftSDMassField          = new FFuQtLabelField(this);
-  myShaftSDStiffnessField     = new FFuQtLabelField(this);
-  myShaftDPFrame              = new FFuQtLabelFrame(this);
-  myShaftDPStiffnessField     = new FFuQtLabelField(this);
-  myShaftDPMassField          = new FFuQtLabelField(this);
-  myShaftNoteALabel           = new FFuQtLabel(this);
-  myShaftNoteBLabel           = new FFuQtLabel(this);
-  myShaftNoteCLabel           = new FFuQtLabel(this);
-  myVisualize3DButton         = new FFuQtToggleButton(this);
-  myVisualize3DStartAngleField = new FFuQtLabelField(this);
-  myVisualize3DStopAngleField = new FFuQtLabelField(this);
-  myBeamOrientationFrame      = new FFuQtLabelFrame(this);
+  myBeam = new FuiQtProperty(NULL,"Beam");
+  myBeamCrossSectionDefField = new FuiQtQueryInputField(NULL,"Cross section:",
+                                                        true);
+  myBeamMassField   = new FFuQtLabelField();
+  myBeamLengthField = new FFuQtLabelField();
+  myBeamVisualize3DButton = new FFuQtToggleButton();
+  for (FFuLabelField*& field : myBeamVisualize3DFields)
+    field = new FFuQtLabelField();
+  myBeamOrientationFrame = new FFuQtLabelFrame();
   for (FFuLabelField*& field : myBeamLocalZField)
-    field = new FFuQtLabelField(this);
+    field = new FFuQtLabelField();
+  myBeamDynProps = new FuiQtDynamicProperties();
 
   // Turbine :
 
-  myTurbineWindRefFrame               = new FFuQtLabelFrame(this);
-  myTurbineWindRefTriadDefLabel       = new FFuQtLabel(this);
-  myTurbineWindRefTriadDefField       = new FuiQtQueryInputField(this);
-  myTurbineWindVertOffsetLabel        = new FFuQtLabel(this);
-  myTurbineWindVertOffsetField        = new FFuQtIOField(this);
-  myTurbineAdvTopologyFrame           = new FFuQtLabelFrame(this);
-  myTurbineYawPointTriadDefLabel      = new FFuQtLabel(this);
-  myTurbineYawPointTriadDefField      = new FuiQtQueryInputField(this);
-  myTurbineHubApexTriadDefLabel       = new FFuQtLabel(this);
-  myTurbineHubApexTriadDefField       = new FuiQtQueryInputField(this);
-  myTurbineHubPartDefLabel            = new FFuQtLabel(this);
-  myTurbineHubPartDefField            = new FuiQtQueryInputField(this);
-  myTurbineFirstBearingDefLabel       = new FFuQtLabel(this);
-  myTurbineFirstBearingDefField       = new FuiQtQueryInputField(this);
+  myTurbineWindRefFrame     = new FFuQtLabelFrame();
+  myTurbineAdvTopologyFrame = new FFuQtLabelFrame();
+  myTurbineWindVertOffsetField = new FFuQtIOField();
+  myTurbineFields[0] = new FuiQtQueryInputField(NULL,"Reference triad",true);
+  myTurbineFields[1] = new FuiQtQueryInputField(NULL,"Yaw point triad",true);
+  myTurbineFields[2] = new FuiQtQueryInputField(NULL,"Hub apex triad",true);
+  myTurbineFields[3] = new FuiQtQueryInputField(NULL,"Hub part triad",true);
+  myTurbineFields[4] = new FuiQtQueryInputField(NULL,"First bearing",true);
 
   // Generator :
 
-  myGeneratorTorqueRadioBtn   = new FFuQtRadioButton(this);
-  myGeneratorVelocityRadioBtn = new FFuQtRadioButton(this);
-  myGeneratorTorqueField      = new FuiQtQueryInputField(this);
-  myGeneratorVelocityField    = new FuiQtQueryInputField(this);
+  myGeneratorFrame            = new FFuQtLabelFrame();
+  myGeneratorTorqueRadioBtn   = new FFuQtRadioButton();
+  myGeneratorVelocityRadioBtn = new FFuQtRadioButton();
+  myGeneratorTorqueField      = new FuiQtQueryInputField(NULL);
+  myGeneratorVelocityField    = new FuiQtQueryInputField(NULL);
+
+  // Shaft :
+
+  myShaftCrossSectionDefField = new FuiQtQueryInputField(NULL,"Cross section:",
+                                                         true);
+  myShaftDynProps             = new FuiQtDynamicProperties();
+  myShaftNote                 = new FFuQtNotes();
 
   // Blades :
 
-  myBladePitchControlLabel    = new FFuQtLabel(this);
-  myBladePitchControlField    = new FuiQtQueryInputField(this);
-  myBladeFixedPitchToggle     = new FFuQtToggleButton(this);
-  myBladeIceFrame             = new FFuQtLabelFrame(this);
-  myBladeIceLayerToggle       = new FFuQtToggleButton(this);
-  myBladeIceThicknessField    = new FFuQtLabelField(this);
+  myBladePitchControlFrame    = new FFuQtLabelFrame();
+  myBladePitchControlField    = new FuiQtQueryInputField(NULL);
+  myBladeFixedPitchToggle     = new FFuQtToggleButton();
+  myBladeIceFrame             = new FFuQtLabelFrame();
+  myBladeIceLayerToggle       = new FFuQtToggleButton();
+  myBladeIceThicknessField    = new FFuQtLabelField();
 
   // Riser :
 
-  myRiserGeneralFrame         = new FFuQtLabelFrame(this);
-  myRiserInternalToDefLabel   = new FFuQtLabel(this);
-  myRiserInternalToDefField   = new FuiQtQueryInputField(this);
-  myRiserVisualize3DButton    = new FFuQtToggleButton(this);
-  myRiserVisualize3DStartAngleField = new FFuQtLabelField(this);
-  myRiserVisualize3DStopAngleField = new FFuQtLabelField(this);
-  myRiserMudFrame             = new FFuQtLabelFrame(this);
-  myRiserMudButton            = new FFuQtToggleButton(this);
-  myRiserMudDensityField      = new FFuQtLabelField(this);
-  myRiserMudLevelField        = new FFuQtLabelField(this);
+  myRiserInternalToDefField = new FuiQtQueryInputField(NULL,
+                                                       "Is internal to:",true);
+  myRiserVisualize3DStartAngleField = new FFuQtLabelField();
+  myRiserVisualize3DStopAngleField  = new FFuQtLabelField();
+  myRiserMudFrame             = new FFuQtLabelFrame();
+  myRiserMudButton            = new FFuQtToggleButton();
+  myRiserMudDensityField      = new FFuQtLabelField();
+  myRiserMudLevelField        = new FFuQtLabelField();
 
   // Joints :
 
-  myJointTabs = qTabs = new FFuQtTabbedWidgetStack(this);
+  myJointTabs = qTabs = new FFuQtTabbedWidgetStack(NULL);
   myJointSummary      = new FuiQtJointSummary(qTabs);
   myJointPosition     = new FuiQtPositionData(qTabs);
   myJointAdvancedTab  = new FuiQtJointTabAdvanced(qTabs);
@@ -212,17 +232,17 @@ FuiQtProperties::FuiQtProperties(QWidget* parent,
   for (FuiJointDOF*& dof : myJointDofs)
     dof = new FuiQtJointDOF(NULL);
 
-  mySwapTriadButton = new FFuQtPushButton(this);
-  myAddMasterButton = new FFuQtPushButton(this);
-  myRevMasterButton = new FFuQtPushButton(this);
+  mySwapTriadButton = new FFuQtPushButton();
+  myAddMasterButton = new FFuQtPushButton();
+  myRevMasterButton = new FFuQtPushButton();
 
   // Pipe surface :
 
-  myPipeRadiusField = new FFuQtLabelField(this);
+  myPipeRadiusField = new FFuQtLabelField();
 
   // Triad :
 
-  myTriadTabs = qTabs = new FFuQtTabbedWidgetStack(this);
+  myTriadTabs = qTabs = new FFuQtTabbedWidgetStack(NULL);
   myTriadSummary      = new FuiQtTriadSummary(qTabs);
   myTriadPosition     = new FuiQtPositionData(qTabs);
   myTriadResults      = new FuiQtTriadResults(qTabs);
@@ -232,171 +252,586 @@ FuiQtProperties::FuiQtProperties(QWidget* parent,
 
   // Load :
 
-  myMagnitudeLabel = new FFuQtLabelFrame(this);
-  myAttackPointFrame = new FFuQtLabelFrame(this);
-  myDirectionFrame = new FFuQtLabelFrame(this);
-  myAttackPointEditor = new FuiQtPointEditor(this);
-  myFromPointEditor = new FuiQtPointEditor(this);
-  myToPointEditor = new FuiQtPointEditor(this);
-  myFromPointLabel = new FFuQtLabel(this);
-  myToPointLabel = new FFuQtLabel(this);
-  myLoadMagnitude = new FuiQtQueryInputField(this);
+  myLoad = new FuiQtProperty(NULL,"Load");
+  myLoadMagnitude = new FuiQtQueryInputField(NULL);
+  myAttackPointEditor = new FuiQtPointEditor(NULL);
+  myFromPointEditor = new FuiQtPointEditor(NULL);
+  myToPointEditor = new FuiQtPointEditor(NULL);
 
   // Generic DB object :
 
-  myGenDBObjTypeLabel = new FFuQtLabel(this);
-  myGenDBObjTypeField = new FFuQtIOField(this);
-  myGenDBObjDefLabel = new FFuQtLabel(this);
-  myGenDBObjDefField = new FFuQtMemo(this);
+  myGenDBObject = new FuiQtProperty(NULL,"Generic DB object");
+  myGenDBObjTypeField = new FFuQtIOField();
+  myGenDBObjDefField = new FFuQtMemo();
 
   // File reference :
 
-  myFileReferenceBrowseField = new FFuQtFileBrowseField(this);
+  myFileReferenceBrowseField = new FFuQtFileBrowseField(NULL);
 
   // Tire :
 
-  myTireDataFileLabel    = new FFuQtLabel(this);
-  myTireDataFileField    = new FuiQtQueryInputField(this);
-  myBrowseTireFileButton = new FFuQtPushButton(this);
-  myRoadLabel            = new FFuQtLabel(this);
-  myRoadField            = new FuiQtQueryInputField(this);
-  myTireModelTypeLabel   = new FFuQtLabel(this);
-  myTireModelMenu        = new FFuQtOptionMenu(this);
-  mySpindelOffsetField   = new FFuQtLabelField(this);
+  myTire = new FuiQtProperty(NULL,"Tire");
+  myTireDataFileField    = new FuiQtQueryInputField(NULL);
+  myBrowseTireFileButton = new FFuQtPushButton();
+  myRoadField            = new FuiQtQueryInputField(NULL);
+  myTireModelMenu        = new FFuQtOptionMenu();
+  mySpindelOffset        = new FFuQtIOField();
 
   // Road :
 
-  myRoadFuncLabel        = new FFuQtLabel(this);
-  myRoadFuncField        = new FuiQtQueryInputField(this);
-  myRoadZShiftField      = new FFuQtLabelField(this);
-  myRoadXOffsetField     = new FFuQtLabelField(this);
-  myRoadZRotationField   = new FFuQtLabelField(this);
-
-  myUseFuncRoadRadio     = new FFuQtRadioButton(this);
-  myUseFileRoadRadio     = new FFuQtRadioButton(this);
-  myRoadDataFileLabel    = new FFuQtLabel(this);
-  myRoadDataFileField    = new FuiQtQueryInputField(this);
-  myBrowseRoadFileButton = new FFuQtPushButton(this);
+  myRoad = new FuiQtProperty(NULL,"Road");
+  myRoadFuncField        = new FuiQtQueryInputField(NULL);
+  for (FFuIOField*& fld : myRoadFields) fld = new FFuQtIOField();
+  myUseFuncRoadRadio     = new FFuQtRadioButton();
+  myUseFileRoadRadio     = new FFuQtRadioButton();
+  myRoadDataFileField    = new FuiQtQueryInputField(NULL);
+  myBrowseRoadFileButton = new FFuQtPushButton();
 
   // Beam material properties :
 
-  myMatPropRhoField      = new FFuQtLabelField(this);
-  myMatPropEField        = new FFuQtLabelField(this);
-  myMatPropNuField       = new FFuQtLabelField(this);
-  myMatPropGField        = new FFuQtLabelField(this);
-
-  // Sea State
-
-  mySeaStateSizeFrame = new FFuQtLabelFrame(this);
-  mySeaStatePositionFrame = new FFuQtLabelFrame(this);
-  mySeaStateVisualizationFrame = new FFuQtLabelFrame(this);
-  mySeaStateWidthField  = new FFuQtLabelField(this);
-  mySeaStateHeightField  = new FFuQtLabelField(this);
-  mySeaStateWidthPosField = new FFuQtLabelField(this);
-  mySeaStateHeightPosField = new FFuQtLabelField(this);
-  mySeaStateNumPoints = new FFuQtLabelField(this);
-  mySeaStateShowGridToggle = new FFuQtToggleButton(this);
-  mySeaStateShowSolidToggle = new FFuQtToggleButton(this);
+  myMatPropFrame    = new FFuQtLabelFrame();
+  myMatPropRhoField = new FFuQtLabelField();
+  myMatPropEField   = new FFuQtLabelField();
+  myMatPropNuField  = new FFuQtLabelField();
+  myMatPropGField   = new FFuQtLabelField();
 
   // Beam properties :
 
-  myBeamPropTabs = qTabs = new FFuQtTabbedWidgetStack(this);
+  myBeamPropTabs = qTabs = new FFuQtTabbedWidgetStack(NULL);
   myBeamPropSummary      = new FuiQtBeamPropSummary(qTabs);
   myBeamPropHydro        = new FuiQtBeamPropHydro(qTabs);
 
   // Strain rosette :
 
-  myStrRosTypeLabel      = new FFuQtLabel(this);
-  myStrRosTypeMenu       = new FFuQtOptionMenu(this);
-  myStrRosNodesField     = new FFuQtLabelField(this);
-  myStrRosEditNodesButton = new FFuQtPushButton(this);
-  myStrRosAngleField     = new FFuQtLabelField(this);
-  myStrRosEditDirButton  = new FFuQtPushButton(this);
-  myStrRosHeightField    = new FFuQtLabelField(this);
-  myStrRosUseFEHeightToggle = new FFuQtToggleButton(this);
-  myStrRosFlipZButton    = new FFuQtPushButton(this);
-  myStrRosEmodField      = new FFuQtLabelField(this);
-  myStrRosNuField        = new FFuQtLabelField(this);
-  myStrRosUseFEMatToggle = new FFuQtToggleButton(this);
-  myResetStartStrainsToggle = new FFuQtToggleButton(this);
-
-  myMaterialFrame        = new FFuQtLabelFrame(this);
-  myLayerFrame           = new FFuQtLabelFrame(this);
-  myOrientationFrame     = new FFuQtLabelFrame(this);
+  myStrainRosette = new FuiQtProperty(NULL,"Strain rosette");
+  myStrRosTypeMenu = new FFuQtOptionMenu();
+  myResetStartStrainsToggle = new FFuQtToggleButton();
+  myStrRosNodesField = new FFuQtIOField();
+  myStrRosEditNodesButton = new FFuQtPushButton();
+  myStrRosAngleField = new FFuQtLabelField();
+  myStrRosEditDirButton = new FFuQtPushButton();
+  myStrRosUseFEHeightToggle = new FFuQtToggleButton();
+  myStrRosHeightField = new FFuQtLabelField();
+  myStrRosFlipZButton = new FFuQtPushButton();
+  myStrRosUseFEMatToggle = new FFuQtToggleButton();
+  myStrRosEmodField = new FFuQtLabelField();
+  myStrRosNuField = new FFuQtLabelField();
 
   // Element group :
 
-  myFatigueFrame  = new FFuQtLabelFrame(this);
-  myFatigueToggle = new FFuQtToggleButton(this);
+  myFatigueFrame = new FFuQtLabelFrame();
+  myFatigueToggle = new FFuQtToggleButton();
 #ifdef FT_HAS_GRAPHVIEW
-  mySNSelector    = new FuiQtSNCurveSelector(this);
+  mySNSelector = new FuiQtSNCurveSelector(NULL);
 #endif
-  myScfField      = new FFuQtLabelField(this);
+  myScfField = new FFuQtLabelField();
 
   // RAO vessel motion :
 
-  myRAOFileLabel        = new FFuQtLabel(this);
-  myRAOFileField        = new FuiQtQueryInputField(this);
-  myBrowseRAOFileButton = new FFuQtPushButton(this);
-  myWaveFuncLabel       = new FFuQtLabel(this);
-  myWaveFuncField       = new FuiQtQueryInputField(this);
-  myWaveDirLabel        = new FFuQtLabel(this);
-  myWaveDirMenu         = new FFuQtOptionMenu(this);
-  myMotionScaleLabel    = new FFuQtLabel(this);
-  myMotionScaleField    = new FuiQtQueryInputField(this);
+  myRAO = new FuiQtProperty(NULL,"RAO");
+  myRAOFileField        = new FuiQtQueryInputField(NULL);
+  myBrowseRAOFileButton = new FFuQtPushButton();
+  myWaveFuncField       = new FuiQtQueryInputField(NULL);
+  myWaveDirMenu         = new FFuQtOptionMenu();
+  myMotionScaleField    = new FuiQtQueryInputField(NULL);
+
+  // Sea state :
+
+  mySeaState = new FuiQtProperty(NULL,"Sea state");
+  mySeaStateWidthField  = new FFuQtLabelField();
+  mySeaStateHeightField  = new FFuQtLabelField();
+  mySeaStateWidthPosField = new FFuQtLabelField();
+  mySeaStateHeightPosField = new FFuQtLabelField();
+  mySeaStateNumPoints = new FFuQtLabelField();
+  mySeaStateShowGridToggle = new FFuQtToggleButton();
+  mySeaStateShowSolidToggle = new FFuQtToggleButton();
 
   // Simulation event :
 
-  myEventProbability = new FFuQtLabelField(this);
-  mySelectEventButton = new FFuQtPushButton(this);
-  myActiveEventLabel = new FFuQtLabel(this);
+  mySimEvent = new FuiQtProperty(NULL,"Simulation event");
+  myEventProbability = new FFuQtLabelField();
+  mySelectEventButton = new FFuQtPushButton();
+  myActiveEventLabel = new FFuQtLabel();
 
   // Subassembly :
 
-  mySubassFileField = new FFuQtFileBrowseField(this);
-  mySubassPosition = new FuiQtPositionData(this);
-  mySubassMassField = new FFuQtLabelField(this);
-  mySubassCoGFrame = new FFuQtLabelFrame(this);
-  mySubassCoGField = new FuiQt3DPoint(this);
-  mySubassLengthField = new FFuQtLabelField(this);
+  mySubassembly = new FuiQtProperty(NULL,"Subassembly");
+  mySubassFileField = new FFuQtFileBrowseField(NULL);
+  mySubassPosition = new FuiQtPositionData(NULL);
+  mySubassMassField = new FFuQtLabelField();
+  mySubassCoGFrame = new FFuQtLabelFrame();
+  mySubassCoGField = new FuiQt3DPoint(NULL);
+  mySubassLengthField = new FFuQtLabelField();
+  myVisualize3DButton = new FFuQtToggleButton();
 
   // Function properties
 
-  myFunctionProperties = new FuiQtFunctionProperties(this);
+  myFunctionProperties = new FuiQtFunctionProperties(NULL);
 
   // Control system properties
 
-  myCtrlElementProperties = new FuiQtCtrlElemProperties(this);
+  myCtrlElementProperties = new FuiQtCtrlElemProperties(NULL);
 #ifdef FT_HAS_EXTCTRL
-  myExtCtrlSysProperties = new FuiQtExtCtrlSysProperties(this);
+  myExtCtrlSysProperties = new FuiQtExtCtrlSysProperties(NULL);
 #endif
 
   // Animation, graph and curve properties
 
-  myAnimationDefine = new FuiQtAnimationDefine(this);
+  myAnimationDefine = new FuiQtAnimationDefine(NULL);
 #ifdef FT_HAS_GRAPHVIEW
-  myGraphDefine = new FuiQtGraphDefine(this);
-  myCurveDefine = new FuiQtCurveDefine(this);
+  myGraphDefine = new FuiQtGraphDefine(NULL);
+  myCurveDefine = new FuiQtCurveDefine(NULL);
 #endif
-
-  // Start guide
-
-  mySGLogoImage = new FFuQtLabel(this);
-  mySGLogoBorderTop = new FFuQtLabel(this);
-  mySGLogoBorderRight = new FFuQtLabel(this);
-  mySGFillWhite = new FFuQtLabel(this);
-  mySGHeading = new FFuQtLabel(this);
-  mySGBorderRight = new FFuQtLabel(this);
-  mySGBorderBottom = new FFuQtLabel(this);
-  mySGBorderTop = new FFuQtLabel(this);
-
-  FFuQtLabel* qlab;
-  mySGContentLabel = qlab = new FFuQtLabel(this);
-  qlab->setAlignment(Qt::AlignTop|Qt::AlignLeft);
 
   // Parent class component initiation
 
-  this->FuiProperties::initWidgets();
+  this->initWidgets();
+
+  ////////////////////////////////////////////////////////
+  // Positioning of property widgets using layout managers
+  ////////////////////////////////////////////////////////
+
+  QBoxLayout* layout;
+  QBoxLayout* layout2;
+  QGridLayout* gLayout;
+
+  // Heading
+
+  layout = new QHBoxLayout(myHeading->getQtWidget());
+  layout->setContentsMargins(2,0,0,0);
+  layout->addWidget(myTypeField->getQtWidget(),5);
+  layout->addWidget(myIdField->getQtWidget(),1);
+  layout->addWidget(myDescriptionField->getQtWidget(),10);
+  layout->addWidget(myTagField->getQtWidget(),5);
+
+  // Reference plane
+
+  QGroupBox* qRefPlaneSizeFrame = new QGroupBox("Size");
+  qRefPlaneSizeFrame->setMaximumWidth(100);
+  gLayout = new QGridLayout(qRefPlaneSizeFrame);
+  gLayout->setContentsMargins(5,0,5,5);
+  gLayout->addWidget(new QLabel("Height"), 0,0);
+  gLayout->addWidget(new QLabel("Width"),  1,0);
+  gLayout->addWidget(myRefPlaneHeightField->getQtWidget(), 0,1);
+  gLayout->addWidget(myRefPlaneWidthField->getQtWidget(),  1,1);
+
+  layout = new QVBoxLayout(myRefPlane->getQtWidget());
+  layout->setContentsMargins(0,0,0,0);
+  layout->setSpacing(2);
+  layout->addWidget(myRefPlanePosition->getQtWidget(),3);
+  layout->addWidget(qRefPlaneSizeFrame,2);
+
+  // Higher Pairs
+
+  layout = new QVBoxLayout(myHPRatioFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myHPRatioField->getQtWidget());
+
+  // Axial spring
+
+  layout = new QHBoxLayout(mySpring->getQtWidget());
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(mySpringDeflCalc->getQtWidget(),1,Qt::AlignTop);
+  layout->addWidget(mySpringForce->getQtWidget(),1,Qt::AlignTop);
+
+  // Beam
+
+  QLayout* layout3 = new QHBoxLayout();
+  layout3->setContentsMargins(0,0,0,0);
+  for (FFuLabelField* field : myBeamVisualize3DFields)
+    layout3->addWidget(field->getQtWidget());
+
+  QGroupBox* qGeneral = new QGroupBox("General");
+  layout = new QVBoxLayout(qGeneral);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myBeamCrossSectionDefField->getQtWidget());
+  layout->addStretch(1);
+  layout->addWidget(myBeamMassField->getQtWidget());
+  layout->addWidget(myBeamLengthField->getQtWidget());
+  layout->addStretch(1);
+  layout->addWidget(myBeamVisualize3DButton->getQtWidget());
+  layout->addLayout(layout3);
+
+  layout = new QHBoxLayout(myBeamOrientationFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  for (FFuLabelField* field : myBeamLocalZField)
+    layout->addWidget(field->getQtWidget());
+
+  layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(myBeamDynProps->getQtWidget());
+  layout2->addWidget(myBeamOrientationFrame->getQtWidget());
+  layout2->addStretch(1);
+
+  layout = new QHBoxLayout(myBeam->getQtWidget());
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qGeneral,1);
+  layout->addLayout(layout2,2);
+
+  // Turbine
+
+  layout = new QVBoxLayout(myTurbineWindRefFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myTurbineFields.front()->getQtWidget());
+  layout->addWidget(new QLabel("Vertical offset"));
+  layout->addWidget(myTurbineWindVertOffsetField->getQtWidget());
+
+  gLayout = new QGridLayout(myTurbineAdvTopologyFrame->getQtWidget());
+  gLayout->setContentsMargins(5,0,5,5);
+  for (int r = 0; r < 2; r++)
+    for (int c = 0; c < 2; c++)
+      gLayout->addWidget(myTurbineFields[1+r+2*c]->getQtWidget(), r,c);
+
+  QWidget* qTurbine = new QWidget();
+  layout = new QHBoxLayout(qTurbine);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(myTurbineWindRefFrame->getQtWidget(),1);
+  layout->addWidget(myTurbineAdvTopologyFrame->getQtWidget(),2);
+
+  // Generator
+
+  gLayout = new QGridLayout(myGeneratorFrame->getQtWidget());
+  gLayout->setContentsMargins(5,0,5,5);
+  gLayout->addWidget(myGeneratorTorqueRadioBtn->getQtWidget(), 0,0);
+  gLayout->addWidget(myGeneratorVelocityRadioBtn->getQtWidget(), 1,0);
+  gLayout->addWidget(myGeneratorTorqueField->getQtWidget(), 0,1);
+  gLayout->addWidget(myGeneratorVelocityField->getQtWidget(), 1,1);
+
+  // Shaft
+
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(myRiserMudFrame->getQtWidget());
+  layout2->addWidget(myShaftDynProps->getQtWidget());
+
+  QWidget* qShaftRight = new QWidget();
+  layout = new QVBoxLayout(qShaftRight);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addLayout(layout2);
+  layout->addWidget(myShaftNote->getQtWidget());
+  layout->addStretch(1);
+
+  // Blades
+
+  layout = new QVBoxLayout(myBladePitchControlFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myBladePitchControlField->getQtWidget());
+  layout->addWidget(myBladeFixedPitchToggle->getQtWidget());
+
+  layout = new QVBoxLayout(myBladeIceFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myBladeIceLayerToggle->getQtWidget());
+  layout->addWidget(myBladeIceThicknessField->getQtWidget());
+
+  // Riser
+
+  layout = new QVBoxLayout(myRiserMudFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myRiserMudButton->getQtWidget());
+  layout->addWidget(myRiserMudDensityField->getQtWidget());
+  layout->addWidget(myRiserMudLevelField->getQtWidget());
+
+  // Load
+
+  QGroupBox* qMagnitude = new QGroupBox("Magnitude");
+  layout = new QVBoxLayout(qMagnitude);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myLoadMagnitude->getQtWidget());
+
+  QGroupBox* qLoadTarget = new QGroupBox("Load target point");
+  layout = new QVBoxLayout(qLoadTarget);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myAttackPointEditor->getQtWidget());
+
+  QGroupBox* qDirection = new QGroupBox("Direction");
+  gLayout = new QGridLayout(qDirection);
+  gLayout->setContentsMargins(5,0,5,5);
+  gLayout->setRowStretch(1,1);
+  gLayout->addWidget(new QLabel("From"), 0,0);
+  gLayout->addWidget(new QLabel("To"), 0,1);
+  gLayout->addWidget(myFromPointEditor->getQtWidget(), 1,0);
+  gLayout->addWidget(myToPointEditor->getQtWidget(), 1,1);
+
+  layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(qMagnitude);
+  layout2->addWidget(qLoadTarget);
+
+  layout = new QHBoxLayout(myLoad->getQtWidget());
+  layout->setContentsMargins(0,0,0,0);
+  layout->addLayout(layout2);
+  layout->addWidget(qDirection);
+
+  // Generic DB object
+
+  gLayout = new QGridLayout(myGenDBObject->getQtWidget());
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->setVerticalSpacing(2);
+  gLayout->setColumnStretch(1,1);
+  gLayout->setRowStretch(1,1);
+  gLayout->addWidget(new QLabel("Type"), 0,0);
+  gLayout->addWidget(new QLabel("Definition"), 1,0, Qt::AlignTop);
+  gLayout->addWidget(myGenDBObjTypeField->getQtWidget(), 0,1);
+  gLayout->addWidget(myGenDBObjDefField->getQtWidget(), 1,1);
+
+  // Tire
+
+  gLayout = new QGridLayout(myTire->getQtWidget());
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->setColumnStretch(1,1);
+  gLayout->addWidget(new QLabel("Tire file"), 0,0);
+  gLayout->addWidget(new QLabel("Road"), 1,0);
+  gLayout->addWidget(new QLabel("Tire model"), 2,0, Qt::AlignVCenter);
+  gLayout->addWidget(new QLabel("Z offset"), 3,0, Qt::AlignVCenter);
+  gLayout->addWidget(myTireDataFileField->getQtWidget(), 0,1);
+  gLayout->addWidget(myRoadField->getQtWidget(), 1,1);
+  gLayout->addWidget(myTireModelMenu->getQtWidget(), 2,1, Qt::AlignVCenter);
+  gLayout->addWidget(mySpindelOffset->getQtWidget(), 3,1, Qt::AlignVCenter);
+  gLayout->addWidget(myBrowseTireFileButton->getQtWidget(), 0,2);
+
+  // Road
+
+  gLayout = new QGridLayout(myRoad->getQtWidget());
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->setVerticalSpacing(2);
+  gLayout->setColumnStretch(2,1);
+  gLayout->addWidget(myUseFuncRoadRadio->getQtWidget(), 0,0,1,2);
+  gLayout->addWidget(myUseFileRoadRadio->getQtWidget(), 5,0,1,2, Qt::AlignVCenter);
+  gLayout->addWidget(new QLabel("      Road function"), 1,0);
+  gLayout->addWidget(new QLabel("      Road file"), 6,0, Qt::AlignVCenter);
+  gLayout->addWidget(myRoadFuncField->getQtWidget(), 1,1,1,3);
+  gLayout->addWidget(new QLabel("Rotation about Z-axis"), 2,1);
+  gLayout->addWidget(new QLabel("Vertical shift"), 3,1);
+  gLayout->addWidget(new QLabel("Horizontal offset"), 4,1);
+  for (size_t i = 0; i < 3; i++)
+    gLayout->addWidget(myRoadFields[i]->getQtWidget(), 2+i,2);
+  gLayout->addWidget(myRoadDataFileField->getQtWidget(), 6,1,1,2, Qt::AlignVCenter);
+  gLayout->addWidget(myBrowseRoadFileButton->getQtWidget(), 6,3, Qt::AlignVCenter);
+
+  // Material properties
+
+  layout = new QVBoxLayout(myMatPropFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myMatPropRhoField->getQtWidget());
+  layout->addWidget(myMatPropEField->getQtWidget());
+  layout->addWidget(myMatPropNuField->getQtWidget());
+  layout->addWidget(myMatPropGField->getQtWidget());
+
+  // Strain rosette
+
+  QWidget* qRosette = new QWidget();
+  gLayout = new QGridLayout(qRosette);
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->addWidget(new QLabel("Rosette type"), 0,0);
+  gLayout->addWidget(new QLabel("Nodes"), 1,0);
+  gLayout->addWidget(myStrRosTypeMenu->getQtWidget(), 0,1);
+  gLayout->addWidget(myStrRosNodesField->getQtWidget(), 1,1);
+  gLayout->addWidget(myResetStartStrainsToggle->getQtWidget(), 0,2);
+  gLayout->addWidget(myStrRosEditNodesButton->getQtWidget(), 1,2);
+
+  QGroupBox* qOrient = new QGroupBox("Orientation");
+  layout = new QHBoxLayout(qOrient);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myStrRosAngleField->getQtWidget());
+  layout->addWidget(myStrRosEditDirButton->getQtWidget());
+
+  QGroupBox* qLayerPos = new QGroupBox("Layer position");
+  layout = new QVBoxLayout(qLayerPos);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myStrRosUseFEHeightToggle->getQtWidget());
+  layout->addWidget(myStrRosHeightField->getQtWidget());
+  layout->addWidget(myStrRosFlipZButton->getQtWidget());
+
+  QGroupBox* qMaterial = new QGroupBox("Material");
+  layout = new QVBoxLayout(qMaterial);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(myStrRosUseFEMatToggle->getQtWidget());
+  layout->addWidget(myStrRosEmodField->getQtWidget());
+  layout->addWidget(myStrRosNuField->getQtWidget());
+
+  gLayout = new QGridLayout(myStrainRosette->getQtWidget());
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->addWidget(qRosette, 0,0,1,2);
+  gLayout->addWidget(qOrient, 1,0,1,2);
+  gLayout->addWidget(qLayerPos, 2,0);
+  gLayout->addWidget(qMaterial, 2,1);
+
+  gLayout = new QGridLayout(myFatigueFrame->getQtWidget());
+  gLayout->setContentsMargins(5,0,5,5);
+  gLayout->setHorizontalSpacing(20);
+  gLayout->setColumnStretch(0,3);
+  gLayout->setColumnStretch(1,2);
+  gLayout->addWidget(myFatigueToggle->getQtWidget(), 0,0,1,2);
+#ifdef FT_HAS_GRAPHVIEW
+  gLayout->addWidget(mySNSelector->getQtWidget(), 1,0);
+#endif
+  gLayout->addWidget(myScfField->getQtWidget(), 1,1);
+
+  // RAO vessel motion
+
+  gLayout = new QGridLayout(myRAO->getQtWidget());
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->setColumnStretch(1,1);
+  gLayout->addWidget(new QLabel("RAO file"), 0,0);
+  gLayout->addWidget(new QLabel("Wave function"), 1,0);
+  gLayout->addWidget(new QLabel("Wave direction"), 1,2);
+  gLayout->addWidget(new QLabel("Motion scale"), 2,0);
+  gLayout->addWidget(myRAOFileField->getQtWidget(), 0,1,1,2);
+  gLayout->addWidget(myBrowseRAOFileButton->getQtWidget(), 0,3);
+  gLayout->addWidget(myWaveFuncField->getQtWidget(), 1,1);
+  gLayout->addWidget(myWaveDirMenu->getQtWidget(), 1,3);
+  gLayout->addWidget(myMotionScaleField->getQtWidget(), 2,1,1,3);
+
+  // Sea state
+
+  QGroupBox* qSeaPos = new QGroupBox("Position");
+  layout = new QVBoxLayout(qSeaPos);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(mySeaStateWidthPosField->getQtWidget());
+  layout->addWidget(mySeaStateHeightPosField->getQtWidget());
+
+  QGroupBox* qSeaSize = new QGroupBox("Size");
+  layout = new QVBoxLayout(qSeaSize);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(mySeaStateWidthField->getQtWidget());
+  layout->addWidget(mySeaStateHeightField->getQtWidget());
+
+  QGroupBox* qSeaViz = new QGroupBox("Visualization");
+  layout = new QVBoxLayout(qSeaViz);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(mySeaStateNumPoints->getQtWidget());
+  layout->addWidget(mySeaStateShowSolidToggle->getQtWidget(),0,Qt::AlignTop);
+  layout->addWidget(mySeaStateShowGridToggle->getQtWidget(),0,Qt::AlignTop);
+
+  gLayout = new QGridLayout(mySeaState->getQtWidget());
+  gLayout->setContentsMargins(0,0,0,0);
+  gLayout->addWidget(qSeaPos, 0,0);
+  gLayout->addWidget(qSeaSize, 1,0);
+  gLayout->addWidget(qSeaViz, 0,1,2,1);
+
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(myEventProbability->getQtWidget(),1);
+  layout2->addStretch(1);
+  layout = new QVBoxLayout(mySimEvent->getQtWidget());
+  layout->setContentsMargins(0,0,0,0);
+  layout->addLayout(layout2);
+  layout->addWidget(mySelectEventButton->getQtWidget());
+  layout->addWidget(myActiveEventLabel->getQtWidget());
+
+  // Subassembly
+
+  layout = new QVBoxLayout(mySubassCoGFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(mySubassCoGField->getQtWidget());
+
+  layout3 = new QHBoxLayout();
+  layout3->setContentsMargins(0,0,0,0);
+  layout3->addWidget(myRiserVisualize3DStartAngleField->getQtWidget());
+  layout3->addWidget(myRiserVisualize3DStopAngleField->getQtWidget());
+
+  QWidget* qLeft = new QWidget();
+  layout = new QVBoxLayout(qLeft);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(myBladePitchControlFrame->getQtWidget());
+  layout->addWidget(myShaftCrossSectionDefField->getQtWidget());
+  layout->addWidget(myRiserInternalToDefField->getQtWidget());
+  layout->addStretch(1);
+  layout->addWidget(mySubassMassField->getQtWidget());
+  layout->addWidget(mySubassLengthField->getQtWidget());
+  layout->addStretch(1);
+  layout->addWidget(mySubassCoGFrame->getQtWidget());
+  layout->addWidget(myBladeIceFrame->getQtWidget());
+  layout->addStretch(1);
+  layout->addWidget(myVisualize3DButton->getQtWidget());
+  layout->addLayout(layout3);
+
+  QWidget* qRight = new QWidget();
+  layout = new QVBoxLayout(qRight);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(qShaftRight);
+  layout->addWidget(mySubassPosition->getQtWidget());
+  layout->addWidget(qTurbine);
+  layout->addWidget(myGeneratorFrame->getQtWidget());
+  layout->addStretch(1);
+
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->setSpacing(15);
+  layout2->addWidget(qLeft);
+  layout2->addWidget(qRight);
+  layout = new QVBoxLayout(mySubassembly->getQtWidget());
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(mySubassFileField->getQtWidget());
+  layout->addLayout(layout2);
+
+  // Topology view
+
+  layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(mySwapTriadButton->getQtWidget());
+  layout2->addWidget(myAddMasterButton->getQtWidget());
+  layout2->addWidget(myRevMasterButton->getQtWidget());
+  layout = new QVBoxLayout(myTopology->getQtWidget());
+  layout->setContentsMargins(2,0,0,0);
+  layout->addWidget(myTopologyView->getQtWidget());
+  layout->addLayout(layout2);
+
+  // Property panel
+
+  layout = new QHBoxLayout(myProperty->getQtWidget());
+  layout->setContentsMargins(2,2,4,0);
+  layout->addWidget(myRefPlane->getQtWidget());
+  layout->addWidget(myHPRatioFrame->getQtWidget(),0,Qt::AlignLeft|Qt::AlignTop);
+  layout->addWidget(mySpringChar->getQtWidget());
+  layout->addWidget(mySpring->getQtWidget());
+  layout->addWidget(myDamperForce->getQtWidget(),0,Qt::AlignTop);
+  layout->addWidget(myLinkTabs->getQtWidget());
+  layout->addWidget(myTriadTabs->getQtWidget());
+  layout->addWidget(myJointTabs->getQtWidget());
+  layout->addWidget(myPipeRadiusField->getQtWidget(),0,Qt::AlignLeft|Qt::AlignTop);
+  layout->addWidget(myBeam->getQtWidget());
+  layout->addWidget(myLoad->getQtWidget());
+  layout->addWidget(myGenDBObject->getQtWidget());
+  layout->addWidget(myFileReferenceBrowseField->getQtWidget(),0,Qt::AlignTop);
+  layout->addWidget(myTire->getQtWidget());
+  layout->addWidget(myRoad->getQtWidget());
+  layout->addWidget(myMatPropFrame->getQtWidget(),0,Qt::AlignLeft|Qt::AlignTop);
+  layout->addWidget(myBeamPropTabs->getQtWidget());
+  layout->addWidget(myStrainRosette->getQtWidget());
+  layout->addWidget(myFatigueFrame->getQtWidget(),0,Qt::AlignTop);
+  layout->addWidget(myRAO->getQtWidget(),0,Qt::AlignTop);
+  layout->addWidget(mySeaState->getQtWidget());
+  layout->addWidget(mySimEvent->getQtWidget());
+  layout->addWidget(mySubassembly->getQtWidget());
+
+  layout->addWidget(myFunctionProperties->getQtWidget());
+  layout->addWidget(myCtrlElementProperties->getQtWidget());
+#ifdef FT_HAS_EXTCTRL
+  layout->addWidget(myExtCtrlSysProperties->getQtWidget());
+#endif
+  layout->addWidget(myAnimationDefine->getQtWidget());
+#ifdef FT_HAS_GRAPHVIEW
+  layout->addWidget(myGraphDefine->getQtWidget());
+  layout->addWidget(myCurveDefine->getQtWidget());
+#endif
+
+  myHeading->popDown();
+  myProperty->popDown();
+}
+
+
+void FuiQtProperties::showEvent(QShowEvent* e)
+{
+  this->QWidget::showEvent(e);
+  this->updateUIValues();
+}
+
+
+void FuiQtProperties::resizeEvent(QResizeEvent* e)
+{
+  this->QWidget::resizeEvent(e);
+  this->placeWidgets(this->width(),this->height());
 }
 
 
@@ -477,7 +912,7 @@ static void onURLActivated(const std::string& url)
 }
 
 
-bool FuiQtProperties::initStartGuide()
+bool FuiQtStartGuide::initWidgets()
 {
   // Load HTML file
   QString appPath = QApplication::applicationDirPath() + "/Doc/";
@@ -497,21 +932,20 @@ bool FuiQtProperties::initStartGuide()
   // Change all relative local paths
   strData.replace(" src='", " src='" + appPath);
   // Set fields
-  mySGLogoImage->setPixMap(startGuideLogo_xpm,true);
-  mySGHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.1</b></i></font>");
-  mySGContentLabel->setLabel(strData.toStdString());
-  mySGContentLabel->setLinkActivatedCB(FFaDynCB1S(onURLActivated,const std::string&));
-  mySGLogoBorderRight->setPixMap(startGuideBorderRight_xpm,true);
+  myLogoImage->setPixMap(startGuideLogo_xpm,true);
+  myHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.1</b></i></font>");
+  myContentLabel->setLabel(strData.toStdString());
+  myContentLabel->setLinkActivatedCB(FFaDynCB1S(onURLActivated,const std::string&));
+  myLogoBorderRight->setPixMap(startGuideBorderRight_xpm,true);
   FFuaPalette pal;
   pal.setStdBackground(255,255,255);
-  mySGFillWhite->setColors(pal);
-  mySGContentLabel->setColors(pal);
-  mySGBorderTop->setPixMap(startGuideBorderTop_xpm,true);
+  myContentLabel->setColors(pal);
+  myBorderTop->setPixMap(startGuideBorderTop_xpm,true);
   pal.setStdBackground(130,135,144);
-  mySGBorderRight->setColors(pal);
-  mySGBorderBottom->setColors(pal);
+  myBorderRight->setColors(pal);
+  myBorderBottom->setColors(pal);
   pal.setStdBackground(113,178,254);
-  mySGLogoBorderTop->setColors(pal);
+  myLogoBorderTop->setColors(pal);
   return fileOk;
 }
 

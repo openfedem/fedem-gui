@@ -14,7 +14,7 @@
 
 class FuiSimModelRDBListView;
 class FuiRDBListView;
-class FFuLabel;
+class FFuNotes;
 class FFuDialogButtons;
 
 
@@ -47,7 +47,7 @@ public:
   FuiRDBListView*         lvPos;
 
 protected:
-  FFuLabel*         notesText;
+  FFuNotes*         notes;
   FFuDialogButtons* dialogButtons;
 
 private:

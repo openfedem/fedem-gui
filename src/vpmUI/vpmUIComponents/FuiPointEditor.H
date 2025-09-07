@@ -8,22 +8,18 @@
 #ifndef FUI_POINT_EDITOR_H
 #define FUI_POINT_EDITOR_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
 class Fui3DPoint;
-class FFuLabel;
-class FFuIOField;
+class FFuLabelField;
 class FFuPushButton;
 class FaVec3;
 
 
-class FuiPointEditor : public virtual FFuMultUIComponent
+class FuiPointEditor : public virtual FFuComponentBase
 {
 public:
-  FuiPointEditor() { IAmShowingOnWhat = true; }
-  virtual ~FuiPointEditor() {}
-
   // Callbacks :
 
   void setViewWhatCB    (const FFaDynCB1<bool>& aDynCB);// Highlight when True
@@ -52,27 +48,23 @@ public:
   virtual void setSensitivity(bool isSensitive);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
   // Shadow Pt's from Subclass,
   // Subclass is responsible to set them up:
 
-  FFuLabel      * myOnLabel;
-  FFuIOField    * myIdField;
-  FFuPushButton * myViewWhatButton;
-  Fui3DPoint    * myPointUI;
-  FFuPushButton * myPickButton;
-  FFuPushButton * myViewPointButton;
-  FFuPushButton * myApplyButton;
+  FFuLabelField* myIdField;
+  FFuPushButton* myViewWhatButton;
+  Fui3DPoint*    myPointUI;
+  FFuPushButton* myPickButton;
+  FFuPushButton* myViewPointButton;
+  FFuPushButton* myApplyButton;
 
 private:
   // Internal methods for rerouting of Callbacks
   void onMyViewWhatTouched();
   void onMyViewPointTouched();
   void onMyApplyButtonPressed();
-
-  bool IAmShowingOnWhat;
 
   // Callback Objects
 

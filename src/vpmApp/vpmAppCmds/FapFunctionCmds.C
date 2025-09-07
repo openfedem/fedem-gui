@@ -27,6 +27,7 @@ void convertToEngine(FmMathFuncBase::FuncUse use);
 
 #define LAMBDA_CREATE_SPRCHAR(USE) FFaDynCB0S([](){ createSpringChar(FmSpringChar::USE); })
 #define LAMBDA_CREATE_FUNCTION(USE) FFaDynCB0S([](){ createFunc(FmMathFuncBase::USE); })
+#define LAMBDA_CREATE_WAVE_FUNCTION FFaDynCB0S([](){ createFunc(FmMathFuncBase::WAVE_FUNCTION,true); })
 #define LAMBDA_CONVERT_FUNCTION(USE) FFaDynCB0S([](){ convertFunc(FmMathFuncBase::USE); })
 #define LAMBDA_CONVERT_ENGINE(USE) FFaDynCB0S([](){ convertToEngine(FmMathFuncBase::USE); })
 
@@ -120,7 +121,7 @@ void FapFunctionCmds::init()
   i = new FFuaCmdItem("cmdId_function_WaveFunction");
   i->setText("Sea wave function");
   i->setSmallIcon(f_of_xt_xpm);
-  i->setActivatedCB(LAMBDA_CREATE_FUNCTION(WAVE_FUNCTION));
+  i->setActivatedCB(LAMBDA_CREATE_WAVE_FUNCTION);
   i->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModelEditable,bool&));
 
   i = new FFuaCmdItem("cmdId_function_CurrFunction");

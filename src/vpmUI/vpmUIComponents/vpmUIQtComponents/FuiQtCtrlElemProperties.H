@@ -8,19 +8,19 @@
 #ifndef FUI_QT_CTRL_ELEM_PROPERTIES_H
 #define FUI_QT_CTRL_ELEM_PROPERTIES_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiCtrlElemProperties.H"
 
 
-class FuiQtCtrlElemProperties : public virtual FFuQtMultUIComponent,
-                                public FuiCtrlElemProperties
+class FuiQtCtrlElemProperties : public FFuQtWidget, public FuiCtrlElemProperties
 {
 public:
   FuiQtCtrlElemProperties(QWidget* parent);
-  virtual ~FuiQtCtrlElemProperties() {}
 
-  virtual void setSensitivity(bool sensitive)
-  { this->FuiCtrlElemProperties::setSensitivity(sensitive); }
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiCtrlElemProperties::setSensitivity(isSensitive);
+  }
 };
 
 #endif

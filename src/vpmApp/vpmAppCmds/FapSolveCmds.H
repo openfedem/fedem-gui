@@ -24,9 +24,6 @@ public:
   static void reduceAllParts();
   static void solveDynamics();
   static void solveEvents();
-#ifdef FT_HAS_NCODE
-  static void solveDutyCycle();
-#endif
   static void solveInCloud();
 
   // batch-solve preparators
@@ -54,9 +51,6 @@ private:
   static void solveStressOnPart(); // group sensitive
   static void solveRosetteOnPart();
   static void solveStrainCoatOnPart(); // group sensitive
-#ifdef FT_HAS_NCODE
-  static void solveFEFatigueOnPart(); // group sensitive, runs on complete part
-#endif
 
   static void checkRunningCloudJob();
 

@@ -5,22 +5,33 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTTRIADSUMMARY_H
-#define FUIQTTRIADSUMMARY_H
+#ifndef FUI_QT_TRIAD_SUMMARY_H
+#define FUI_QT_TRIAD_SUMMARY_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiTriadSummary.H"
 
+class QGroupBox;
 
-class FuiQtTriadSummary : public virtual FFuQtMultUIComponent,
-			  public FuiTriadSummary
+
+class FuiQtTriadSummary : public FFuQtWidget, public FuiTriadSummary
 {
 public:
-  FuiQtTriadSummary(QWidget* parent = 0,
-		    int xpos = 100, int ypos = 100,
-		    int width = 800, int height = 35,
-		    const char* name="TriadSummary");
-  virtual ~FuiQtTriadSummary() {}
+  FuiQtTriadSummary(QWidget* parent, const char* name = "FuiQtTriadSummary");
+
+  virtual void showMass(int onOff);
+  virtual void showSysDir(bool onOff) { showFrame(mySysDirFrame,onOff); }
+  virtual void showConnector(bool onOff) { showFrame(myConnectorFrame,onOff); }
+
+protected:
+  void resizeEvent(QResizeEvent* e);
+
+private:
+  static void showFrame(QGroupBox* frame, bool onOff);
+
+  QGroupBox* myMassFrame;
+  QGroupBox* mySysDirFrame;
+  QGroupBox* myConnectorFrame;
 };
 
 #endif

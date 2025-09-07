@@ -5,20 +5,30 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "FuiQtCtrlElemProperties.H"
+#include <QHBoxLayout>
 
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 
+#include "FuiQtCtrlElemProperties.H"
+
 
 FuiQtCtrlElemProperties::FuiQtCtrlElemProperties(QWidget* parent)
-  : FFuQtMultUIComponent(parent,"FuiCtrlElemProperties")
+  : FFuQtWidget(parent,"FuiQtCtrlElemProperties")
 {
-  FFuQtLabel* elemPixmap = new FFuQtLabel(this);
-  elemPixmap->setAlignment(Qt::AlignCenter);
-
-  this->myElemPixmap     = elemPixmap;
-  this->myParameterFrame = new FFuQtLabelFrame(this);
+  myElemPixmap     = new FFuQtLabel();
+  myElemFrame      = new FFuQtLabelFrame();
+  myParameterFrame = new FFuQtLabelFrame();
 
   this->initWidgets();
+
+  QBoxLayout* layout = new QHBoxLayout(myElemFrame->getQtWidget());
+  layout->setContentsMargins(5,0,5,0);
+  layout->addWidget(myElemPixmap->getQtWidget());
+
+  layout = new QHBoxLayout(this);
+  layout->setSpacing(20);
+  layout->addWidget(myElemFrame->getQtWidget());
+  layout->addWidget(myParameterFrame->getQtWidget(),5);
+  layout->addStretch(1);
 }

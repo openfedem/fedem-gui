@@ -10,39 +10,35 @@
 
 #include "vpmUI/vpmUIComponents/FuiSummaryTable.H"
 
-class FFuLabelFrame;
 class FFuLabelField;
 class FFuPushButton;
 class FFuOptionMenu;
-class FuiTriadDOFValues;
+struct FuiTriadDOFValues;
 
 
 class FuiTriadSummary : public FuiSummaryTable
 {
 public:
-  FuiTriadSummary() {}
-  virtual ~FuiTriadSummary() {}
-
   void setSummary(int dof, const FuiTriadDOFValues& tval);
+
+  virtual void showMass(int onOff) = 0;
+  virtual void showSysDir(bool onOff) = 0;
+  virtual void showConnector(bool onOff) = 0;
 
   FFuLabelField* myFENodeField;
   FFuPushButton* mySetAllFreeButton;
   FFuPushButton* mySetAllFixedButton;
 
-  FFuLabelFrame* myMassFrame;
   FFuLabelField* myMassField;
   FFuLabelField* myIxField;
   FFuLabelField* myIyField;
   FFuLabelField* myIzField;
 
   FFuLabel*      myTriadLabel;
-  FFuLabelFrame* mySysDirFrame;
   FFuOptionMenu* mySysDirMenu;
-  FFuLabelFrame* myConnectorFrame;
   FFuOptionMenu* myConnectorMenu;
 
 protected:
-  virtual void placeWidgets(int width, int height);
   virtual void initWidgets();
 };
 

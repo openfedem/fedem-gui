@@ -8,31 +8,30 @@
 #ifndef FUI_THRESHOLD_H
 #define FUI_THRESHOLD_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include <string>
 
 class FFuToggleButton;
 class FFuLabelField;
-class FFuLabel;
 class FFuOptionMenu;
 
 
 struct ThresholdValues
 {
-  bool   active;
-  double threshold;
-  int    min, skip, severity;
+  bool   active = false;
+  double threshold = 0.0;
+  int    min = 0;
+  int    skip = 0;
+  int    severity = 0;
   std::string description;
-
-  ThresholdValues() { active = false; threshold = 0.0; min = skip = severity = 0; }
 };
 
 
-class FuiThreshold : public virtual FFuMultUIComponent
+class FuiThreshold : public virtual FFuComponentBase
 {
 public:
   FuiThreshold();
-  virtual ~FuiThreshold() {}
 
   void setToggleCB(const FFaDynCB1<bool>& cb);
   void setValueChangedCB(const FFaDynCB1<char*>& cb);
@@ -44,14 +43,11 @@ public:
 protected:
   void initWidgets();
 
-  virtual void placeWidgets(int width, int);
-
   FFuToggleButton* myToggle;
   FFuLabelField*   myDescription;
   FFuLabelField*   myValueField;
   FFuLabelField*   myMinField;
   FFuLabelField*   mySkipField;
-  FFuLabel*        mySeverityLabel;
   FFuOptionMenu*   mySeverityMenu;
 };
 

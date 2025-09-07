@@ -81,7 +81,7 @@ public:
 
   int    nElemsTogether = 0;
   bool   performRainflow = true;
-  int    histType = 0;
+  int    histType = -1;
   double biaxGate = 0.0;
   double pvxGate = 0.0;
   double max = 0.0;

@@ -5,29 +5,22 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIQTPOINTEDITOR_H
-#define FUIQTPOINTEDITOR_H
+#ifndef FUI_QT_POINT_EDITOR_H
+#define FUI_QT_POINT_EDITOR_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiPointEditor.H"
 
 
-class FuiQtPointEditor : public virtual FFuQtMultUIComponent, 
-                         public FuiPointEditor
+class FuiQtPointEditor : public FFuQtWidget, public FuiPointEditor
 {
-  
 public:
+  FuiQtPointEditor(QWidget* parent, const char* name = "FuiQtPointEditor");
 
-  FuiQtPointEditor(QWidget* parent = 0,
-                   int xpos=100,
-                   int ypos=100,
-                   int width=40,
-                   int height=60,
-                   const char* name="PointEditor");
-  virtual ~FuiQtPointEditor();
-
-  virtual void setSensitivity(bool sensitive){FuiPointEditor::setSensitivity(sensitive);}
-
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiPointEditor::setSensitivity(isSensitive);
+  }
 };
 
 #endif

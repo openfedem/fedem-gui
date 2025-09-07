@@ -8,22 +8,41 @@
 #ifndef FUI_QT_FUNCTION_PROPERTIES_H
 #define FUI_QT_FUNCTION_PROPERTIES_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "vpmUI/vpmUIComponents/FuiFunctionProperties.H"
 
 
-class FuiQtFunctionProperties : public virtual FFuQtMultUIComponent,
-                                public FuiFunctionProperties
+class FuiQtFunctionProperties : public FFuQtWidget, public FuiFunctionProperties
 {
 public:
   FuiQtFunctionProperties(QWidget* parent);
-  virtual ~FuiQtFunctionProperties() {}
 
-  virtual void setSensitivity(bool sensitive)
-  { this->FuiFunctionProperties::setSensitivity(sensitive); }
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiFunctionProperties::setSensitivity(isSensitive);
+  }
 
 protected:
-  virtual void setNoArgs(size_t narg);
+  class FuiQtJonswapAdvanced : public FFuQtLabelFrame,
+                               public FuiFunctionProperties::FuiJonswapAdvanced
+  {
+  public:
+    FuiQtJonswapAdvanced(QWidget* parent);
+  };
+
+  class FuiQtJonswapBasic : public FFuQtWidget,
+                            public FuiFunctionProperties::FuiJonswapBasic
+  {
+  public:
+    FuiQtJonswapBasic(QWidget* parent);
+  };
+
+  class FuiQtWaveSpectrum : public FFuQtLabelFrame,
+                            public FuiFunctionProperties::FuiWaveSpectrum
+  {
+  public:
+    FuiQtWaveSpectrum(QWidget* parent);
+  };
 };
 
 #endif

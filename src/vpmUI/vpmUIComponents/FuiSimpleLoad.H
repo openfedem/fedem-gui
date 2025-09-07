@@ -5,29 +5,37 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUISIMPLELOAD_H
-#define FUISIMPLELOAD_H
+#ifndef FUI_SIMPLE_LOAD_H
+#define FUI_SIMPLE_LOAD_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
-class FFuLabelFrame;
 class FFuaQueryBase;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
-class FuiSimpleLoadValues;
 class FmModelMemberBase;
 
 
-class FuiSimpleLoad : public virtual FFuMultUIComponent
+struct FuiSimpleLoadValues
+{
+  bool   isConstant = true;
+  double constValue = 0.0;
+
+  FFuaQueryBase*     engineQuery = NULL;
+  FmModelMemberBase* selectedEngine = NULL;
+
+  FFaDynCB1<FuiQueryInputFieldValues&> myEngineQIFieldButtonCB;
+};
+
+
+class FuiSimpleLoad : public virtual FFuComponentBase
 {
 public:
-  FuiSimpleLoad() {}
-  virtual ~FuiSimpleLoad() {}
 
   // Setting Up :
 
-  void setLabel(const char* text);
+  virtual void setLabel(const char* text) = 0;
   virtual void setSensitivity(bool isSensitive);
 
   // Callbacks :
@@ -45,13 +53,8 @@ public:
   void getValues(FuiSimpleLoadValues& values);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
 
-  // Shadow pointers from subclass.
-  // Subclass is responsible to set them up:
-
-  FFuLabelFrame*      myFrame;
   FuiQueryInputField* myEngineField;
 
 private:
@@ -63,27 +66,6 @@ private:
 
   FFaDynCB1<FuiSimpleLoadValues&> myValuesChangedCB;
   FFaDynCB0                       myChangedCB;
-};
-
-
-class FuiSimpleLoadValues
-{
-public:
-  FuiSimpleLoadValues()
-  {
-    isConstant = true;
-    constValue = 0.0;
-    engineQuery = 0;
-    selectedEngine = 0;
-  }
-
-  bool   isConstant;
-  double constValue;
-
-  FFuaQueryBase*     engineQuery;
-  FmModelMemberBase* selectedEngine;
-
-  FFaDynCB1<FuiQueryInputFieldValues&> myEngineQIFieldButtonCB;
 };
 
 #endif

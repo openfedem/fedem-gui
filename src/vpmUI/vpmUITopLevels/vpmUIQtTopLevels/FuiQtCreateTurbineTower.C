@@ -36,7 +36,7 @@ FuiQtCreateTurbineTower::FuiQtCreateTurbineTower(int xpos, int ypos,
 {
   headerImage = new FFuQtLabel();
   modelImage  = new FFuQtLabel();
-  notesText   = new FFuQtLabel();
+  notes       = new FFuQtNotes();
 
   std::array<FFuQtLabelField*,12> qFields;
   for (FFuQtLabelField*& field : qFields)
@@ -80,42 +80,41 @@ FuiQtCreateTurbineTower::FuiQtCreateTurbineTower(int xpos, int ypos,
     qFields[i]->setLabelWidth(20);
 
   QBoxLayout* layout = NULL;
-  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(towerGeometryFrame));
+  layout = new QVBoxLayout(towerGeometryFrame->getQtWidget());
   layout->setContentsMargins(10,2,10,10);
   layout->setSpacing(2);
   for (i = 0; i < 6; i++)
     layout->addWidget(qFields[i]);
 
-  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(towerMaterialFrame));
-  layout->addWidget(static_cast<FuiQtQueryInputField*>(towerMaterialMenu));
+  layout = new QVBoxLayout(towerMaterialFrame->getQtWidget());
+  layout->addWidget(towerMaterialMenu->getQtWidget());
   for (i = 6; i < 9; i++)
     layout->addWidget(qFields[i]);
 
-  layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(towerMeshFrame));
+  layout = new QVBoxLayout(towerMeshFrame->getQtWidget());
   for (i = 10; i < 12; i++)
     layout->addWidget(qFields[i]);
 
-  QWidget* qLeft = new QWidget();
-  QGridLayout* gl = new QGridLayout(qLeft);
+  QGridLayout* gl = new QGridLayout();
   gl->setContentsMargins(0,0,0,0);
+  gl->setHorizontalSpacing(10);
+  gl->setVerticalSpacing(5);
   gl->setColumnStretch(0,5);
   gl->setColumnStretch(1,4);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(towerGeometryFrame), 0,0);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(towerMaterialFrame), 0,1);
-  gl->addWidget(static_cast<FFuQtLabelFrame*>(towerMeshFrame),     1,1);
-  gl->addWidget(new FFuQtNotesLabel(), 2,0);
-  gl->addWidget(static_cast<FFuQtLabel*>(notesText), 3,0,1,-1);
-  gl->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons), 4,0,1,-1);
+  gl->addWidget(towerGeometryFrame->getQtWidget(), 0,0);
+  gl->addWidget(towerMaterialFrame->getQtWidget(), 0,1);
+  gl->addWidget(towerMeshFrame->getQtWidget(),     1,1);
+  gl->addWidget(notes->getQtWidget(),         2,0,1,-1);
+  gl->addWidget(dialogButtons->getQtWidget(), 3,0,1,-1);
 
-  QWidget* qMain = new QWidget();
-  layout = new QHBoxLayout(qMain);
-  layout->setContentsMargins(10,0,0,10);
-  layout->setSpacing(40);
-  layout->addWidget(qLeft);
-  layout->addWidget(static_cast<FFuQtLabel*>(modelImage),1);
+  QBoxLayout* mainLayout = new QHBoxLayout();
+  mainLayout->setContentsMargins(10,0,0,10);
+  mainLayout->setSpacing(40);
+  mainLayout->addLayout(gl);
+  mainLayout->addWidget(modelImage->getQtWidget(),1);
 
   layout = new QVBoxLayout(this);
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(static_cast<FFuQtLabel*>(headerImage));
-  layout->addWidget(qMain);
+  layout->addWidget(headerImage->getQtWidget());
+  layout->addLayout(mainLayout);
 }

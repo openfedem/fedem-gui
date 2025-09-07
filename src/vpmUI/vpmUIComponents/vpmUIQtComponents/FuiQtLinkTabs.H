@@ -9,149 +9,176 @@
 #define FUI_QT_LINK_TABS_H
 
 #include "vpmUI/vpmUIComponents/FuiLinkTabs.H"
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtFrame.H"
+#include "FFuLib/FFuQtComponents/FFuQtTable.H"
 
-class FuiQtLinkModelSheet : public FFuQtMultUIComponent,
-			    public FuiLinkModelSheet
+class FuiQtPositionData;
+class QLabel;
+
+
+class FuiQtReductionFrame : public FFuQtFrame, public FuiReductionFrame
 {
- public:
-  FuiQtLinkModelSheet(QWidget* parent=0, const char* name = "FuiQtLinkModelSheet");
-  virtual ~FuiQtLinkModelSheet() {}
+public:
+  FuiQtReductionFrame();
+  void setReducedVersion(int redVer);
 
- private:
+private:
+  QLabel* myLabel;
+};
+
+
+class FuiQtLinkModelSheet : public FFuQtWidget, public FuiLinkModelSheet
+{
+public:
+  FuiQtLinkModelSheet(QWidget* parent, const char* name = "FuiQtLinkModel");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiLinkModelSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiLinkModelSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtLinkOriginSheet : public FFuQtMultUIComponent,
-			     public FuiLinkOriginSheet
-{
- public:
-  FuiQtLinkOriginSheet(QWidget* parent=0, const char* name="FuiQtLinkOriginSheet");
-  virtual ~FuiQtLinkOriginSheet() {}
 
- private:
+using FuiQtLinkOriginSheet = FuiQtPositionData; //!< Convenience alias
+
+
+class FuiQtLinkNodeSheet : public FFuQtWidget, public FuiLinkNodeSheet
+{
+public:
+  FuiQtLinkNodeSheet(QWidget* parent, const char* name = "FuiQtLinkNode");
+};
+
+
+class FuiQtLinkRedOptSheet : public FFuQtWidget, public FuiLinkRedOptSheet
+{
+public:
+  FuiQtLinkRedOptSheet(QWidget* parent, const char* name = "FuiQtLinkRedOpt");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiLinkOriginSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiLinkRedOptSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtLinkNodeSheet : public FFuQtMultUIComponent,
-			   public FuiLinkNodeSheet
+
+class FuiQtLinkLoadSheet : public FFuQtTable, public FuiLinkLoadSheet
 {
- public:
-  FuiQtLinkNodeSheet(QWidget* parent=0, const char* name="FuiQtLinkNodeSheet");
-  virtual ~FuiQtLinkNodeSheet() {}
-};
+public:
+  FuiQtLinkLoadSheet(QWidget* parent, const char* name = "FuiQtLinkLoad");
 
-class FuiQtLinkRedOptSheet : public FFuQtMultUIComponent,
-			     public FuiLinkRedOptSheet
-{
- public:
-  FuiQtLinkRedOptSheet(QWidget* parent=0, const char* name="FuiQtLinkRedOptSheet");
-  virtual ~FuiQtLinkRedOptSheet() {}
+  virtual void buildDynamicWidgets(const FuiLinkValues& values);
 
- private:
-  virtual void setSensitivity(bool isSensitive)
-  {FuiLinkRedOptSheet::setSensitivity(isSensitive);}
-};
-
-class FuiQtLinkLoadSheet : public FFuQtMultUIComponent,
-			   public FuiLinkLoadSheet
-{
- public:
-  FuiQtLinkLoadSheet(QWidget* parent=0, const char* name="FuiQtLinkLoadSheet");
-  virtual ~FuiQtLinkLoadSheet() {}
-
- protected:
+protected:
   virtual void setNoLoadCases(unsigned int nlc);
+  virtual void resizeEvent(QResizeEvent* e);
 
- private:
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiLinkLoadSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiLinkLoadSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtGenericPartCGSheet : public FFuQtMultUIComponent,
-				public FuiGenericPartCGSheet
-{
- public:
-  FuiQtGenericPartCGSheet(QWidget* parent=0, const char* name="FuiQtGenericPartCGSheet");
-  virtual ~FuiQtGenericPartCGSheet() {}
 
- private:
+class FuiQtGenericPartCGSheet : public FFuQtWidget, public FuiGenericPartCGSheet
+{
+public:
+  FuiQtGenericPartCGSheet(QWidget* parent, const char* name = "FuiQtGenPartCG");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiGenericPartCGSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiGenericPartCGSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtGenericPartMassSheet : public FFuQtMultUIComponent,
-				  public FuiGenericPartMassSheet
-{
- public:
-  FuiQtGenericPartMassSheet(QWidget* parent=0, const char* name="FuiQtGenericPartMassSheet");
-  virtual ~FuiQtGenericPartMassSheet() {}
 
- private:
+class FuiQtGenericPartMassSheet : public FFuQtWidget,
+                                  public FuiGenericPartMassSheet
+{
+public:
+  FuiQtGenericPartMassSheet(QWidget* parent,
+                            const char* name = "FuiQtGenPartMass");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiGenericPartMassSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiGenericPartMassSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtGenericPartStiffSheet : public FFuQtMultUIComponent,
-				   public FuiGenericPartStiffSheet
-{
- public:
-  FuiQtGenericPartStiffSheet(QWidget* parent=0, const char* name="FuiQtGenericPartStiffSheet");
-  virtual ~FuiQtGenericPartStiffSheet() {}
 
- private:
+class FuiQtGenericPartStiffSheet : public FFuQtWidget,
+                                   public FuiGenericPartStiffSheet
+{
+public:
+  FuiQtGenericPartStiffSheet(QWidget* parent,
+                             const char* name = "FuiQtGenPartStiff");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiGenericPartStiffSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiGenericPartStiffSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtHydrodynamicsSheet : public FFuQtMultUIComponent,
-				public FuiHydrodynamicsSheet
-{
- public:
-  FuiQtHydrodynamicsSheet(QWidget* parent=0, const char* name="FuiQtHydrodynamicsSheet");
-  virtual ~FuiQtHydrodynamicsSheet() {}
 
- private:
+class FuiQtHydrodynamicsSheet : public FFuQtWidget, public FuiHydrodynamicsSheet
+{
+public:
+  FuiQtHydrodynamicsSheet(QWidget* parent,
+                          const char* name = "FuiQtHydrodynamics");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiHydrodynamicsSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiHydrodynamicsSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtMeshingSheet : public FFuQtMultUIComponent,
-			  public FuiMeshingSheet
-{
- public:
-  FuiQtMeshingSheet(QWidget* parent=0, const char* name="FuiQtMeshingSheet");
-  virtual ~FuiQtMeshingSheet() {}
 
- private:
+class FuiQtMeshingSheet : public FFuQtWidget, public FuiMeshingSheet
+{
+public:
+  FuiQtMeshingSheet(QWidget* parent, const char* name = "FuiQtMeshing");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiMeshingSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiMeshingSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtAdvancedLinkOptsSheet : public FFuQtMultUIComponent,
-				   public FuiAdvancedLinkOptsSheet
-{
- public:
-  FuiQtAdvancedLinkOptsSheet(QWidget* parent=0, const char* name="FuiQtAdvancedLinkOptsSheet");
-  virtual ~FuiQtAdvancedLinkOptsSheet() {}
 
- private:
+class FuiQtAdvancedLinkOptsSheet : public FFuQtWidget,
+                                   public FuiAdvancedLinkOptsSheet
+{
+public:
+  FuiQtAdvancedLinkOptsSheet(QWidget* parent,
+                             const char* name = "FuiQtAdvancedLinkOpts");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiAdvancedLinkOptsSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiAdvancedLinkOptsSheet::setSensitivity(isSensitive);
+  }
 };
 
-class FuiQtNonlinearLinkOptsSheet : public FFuQtMultUIComponent,
-				    public FuiNonlinearLinkOptsSheet
-{
- public:
-  FuiQtNonlinearLinkOptsSheet(QWidget* parent=0, const char* name="FuiQtNonlinearLinkOptsSheet");
-  virtual ~FuiQtNonlinearLinkOptsSheet() {}
 
- private:
+class FuiQtNonlinearLinkOptsSheet : public FFuQtWidget,
+                                    public FuiNonlinearLinkOptsSheet
+{
+public:
+  FuiQtNonlinearLinkOptsSheet(QWidget* parent,
+                              const char* name = "FuiQtNonlinearLinkOpts");
+
+private:
   virtual void setSensitivity(bool isSensitive)
-  {FuiNonlinearLinkOptsSheet::setSensitivity(isSensitive);}
+  {
+    this->FuiNonlinearLinkOptsSheet::setSensitivity(isSensitive);
+  }
 };
 
 #endif

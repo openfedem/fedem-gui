@@ -7,16 +7,14 @@
 
 #include "vpmUI/vpmUIComponents/FuiSprDaForce.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
-#include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuToggleButton.H"
 
 
 void FuiSprDaForce::initWidgets()
 {
-  myScaleLabel->setLabel("Scale");
-  myIsDefDamperToggle->setLabel("Use deformational velocity");
-  this->updateSprDaLabels();
+  this->setAsSpring(true);
+  this->setSensitivity(true);
 
   myFunctionField->setBehaviour(FuiQueryInputField::REF_NUMBER);
   myFunctionField->setChangedCB(FFaDynCB1M(FuiSprDaForce,this,onQIFieldChanged,
@@ -26,9 +24,8 @@ void FuiSprDaForce::initWidgets()
   myScaleField->setChangedCB(FFaDynCB1M(FuiSprDaForce,this,onQIFieldChanged,
 					 FuiQueryInputField*));
 
-  myIsDefDamperToggle->setToggleCB(FFaDynCB1M(FuiSprDaForce,this,
-					      onBoolChanged,bool));
-  myFrame->toBack();
+  myDmpToggle->setLabel("Use deformational velocity");
+  myDmpToggle->setToggleCB(FFaDynCB1M(FuiSprDaForce,this,onBoolChanged,bool));
 }
 
 
@@ -38,68 +35,25 @@ void FuiSprDaForce::setAsSpring(bool yesOrNo)
 
   IAmSpringUI = yesOrNo;
 
-  this->updateSprDaLabels();
-}
-
-
-void FuiSprDaForce::updateSprDaLabels()
-{
   if (IAmSpringUI) {
-    myFrame->setLabel("Spring properties");
+    this->setLabel("Spring properties");
     myFunctionLabel->setLabel("Stiffness");
     myFunctionField->setToolTip("Specify a constant spring stiffness,\n"
 				"or select a stiffness/force-deflection function\n"
 				"or an Advanced spring characteristics property");
     myScaleField->setToolTip("Optional scaling function for the spring stiffness and force.\n"
 			     "Note: This should not be a function of the spring deflection or length");
-    myIsDefDamperToggle->popDown();
+    myDmpToggle->popDown();
   }
   else {
-    myFrame->setLabel("Damper properties");
+    this->setLabel("Damper properties");
     myFunctionLabel->setLabel("Damping coefficient");
     myFunctionField->setToolTip("Specify a constant damping coefficient,\n"
 				"or select a coefficient/force-velocity function");
     myScaleField->setToolTip("Optional scaling function for the damping coefficient and force.\n"
 			     "Note: This should not be a function of the damper velocity or length");
-    myIsDefDamperToggle->popUp();
+    myDmpToggle->popUp();
   }
-}
-
-
-void FuiSprDaForce::placeWidgets(int width, int height)
-{
-  int border      = 6;
-  int fieldHeight = 20;
-  int fieldSpace  = 10;
-
-  int n2 = IAmSpringUI ? 5 : 7;
-  while (n2*(fieldHeight + fieldSpace)/2 > height-border)
-    if (n2*fieldHeight/2 > height-border) {
-      fieldHeight = 2*(height-border)/n2;
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-
-  int line1 = fieldSpace + fieldHeight + border/2;
-  int line2 = line1 + fieldSpace + fieldHeight;
-  int line3 = line2 + fieldSpace + fieldHeight;
-
-  int v1 = border;
-  int v2 = v1 + myFunctionLabel->getWidthHint() + border;
-  int v3 = v1 + myScaleLabel->getWidthHint() + border;
-  int v4 = width - border;
-
-  myFrame->setEdgeGeometry(0, width, 0, height);
-
-  myFunctionLabel->setCenterYGeometry(v1, line1, v2-v1, fieldHeight);
-  myFunctionField->setCenterYGeometry(v2, line1, v4-v2, fieldHeight);
-
-  myScaleLabel->setCenterYGeometry(v1, line2, v3-v1, fieldHeight);
-  myScaleField->setCenterYGeometry(v3, line2, v4-v3, fieldHeight);
-
-  myIsDefDamperToggle->setCenterYGeometry(v1, line3, v4-v1, fieldHeight);
 }
 
 
@@ -132,11 +86,11 @@ void FuiSprDaForce::buildDynamicWidgets(const FuiSprDaForceValues& values)
   if (IAmSpringUI) return;
 
   if (values.showDefDamper) {
-    myIsDefDamperToggle->popUp();
-    myIsDefDamperToggle->setSensitivity(IAmSensitive && values.showDefDamper > 0);
+    myDmpToggle->popUp();
+    myDmpToggle->setSensitivity(IAmSensitive && values.showDefDamper > 0);
   }
   else
-    myIsDefDamperToggle->popDown();
+    myDmpToggle->popDown();
 }
 
 
@@ -149,7 +103,7 @@ void FuiSprDaForce::setValues(const FuiSprDaForceValues& values)
   myScaleField->setQuery(values.engineQuery);
   myScaleField->setSelectedRef(values.selectedScaleEngine);
 
-  myIsDefDamperToggle->setValue(values.isDefDamper);
+  myDmpToggle->setValue(values.isDefDamper);
 
   buildDynamicWidgets(values);
 }
@@ -163,7 +117,7 @@ void FuiSprDaForce::getValues(FuiSprDaForceValues& values)
 
   values.selectedScaleEngine = myScaleField->getSelectedRef();
 
-  values.isDefDamper = myIsDefDamperToggle->getValue();
+  values.isDefDamper = myDmpToggle->getValue();
 }
 
 
@@ -197,7 +151,7 @@ void FuiSprDaForce::setSensitivity(bool isSensitive)
 {
   myFunctionField->setSensitivity(isSensitive);
   myScaleField->setSensitivity(isSensitive);
-  myIsDefDamperToggle->setSensitivity(isSensitive);
+  myDmpToggle->setSensitivity(isSensitive);
 
   IAmSensitive = isSensitive;
 }

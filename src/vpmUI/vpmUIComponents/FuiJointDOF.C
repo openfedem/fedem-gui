@@ -37,43 +37,6 @@ void FuiJointDOF::initWidgets()
 }
 
 
-void FuiJointDOF::placeWidgets(int width, int height)
-{
-  int border = 4;
-  int columnWidth1 = (width - 4*border)/4;
-  int columnWidth2 = (width - columnWidth1 - 4*border)/2;
-
-  int v1 = border;
-  int v2 = v1 + columnWidth1;
-  int v3 = v2 + border;
-  int v4 = v3 + columnWidth2;
-  int v5 = v4 + border;
-  int v6 = v5 + columnWidth2;
-
-  int h1 = border;
-  int h2 = 6*(height - 2*border)/10;
-  int h3 = h2 + border;
-  int h4 = height - border;
-  int h5 = h4 - initialVel->myField->getHeightHint();
-  if (h4-h5 > 2*(h5-border-h3)/3)
-    h5 = 3*h4/5 + 2*(h3+border)/5;
-  int h6 = h5 - border;
-  int springBtm = h1 + 42*(h4 - h1)/100 - border/2;
-  int damperTop = springBtm + border;
-
-  motionType->  setEdgeGeometry(v1, v2, h1, h2);
-  simpleLoad->  setEdgeGeometry(v1, v2, h3, h6);
-  variableType->setEdgeGeometry(v1, v2, h3, h6);
-#ifdef FT_HAS_FREQDOMAIN
-  freqToggle->  setEdgeGeometry(v5, v6, h3, h3 + freqToggle->getHeightHint());
-#endif
-  initialVel->  setEdgeGeometry(v1, v2, h5, h4);
-  springDC->    setEdgeGeometry(v3, v4, h1, h4);
-  springFS->    setEdgeGeometry(v5, v6, h1, springBtm);
-  damperFS->    setEdgeGeometry(v5, v6, damperTop, h4);
-}
-
-
 void FuiJointDOF::setChangedCB(const FFaDynCB0& aDynCB)
 {
   simpleLoad->setChangedCB(aDynCB);

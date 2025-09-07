@@ -2078,8 +2078,6 @@ void FpPM::setResultFlag()
       FpPM::resultsFlag += GAGE_RCY;
     if (FpModelRDBHandler::hasResults(rsd, "summary_rcy"))
       FpPM::resultsFlag += SUMMARY_RCY;
-    if (FpModelRDBHandler::hasResults(rsd, "dutycycle_rcy"))
-      FpPM::resultsFlag += DUTYCYCLE;
     if (rsd->hasFileNames("res"))
       FpPM::resultsFlag += RES_FILE;
   }

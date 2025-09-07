@@ -20,24 +20,16 @@ FFuQtScrolledListDialog::FFuQtScrolledListDialog(QWidget*, bool withNotes,
                                                  const char* name)
   : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name)
 {
-  myItemSelector  = new FFuQtScrolledList();
-  if (withNotes)
-  {
-    myNotesLabel  = new FFuQtNotesLabel();
-    myNotesText   = new FFuQtLabel();
-  }
+  myItemSelector = new FFuQtScrolledList();
+  if (withNotes) myNotes = new FFuQtNotes();
   myDialogButtons = new FFuQtDialogButtons(NULL,withNotes);
 
   this->initWidgets();
 
-  QLayout* layout = new QVBoxLayout(this);
-  layout->addWidget(static_cast<FFuQtScrolledList*>(myItemSelector));
-  if (withNotes)
-  {
-    layout->addWidget(dynamic_cast<FFuQtNotesLabel*>(myNotesLabel));
-    layout->addWidget(static_cast<FFuQtLabel*>(myNotesText));
-  }
-  layout->addWidget(static_cast<FFuQtDialogButtons*>(myDialogButtons));
+  QBoxLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(myItemSelector->getQtWidget(),1);
+  if (withNotes) layout->addWidget(myNotes->getQtWidget());
+  layout->addWidget(myDialogButtons->getQtWidget());
 }
 
 

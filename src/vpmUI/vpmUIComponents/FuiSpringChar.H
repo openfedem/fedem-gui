@@ -8,26 +8,55 @@
 #ifndef FUI_SPRING_CHAR_H
 #define FUI_SPRING_CHAR_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
+#include <array>
 
 class FFuLabel;
-class FFuLabelFrame;
 class FFuIOField;
 class FFuToggleButton;
-class FFuRadioButton;
 class FFuaQueryBase;
 class FuiQueryInputField;
 class FuiQueryInputFieldValues;
-class FuiSpringCharValues;
 class FmModelMemberBase;
 
 
-class FuiSpringChar : public virtual FFuMultUIComponent
+struct FuiSpringCharValues
+{
+  bool isTranslationalSpring = true;
+  double constantStiffness = 0.0;
+  FmModelMemberBase* springFunction = NULL;
+  FFuaQueryBase* springFunctionQuery = NULL;
+  FFaDynCB1<FuiQueryInputFieldValues&> springFunctionFieldButtonCB;
+
+  bool   useDeflectionMax = false;
+  bool   useDeflectionMin = false;
+  bool   useForceMax = false;
+  bool   useForceMin = false;
+  double deflectionMax = 0.0;
+  double deflectionMin = 0.0;
+  double forceMax = 0.0;
+  double forceMin = 0.0;
+
+  bool   useYieldForceMax = false;
+  bool   useYieldForceMin = false;
+  double constantYieldForceMax = 0.0;
+  double constantYieldForceMin = 0.0;
+  FmModelMemberBase* yieldForceMaxEngine = NULL;
+  FmModelMemberBase* yieldForceMinEngine = NULL;
+  FFuaQueryBase* yieldForceEngineQuery = NULL;
+  FFaDynCB1<FuiQueryInputFieldValues&> yieldForceFieldMaxButtonCB;
+  FFaDynCB1<FuiQueryInputFieldValues&> yieldForceFieldMinButtonCB;
+
+  bool   useYieldDeflectionMax = false;
+  double yieldDeflectionMax = 0.0;
+};
+
+
+class FuiSpringChar : public virtual FFuComponentBase
 {
 public:
-  FuiSpringChar() { IAmSensitive = true; }
-  virtual ~FuiSpringChar() {}
+  FuiSpringChar();
 
   virtual void setSensitivity(bool isSensitive);
 
@@ -46,46 +75,35 @@ public:
   void getValues(FuiSpringCharValues& values);
 
 protected:
-  virtual void placeWidgets(int width, int height);
   void initWidgets();
+
+  enum {
+    MAX_DEFL, MIN_DEFL,
+    MAX_FORCE, MIN_FORCE,
+    MAX_YIELD_FORCE, MIN_YIELD_FORCE,
+    MAX_YIELD_DEFL,
+    NUM_FIELDS
+  };
 
   // Shadow pointers from subclass.
   // Subclass is responsible to set them up:
 
-  FFuLabelFrame       *mySpringFunctionFrame;
-  FFuLabelFrame       *myFailureFrame;
-  FFuLabelFrame       *myYieldFrame;
+  FFuLabel*           mySpringFunctionDescription;
+  FuiQueryInputField* mySpringFunctionField;
+  FuiQueryInputField* myYieldForceMaxEngineField;
+  FuiQueryInputField* myYieldForceMinEngineField;
 
-  FuiQueryInputField  *mySpringFunctionField;
-  FFuLabel            *mySpringFunctionDescription;
-
-  FFuIOField          *myDeflectionMaxField;
-  FFuIOField          *myDeflectionMinField;
-  FFuIOField          *myForceMaxField;
-  FFuIOField          *myForceMinField;
-
-  FFuToggleButton     *myDeflectionMaxToggle;
-  FFuToggleButton     *myDeflectionMinToggle;
-  FFuToggleButton     *myForceMaxToggle;
-  FFuToggleButton     *myForceMinToggle;
-
-  FuiQueryInputField  *myYieldForceMaxEngineField;
-  FuiQueryInputField  *myYieldForceMinEngineField;
-  FFuToggleButton     *myYieldForceMaxToggle;
-  FFuToggleButton     *myYieldForceMinToggle;
-
-  FFuToggleButton     *myYieldDeflectionMaxToggle;
-  FFuIOField          *myYieldDeflectionMaxField;
+  std::array<FFuToggleButton*,NUM_FIELDS> myToggles;
+  std::array<FFuIOField*,NUM_FIELDS>      myFields;
 
 private:
 
   // Internal methods for rerouting of Callbacks
 
-  void onDoubleChanged(double);
   void onBoolChanged(bool);
-  void onBoolChanged(int, bool);
+  void onBoolChanged(int,bool);
   void onQIFieldChanged(FuiQueryInputField*);
-  void onValuesChanged();
+  void onValuesChanged(double = 0.0);
 
   // Callback Objects
 
@@ -95,72 +113,6 @@ private:
   // Internal Vars
 
   bool IAmSensitive;
-};
-
-
-class FuiSpringCharValues
-{
-public:
-  FuiSpringCharValues()
-    {
-      isTranslationalSpring = true;
-      isConstantStiffness = true;
-      constantStiffness = 0.0;
-      springFunction = NULL;
-
-      deflectionMax = 0.0;
-      deflectionMin = 0.0;
-      forceMax = 0.0;
-      forceMin = 0.0;
-
-      useDeflectionMax = false;
-      useDeflectionMin = false;
-      useForceMax = false;
-      useForceMin = false;
-
-      useYieldForceMax = false;
-      useYieldForceMin = false;
-      isConstantYieldForceMax = true;
-      isConstantYieldForceMin = true;
-      constantYieldForceMax = 0.0;
-      constantYieldForceMin = 0.0;
-
-      useYieldDeflectionMax = false;
-      yieldDeflectionMax = 0.0;
-    }
-
-  FmModelMemberBase *springFunction;
-  FFuaQueryBase     *springFunctionQuery;
-
-  bool               isTranslationalSpring;
-  bool               isConstantStiffness;
-  double             constantStiffness;
-  FFaDynCB1<FuiQueryInputFieldValues&> springFunctionFieldButtonCB;
-
-  double deflectionMax;
-  double deflectionMin;
-  double forceMax;
-  double forceMin;
-
-  bool useDeflectionMax;
-  bool useDeflectionMin;
-  bool useForceMax;
-  bool useForceMin;
-
-  bool useYieldForceMax;
-  bool useYieldForceMin;
-  bool isConstantYieldForceMax;
-  bool isConstantYieldForceMin;
-  FmModelMemberBase *yieldForceMaxEngine;
-  FmModelMemberBase *yieldForceMinEngine;
-  FFuaQueryBase     *yieldForceEngineQuery;
-  FFaDynCB1<FuiQueryInputFieldValues&> yieldForceFieldMaxButtonCB;
-  FFaDynCB1<FuiQueryInputFieldValues&> yieldForceFieldMinButtonCB;
-  double             constantYieldForceMax;
-  double             constantYieldForceMin;
-
-  bool   useYieldDeflectionMax;
-  double yieldDeflectionMax;
 };
 
 #endif

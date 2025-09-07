@@ -8,22 +8,24 @@
 #ifndef FUI_QT_SPRING_DEF_CALC_H
 #define FUI_QT_SPRING_DEF_CALC_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "vpmUI/vpmUIComponents/FuiSpringDefCalc.H"
 
 
-class FuiQtSpringDefCalc : public virtual FFuQtMultUIComponent,
-                           public FuiSpringDefCalc
+class FuiQtSpringDefCalc : public FFuQtLabelFrame, public FuiSpringDefCalc
 {
 public:
-  FuiQtSpringDefCalc(QWidget* parent = 0,
-		     int xpos=100, int ypos=100,
-		     int width=800,int height=35,
-		     const char* name="SpringDefCalc");
-  virtual ~FuiQtSpringDefCalc() {}
+  FuiQtSpringDefCalc(QWidget* parent, const char* name = "FuiQtSpringDefCalc");
 
-  virtual void setSensitivity(bool sensitive)
-  { this->FuiSpringDefCalc::setSensitivity(sensitive); }
+  virtual void setLabel(const char* text)
+  {
+    this->FFuQtLabelFrame::setLabel(text);
+  }
+
+  virtual void setSensitivity(bool isSensitive)
+  {
+    this->FuiSpringDefCalc::setSensitivity(isSensitive);
+  }
 };
 
 #endif

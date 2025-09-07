@@ -35,39 +35,6 @@ void FuiTriadDOF::initWidgets()
 }
 
 
-void FuiTriadDOF::placeWidgets(int width, int height)
-{
-  int border = 4;
-
-  int v1 = border;
-  int v2 = 4*width/10 - border/2;
-  int v3 = v2 + border;
-  int v4 = width - border;
-#ifdef FT_HAS_FREQDOMAIN
-  int v6 = v4 - freqToggle->getWidthHint();
-  if (v6 < v3 + 2*border) v6 = v3 + 2*border;
-  int v5 = v6 - 2*border;
-#else
-  int v5 = v4;
-#endif
-
-  int h1 = border;
-  int h2 = height - border;
-  int h3 = h2 - initialVel->myField->getHeightHint();
-  int h4 = h3 - border;
-  int h5 = (h1+h4+border)/2;
-  int h6 = h5 - border;
-
-  motionType->  setEdgeGeometry(v1, v2, h1, h2);
-  loadField->   setEdgeGeometry(v3, v4, h1, h6);
-  variableType->setEdgeGeometry(v3, v5, h5, h4);
-#ifdef FT_HAS_FREQDOMAIN
-  freqToggle->  setEdgeGeometry(v6, v4, h5, h5 + freqToggle->getHeightHint());
-#endif
-  initialVel->  setEdgeGeometry(v3, v4, h3, h2);
-}
-
-
 void FuiTriadDOF::setChangedCB(const FFaDynCB0& aDynCB)
 {
   motionType->setChangedCB(aDynCB);

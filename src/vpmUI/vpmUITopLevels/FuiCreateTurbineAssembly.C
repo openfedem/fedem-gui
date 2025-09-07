@@ -368,18 +368,18 @@ void FuiCreateTurbineAssembly::setApplyButton(bool switchToUpdate)
 {
   if (switchToUpdate)
   {
-    notesText->setLabel("You can provide high-level wind turbine model data here.\n"
-                        "Click 'Update turbine' to update the existing mechanism model.\n"
-                        "All fields use metric and degree values.\n"
-                        "The selected blade will be copied to a folder named [modelfile]_blade.");
+    notes->setText("You can provide high-level wind turbine model data here. "
+                   "Click 'Update turbine' to update the existing mechanism model. "
+                   "All fields use metric and degree values. "
+                   "The selected blade will be copied to a folder named [modelfile]_blade.");
     dialogButtons->setButtonLabel(APPLY,"Update turbine");
   }
   else
   {
-    notesText->setLabel("You can provide high-level wind turbine model data here. Click\n"
-                        "'Generate turbine' to generate a mechanism model of the turbine.\n"
-                        "All fields use metric and degree values.\n"
-                        "The selected blade will be copied to a folder named [modelfile]_blade.");
+    notes->setText("You can provide high-level wind turbine model data here. "
+                   "Click 'Generate turbine' to generate a mechanism model of the turbine. "
+                   "All fields use metric and degree values. "
+                   "The selected blade will be copied to a folder named [modelfile]_blade.");
     dialogButtons->setButtonLabel(APPLY,"Generate turbine");
   }
 }

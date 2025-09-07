@@ -8,31 +8,28 @@
 #ifndef FUI_QT_CURVE_AXIS_DEFINITION_H
 #define FUI_QT_CURVE_AXIS_DEFINITION_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 #include "vpmUI/vpmUIComponents/FuiCurveAxisDefinition.H"
-#include "vpmUI/vpmUIComponents/FuiCurveTimeRange.H"
 
 
-class FuiQtCurveAxisDefinition : public FFuQtMultUIComponent,
+class FuiQtCurveAxisDefinition : public FFuQtLabelFrame,
                                  public FuiCurveAxisDefinition
 {
 public:
-  FuiQtCurveAxisDefinition(QWidget* parent = 0,
+  FuiQtCurveAxisDefinition(QWidget* parent, const char* title,
 			   const char* name = "FuiQtCurveAxisDefinition");
-  virtual ~FuiQtCurveAxisDefinition() {}
 
 private:
   virtual void setSensitivity(bool) {}
 };
 
 
-class FuiQtCurveTimeRange : public FFuQtMultUIComponent,
+class FuiQtCurveTimeRange : public FFuQtLabelFrame,
                             public FuiCurveTimeRange
 {
 public:
-  FuiQtCurveTimeRange(QWidget* parent = 0,
-		      const char* name = "FuiQtCurveTimeRange");
-  virtual ~FuiQtCurveTimeRange() {}
+  FuiQtCurveTimeRange(QWidget* parent,
+                      const char* name = "FuiQtCurveTimeRange");
 
 private:
   virtual void setSensitivity(bool) {}

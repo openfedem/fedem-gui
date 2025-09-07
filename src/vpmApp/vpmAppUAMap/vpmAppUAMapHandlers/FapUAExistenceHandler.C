@@ -36,9 +36,6 @@
 #include "vpmUI/vpmUITopLevels/FuiObjectBrowser.H"
 #include "vpmUI/vpmUITopLevels/FuiFppOptions.H"
 #include "vpmUI/vpmUITopLevels/FuiViewSettings.H"
-#ifdef FT_HAS_NCODE
-#include "vpmUI/vpmUITopLevels/FuiDutyCycleOptions.H"
-#endif
 #include "vpmUI/vpmUITopLevels/FuiRDBSelector.H"
 #ifdef FT_HAS_GRAPHVIEW
 #include "vpmUI/vpmUITopLevels/FuiRDBMEFatigue.H"
@@ -93,9 +90,6 @@
 #include "vpmApp/vpmAppUAMap/FapUARDBSelector.H"
 #ifdef FT_HAS_GRAPHVIEW
 #include "vpmApp/vpmAppUAMap/FapUARDBMEFatigue.H"
-#endif
-#ifdef FT_HAS_NCODE
-#include "vpmApp/vpmAppUAMap/FapUADutyCycleOptions.H"
 #endif
 #include "vpmApp/vpmAppUAMap/FapUAMiniFileBrowser.H"
 #include "vpmApp/vpmAppUAMap/FapUALinkRamSettings.H"
@@ -248,9 +242,6 @@ void FapUAExistenceHandler::createUA(FFuUAExistenceHandler* ui)
   FuiRDBListView* rdbLV;
   FuiSimModelRDBListView* simRDBLV;
   FuiRDBSelector* rdbSel;
-#ifdef FT_HAS_NCODE
-  FuiDutyCycleOptions* dutyCycle;
-#endif
   FuiMiniFileBrowser* fileBrowser;
   FuiLinkRamSettings* linkRamSettings;
   FuiModelPreferences* modelPreferences;
@@ -361,11 +352,6 @@ void FapUAExistenceHandler::createUA(FFuUAExistenceHandler* ui)
 #ifdef FT_HAS_GRAPHVIEW
   else if ((rdbMEFatigue = dynamic_cast<FuiRDBMEFatigue*>(ui)))
     new FapUARDBMEFatigue(rdbMEFatigue);
-#endif
-
-#ifdef FT_HAS_NCODE
-  else if ((dutyCycle = dynamic_cast<FuiDutyCycleOptions*>(ui)))
-    new FapUADutyCycleOptions(dutyCycle);
 #endif
 
   else if ((fileBrowser = dynamic_cast<FuiMiniFileBrowser*>(ui)))

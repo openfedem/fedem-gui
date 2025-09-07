@@ -5,6 +5,9 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtJointDOF.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtMotionType.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtVariableType.H"
@@ -18,18 +21,40 @@
 
 
 FuiQtJointDOF::FuiQtJointDOF(QWidget* parent, const char* name)
-  : FFuQtMultUIComponent(parent,name)
+  : FFuQtWidget(parent,name)
 {
-  motionType   = new FuiQtMotionType(this);
-  variableType = new FuiQtVariableType(this);
-  simpleLoad   = new FuiQtSimpleLoad(this);
-  springDC     = new FuiQtSpringDefCalc(this);
-  springFS     = new FuiQtSprDaForce(this);
-  damperFS     = new FuiQtSprDaForce(this);
-  initialVel   = new FFuQtLabelField(this);
+  motionType   = new FuiQtMotionType(NULL);
+  variableType = new FuiQtVariableType(NULL);
+  simpleLoad   = new FuiQtSimpleLoad(NULL);
+  springDC     = new FuiQtSpringDefCalc(NULL);
+  springFS     = new FuiQtSprDaForce(NULL);
+  damperFS     = new FuiQtSprDaForce(NULL);
+  initialVel   = new FFuQtLabelField();
 #ifdef FT_HAS_FREQDOMAIN
-  freqToggle   = new FFuQtToggleButton(this);
+  freqToggle   = new FFuQtToggleButton();
 #endif
 
   this->initWidgets();
+
+  QWidget* qLeft = new QWidget();
+  QBoxLayout* layout = new QVBoxLayout(qLeft);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(static_cast<FuiQtMotionType*>(motionType));
+  layout->addWidget(static_cast<FuiQtSimpleLoad*>(simpleLoad));
+  layout->addWidget(static_cast<FuiQtVariableType*>(variableType));
+  layout->addWidget(static_cast<FFuQtLabelField*>(initialVel));
+
+  QWidget* qRight = new QWidget();
+  layout = new QVBoxLayout(qRight);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(static_cast<FuiQtSprDaForce*>(springFS));
+#ifdef FT_HAS_FREQDOMAIN
+  layout->addWidget(dynamic_cast<FFuQtToggleButton*>(freqToggle));
+#endif
+  layout->addWidget(static_cast<FuiQtSprDaForce*>(damperFS));
+
+  layout = new QHBoxLayout(this);
+  layout->addWidget(qLeft);
+  layout->addWidget(static_cast<FuiQtSpringDefCalc*>(springDC));
+  layout->addWidget(qRight);
 }

@@ -8,39 +8,36 @@
 #ifndef FUI_QT_ANIMATION_DEFINE_H
 #define FUI_QT_ANIMATION_DEFINE_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUIComponents/FuiAnimationDefine.H"
 
 
-class FuiQtAnimationDefine : public FFuQtMultUIComponent, public FuiAnimationDefine
+class FuiQtAnimationDefine : public FFuQtWidget, public FuiAnimationDefine
 {
 public:
-  FuiQtAnimationDefine(QWidget* parent, const char* name = "FuiQtAnimationDefine");
-  virtual ~FuiQtAnimationDefine() {}
+  FuiQtAnimationDefine(QWidget* parent,
+                       const char* name = "FuiQtAnimationDefine");
 };
 
 
-class FuiQtFringeSheet : public FFuQtMultUIComponent, public FuiFringeSheet
+class FuiQtFringeSheet : public FFuQtWidget, public FuiFringeSheet
 {
 public:
   FuiQtFringeSheet(QWidget* parent, const char* name = "FuiQtFringeSheet");
-  virtual ~FuiQtFringeSheet() {}
 };
 
 
-class FuiQtTimeSheet : public FFuQtMultUIComponent,  public FuiTimeSheet
+class FuiQtTimeSheet : public FFuQtWidget,  public FuiTimeSheet
 {
 public:
   FuiQtTimeSheet(QWidget* parent, const char* name = "FuiQtTimeSheet");
-  virtual ~FuiQtTimeSheet() {}
 };
 
 
-class FuiQtModesSheet : public FFuQtMultUIComponent, public FuiModesSheet
+class FuiQtModesSheet : public FFuQtWidget, public FuiModesSheet
 {
 public:
   FuiQtModesSheet(QWidget* parent, const char* name = "FuiQtModesSheet");
-  virtual ~FuiQtModesSheet() {}
 };
 
 #endif

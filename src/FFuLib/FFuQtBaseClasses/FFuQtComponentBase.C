@@ -350,13 +350,13 @@ void FFuQtComponentBase::giveKeyboardFocus()
 // Useful for widgets using fonts, and text.
 // Reimplemented from FFuComponentBase.
 
-int FFuQtComponentBase::getBasicWidthHint()
+int FFuQtComponentBase::getWidthHint() const
 {
   return myWidget->sizeHint().width();
 }
 
 
-int FFuQtComponentBase::getBasicHeightHint()
+int FFuQtComponentBase::getHeightHint() const
 {
   return myWidget->sizeHint().height();
 }

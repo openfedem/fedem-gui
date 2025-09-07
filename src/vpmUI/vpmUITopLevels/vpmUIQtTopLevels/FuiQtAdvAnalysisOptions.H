@@ -17,7 +17,7 @@ class FuiQtAdvAnalysisOptions : public FFuQtTopLevelShell,
 {
 public:
   FuiQtAdvAnalysisOptions(int xpos, int ypos, int width, int height,
-                          bool basicMode, const char* title, const char* name);
+                          bool basicMode = false);
 
 private:
   void initLayout(QWidget* parentSheet, int iOpt);
@@ -28,8 +28,6 @@ private:
   }
 
 protected:
-  virtual void onAdvBtnClicked();
-
   virtual void resizeEvent(QResizeEvent* e);
 };
 

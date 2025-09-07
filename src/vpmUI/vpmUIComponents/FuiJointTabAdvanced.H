@@ -5,45 +5,29 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FUIJOINTTABADVANCED_H
-#define FUIJOINTTABADVANCED_H
+#ifndef FUI_JOINT_TAB_ADVANCED_H
+#define FUI_JOINT_TAB_ADVANCED_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
 
-class FFuLabelFrame;
 class FFuOptionMenu;
-class FFuLabel;
 
 
-class FuiJointTabAdvanced : public virtual FFuMultUIComponent
+class FuiJointTabAdvanced : public virtual FFuComponentBase
 {
 public:
-  FuiJointTabAdvanced() {}
-  virtual ~FuiJointTabAdvanced() {}
+  void setOptionChangedCB(const FFaDynCB1<std::string>& cb);
+  void setSensitivity(bool isSensitive);
 
-  void showRotFormulation(bool yesOrNo);
-  void showSpringCpl(bool yesOrNo);
-  void showRotSpringCpl();
+  virtual void showRotFormulation(bool yesOrNo) = 0;
+  virtual void showSpringCpl(int rotOrYesOrNo) = 0;
+  virtual void setRotExplain(const char* text) = 0;
 
-  FFuLabelFrame      * myRotFormulationFrame;
-  FFuOptionMenu      * myRotFormulationMenu;
-  FFuOptionMenu      * myRotSequenceMenu;
-  FFuLabel           * myRotFormulationLabel;
-  FFuLabel           * myRotSequenceLabel;
-  FFuLabel           * myRotExplainLabel;
-
-  FFuLabelFrame      * mySpringCplFrame;
-  FFuOptionMenu      * myTranSpringCplMenu;
-  FFuOptionMenu      * myRotSpringCplMenu;
-  FFuLabel           * myRotSpringCplLabel;
-  FFuLabel           * myTranSpringCplLabel;
-
-protected:
-  virtual void placeWidgets(int width, int height);
-  void initWidgets();
-
-  bool IAmShowingRotFormulation;
-  char IAmShowingSpringCpl;
+  FFuOptionMenu* myRotFormulationMenu;
+  FFuOptionMenu* myRotSequenceMenu;
+  FFuOptionMenu* myTranSpringCplMenu;
+  FFuOptionMenu* myRotSpringCplMenu;
 };
 
 #endif

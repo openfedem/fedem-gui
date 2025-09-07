@@ -11,11 +11,11 @@
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
 #include "vpmUI/vpmUIComponents/FuiParameterView.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
-#include "FFuLib/FFuTable.H"
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuMemo.H"
 #include "FFuLib/FFuFrame.H"
 #include "FFuLib/FFuIOField.H"
+#include "FFuLib/FFuFileBrowseField.H"
 #include "FFuLib/FFuSpinBox.H"
 #include "FFuLib/FFuOptionMenu.H"
 #include "FFuLib/FFuPushButton.H"
@@ -30,20 +30,15 @@
 
 FuiFunctionProperties::FuiFunctionProperties()
 {
-  IAmShowingParameterList = false;
-  IAmShowingParameterView = false;
-  IAmShowingFileView = false;
+  IAmSensitive = IAmAllowingTopolChange = true;
+
   IAmShowingTypeSwitch = false;
-  IAmShowingMathExpr = false;
   IAmShowingCurvePreview = false;
   IAmShowingArgument = false;
   IAmShowingOutput = false;
   IAmShowingLinkToFields = false;
   IAmShowingHelpPixmap = false;
   IAmShowingJonswap = false;
-  myMinParameterWidth = 0;
-
-  IAmSensitive = IAmAllowingTopolChange = true;
 }
 
 
@@ -52,11 +47,12 @@ void FuiFunctionProperties::initWidgets()
   // Function type and linkage
 
   myTypeFrame->setLabel("Function Type");
+  myTypeFrame->setMaxHeight(80);
+
   myTypeSwitch->setOptionSelectedCB(FFaDynCB1M(FFaDynCB1<int>,&myFuncTypeSwitchedCB,invoke,int));
 
   myEngineFunction->setRefSelectedCB(FFaDynCB1M(FuiFunctionProperties,this,
 						onEngineFuncChanged,int));
-  myEngineFunction->popDown();
 
   // Argument
 
@@ -68,27 +64,27 @@ void FuiFunctionProperties::initWidgets()
 					       FuiInputSelectorValues&));
   myInputSelector->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,
 					onSensorPicked));
-  myInputSelector->popDown();
+  myInputSelector->setMaxHeight(120);
 
   // Arguments for multi-variable functions
 
-  myArgumentTable->showRowHeader(false);
-  myArgumentTable->showColumnHeader(false);
-  myArgumentTable->setNumberColumns(1);
-  myArgumentTable->setSelectionPolicy(FFuTable::NO_SELECTION);
-  myArgumentTable->popDown();
+  myInputSelectors->setCBs(FFaDynCB1M(FuiFunctionProperties,this,
+                                      onInputSelectorValuesChanged,
+                                      FuiInputSelectorValues&),
+                           FFaDynCB1M(FuiFunctionProperties,this,
+                                      onInputSelectorSetDBValues,
+                                      FuiInputSelectorValues&),
+                           FFaDynCB1M(FFaDynCB1<int>,&myPickSensorCB,invoke,int));
 
   // Output sensor toggle
 
   myOutputToggle->setLabel("Use as output sensor");
   myOutputToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
                                          onOutputToggled,bool));
-  myOutputToggle->popDown();
 
   // Threshold fields
 
   myThresholdFrame->setLabel("Event Threshold");
-  myThresholdFrame->popDown();
 
   myThresholds->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
                                        onToggleChanged,bool));
@@ -102,13 +98,12 @@ void FuiFunctionProperties::initWidgets()
                                              onParameterChanged,char*));
   myThreshold2->setSelectionChangedCB(FFaDynCB1M(FuiFunctionProperties,this,
                                                  onSelectionChanged,int));
-  myThreshold2->popDown();
 
-  // Parameter view
+  // Parameter views
 
-  myParameterFrame->setLabel("Parameters");
+  for (FFuLabelFrame* frame : myParameterFrames)
+    frame->setLabel("Parameters");
 
-  myExtrapolationLabel->setLabel("Extrapolation");
   myExtrapolationSwitch->setOptionSelectedCB(FFaDynCB1M(FuiFunctionProperties,this,
 							onSelectionChanged,int));
   myExtrapolationSwitch->addOption("None");
@@ -121,7 +116,6 @@ void FuiFunctionProperties::initWidgets()
 
   myExpandButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
 					   onExpandButtonActivated));
-  myExpandButton->popDown();
 
   // Multi points UI
 
@@ -133,33 +127,20 @@ void FuiFunctionProperties::initWidgets()
   myParameterList->setToolTip("Use Ctrl+V to paste numbers into this function\n"
 			      "Use Ctrl+X to clear all numbers");
 
-  myXLabel->setLabel("X");
   myXValueInputField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myXValueInputField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
                                                onXAccepted,double));
-  myYLabel->setLabel("Y");
   myYValueInputField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myYValueInputField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
                                                onYAccepted,double));
   myAddButton->setLabel("+");
+  myAddButton->setMaxWidth(20);
   myAddButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
 					onAddButtonActivated));
   myDeleteButton->setLabel("-");
+  myDeleteButton->setMaxWidth(20);
   myDeleteButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
 					   onDeleteButtonActivated));
-  myXLabel->popDown();
-  myYLabel->popDown();
-
-  myExtrapolationLabel->popDown();
-  myExtrapolationSwitch->popDown();
-
-  myXValueInputField->popDown();
-  myYValueInputField->popDown();
-
-  myAddButton->popDown();
-  myDeleteButton->popDown();
-
-  myParameterList->popDown();
 
   // Math expression
 
@@ -167,23 +148,18 @@ void FuiFunctionProperties::initWidgets()
   myExprApplyButton->setLabel("Apply");
   myExprApplyButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
 					      onExprApplyButtonActivated));
+
   myNumArgLabel->setLabel("Number of function arguments");
   myNumArgBox->setMinMax(1,4);
   myNumArgBox->setValueChangedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					    onEngineFuncChanged,int));
 
-  myExprLabel->popDown();
-  myExprMemo->popDown();
-  myExprApplyButton->popDown();
-  myNumArgLabel->popDown();
-  myNumArgBox->popDown();
-
   // File function
 
-  myChannelNameField->setLabel("Channel");
   myChannelNameField->setSensitivity(false);
 
   myChannelBrowseButton->setLabel("...");
+  myChannelBrowseButton->setMaxWidth(25);
   myChannelBrowseButton->setActivateCB(FFaDynCB0M(FFaDynCB0,&myGetChannelListCB,invoke));
 
   myChannelSelectUI->setTitle("Channel list");
@@ -194,12 +170,9 @@ void FuiFunctionProperties::initWidgets()
   myChannelSelectUI->setCancelButtonClickedCB(FFaDynCB1M(FuiFunctionProperties,this,
 							 onChannelDialogCancel,int));
 
-  myScaleFactorField->setLabel("Scale");
-  myScaleFactorField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myScaleFactorField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myScaleFactorField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onParameterValueChanged,double));
-
-  myVerticalShiftFrame->setLabel("Vertical shift after scale");
 
   myVerticalShiftField->setLabel("Additional shift  ");
   myVerticalShiftField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
@@ -210,29 +183,17 @@ void FuiFunctionProperties::initWidgets()
   myZeroAdjustToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
 					     onToggleChanged,bool));
 
-  myChannelNameField->popDown();
-  myScaleFactorField->popDown();
-  myVerticalShiftFrame->popDown();
-  myVerticalShiftField->popDown();
-  myZeroAdjustToggle->popDown();
-
   // File reference
 
   myFileBrowseButton->setLabel("...");
+  myFileBrowseButton->setMaxWidth(25);
   myFileBrowseButton->setActivateCB(FFaDynCB0M(FuiFunctionProperties,this,
 					       onFileBrowseActivated));
-  myFileBrowseButton->popDown();
-
-  myFileBrowseLabel->setLabel("File/Reference");
-  myFileBrowseLabel->popDown();
 
   myFileRefQueryField->setChangedCB(FFaDynCB1M(FuiFunctionProperties,this,
 					       onFileQIChanged,FuiQueryInputField*));
   myFileRefQueryField->setBehaviour(FuiQueryInputField::REF_TEXT,true);
   myFileRefQueryField->setEditSensitivity(false);
-
-  myActualFileInfoLabel->setLabel("Actual file");
-  myActualFileInfoLabel->popDown();
 
   // Help and
 
@@ -243,11 +204,6 @@ void FuiFunctionProperties::initWidgets()
 #ifdef FT_HAS_PREVIEW
   myPreviewButton->setLabel("Show");
   myPreviewButton->setActivateCB(FFaDynCB0M(FFaDynCB0,&myPreviewCB,invoke));
-  myPreviewButton->popUp();
-
-  myX0Label->setLabel("Domain");
-  myDXLabel->setLabel("Increment ");
-  myUseSmartPointsToggle->setLabel("Auto");
 
   myX0Field->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myX0Field->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
@@ -258,333 +214,108 @@ void FuiFunctionProperties::initWidgets()
   myDXField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   myDXField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
 				      onParameterValueChanged,double));
+
+  myUseSmartPointsToggle->setLabel("Auto");
   myUseSmartPointsToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
                                                  onToggleChanged,bool));
 #endif
 
   // Jonswap wave spectrum
 
-  myJonswapAdvancedFrame->setLabel("Advanced");
+  myJonswapA->initWidgets(FFaDynCB1M(FuiFunctionProperties,this,onParameterValueChanged,double),
+                          FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int),
+                          FFaDynCB1M(FuiFunctionProperties,this,onToggleChanged,bool));
+  myJonswapB->initWidgets(FFaDynCB1M(FuiFunctionProperties,this,onParameterValueChanged,double),
+                          FFaDynCB1M(FuiFunctionProperties,this,onToggleChanged,bool));
 
-  myJonswapSpectralPeakednessField->setLabel("Spectral peakedness, <font face='Symbol'><font size='+1'>g</font></font>");
-  myJonswapSpectralPeakednessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myJonswapSpectralPeakednessField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
-                                                             onParameterValueChanged,double));
+  // User-defined wave spectrum
 
-  myJonswapSpectralPeakednessToggle->setLabel("Use DNV recommendation");
-  myJonswapSpectralPeakednessToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
-                                                            onToggleChanged,bool));
-
-  myJonswapWaveComponentsField->setLabel("Number of wave components");
-  myJonswapWaveComponentsField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myJonswapWaveComponentsField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-
-  myJonswapRandomSeedField->setLabel("Random seed");
-  myJonswapRandomSeedField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myJonswapRandomSeedField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-
-  myJonswapWaveDirsField->setLabel("Number of wave directions");
-  myJonswapWaveDirsField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myJonswapWaveDirsField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-
-  myJonswapSpreadExpField->setLabel("Spreading exp.");
-  myJonswapSpreadExpField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
-  myJonswapSpreadExpField->myField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int));
-
-  myJonswapBasicFrame->setLabel("Basic");
-
-  myJonswapHsField->setLabel("Significant wave height, Hs");
-  myJonswapHsField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myJonswapHsField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
-					       onParameterValueChanged,double));
-
-  myJonswapTpField->setLabel("Spectral peak period, Tp");
-  myJonswapTpField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myJonswapTpField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
-                                             onParameterValueChanged,double));
-
-  myJonswapCutOffFrame->setLabel("Period cut-off values");
-
-  myJonswapCutOffToggle->setLabel("Auto calculate period cut-off values");
-  myJonswapCutOffToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
-                                                onToggleChanged,bool));
-
-  myJonswapTLowField->setLabel("T<sub>low</sub>");
-  myJonswapTLowField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myJonswapTLowField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
-					       onParameterValueChanged,double));
-
-  myJonswapTHighField->setLabel("T<sub>high</sub>");
-  myJonswapTHighField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  myJonswapTHighField->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
-					       onParameterValueChanged,double));
-
-  myJonswapAdvancedFrame->popDown();
-  myJonswapSpectralPeakednessField->popDown();
-  myJonswapSpectralPeakednessToggle->popDown();
-  myJonswapWaveComponentsField->popDown();
-  myJonswapRandomSeedField->popDown();
-  myJonswapWaveDirsField->popDown();
-  myJonswapSpreadExpField->popDown();
-  myJonswapBasicFrame->popDown();
-  myJonswapHsField->popDown();
-  myJonswapTpField->popDown();
-  myJonswapCutOffFrame->popDown();
-  myJonswapCutOffToggle->popDown();
-  myJonswapTLowField->popDown();
-  myJonswapTHighField->popDown();
+  myWaveSpec->initWidgets(FFaDynCB1M(FuiFunctionProperties,this,onSelectionChanged,int),
+                          FFaDynCB2M(FuiFunctionProperties,this,
+                                     onBrowseFileOpened,const std::string&,int));
 
   FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
 
-void FuiFunctionProperties::placeWidgets(int width, int height)
+void FuiFunctionProperties::FuiJonswapAdvanced::initWidgets(const FFaDynCB1<double>& doubleCB,
+                                                            const FFaDynCB1<int>& intCB,
+                                                            const FFaDynCB1<bool>& boolCB)
 {
-  int textHeight  = myXLabel->getHeightHint();
-  int fieldHeight = myTypeSwitch->getHeightHint();
-  int border      = getGridLinePos(height,30);
-  int vBorder     = 6;
+  mySpectralPeakednessField->setLabel("Spectral peakedness, <font face='Symbol'><font size='+1'>g</font></font>");
+  mySpectralPeakednessField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  mySpectralPeakednessField->setAcceptedCB(doubleCB);
 
-  int columnSep;
-  if (!IAmShowingTypeSwitch && IAmShowingArgument < 1)
-    columnSep = vBorder;
-  else if (width < 300)
-    columnSep = getGridLinePos(width,500);
-  else
-    columnSep = 202 + 4*vBorder;
+  mySpectralPeakednessToggle->setLabel("Use DNV recommendation");
+  mySpectralPeakednessToggle->setToggleCB(boolCB);
 
-  int previewFrameWidth = 0;
-  if (IAmShowingCurvePreview || IAmShowingHelpPixmap)
-    previewFrameWidth = std::min(width-464,211); //getGridLinePos(width,320);
+  myWaveComponentsField->setLabel("Number of wave components");
+  myWaveComponentsField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
+  myWaveComponentsField->myField->setAcceptedCB(intCB);
 
-  int inParameterFrameWidth = width - columnSep - 3*vBorder - previewFrameWidth;
-  int xFieldWidth = getGridLinePos(inParameterFrameWidth,300);
-  int buttonWidth = getGridLinePos(inParameterFrameWidth,75);
-  int extrapolateWidth = getGridLinePos(inParameterFrameWidth,250-vBorder);
+  myRandomSeedField->setLabel("Rnd. seed");
+  myRandomSeedField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
+  myRandomSeedField->myField->setAcceptedCB(intCB);
 
-  int h1 = textHeight + border;
-  int h2 = h1 + fieldHeight;
-  int h3 = h2 + border;
-  int h4 = IAmShowingLinkToFields ? h3 + fieldHeight : h3;
-  int h5 = h4 + border;
-  int h8 = height - border;
-  int h7 = h8 - fieldHeight;
-  int h6 = h7 - textHeight;
-  int h9 = height;
-  if (IAmShowingOutput) h9 -= fieldHeight;
-  int h0 = h9;
-  if (IAmShowingMathExpr) h9 -= fieldHeight+border;
+  myWaveDirsField->setLabel("Number of wave directions");
+  myWaveDirsField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
+  myWaveDirsField->myField->setAcceptedCB(intCB);
 
-  int v1 = vBorder;
-  int v2 = columnSep - 2*vBorder;
-  int v3 = columnSep - vBorder;
-  int v4 = columnSep;
-  int v5 = columnSep + vBorder;
-  int v6 = v5 + xFieldWidth;
-  int v7 = v6 + xFieldWidth;
-  int v8 = v7 + buttonWidth;
-  int v9 = v8 + buttonWidth;
-  int v91 = width - vBorder - previewFrameWidth - extrapolateWidth;
-  int v10 = v91 + extrapolateWidth - vBorder;
-  int v11 = v10 + vBorder;
-  int v13 = myNumArgLabel->getWidthHint();
+  int labelWidth = myWaveComponentsField->myLabel->getWidthHint();
+  myWaveDirsField->setLabelWidth(labelWidth);
+  mySpectralPeakednessField->setLabelWidth(labelWidth);
+}
 
-  myTypeFrame->setEdgeGeometry(0,v3,0,h5);
-  myTypeSwitch->setEdgeGeometry(v1,v2,h1,h2);
 
-  myEngineFunction->setEdgeGeometry(v1,v2,h3,h4);
+void FuiFunctionProperties::FuiJonswapBasic::initWidgets(const FFaDynCB1<double>& doubleCB,
+                                                         const FFaDynCB1<bool>& boolCB)
+{
+  myHsField->setLabel("Significant wave height, Hs");
+  myHsField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myHsField->setAcceptedCB(doubleCB);
 
-  myInputSelector->setEdgeGeometry(0,v3,h5,h9);
-  myArgumentTable->setEdgeGeometry(0,v3,h5,h9);
-  myNumArgLabel->setEdgeGeometry(0,v13,h0-fieldHeight,h0);
-  myNumArgBox->setEdgeGeometry(v13+border,v3,h0-fieldHeight,h0);
-  myOutputToggle->setEdgeGeometry(0,v3,height-fieldHeight,height);
-  myThresholdFrame->setEdgeGeometry(v5,width,0,height);
-  myThresholds->setEdgeGeometry(vBorder,width-v5-vBorder,h1,height-border);
+  myTpField->setLabel("Spectral peak period, Tp");
+  myTpField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myTpField->setAcceptedCB(doubleCB);
+  myTpField->setLabelWidth(myHsField->myLabel->getWidthHint());
 
-  // Add or remove the threshold fields as a third tab
-  if (IAmShowingOutput == 3)
-  {
-#ifdef FT_HAS_PREVIEW
-    if (myTabStack->addTabPage(myThreshold2, "Threshold"))
-      myTabStack->renameTabPage(myHelpFrame, "Prm. Help");
-#else
-    // No preview tab - don't need to change tab label
-    myTabStack->addTabPage(myThreshold2, "Threshold");
-#endif
-  }
-  else if (IAmShowingCurvePreview || IAmShowingHelpPixmap)
-  {
-    if (myTabStack->removeTabPage(myThreshold2))
-      myTabStack->renameTabPage(myHelpFrame, "Parameter Help");
-  }
+  myCutOffToggle->setLabel("Auto calculate period cut-off values");
+  myCutOffToggle->setToggleCB(boolCB);
 
-  int nRows = myArgumentTable->getNumberRows();
-  int argWt = v3-4;
-  int argHt = textHeight+3*(vBorder+fieldHeight);
-  if (argHt*nRows > h9-h5-4)
-    argWt -= 18;
-  else if (nRows > 0)
-    argHt = (h9-h5-4)/nRows;
-  for (int i = 0; i < nRows; i++)
-    myArgumentTable->setRowHeight(i,argHt);
-  myArgumentTable->setColumnWidth(0,argWt);
+  myTLowField->setLabel("T<sub>low</sub>");
+  myTLowField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myTLowField->setAcceptedCB(doubleCB);
 
-  myTabStack->setEdgeGeometry(std::max(width-211,464),width,0,180);
+  myTHighField->setLabel("T<sub>high</sub>");
+  myTHighField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  myTHighField->setAcceptedCB(doubleCB);
+}
 
-  int helpWidth = myHelpFrame->getWidth();
-  int helpHeight = myHelpFrame->getHeight();
-  myHelpLabel->setEdgeGeometry(2, helpWidth-2, 2, helpHeight-2);
 
-  myParameterFrame->setEdgeGeometry(v4,v11,0,height);
-  myParameterView->setEdgeGeometry(v5,v10,h1,h8);
-  myParameterList->setEdgeGeometry(v5,v10,h1,h6);
-  myExpandButton->setEdgeGeometry(v10-6*textHeight/5,v10+1,0,textHeight+5);
+void FuiFunctionProperties::FuiWaveSpectrum::initWidgets(const FFaDynCB1<int>& intCB,
+                                                         const FFaDynCB2<const std::string&,int>& strCB)
+{
+  myFileField->setLabel("Wave spectrum file");
+  myFileField->setButtonLabel("...",25);
+  myFileField->setAbsToRelPath("yes");
+  myFileField->setFileOpenedCB(strCB);
+  static std::vector<std::string> ascii({ "asc", "txt" });
+  myFileField->addDialogFilter("ASCII file",ascii,true);
+  myFileField->setDialogRememberKeyword("WaveSpectrum");
 
-  myXLabel->setEdgeGeometry(v5,v6,h6,h7);
-  myYLabel->setEdgeGeometry(v6,v7,h6,h7);
-  if (IAmShowingParameterList > 1)
-    myXValueInputField->setEdgeGeometry(v5,v6,h7,h8);
-  else
-    myXValueInputField->setEdgeGeometry(v5,v7,h7,h8);
-  myYValueInputField->setEdgeGeometry(v6,v7,h7,h8);
+  myRandomSeedField->setLabel("Random seed");
+  myRandomSeedField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);
+  myRandomSeedField->myField->setAcceptedCB(intCB);
 
-  myExtrapolationLabel->setEdgeGeometry(v91,v10,h6,h7);
-  myExtrapolationSwitch->setEdgeGeometry(v91,v10,h7,h8);
+  myHsField->setLabel("Significant wave height, Hs");
+  myHsField->setSensitivity(false);
 
-  myAddButton->setEdgeGeometry(v7,v8,h7,h8);
-  myDeleteButton->setEdgeGeometry(v8,v9,h7,h8);
+  myTpField->setLabel("Mean wave period, Tz");
+  myTpField->setSensitivity(false);
 
-  // Place external function parameters
-
-  int labelWidth = myFileBrowseLabel->getFontWidth("File/Reference");
-  int channelBrowseWidth = this->getFontWidth("X...X");
-
-  int h_1  = textHeight + border;
-  int h_2  = IAmShowingFileView ? h_1 + fieldHeight : h_1;
-  int h_21 = IAmShowingFileView ? h_2 + border : h_1;
-  int h_22 = h_21 + fieldHeight;
-  int h_3  = h_22 + border;
-  int h_4  = h_3 + fieldHeight;
-  int h_5  = h_4 + border;
-  int h_6  = h_5 + fieldHeight;
-  int h_7  = h_6 + fieldHeight;
-  int h_8  = h_7 + border;
-  int h_9  = h_8 + fieldHeight;
-  int h_10 = h_9 + border;
-
-  int v_1 = columnSep + vBorder;
-  int v_2 = v_1 + vBorder;
-  int v_3 = v_1 + labelWidth + vBorder;
-  int v_5 = v11 - vBorder;
-  int v_6 = v_5 - channelBrowseWidth;
-  int v_7 = v_6 - vBorder;
-  int v_8 = v_5 - vBorder;
-
-  myFileBrowseLabel->    setEdgeGeometry(v_1, v_3, h_1, h_2);
-  myFileRefQueryField->  setEdgeGeometry(v_3, v_7, h_1, h_2);
-  myFileBrowseButton->   setEdgeGeometry(v_6, v_5, h_1, h_2);
-  myChannelNameField->   setEdgeGeometry(v_1, v_7, h_21, h_22);
-  myChannelNameField->   setLabelWidth  (v_3-v_1);
-  myChannelBrowseButton->setEdgeGeometry(v_6, v_5, h_21, h_22);
-  myScaleFactorField->   setEdgeGeometry(v_2, v_7, h_3, h_4);
-  myScaleFactorField->   setLabelWidth  (labelWidth);
-  myVerticalShiftFrame-> setEdgeGeometry(v_1, v_5, h_5, h_10);
-  myZeroAdjustToggle->   setEdgeGeometry(v_2, v_8, h_6, h_7);
-  if (IAmShowingFileView)
-    myVerticalShiftField->setEdgeGeometry(v_2, v_8, h_8, h_9);
-  else // External Function
-    myVerticalShiftField->setEdgeGeometry(v_2, v_7, h_5, h_6);
-
-  // Place math expression
-
-  int eh_1 = h6   + border;
-  int eh_2 = eh_1 + myExprApplyButton->getHeightHint();
-  int ev_1 = v5   + myExprLabel->getWidthHint();
-  int ev_2 = v10  - myExprApplyButton->getFontWidth("XApplyX");
-
-  myExprMemo->setEdgeGeometry(v5,v10,h1,h6);
-  myExprLabel->setEdgeGeometry(v5,ev_1,eh_1,eh_2);
-  myExprApplyButton->setEdgeGeometry(ev_2,v10,eh_1,eh_2);
-
-  // Place preview fields (matching file/channel browse field heights)
-
-#ifdef FT_HAS_PREVIEW
-  int incLabelWidth = myDXLabel->getWidthHint();
-  int vp1 = vBorder;
-  int vp2 = vp1 + incLabelWidth;
-  int vp3 = vp2 + vBorder;
-  int vp4 = vp3 + 60;
-  int vp5 = vp4 + vBorder;
-  int vp6 = vp5 + 60;
-
-  int ph1 = border;
-  int ph2 = ph1 + fieldHeight;
-  int ph3 = ph2 + border;
-  int ph4 = ph3 + fieldHeight;
-  int ph5 = ph4 + border;
-  int ph6 = ph5 + fieldHeight + 4;
-
-  myPreviewButton->setEdgeGeometry(vp5,vp6,ph5,ph6);
-
-  myX0Label->setEdgeGeometry(vp1,vp2,ph1,ph2);
-  myDXLabel->setEdgeGeometry(vp1,vp2,ph3,ph4);
-  myX0Field->setEdgeGeometry(vp3,vp4,ph1,ph2);
-  myXNField->setEdgeGeometry(vp5,vp6,ph1,ph2);
-  myDXField->setEdgeGeometry(vp5,vp6,ph3,ph4);
-  myUseSmartPointsToggle->setEdgeGeometry(vp3,vp4,ph3,ph4);
-#endif
-
-  // Jonswap wave spectrum
-
-  int y = h5;
-  myJonswapAdvancedFrame->setEdgeGeometry(0,v3,y,136+y);
-  v3 -= vBorder;
-  y += 16;
-  myJonswapSpectralPeakednessField->setEdgeGeometry(v1,v3,y,20+y);
-  myJonswapSpectralPeakednessField->setLabelWidth(150);
-  y += 20;
-  myJonswapSpectralPeakednessToggle->setEdgeGeometry(v1+10,v3,y,20+y);
-  y += 24;
-  myJonswapWaveComponentsField->setEdgeGeometry(v1,v3,y,20+y);
-  myJonswapWaveComponentsField->setLabelWidth(150);
-  y += 24;
-  myJonswapWaveDirsField->setEdgeGeometry(v1,v3,y,20+y);
-  myJonswapWaveDirsField->setLabelWidth(150);
-  y += 24;
-  int x = v1 + (v3-v1)/2;
-  myJonswapSpreadExpField->setEdgeGeometry(v1,x,y,20+y);
-  myJonswapBasicFrame->setEdgeGeometry(v5,v10,0,68);
-  if (IAmShowingFileView == 'w') {
-    y = h_21 + border;
-    myJonswapRandomSeedField->setEdgeGeometry(v5,v10,y,20+y);
-    myJonswapRandomSeedField->setLabelWidth(150-vBorder);
-    y += 25;
-  }
-  else {
-    myJonswapRandomSeedField->setEdgeGeometry(x+vBorder,v3,y,20+y);
-    myJonswapRandomSeedField->setLabelWidth(myJonswapRandomSeedField->myLabel->getWidthHint());
-    v5 += vBorder; v10 -= vBorder;
-    y = 18;
-  }
-  myJonswapHsField->setEdgeGeometry(v5,v10,y,20+y);
-  myJonswapHsField->setLabelWidth(150);
-  y += 24;
-  myJonswapTpField->setEdgeGeometry(v5,v10,y,20+y);
-  myJonswapTpField->setLabelWidth(150);
-
-  y += 34;
-  v5 -= vBorder; v10 += vBorder;
-  myJonswapCutOffFrame->setEdgeGeometry(v5,v10,y,68+y);
-  v5 += vBorder; v10 -= vBorder;
-  y += 18;
-  myJonswapCutOffToggle->setEdgeGeometry(v5,v10,y,20+y);
-  y += 24;
-  x = v5 + (v10-v5)/2;
-  myJonswapTLowField->setEdgeGeometry(v5,x-vBorder,y,20+y);
-  myJonswapTLowField->setLabelWidth(30);
-  myJonswapTHighField->setEdgeGeometry(x+vBorder,v10,y,20+y);
-  myJonswapTHighField->setLabelWidth(30);
+  int labelWidth = myHsField->myLabel->getWidthHint();
+  myTpField->setLabelWidth(labelWidth);
+  myRandomSeedField->setLabelWidth(labelWidth);
 }
 
 
@@ -599,8 +330,8 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
   {
     if (fv->myArgumentValues.size() == 1)
       myInputSelector->setValues(fv->myArgumentValues.front());
-    else for (size_t j = 0; j < fv->myArgumentValues.size(); j++)
-      myArguments[j]->setValues(fv->myArgumentValues[j]);
+    else if (!fv->myArgumentValues.empty())
+      myInputSelectors->setValues(fv->myArgumentValues);
   }
 
   if (fv->showLinkToFields)
@@ -617,7 +348,7 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
   {
     myFileRefQueryField->setSelectedRef(fv->selectedFileRef);
     myFileRefQueryField->setText(fv->fileName);
-    myChannelNameField->myField->setValue(fv->myChannelName);
+    myChannelNameField->setValue(fv->myChannelName);
     myChannelBrowseButton->setSensitivity(fv->isMultiChannel && IAmSensitive);
     myZeroAdjustToggle->setValue(fv->myZeroAdjust);
     myScaleFactorField->setValue(fv->myScaleFactor);
@@ -638,8 +369,9 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
     }
   }
 
-  else if (fv->myExtFunc > 0) {
-    myChannelNameField->myField->setValue(fv->myExtFunc);
+  else if (fv->myExtFunc > 0)
+  {
+    myChannelNameField->setValue(fv->myExtFunc);
     myScaleFactorField->setValue(fv->myScaleFactor);
     myVerticalShiftField->setValue(fv->myVerticalShift);
   }
@@ -656,18 +388,36 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
 
     myParameterList->setItems(items);
     myExtrapolationSwitch->selectOption(fv->myExtrapolationType);
+    myChannelBrowseButton->setSensitivity(fv->isMultiChannel && IAmSensitive);
+    myYValueInputField->setSensitivity(IAmSensitive && fv->showParameterList > 1);
   }
 
   if ((IAmShowingOutput = fv->useAsOutputSensor+1) > 0)
   {
     myOutputToggle->setValue(fv->useAsOutputSensor > 0);
     if (IAmShowingOutput == 3)
+    {
       myThreshold2->setValues(fv->myThreshold);
-    else
+      // Add the threshold fields as a (second or) third tab
+#ifdef FT_HAS_PREVIEW
+      if (myTabStack->addTabPage(myThreshold2, "Threshold"))
+        myTabStack->renameTabPage(myHelpFrame, "Prm. Help");
+#else
+      // No preview tab - don't need to change tab label
+      myTabStack->addTabPage(myThreshold2, "Threshold");
+#endif
+    }
+    else if (IAmShowingCurvePreview || IAmShowingHelpPixmap)
+    {
+      // Use the threshold frame instead
+      myThresholds->setValues(fv->myThreshold);
+      // Remove the threshold fields tab
+      if (myTabStack->removeTabPage(myThreshold2))
+        myTabStack->renameTabPage(myHelpFrame, "Parameter Help");
+    }
+    else // No tab widget - use the threshold frame instead
       myThresholds->setValues(fv->myThreshold);
   }
-
-  this->placeWidgets(this->getWidth(), this->getHeight());
 
 #ifdef FT_HAS_PREVIEW
   myX0Field->setValue(fv->previewDomain.X.first);
@@ -680,27 +430,26 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
 
   if (fv->showJonswapView)
   {
-    myJonswapTpField->setLabel("Spectral peak period, Tp");
-    myJonswapHsField->setValue(fv->myJonswapHs);
-    myJonswapTpField->setValue(fv->myJonswapTp);
-    myJonswapCutOffToggle->setValue(fv->myJonswapAutoCalcCutoff);
-    myJonswapTLowField->setValue(fv->myJonswapRange.first);
-    myJonswapTHighField->setValue(fv->myJonswapRange.second);
-    myJonswapSpectralPeakednessToggle->setValue(fv->myJonswapAutoCalcSpectralPeakedness);
-    myJonswapSpectralPeakednessField->setValue(fv->myJonswapSpectralPeakedness);
-    myJonswapWaveComponentsField->myField->setValue(fv->myJonswapNComp);
-    myJonswapRandomSeedField->myField->setValue(fv->myJonswapRandomSeed);
-    myJonswapWaveDirsField->myField->setValue(fv->myJonswapNDir);
-    myJonswapSpreadExpField->myField->setValue(fv->myJonswapSprExp);
+    myJonswapB->myHsField->setValue(fv->myJonswapHs);
+    myJonswapB->myTpField->setValue(fv->myJonswapTp);
+    myJonswapB->myCutOffToggle->setValue(fv->myJonswapAutoCalcCutoff);
+    myJonswapB->myTLowField->setValue(fv->myJonswapRange.first);
+    myJonswapB->myTHighField->setValue(fv->myJonswapRange.second);
+    myJonswapA->mySpectralPeakednessToggle->setValue(fv->myJonswapAutoCalcSpectralPeakedness);
+    myJonswapA->mySpectralPeakednessField->setValue(fv->myJonswapSpectralPeakedness);
+    myJonswapA->myWaveComponentsField->myField->setValue(fv->myJonswapNComp);
+    myJonswapA->myRandomSeedField->myField->setValue(fv->myJonswapRandomSeed);
+    myJonswapA->myWaveDirsField->myField->setValue(fv->myJonswapNDir);
+    myJonswapA->mySpreadExpField->myField->setValue(fv->myJonswapSprExp);
     this->setJonswapSensitivity();
   }
-  else if (IAmShowingFileView == 'w')
+  else if (IAmShowingPrmView[UDWS])
   {
-    // These values are calculated from file
-    myJonswapTpField->setLabel("Mean wave period, Tz");
-    myJonswapHsField->setValue(fv->myJonswapHs);
-    myJonswapTpField->setValue(fv->myJonswapTp);
-    myJonswapRandomSeedField->myField->setValue(fv->myJonswapRandomSeed);
+    myWaveSpec->myFileField->setFileName(fv->fileName);
+    myWaveSpec->myFileField->setAbsToRelPath(fv->modelFilePath);
+    myWaveSpec->myRandomSeedField->myField->setValue(fv->myJonswapRandomSeed);
+    myWaveSpec->myHsField->setValue(fv->myJonswapHs);
+    myWaveSpec->myTpField->setValue(fv->myJonswapTp);
   }
 }
 
@@ -710,17 +459,17 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
   const FuaFunctionPropertiesValues* fv = dynamic_cast<const FuaFunctionPropertiesValues*>(values);
   if (!fv) return;
 
-  // Store the visibility for placeWidgets etc.
-
-  IAmShowingParameterList = fv->showParameterList;
-  IAmShowingParameterView = fv->showParameterView;
-  if (!fv->showFileView)
-    IAmShowingFileView = false;
-  else if (fv->mySelectedFunctionTypeIdx == 2)
-    IAmShowingFileView = 'w'; // User defined wave spectrum view
-  else
-    IAmShowingFileView = fv->isMultiChannel ? 2 : 1; // Other file views
-  IAmShowingMathExpr = fv->showMathExpr;
+  IAmShowingPrmView.fill(false);
+  IAmShowingPrmView[LIST] = fv->showParameterList;
+  IAmShowingPrmView[VIEW] = fv->showParameterView;
+  if (fv->showFileView)
+  {
+    if (fv->mySelectedFunctionTypeIdx == 2)
+      IAmShowingPrmView[UDWS] = true; // User-defined wave spectrum
+    else
+      IAmShowingPrmView[FILE] = fv->isMultiChannel ? 2 : 1; // Other file views
+  }
+  IAmShowingPrmView[MATH] = fv->showMathExpr;
   IAmShowingCurvePreview = fv->showCurvePreview;
   unsigned char nArg = fv->myArgumentValues.size();
   IAmShowingArgument = fv->showArgument ? nArg : -nArg;
@@ -734,58 +483,24 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
   if (IAmShowingTypeSwitch) {
     myTypeFrame->popUp();
-    myTypeSwitch->popUp();
     myTypeSwitch->setOptions(fv->myFunctionTypes);
   }
-  else {
+  else
     myTypeFrame->popDown();
-    myTypeSwitch->popDown();
-  }
 
   // Arguments
 
   if (IAmShowingArgument == 1) {
     myInputSelector->popUp();
-    myArgumentTable->popDown();
+    myInputSelectors->popDown();
   }
   else if (IAmShowingArgument > 1) {
-    size_t narg = fv->myArgumentValues.size();
-    size_t nrow = myArgumentTable->getNumberRows();
-    for (size_t r = narg; r < nrow; r++)
-      myArgumentTable->clearCellContents(r,0);
-    this->setNoArgs(narg);
-    myArgumentTable->setNumberRows(narg);
-    for (size_t i = 0; i < narg; i++) {
-      if (narg > 4)
-	myArguments[i]->setLabel(std::string("Argument ") + char('1'+i));
-      else
-	myArguments[i]->setLabel(std::string("Argument ") + (i < 3 ? char('x'+i) : 't'));
-      myArguments[i]->setValuesChangedCB(FFaDynCB1M(FuiFunctionProperties,this,
-						    onInputSelectorValuesChanged,
-						    FuiInputSelectorValues&));
-      myArguments[i]->setSetDBValuesCB(FFaDynCB1M(FuiFunctionProperties,this,
-						  onInputSelectorSetDBValues,
-						  FuiInputSelectorValues&));
-      if (i >= nrow) myArgumentTable->insertWidget(i,0,myArguments[i]);
-      switch (i) {
-      case 0: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensorPicked)); break;
-      case 1: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor1Picked)); break;
-      case 2: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor2Picked)); break;
-      case 3: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor3Picked)); break;
-      case 4: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor4Picked)); break;
-      case 5: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor5Picked)); break;
-      case 6: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor6Picked)); break;
-      case 7: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor7Picked)); break;
-      case 8: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor8Picked)); break;
-      case 9: myArguments[i]->setPickCB(FFaDynCB0M(FuiFunctionProperties,this,onSensor9Picked)); break;
-      }
-    }
     myInputSelector->popDown();
-    myArgumentTable->popUp();
+    myInputSelectors->popUp(fv->myArgumentValues.size());
   }
   else {
     myInputSelector->popDown();
-    myArgumentTable->popDown();
+    myInputSelectors->popDown();
   }
 
   // Output sensor toggle
@@ -807,11 +522,69 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
   if (IAmShowingLinkToFields) {
     myEngineFunction->setBehaviour(FuiQueryInputField::REF_NONE);
     myEngineFunction->setTextForNoRefSelected("None");
-    myEngineFunction->popUp();
     myEngineFunction->setQuery(fv->myLinkFunctionQuery);
+    myEngineFunction->popUp();
   }
   else
     myEngineFunction->popDown();
+
+  // Parameter frames
+
+  for (size_t i = 0; i < myParameterFrames.size(); i++)
+    if (IAmShowingPrmView[i])
+      myParameterFrames[i]->popUp();
+    else
+      myParameterFrames[i]->popDown();
+
+  // Parameter view
+
+  if (IAmShowingPrmView[VIEW]) {
+    myParameterView->setFields(fv->mySelectedFunctionTypeIdx,
+                               fv->myParameterNames,
+			       myParameterFrames[VIEW]);
+    myExpandButton->setLabel(">");
+    myExpandButton->setToolTip("Expand the Parameters view");
+    this->placeExpandButton();
+  }
+
+  // File view
+
+  if (IAmShowingPrmView[FILE])
+    myFileRefQueryField->setQuery(fv->fileRefQuery);
+
+  // Math expression
+
+  if (IAmShowingPrmView[MATH])
+    switch (std::abs(static_cast<int>(IAmShowingArgument))) {
+    case 1: myExprLabel->setLabel("Enter a function of x"); break;
+    case 2: myExprLabel->setLabel("Enter a function of x,y"); break;
+    case 3: myExprLabel->setLabel("Enter a function of x,y,z"); break;
+    case 4: myExprLabel->setLabel("Enter a function of x,y,z,t"); break;
+    }
+
+  if (IAmShowingPrmView[MATH] && IAmShowingArgument > 0) {
+    myNumArgLabel->popUp();
+    myNumArgBox->popUp();
+  }
+  else {
+    myNumArgLabel->popDown();
+    myNumArgBox->popDown();
+  }
+
+  // Jonswap wave spectrum
+
+  if (IAmShowingJonswap) {
+    myJonswapA->popUp();
+    myJonswapB->popUp();
+  }
+  else {
+    myJonswapA->popDown();
+    myJonswapB->popDown();
+  }
+
+  // Help picture
+
+  myHelpLabel->setPixMap(fv->myHelpPixmap);
 
   // Curve preview
 
@@ -823,182 +596,6 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
   }
   else
     myTabStack->popDown();
-
-  // Help picture
-
-  myHelpLabel->setPixMap(fv->myHelpPixmap);
-
-  // Parameter view
-
-  if (IAmShowingParameterView) {
-    myParameterView->setFields(fv->mySelectedFunctionTypeIdx,
-                               fv->myParameterNames, this);
-
-    myExpandButton->setLabel(">");
-    myExpandButton->setToolTip("Expand the Parameters view");
-    myExpandButton->popUp();
-  }
-  else {
-    myParameterView->popDown();
-    myExpandButton->popDown();
-  }
-
-  // File view
-
-  if (IAmShowingFileView) {
-    myFileRefQueryField->setQuery(fv->fileRefQuery);
-    myFileRefQueryField->popUp();
-    myFileBrowseLabel->popUp();
-    myFileBrowseButton->popUp();
-
-    if (IAmShowingFileView == 'w') {
-      // User defined wave spectrum view
-      myJonswapHsField->popUp();
-      myJonswapTpField->popUp();
-      myJonswapRandomSeedField->popUp();
-      myChannelNameField->popDown();
-      myChannelBrowseButton->popDown();
-      myScaleFactorField->popDown();
-      myVerticalShiftFrame->popDown();
-      myVerticalShiftField->popDown();
-      myZeroAdjustToggle->popDown();
-    }
-    else {
-      // Other file view
-      myChannelNameField->popUp();
-      myChannelBrowseButton->popUp();
-      myScaleFactorField->popUp();
-      myVerticalShiftFrame->popUp();
-      myVerticalShiftField->popUp();
-      myZeroAdjustToggle->popUp();
-    }
-  }
-  else {
-    myFileRefQueryField->popDown();
-    myFileBrowseLabel->popDown();
-    myFileBrowseButton->popDown();
-    if (fv->myExtFunc > 0) {
-      myChannelNameField->popUp();
-      myScaleFactorField->popUp();
-      myVerticalShiftField->popUp();
-    }
-    else {
-      myChannelNameField->popDown();
-      myScaleFactorField->popDown();
-      myVerticalShiftField->popDown();
-    }
-    myChannelBrowseButton->popDown();
-    myVerticalShiftFrame->popDown();
-    myZeroAdjustToggle->popDown();
-  }
-
-  // Parameter list
-
-  if (IAmShowingParameterList) {
-    myXLabel->popUp();
-    myAddButton->popUp();
-    myDeleteButton->popUp();
-    myExtrapolationLabel->popUp();
-    myExtrapolationSwitch->popUp();
-    myXValueInputField->setValue("");
-    myXValueInputField->popUp();
-    myParameterList->popUp();
-
-    if (IAmShowingParameterList > 1) {
-      myYLabel->popUp();
-      myYValueInputField->setValue("");
-      myYValueInputField->popUp();
-    }
-    else {
-      myYLabel->popDown();
-      myYValueInputField->popDown();
-    }
-  }
-  else {
-    myXLabel->popDown();
-    myAddButton->popDown();
-    myDeleteButton->popDown();
-    myExtrapolationLabel->popDown();
-    myExtrapolationSwitch->popDown();
-    myXValueInputField->popDown();
-    myParameterList->popDown();
-    myYLabel->popDown();
-    myYValueInputField->popDown();
-  }
-
-  // Math expression
-
-  if (IAmShowingMathExpr) {
-    switch ( std::abs((int)IAmShowingArgument) ) {
-    case 1: myExprLabel->setLabel("Enter a function of x"); break;
-    case 2: myExprLabel->setLabel("Enter a function of x,y"); break;
-    case 3: myExprLabel->setLabel("Enter a function of x,y,z"); break;
-    case 4: myExprLabel->setLabel("Enter a function of x,y,z,t"); break;
-    }
-    myExprMemo->popUp();
-    myExprLabel->popUp();
-    myExprApplyButton->popUp();
-    if (IAmShowingArgument > 0) {
-      myNumArgLabel->popUp();
-      myNumArgBox->popUp();
-    }
-    else {
-      myNumArgLabel->popDown();
-      myNumArgBox->popDown();
-    }
-  }
-  else {
-    myExprMemo->popDown();
-    myExprLabel->popDown();
-    myExprApplyButton->popDown();
-    myNumArgLabel->popDown();
-    myNumArgBox->popDown();
-  }
-
-  if (IAmShowingParameterList || IAmShowingParameterView || IAmShowingFileView || IAmShowingMathExpr)
-    myParameterFrame->popUp();
-  else
-    myParameterFrame->popDown();
-
-  // Jonswap wave spectrum
-
-  if (IAmShowingJonswap) {
-    myJonswapAdvancedFrame->popUp();
-    myJonswapSpectralPeakednessField->popUp();
-    myJonswapSpectralPeakednessToggle->popUp();
-    myJonswapWaveComponentsField->popUp();
-    myJonswapRandomSeedField->popUp();
-    myJonswapWaveDirsField->popUp();
-    myJonswapSpreadExpField->popUp();
-    myJonswapBasicFrame->popUp();
-    myJonswapHsField->popUp();
-    myJonswapTpField->popUp();
-    myJonswapCutOffFrame->popUp();
-    myJonswapCutOffToggle->popUp();
-    myJonswapTLowField->popUp();
-    myJonswapTHighField->popUp();
-    myParameterFrame->popDown();
-    myParameterView->popDown();
-    myExpandButton->popDown();
-  }
-  else {
-    myJonswapAdvancedFrame->popDown();
-    myJonswapSpectralPeakednessField->popDown();
-    myJonswapSpectralPeakednessToggle->popDown();
-    myJonswapWaveComponentsField->popDown();
-    myJonswapWaveDirsField->popDown();
-    myJonswapSpreadExpField->popDown();
-    myJonswapBasicFrame->popDown();
-    if (IAmShowingFileView != 'w') {
-      myJonswapRandomSeedField->popDown();
-      myJonswapHsField->popDown();
-      myJonswapTpField->popDown();
-    }
-    myJonswapCutOffFrame->popDown();
-    myJonswapCutOffToggle->popDown();
-    myJonswapTLowField->popDown();
-    myJonswapTHighField->popDown();
-  }
 }
 
 
@@ -1030,12 +627,12 @@ void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
 {
   values.mySelectedFunctionTypeIdx = myTypeSwitch->getSelectedOption();
 
-  values.showParameterView = IAmShowingParameterView > 0;
-  values.showFileView = IAmShowingFileView > 0;
-  values.showMathExpr = IAmShowingMathExpr;
-  values.showParameterList = IAmShowingParameterList;
+  values.showParameterView = IAmShowingPrmView[VIEW] > 0;
+  values.showFileView      = IAmShowingPrmView[FILE] > 0;
+  values.showMathExpr      = IAmShowingPrmView[MATH] > 0;
+  values.showParameterList = IAmShowingPrmView[LIST] > 0;
 
-  if (IAmShowingFileView) {
+  if (IAmShowingPrmView[FILE]) {
     if (myFileRefQueryField->isAConstant()) {
       values.fileName = myFileRefQueryField->getText();
       values.selectedFileRef = NULL;
@@ -1044,36 +641,41 @@ void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
       values.fileName = "";
       values.selectedFileRef = myFileRefQueryField->getSelectedRef();
     }
-    values.myChannelName = myChannelNameField->myField->getValue();
-    values.myScaleFactor = myScaleFactorField->getValue();
+    values.myChannelName = myChannelNameField->getValue();
+    values.myScaleFactor = myScaleFactorField->getDouble();
     values.myVerticalShift = myVerticalShiftField->getValue();
     values.myZeroAdjust = myZeroAdjustToggle->getValue();
-    values.myJonswapRandomSeed = myJonswapRandomSeedField->myField->getInt();
+  }
+  else if (IAmShowingPrmView[UDWS]) {
+    values.fileName = myWaveSpec->myFileField->getFileName();
+    values.myJonswapRandomSeed = myWaveSpec->myRandomSeedField->myField->getInt();
+    values.myJonswapHs = myWaveSpec->myHsField->getValue();
+    values.myJonswapTp = myWaveSpec->myTpField->getValue();
   }
   else if (IAmShowingJonswap) {
-    values.myJonswapHs = myJonswapHsField->getValue();
-    values.myJonswapTp = myJonswapTpField->getValue();
-    values.myJonswapAutoCalcCutoff = myJonswapCutOffToggle->getValue();
-    values.myJonswapRange = { myJonswapTLowField->getValue(), myJonswapTHighField->getValue() };
-    values.myJonswapAutoCalcSpectralPeakedness = myJonswapSpectralPeakednessToggle->getValue();
-    values.myJonswapSpectralPeakedness = myJonswapSpectralPeakednessField->getValue();
-    values.myJonswapNComp = myJonswapWaveComponentsField->myField->getInt();
-    values.myJonswapRandomSeed = myJonswapRandomSeedField->myField->getInt();
-    values.myJonswapNDir = myJonswapWaveDirsField->myField->getInt();
-    values.myJonswapSprExp = myJonswapSpreadExpField->myField->getInt();
+    values.myJonswapHs = myJonswapB->myHsField->getValue();
+    values.myJonswapTp = myJonswapB->myTpField->getValue();
+    values.myJonswapAutoCalcCutoff = myJonswapB->myCutOffToggle->getValue();
+    values.myJonswapRange = { myJonswapB->myTLowField->getValue(), myJonswapB->myTHighField->getValue() };
+    values.myJonswapAutoCalcSpectralPeakedness = myJonswapA->mySpectralPeakednessToggle->getValue();
+    values.myJonswapSpectralPeakedness = myJonswapA->mySpectralPeakednessField->getValue();
+    values.myJonswapNComp = myJonswapA->myWaveComponentsField->myField->getInt();
+    values.myJonswapRandomSeed = myJonswapA->myRandomSeedField->myField->getInt();
+    values.myJonswapNDir = myJonswapA->myWaveDirsField->myField->getInt();
+    values.myJonswapSprExp = myJonswapA->mySpreadExpField->myField->getInt();
   }
-  else if (IAmShowingParameterView)
+  else if (IAmShowingPrmView[VIEW])
     myParameterView->getValues(values.mySelectedFunctionTypeIdx,
                                values.myParameterValues);
 
-  else if (IAmShowingParameterList)
+  else if (IAmShowingPrmView[LIST])
     values.myExtrapolationType = myExtrapolationSwitch->getSelectedOption();
 
-  else if (IAmShowingMathExpr)
+  else if (IAmShowingPrmView[MATH])
     myExprMemo->getText(values.myExpression);
 
   else {
-    values.myScaleFactor = myScaleFactorField->getValue();
+    values.myScaleFactor = myScaleFactorField->getDouble();
     values.myVerticalShift = myVerticalShiftField->getValue();
   }
 
@@ -1083,10 +685,10 @@ void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
     values.myArgumentValues.clear();
   if (IAmShowingArgument == 1)
     myInputSelector->getValues(values.myArgumentValues.front());
-  else for (char i = 0; i < IAmShowingArgument; i++)
-    myArguments[i]->getValues(values.myArgumentValues[i]);
+  else
+    myInputSelectors->getValues(values.myArgumentValues);
 
-  if (IAmShowingMathExpr)
+  if (IAmShowingPrmView[MATH])
     values.myArgumentValues.resize(myNumArgBox->getIntValue());
 
   if (IAmShowingLinkToFields)
@@ -1148,7 +750,7 @@ void FuiFunctionProperties::onValuesChanged(bool widgetChanges)
 
 void FuiFunctionProperties::onXAccepted(double d)
 {
-  if (IAmShowingParameterList < 2)
+  if (IAmShowingPrmView[LIST] < 2)
     myAddNumberCB.invoke(d);
 }
 
@@ -1162,7 +764,7 @@ void FuiFunctionProperties::onYAccepted(double)
 
 void FuiFunctionProperties::onAddButtonActivated()
 {
-  if (IAmShowingParameterList > 1)
+  if (IAmShowingPrmView[LIST] > 1)
     myAddNumbersCB.invoke(myXValueInputField->getDouble(),myYValueInputField->getDouble());
   else
     myAddNumberCB.invoke(myXValueInputField->getDouble());
@@ -1180,13 +782,6 @@ void FuiFunctionProperties::onDeleteButtonActivated()
 }
 
 
-void FuiFunctionProperties::onBrowseFileOpened(const std::string&, int)
-{
-  myChannelNameField->myField->setValue("Not set");
-  this->onValuesChanged();
-}
-
-
 void FuiFunctionProperties::onChannelDialogOK(int index)
 {
   this->onChannelDialogApply(index);
@@ -1197,7 +792,7 @@ void FuiFunctionProperties::onChannelDialogOK(int index)
 void FuiFunctionProperties::onChannelDialogApply(int index)
 {
   if (myChannelSelectUI->myItemSelector->isItemSelected(index))
-    myChannelNameField->myField->setValue(myChannelSelectUI->myItemSelector->getItemText(index));
+    myChannelNameField->setValue(myChannelSelectUI->myItemSelector->getItemText(index));
 
   this->onValuesChanged();
 }
@@ -1214,7 +809,7 @@ void FuiFunctionProperties::onParameterSelected(int i)
   std::string txt = myParameterList->getItemText(i);
   double x,y;
 
-  if (IAmShowingParameterList > 1) {
+  if (IAmShowingPrmView[LIST] > 1) {
     sscanf(txt.c_str(), "%lf, %lf", &x,&y);
     myXValueInputField->setValue(x);
     myYValueInputField->setValue(y);
@@ -1222,6 +817,7 @@ void FuiFunctionProperties::onParameterSelected(int i)
   else {
     sscanf(txt.c_str(), "%lf", &x);
     myXValueInputField->setValue(x);
+    myYValueInputField->setValue("");
   }
 }
 
@@ -1235,11 +831,11 @@ void FuiFunctionProperties::onExprApplyButtonActivated()
 
 void FuiFunctionProperties::onExpandButtonActivated()
 {
-  if (IAmShowingParameterView > 1)
+  if (IAmShowingPrmView[VIEW] > 1)
   {
-    IAmShowingCurvePreview = IAmShowingParameterView%2 > 0;
-    IAmShowingHelpPixmap = IAmShowingParameterView > 2;
-    IAmShowingParameterView = 1;
+    IAmShowingCurvePreview  = IAmShowingPrmView[VIEW]%2 > 0;
+    IAmShowingHelpPixmap    = IAmShowingPrmView[VIEW] > 2;
+    IAmShowingPrmView[VIEW] = 1;
     myExpandButton->setLabel(">");
     myExpandButton->setToolTip("Expand the Parameters view");
     if (IAmShowingCurvePreview || IAmShowingHelpPixmap)
@@ -1247,15 +843,22 @@ void FuiFunctionProperties::onExpandButtonActivated()
   }
   else
   {
-    if (IAmShowingCurvePreview) IAmShowingParameterView += 1;
-    if (IAmShowingHelpPixmap) IAmShowingParameterView += 2;
+    if (IAmShowingCurvePreview) IAmShowingPrmView[VIEW] += 1;
+    if (IAmShowingHelpPixmap)   IAmShowingPrmView[VIEW] += 2;
     IAmShowingCurvePreview = IAmShowingHelpPixmap = false;
     myExpandButton->setLabel("<");
     myExpandButton->setToolTip("Contract the Parameters view");
     myTabStack->popDown();
   }
+  this->placeExpandButton();
+}
 
-  this->placeWidgets(this->getWidth(), this->getHeight());
+
+void FuiFunctionProperties::placeExpandButton()
+{
+  int w = myParameterFrames[VIEW]->getWidth();
+  myExpandButton->setSizeGeometry(w-22,0,20,18);
+  myExpandButton->toFront();
 }
 
 
@@ -1266,8 +869,7 @@ void FuiFunctionProperties::setSensitivity(bool isSensitive)
   myTypeSwitch->setSensitivity(isSensitive && IAmAllowingTopolChange);
   myEngineFunction->setSensitivity(isSensitive && IAmAllowingTopolChange);
   myInputSelector->setSensitivity(isSensitive && IAmAllowingTopolChange);
-  for (FuiInputSelector* arg : myArguments)
-    arg->setSensitivity(isSensitive && IAmAllowingTopolChange);
+  myInputSelectors->setSensitivity(isSensitive && IAmAllowingTopolChange);
 
   this->setParameterSensitivity(isSensitive && !IAmShowingLinkToFields);
 }
@@ -1278,12 +880,12 @@ void FuiFunctionProperties::setParameterSensitivity(bool isSensitive)
   myParameterView->setSensitivity(isSensitive);
   myParameterList->setSensitivity(isSensitive);
   myXValueInputField->setSensitivity(isSensitive);
-  myYValueInputField->setSensitivity(isSensitive);
+  myYValueInputField->setSensitivity(isSensitive && IAmShowingPrmView[LIST] > 1);
   myAddButton->setSensitivity(isSensitive);
   myDeleteButton->setSensitivity(isSensitive);
   myFileRefQueryField->setSensitivity(isSensitive);
   myFileBrowseButton->setSensitivity(isSensitive);
-  myChannelBrowseButton->setSensitivity(isSensitive && IAmShowingFileView == 2);
+  myChannelBrowseButton->setSensitivity(isSensitive && IAmShowingPrmView[FILE] == 2);
   myScaleFactorField->setSensitivity(isSensitive);
   myVerticalShiftField->setSensitivity(isSensitive);
   myZeroAdjustToggle->setSensitivity(isSensitive);
@@ -1291,29 +893,31 @@ void FuiFunctionProperties::setParameterSensitivity(bool isSensitive)
   myExprApplyButton->setSensitivity(isSensitive);
   myExtrapolationSwitch->setSensitivity(isSensitive);
 
-  myJonswapSpectralPeakednessToggle->setSensitivity(isSensitive);
-  myJonswapWaveComponentsField->setSensitivity(isSensitive);
-  myJonswapRandomSeedField->setSensitivity(isSensitive);
-  myJonswapWaveDirsField->setSensitivity(isSensitive);
-  myJonswapHsField->setSensitivity(isSensitive && IAmShowingFileView != 'w');
-  myJonswapTpField->setSensitivity(isSensitive && IAmShowingFileView != 'w');
-  myJonswapCutOffToggle->setSensitivity(isSensitive);
+  myJonswapA->mySpectralPeakednessToggle->setSensitivity(isSensitive);
+  myJonswapA->myWaveComponentsField->setSensitivity(isSensitive);
+  myJonswapA->myRandomSeedField->setSensitivity(isSensitive);
+  myJonswapA->myWaveDirsField->setSensitivity(isSensitive);
+  myJonswapB->myHsField->setSensitivity(isSensitive);
+  myJonswapB->myTpField->setSensitivity(isSensitive);
+  myJonswapB->myCutOffToggle->setSensitivity(isSensitive);
   this->setJonswapSensitivity(isSensitive);
+  myWaveSpec->myFileField->setSensitivity(isSensitive);
+  myWaveSpec->myRandomSeedField->setSensitivity(isSensitive);
 }
 
 
 void FuiFunctionProperties::setJonswapSensitivity(bool isSensitive)
 {
   // Disable Tmin and Tmax based on CutOffToggle
-  bool bVal = isSensitive && !this->myJonswapCutOffToggle->getValue();
-  this->myJonswapTLowField->setSensitivity(bVal);
-  this->myJonswapTHighField->setSensitivity(bVal);
+  bool bVal = isSensitive && !myJonswapB->myCutOffToggle->getValue();
+  myJonswapB->myTLowField->setSensitivity(bVal);
+  myJonswapB->myTHighField->setSensitivity(bVal);
   // Disable SpectralPeakedness based on SpectralPeakednessToggle
-  bVal = isSensitive && !this->myJonswapSpectralPeakednessToggle->getValue();
-  this->myJonswapSpectralPeakednessField->setSensitivity(bVal);
-  bVal = isSensitive && this->myJonswapWaveDirsField->myField->getInt() > 1;
+  bVal = isSensitive && !myJonswapA->mySpectralPeakednessToggle->getValue();
+  myJonswapA->mySpectralPeakednessField->setSensitivity(bVal);
+  bVal = isSensitive && myJonswapA->myWaveDirsField->myField->getInt() > 1;
   // Disable spreading exponent field if only one wave direction
-  this->myJonswapSpreadExpField->setSensitivity(bVal);
+  myJonswapA->mySpreadExpField->setSensitivity(bVal);
 }
 
 

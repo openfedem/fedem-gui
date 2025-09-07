@@ -8,7 +8,7 @@
 #ifndef FUI_CTRL_ELEM_PROPERTIES_H
 #define FUI_CTRL_ELEM_PROPERTIES_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include <string>
@@ -19,9 +19,9 @@ class FFuLabelFrame;
 class FuiParameterView;
 
 
-class FuiCtrlElemProperties : virtual public FFuMultUIComponent,
-			      public FFuUAExistenceHandler,
-			      public FFuUADataHandler
+class FuiCtrlElemProperties : virtual public FFuComponentBase,
+                              public FFuUAExistenceHandler,
+                              public FFuUADataHandler
 {
 public:
   // Virtual override of the Data dialog methods :
@@ -36,15 +36,13 @@ protected:
   // has initialized all the shado widget pointers.
   void initWidgets();
 
-  // Overridden method that does the geometry management :
-  virtual void placeWidgets(int width, int height);
-
 private:
   // Callback called by all fields. Collects all the data from
   // the UI and calls setAndGetDBValuesCB with the new data.
   void onValueChanged(double);
 
 protected:
+  FFuLabelFrame*    myElemFrame;
   FFuLabel*         myElemPixmap;
   FFuLabelFrame*    myParameterFrame;
   FuiParameterView* myParameterView;

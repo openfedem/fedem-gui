@@ -88,7 +88,6 @@ public:
     EIGVAL_RCY  = 0020,
     GAGE_RCY    = 0040,
     SUMMARY_RCY = 0100,
-    DUTYCYCLE   = 0200,
     RES_FILE    = 0400
   };
 

@@ -6,6 +6,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
 
 #include "FFuLib/FFuQtComponents/FFuQtOptionMenu.H"
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
@@ -14,7 +16,9 @@
 #include "FuiQtQueryInputField.H"
 
 
-FuiQtQueryInputField::FuiQtQueryInputField(QWidget* parent, const char* name)
+FuiQtQueryInputField::FuiQtQueryInputField(QWidget* parent,
+                                           const char* label, bool above,
+                                           const char* name)
   : FFuQtWidget(parent,name)
 {
   myOptions = new FFuQtOptionMenu();
@@ -22,11 +26,26 @@ FuiQtQueryInputField::FuiQtQueryInputField(QWidget* parent, const char* name)
 
   this->initWidgets();
 
-  QBoxLayout* layout = new QHBoxLayout(this);
+  QWidget* qField = label && above ? new QWidget() : this;
+  QBoxLayout* layout = new QHBoxLayout(qField);
   layout->setContentsMargins(0,0,0,0);
   layout->setSpacing(0);
-  layout->addWidget(static_cast<FFuQtOptionMenu*>(myOptions),1);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(myButton));
+  if (label && !above)
+  {
+    layout->addWidget(new QLabel(label),0,Qt::AlignVCenter);
+    layout->addSpacing(6);
+  }
+  layout->addWidget(myOptions->getQtWidget(),1,Qt::AlignVCenter);
+  layout->addWidget(myButton->getQtWidget(),0,Qt::AlignVCenter);
+
+  if (label && above)
+  {
+    layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0,0,0,0);
+    layout->setSpacing(0);
+    layout->addWidget(new QLabel(label));
+    layout->addWidget(qField);
+  }
 }
 
 
@@ -57,8 +76,10 @@ void FuiQtQueryInputField::resizeEvent(QResizeEvent* e)
   {
     const int border = 2;
     const int arrowWidth = 17;
-    int width  = myOptions->getWidth() - arrowWidth;
-    int height = myOptions->getHeight();
-    myIOField->setSizeGeometry(border,border,width-border,height-2*border);
+    int x = myOptions->getXPos() + border;
+    int y = myOptions->getYPos() + border;
+    int width  = myOptions->getWidth() - arrowWidth - border;
+    int height = myOptions->getHeight() - 2*border;
+    myIOField->setSizeGeometry(x,y,width,height);
   }
 }

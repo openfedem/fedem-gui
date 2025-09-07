@@ -8,7 +8,7 @@
 #ifndef FUI_CURVE_DEFINE_H
 #define FUI_CURVE_DEFINE_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFuLib/FFuBase/FFuUAExistenceHandler.H"
 #include "FFuLib/FFuBase/FFuUADataHandler.H"
 #include "FFuLib/FFuColor.H"
@@ -19,10 +19,10 @@
 #include <vector>
 #include <array>
 
+class FFuFrame;
 class FFuLabelFrame;
 class FFuIOField;
 class FFuLabel;
-class FFuTable;
 class FFuToggleButton;
 class FFuPushButton;
 class FFuLabelField;
@@ -32,7 +32,6 @@ class FFuTabbedWidgetStack;
 class FFuSpinBox;
 class FFuRadioButton;
 class FFuOptionMenu;
-class FFuColorDialog;
 class FFuColorChooser;
 class FFuaQueryBase;
 class FuiQueryInputField;
@@ -50,13 +49,12 @@ class FuiScaleShiftWidget;
 class FmModelMemberBase;
 
 
-class FuiCurveDefine : virtual public FFuMultUIComponent,
+class FuiCurveDefine : virtual public FFuComponentBase,
 		       public FFuUAExistenceHandler,
 		       public FFuUADataHandler
 {
 public:
   FuiCurveDefine();
-  virtual ~FuiCurveDefine() {}
 
   enum {X, Y, NDIRS};
 
@@ -85,17 +83,13 @@ public:
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
+  void rememberSelectedTab(bool show);
 
 private:
   // Inside callback functions
   void onLegendButtonToggled(bool toggle);
-  void onFieldValueChanged(char* dummy = 0);
-  void onValuesChanged();
-
-  // From FFuMultUIComponent
-  virtual void onPoppedDownToMem();
-  virtual void onPoppedUpFromMem();
+  void onFieldValueChanged(char*) { this->updateDBValues(false); }
+  void onValuesChanged() { this->updateDBValues(true); }
 
   // From datahandler
   virtual FFuaUIValues* createValuesObject();
@@ -104,16 +98,16 @@ private:
   virtual void buildDynamicWidgets(const FFuaUIValues* values);
 
 protected:
-  FFuLabelField* legendField;
-  FFuToggleButton* legendButton;
-
+  FFuLabelField*        legendField;
+  FFuToggleButton*      legendButton;
   FFuTabbedWidgetStack* tabStack;
-  FuiCurveDefSheet* curveDefSheet;
-  FuiCurveAnalysisSheet* curveAnalysisSheet;
-  FuiCurveScaleSheet* curveScaleSheet;
+
+  FuiCurveDefSheet*        curveDefSheet;
+  FuiCurveAnalysisSheet*   curveAnalysisSheet;
+  FuiCurveScaleSheet*      curveScaleSheet;
   FuiCurveAppearanceSheet* appearanceSheet;
-  FuiCurveInfoSheet* infoSheet;
-  FuiCurveFatigueSheet* fatigueSheet;
+  FuiCurveInfoSheet*       infoSheet;
+  FuiCurveFatigueSheet*    fatigueSheet;
 
 private:
   int selectedTab;
@@ -126,119 +120,94 @@ private:
 class FuaCurveDefineValues : public FFuaUIValues
 {
 public:
-  FuaCurveDefineValues() {
-    this->autoLegend = false;
-    this->axesComplete = false;
-    this->manualReload = false;
-    this->autoExport = false;
-    this->selectedTabIdx = 0;
-
-    this->inputMode = 0;
-    this->isMultiChannelFile = false;
-    this->channel = "Not set";
-
-    this->timeRange = {0.0, 0.0};
-
-    this->curveType = 0;
-    this->curveWidth = 0;
-    this->curveSymbol = 0;
-    this->symbolSize = 0;
-    this->numSymbols = 10;
-
-    this->scaleX = 1.0;
-    this->offsetX = 0.0;
-    this->zeroAdjustX = false;
-    this->scaleY = 1.0;
-    this->offsetY = 0.0;
-    this->zeroAdjustY = false;
-
-    this->analysis = false;
-    this->dftDomain = {0.0, 1.0};
-    this->dftFeasable = false;
-    this->dftEntireDomain = false;
-    this->dftRemoveComp = false;
-    this->dftResample = false;
-    this->dftResampleRate = 0.0;
-    this->fatigueDomain = {0.0, 1.0};
-    this->fatigueEntireDomain = true;
-    this->fatigueGateValue = 1.0;
-    this->fatigueFeasable = 0;
-    this->fatigueSNCurve = 0;
-    this->fatigueSNStd = 0;
-    this->fatigueLifeUnit = 0;
-
-    this->firstTriad = this->secondTriad = NULL;
-    this->functionRef = NULL;
-    this->functionQuery = this->curveQuery = NULL;
-  }
-  virtual ~FuaCurveDefineValues() {}
-
   std::string legend;
-  bool autoLegend;
-  bool axesComplete;
-  bool manualReload;
-  bool autoExport;
-  int selectedTabIdx;
+  bool autoLegend = false;
+  bool axesComplete = false;
+  bool manualReload = false;
+  bool autoExport = false;
+  int selectedTabIdx = 0;
 
-  int inputMode;
+  int inputMode = 0;
   std::string expression;
   std::vector<bool> activeComps;
   std::string modelFilePath;
   std::string filePath;
-  bool isMultiChannelFile;
-  std::string channel;
+  bool isMultiChannelFile = false;
+  std::string channel = "Not set";
 
-  std::pair<double,double> timeRange;
+  std::pair<double,double> timeRange = { 0.0, 0.0 };
   std::string timeOper;
   std::string spaceOper;
 
-  int curveType;
-  int curveWidth;
-  int curveSymbol;
-  int symbolSize;
-  int numSymbols;
+  int curveType   = 0;
+  int curveWidth  = 0;
+  int curveSymbol = 0;
+  int symbolSize  = 0;
+  int numSymbols  = 10;
   FFuColor color;
 
-  double scaleX;
-  double offsetX;
-  bool zeroAdjustX;
-  double scaleY;
-  double offsetY;
-  bool zeroAdjustY;
+  double scaleX    = 1.0;
+  double offsetX   = 0.0;
+  bool zeroAdjustX = false;
+  double scaleY    = 1.0;
+  double offsetY   = 0.0;
+  bool zeroAdjustY = false;
+ 
+  char analysis = false;
+  std::pair<double,double> dftDomain = { 0.0, 1.0 };
+  bool dftFeasable = false;
+  bool dftEntireDomain = false;
+  bool dftRemoveComp = false;
+  bool dftResample = false;
+  double dftResampleRate = 0.0;
+  std::pair<double,double> fatigueDomain = { 0.0, 1.0 };
+  bool fatigueEntireDomain = false;
+  double fatigueGateValue = 1.0;
+  char fatigueFeasable = 0;
+  int fatigueSNCurve = 0;
+  int fatigueSNStd = 0;
+  int fatigueLifeUnit = 0;
 
-  char analysis;
-  std::pair<double,double> dftDomain;
-  bool dftFeasable;
-  bool dftEntireDomain;
-  bool dftRemoveComp;
-  bool dftResample;
-  double dftResampleRate;
-  std::pair<double,double> fatigueDomain;
-  bool fatigueEntireDomain;
-  double fatigueGateValue;
-  char fatigueFeasable;
-  int fatigueSNCurve;
-  int fatigueSNStd;
-  int fatigueLifeUnit;
+  FmModelMemberBase* firstTriad = NULL;
+  FmModelMemberBase* secondTriad = NULL;
 
-  FmModelMemberBase* firstTriad;
-  FmModelMemberBase* secondTriad;
-
-  FmModelMemberBase* functionRef;
-  FFuaQueryBase*     functionQuery;
+  FmModelMemberBase* functionRef = NULL;
+  FFuaQueryBase*     functionQuery = NULL;
   FuaFunctionDomain  functionDomain;
 
   std::vector<FmModelMemberBase*> curveComps;
-  FFuaQueryBase*     curveQuery;
+  FFuaQueryBase*     curveQuery = NULL;
 };
 /////////////////////////////////////////////////////////////////////////////
 
 
-class FuiCurveDefSheet : virtual public FFuMultUIComponent
+class FuiCurveDomain : virtual public FFuComponentBase
+{
+public:
+  FuiCurveDomain() { entireBtn = NULL; startField = endField = NULL; }
+
+  void initWidgets(bool internalToggleCB = true);
+  void initWidgets(const FFaDynCB1<double>& doubleCB,
+                   const FFaDynCB1<bool>& boolCB);
+  void setValues(const std::pair<double,double>& domain,
+                 bool entire, bool isSensitive = true);
+  bool getValues(std::pair<double,double>& domain) const;
+
+private:
+  void onButtonToggled(bool toggle);
+
+protected:
+  FFuLabelField*   startField;
+  FFuLabelField*   endField;
+  FFuToggleButton* entireBtn;
+};
+/////////////////////////////////////////////////////////////////////////////
+
+
+class FuiCurveDefSheet : virtual public FFuComponentBase
 {
 public:
   FuiCurveDefSheet();
-  virtual ~FuiCurveDefSheet() {}
 
   enum {
     TEMPORAL_RESULT = 0,
@@ -261,62 +230,60 @@ public:
   void buildDynamicWidgets(const FuaCurveDefineValues* values);
 
   FmModelMemberBase* getSelectedFunction() const;
-  FuiCurveAxisDefinition* getAxisUI(int dir) const;
+  FuiCurveAxisDefinition* getAxisUI(int dir) const { return axes[dir]; }
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
 
   virtual void setNoComps(unsigned int nc) = 0;
 
 private:
-  virtual void onPoppedDownToMem();
-
   void onInputModeToggled(int, bool);
-  void onFileSelected(const std::string&, int);
+  void onFileSelected(const std::string&, int) { dataChangedCB.invoke(); }
   void onChannelBtnClicked();
   void onChannelSelectOK(int index);
   void onChannelSelectApply(int index);
   void onChannelSelectCancel(int);
-  void onReloadCurveClicked();
-  void onExpressionChanged(char*);
-  void onFieldValueChanged(double);
-  void onRefSelected(int);
-  void onButtonToggled(bool);
+  void onReloadCurveClicked() { reloadCurveCB.invoke(); }
+  void onExpressionChanged(char*) { dataChangedCB.invoke(); }
+  void onFieldValueChanged(double) { dataChangedCB.invoke(); }
+  void onRefSelected(int) { dataChangedCB.invoke(); }
+  void onButtonToggled(bool) { dataChangedCB.invoke(); }
 
   void setDefineMode(int inputMode);
 
 protected:
-  FFuLabelFrame* sourceFrame;
   FFuRadioButton* rdbResultPlotRadio;
   FFuRadioButton* combCurvePlotRadio;
   FFuRadioButton* extCurvePlotRadio;
   FFuRadioButton* intFunctionPlotRadio;
   FFuLogicButtonGroup inputGroup;
 
-  std::array<FFuLabelFrame*,FuiCurveDefine::NDIRS> frames;
+  FFuComponentBase* rdbAxes;
   std::array<FuiCurveAxisDefinition*,FuiCurveDefine::NDIRS> axes;
-  FFuLabelFrame* definitionFrame;
+  FFuLabelFrame* xAxisFrame;
+  FFuOptionMenu* spaceOper;
+  FuiCurveTimeRange* timeRange;
+
+  FFuLabelFrame* combFrame;
   FFuLabelField* exprField;
-  FFuTable* compTable;
   std::vector<FuiQueryInputField*> curveComps;
+
+  FFuLabelFrame* fileFrame;
   FFuFileBrowseField* fileBrowseField;
-  FFuPushButton* reloadCurveButton;
   FFuLabelField* channelField;
   FFuPushButton* channelBtn;
   FFuScrolledListDialog* channelSelectUI;
-  FFuLabel* functionLabel;
+
+  FFuLabelFrame* functionFrame;
   FuiQueryInputField* functionMenu;
   FFuLabelField* startXField;
   FFuLabelField* stopXField;
   FFuLabelField* incXField;
   FFuToggleButton* useSmartPointsBtn;
 
-  FuiCurveTimeRange* timeRange;
-  FFuLabel*          spaceObj;
-  FFuOptionMenu*     spaceOper;
-
   FFuLabel* completeLabel;
+  FFuPushButton* reloadCurveButton;
   FFuToggleButton* autoExportToggle;
 
 private:
@@ -331,52 +298,31 @@ private:
 /////////////////////////////////////////////////////////////////////////////
 
 
-class FuiCurveAppearanceSheet : virtual public FFuMultUIComponent
+class FuiCurveAppearanceSheet : virtual public FFuComponentBase
 {
 public:
   FuiCurveAppearanceSheet();
-  virtual ~FuiCurveAppearanceSheet() {}
 
-  void setDataChangedCB(const FFaDynCB0& aCB) { this->dataChangedCB = aCB; }
+  void setDataChangedCB(const FFaDynCB0& aCB) { dataChangedCB = aCB; }
 
   void setUIValues(const FuaCurveDefineValues* values);
   void getUIValues(FuaCurveDefineValues* values) const;
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
 
 private:
-  virtual void onPoppedDownToMem();
-
-  void onIntValueChanged(int);
-  void onAllSymbolsToggled(bool);
-
-  void onColorDialogOk(const FFuColor&);
-  void onColorDialogCancel(const FFuColor&);
-  void onColorChanged(const FFuColor&);
+  void onIntValueChanged(int) { dataChangedCB.invoke(); }
+  void onSymbolsToggled(bool) { dataChangedCB.invoke(); }
+  void onColorChanged(const FFuColor&) { dataChangedCB.invoke(); }
 
 protected:
-  FFuLabelFrame* genAppearanceFrame;
-  FFuLabelFrame* symbolFrame;
-
-  FFuLabel*      curveTypeLabel;
-  FFuOptionMenu* curveTypeMenu;
-
-  FFuLabel*   curveWidthLabel;
-  FFuSpinBox* curveWidthBox;
-
-  FFuLabel*        colorLabel;
+  FFuOptionMenu*   curveTypeMenu;
+  FFuSpinBox*      curveWidthBox;
   FFuColorChooser* colorChooser;
-  FFuColorDialog*  colorDialog;
 
-  FFuLabel*      curveSymbolLabel;
-  FFuOptionMenu* curveSymbolMenu;
-
-  FFuLabel*   symbolSizeLabel;
-  FFuSpinBox* symbolSizeBox;
-
-  FFuLabel*        numSymbolsLabel;
+  FFuOptionMenu*   curveSymbolMenu;
+  FFuSpinBox*      symbolSizeBox;
   FFuSpinBox*      numSymbolsBox;
   FFuToggleButton* allSymbolsButton;
 
@@ -386,38 +332,30 @@ private:
 /////////////////////////////////////////////////////////////////////////////
 
 
-class FuiCurveAnalysisSheet : virtual public FFuMultUIComponent
+class FuiCurveAnalysisSheet : virtual public FFuComponentBase
 {
 public:
-  FuiCurveAnalysisSheet() {}
-  virtual ~FuiCurveAnalysisSheet() {}
-
-  void setDataChangedCB(const FFaDynCB0& aCB) { this->dataChangedCB = aCB; }
+  void setDataChangedCB(const FFaDynCB0& aCB) { dataChangedCB = aCB; }
 
   void setUIValues(const FuaCurveDefineValues* values);
   void getUIValues(FuaCurveDefineValues* values) const;
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
 
 private:
   void onDftToggled(bool toggle);
   void onDiffToggled(bool toggle);
   void onIntToggled(bool toggle);
-  void onButtonToggled(bool toggle);
-  void onFieldValueChanged(double value);
+  void onButtonToggled(bool) { dataChangedCB.invoke(); }
+  void onFieldValueChanged(double) { dataChangedCB.invoke(); }
 
 protected:
-  FFuLabelFrame* dftFrame;
   FFuToggleButton* doDftBtn;
-  FFuToggleButton* entireDomainBtn;
   FFuToggleButton* removeCompBtn;
   FFuToggleButton* resampleBtn;
-  FFuLabelFrame* dftDomainFrame;
-  FFuLabelField* startField;
-  FFuLabelField* endField;
   FFuIOField* resampleRateField;
+  FuiCurveDomain* curveDomain;
 
   FFuToggleButton* diffBtn;
   FFuToggleButton* intBtn;
@@ -431,11 +369,10 @@ private:
 /////////////////////////////////////////////////////////////////////////////
 
 
-class FuiCurveInfoSheet : virtual public FFuMultUIComponent
+class FuiCurveInfoSheet : virtual public FFuComponentBase
 {
 public:
   FuiCurveInfoSheet() { probablyHasMarkers = false; }
-  virtual ~FuiCurveInfoSheet() {}
 
   void setGetCurveStatisticsCB(const FFaDynCB4<bool,bool,double,double>& aCB)
   { this->getCurveStatisticsCB = aCB; }
@@ -453,25 +390,21 @@ public:
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
 
 private:
   void onBtnClicked();
-  void onEntireDomainToggled(bool toggle);
 
 protected:
   FFuLabelFrame* domainFrame;
   FFuPushButton* calculateBtn;
   FFuToggleButton* useScaleShiftBtn;
-  FFuLabelField* startField;
-  FFuLabelField* stopField;
   FFuLabelField* rmsField;
   FFuLabelField* avgField;
   FFuLabelField* stdDevField;
   FFuLabelField* integralField;
   FFuLabelField* maxField;
   FFuLabelField* minField;
-  FFuToggleButton* entireDomainBtn;
+  FuiCurveDomain* xDomain;
 
 private:
   FFaDynCB4<bool,bool,double,double> getCurveStatisticsCB;
@@ -483,13 +416,10 @@ private:
 /////////////////////////////////////////////////////////////////////////////
 
 
-class FuiCurveScaleSheet : virtual public FFuMultUIComponent
+class FuiCurveScaleSheet : virtual public FFuComponentBase
 {
 public:
-  FuiCurveScaleSheet() {}
-  virtual ~FuiCurveScaleSheet() {}
-
-  void setDataChangedCB(const FFaDynCB0& aCB) { this->dataChangedCB = aCB; }
+  void setDataChangedCB(const FFaDynCB0& aCB) { dataChangedCB = aCB; }
 
   void setUIValues(const FuaCurveDefineValues* values);
   void getUIValues(FuaCurveDefineValues* values) const;
@@ -497,10 +427,6 @@ public:
 protected:
   void initWidgets();
 
-private:
-  void invokeDataChangedCB() { this->dataChangedCB.invoke(); }
-
-protected:
   FuiScaleShiftWidget* XScale;
   FuiScaleShiftWidget* YScale;
 
@@ -510,18 +436,15 @@ private:
 /////////////////////////////////////////////////////////////////////////////
 
 
-class FuiCurveFatigueSheet : virtual public FFuMultUIComponent
+class FuiCurveFatigueSheet : virtual public FFuComponentBase
 {
 public:
   FuiCurveFatigueSheet() { myInterval = 0.0; delayDamage=showCalcBtn = false; }
-  virtual ~FuiCurveFatigueSheet() {}
 
   enum {REPEATS, HOURS, DAYS};
 
   void setDataChangedCB(const FFaDynCB0& aCB);
-
-  void setCalculateCurveDamageCB(const FFaDynCB4<bool,bool,double,double>& aCB)
-  { this->calculateCurveDamageCB = aCB; }
+  void setCalculateCurveDamageCB(const FFaDynCB4<bool,bool,double,double>& aCB);
 
   void setCurveDamage(double damage, double interval);
 
@@ -533,34 +456,25 @@ public:
 
 protected:
   void initWidgets();
-  virtual void placeWidgets(int width, int height);
 
 private:
   void onButtonClicked() { this->calculateCurveDamage(true); }
-  void onButtonToggled(bool toggle);
-  void onFieldValueChanged(double value);
-  void onUnitValueChanged(int value);
+  void onButtonToggled(bool) { dataChangedCB.invoke(); }
+  void onFieldValueChanged(double) { dataChangedCB.invoke(); }
 
   void calculateCurveDamage(bool eventWeighted = false);
   void recalculateLife(int unitType);
 
 protected:
   FuiSNCurveSelector* snSelector;
-
   FFuLabelField* gateValueField;
 
-  FFuLabelFrame* resultFrame;
   FFuLabelField* damageField;
   FFuLabelField* lifeField;
+  FFuOptionMenu* unitTypeMenu;
   FFuPushButton* calculateBtn;
 
-  FFuLabel*      unitLabel;
-  FFuOptionMenu* unitTypeMenu;
-
-  FFuLabelFrame*   domainFrame;
-  FFuLabelField*   startField;
-  FFuLabelField*   stopField;
-  FFuToggleButton* entireDomainBtn;
+  FuiCurveDomain* timeDomain;
 
 public: // because FuiCurveAnalysisSheet needs to access this button too
   FFuToggleButton* doRainflowBtn;

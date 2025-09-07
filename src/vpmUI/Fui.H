@@ -109,7 +109,6 @@ namespace Fui
     EIGENMODEOPTIONS_GEO,
     GAGEOPTIONS_GEO,
     FPPOPTIONS_GEO,
-    DUTYCYCLEOPTIONS_GEO,
     PREFERENCES_GEO,
     ANIMATIONCONTROL_GEO,
     RDBSELECTOR_GEO,
@@ -155,7 +154,6 @@ namespace Fui
   void eigenmodeOptionsUI (bool onScreen = true, bool inMem = false);
   void gageOptionsUI      (bool onScreen = true, bool inMem = false);
   void fppOptionsUI       (bool onScreen = true, bool inMem = false);
-  void dutyCycleOptionsUI (bool onScreen = true, bool inMem = false);
   void preferencesUI      (bool onScreen = true, bool inMem = false);
   void animationControlUI (bool onScreen = true, bool inMem = false);
   void rdbSelectorUI      (bool onScreen = true, bool inMem = false);

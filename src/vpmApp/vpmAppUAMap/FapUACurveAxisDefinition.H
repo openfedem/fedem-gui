@@ -36,7 +36,7 @@ public:
 
 private:
   void editResult();
-  void onOperSelected(const std::string& oper);
+  void onOperSelected(std::string oper);
 
   FuiCurveAxisDefinition* ui;
 

@@ -12,8 +12,8 @@
 #include <vector>
 #include <map>
 
+#include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
 
 class FFuIOField;
 
@@ -21,7 +21,7 @@ class FFuIOField;
 class FuiParameterView
 {
 public:
-  class PrmSheet : public virtual FFuMultUIComponent
+  class PrmSheet : public virtual FFuComponentBase
   {
   public:
     PrmSheet() : IAmSensitive(true) {}
@@ -40,16 +40,15 @@ public:
     bool IAmSensitive;
   };
 
-  static PrmSheet* createSheet(FFuMultUIComponent* parent,
+  static PrmSheet* createSheet(FFuComponentBase* parent,
                                const char* name = "FuiParameterView");
 
   void setFields(int idx, const std::vector<std::string>& names,
-                 FFuMultUIComponent* parent = NULL);
+                 FFuComponentBase* parent = NULL);
   void setValues(int idx, const std::vector<double>& values);
   void getValues(int idx, std::vector<double>& values) const;
   int  getValues(std::vector<double>& values) const;
 
-  void setEdgeGeometry(int v1, int v2, int h1, int h2);
   void setSensitivity(bool isSensitive);
   void popDown();
 

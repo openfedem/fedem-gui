@@ -5,48 +5,32 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-//include
-#include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtExtCtrlSysProperties.H"
-#include "vpmUI/vpmUIComponents/FuiExtCtrlSysProperties.H"
+#include <QVBoxLayout>
+
+#include "FFuLib/FFuQtComponents/FFuQtTable.H"
 #include "FFuLib/FFuQtComponents/FFuQtLabel.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabelField.H"
-#include "FFuLib/FFuQtComponents/FFuQtFrame.H"
 #include "FFuLib/FFuQtComponents/FFuQtFileBrowseField.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtQueryInputField.H"
-#include "FFuLib/FFuQtComponents/FFuQtTable.H"
 
-//----------------------------------------------------------------------------
+#include "FuiQtExtCtrlSysProperties.H"
 
-FuiQtExtCtrlSysProperties::FuiQtExtCtrlSysProperties(QWidget* parent,
-						     const char* name)
-  : FFuQtMultUIComponent(parent,name)
+
+FuiQtExtCtrlSysProperties::FuiQtExtCtrlSysProperties(QWidget* parent)
+  : FFuQtWidget(parent,"FuiQtExtCtrlSysProperties")
 {
-  // Component creation
-  this->fileBrowseField = new FFuQtFileBrowseField(this);
-  this->myTable = new FFuQtTable(this);
+  fileBrowseField = new FFuQtFileBrowseField(NULL);
+  myTable         = new FFuQtTable(NULL);
 
-  //base class component initiation
-  this->FuiExtCtrlSysProperties::initWidgets();
-  
-}
-//----------------------------------------------------------------------------
+  this->initWidgets();
 
-FuiQtExtCtrlSysProperties::~FuiQtExtCtrlSysProperties()
-{
+  QLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(fileBrowseField->getQtWidget());
+  layout->addWidget(myTable->getQtWidget());
 }
 
-//----------------------------------------------------------------------------
+
 void FuiQtExtCtrlSysProperties::makeNewFields()
 {
-  QWidget* qTablePtr = dynamic_cast<QWidget*>(myTable);
-
-  this->myInpEngineFields.push_back(new FuiQtQueryInputField(qTablePtr));
-  this->myNameLabels.push_back(new FFuQtLabel(qTablePtr));
+  myInpEngineFields.push_back(new FuiQtQueryInputField(myTable->getQtWidget()));
+  myNameLabels.push_back(new FFuQtLabel(myTable->getQtWidget()));
 }
-
-void FuiQtExtCtrlSysProperties::setSensitivity(bool isSensitive)
-{
-  FuiExtCtrlSysProperties::setSensitivity(isSensitive);
-}
-
-//----------------------------------------------------------------------------

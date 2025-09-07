@@ -16,9 +16,6 @@
 #include "vpmUI/vpmUITopLevels/FuiEigenOptions.H"
 #include "vpmUI/vpmUITopLevels/FuiGageOptions.H"
 #include "vpmUI/vpmUITopLevels/FuiFppOptions.H"
-#ifdef FT_HAS_NCODE
-#include "vpmUI/vpmUITopLevels/FuiDutyCycleOptions.H"
-#endif
 #include "vpmUI/vpmUITopLevels/FuiAnimationControl.H"
 #include "vpmUI/vpmUITopLevels/FuiPreferences.H"
 #include "vpmUI/vpmUITopLevels/FuiViewSettings.H"
@@ -494,14 +491,6 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       geo.width  = 370;
       geo.height = 590;
       break;
-#ifdef FT_HAS_NCODE
-    case DUTYCYCLEOPTIONS_GEO:
-      geo.width  = 650;
-      geo.height = 400;
-      geo.xPos   = modellerWidth - geo.width;
-      geo.yPos   = modellerHeight - 275 - 210 - uiBorderWidth;
-      break;
-#endif
     case ANIMATIONCONTROL_GEO:
       geo.xPos   = 100;
       geo.yPos   = 350;
@@ -754,24 +743,6 @@ void Fui::fppOptionsUI(bool onScreen, bool inMem)
 
   if (uic) uic->manage(onScreen,inMem);
 }
-
-
-#ifdef FT_HAS_NCODE
-void Fui::dutyCycleOptionsUI(bool onScreen, bool inMem)
-{
-  if (!mainWindow) return;
-
-  FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiDutyCycleOptions::getClassTypeID());
-
-  if ((onScreen || inMem) && uic == NULL)
-    {
-      Fui::Geo geo = Fui::getGeo(DUTYCYCLEOPTIONS_GEO);
-      uic = FuiDutyCycleOptions::create(geo.xPos, geo.yPos, geo.width, geo.height);
-    }
-
-  if (uic) uic->manage(onScreen,inMem);
-}
-#endif
 
 
 void Fui::preferencesUI(bool onScreen, bool inMem)

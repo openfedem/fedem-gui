@@ -9,7 +9,6 @@
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuRadioButton.H"
-#include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabel.H"
 
 
@@ -51,51 +50,6 @@ void FuiSpringDefCalc::initWidgets()
 						   onEngineChanged,int));
 
   this->setLabels(false,true);
-}
-
-
-void FuiSpringDefCalc::placeWidgets(int width, int height)
-{
-  int fontHeight = myVariableLabel->getFontHeigth();
-  int labelWidth = IAmSpring || (IAmAngular > 0 && !IAmDeflection) ? myILToggle->getWidthHint() : myIDToggle->getWidthHint();
-
-  int border      = 6;
-  int fieldHeight = 20;
-  int fieldSpace  = 10;
-
-  while (11*(fieldHeight + fieldSpace)/2 > height-border)
-    if (11*fieldHeight/2 > height-border) {
-      fieldHeight = 2*(height-border)/11;
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-
-  if (fieldHeight < fontHeight) fontHeight = fieldHeight;
-
-  int v1 = border;
-  int v2 = v1 + labelWidth + border;
-  int v3 = width - border;
-
-  myFrame->setEdgeGeometry(0,width,0,height);
-
-  int line = border/2 + fieldSpace + fieldHeight;
-  myVariableLabel->setCenterYGeometry(v1,line,v2-v1,fieldHeight);
-  myVariableField->setCenterYGeometry(v2,line,v3-v2,fieldHeight);
-
-  line += fieldSpace + fieldHeight;
-  myILToggle->setCenterYGeometry(v1,line,v2-v1,fieldHeight);
-  myILengthField->setCenterYGeometry(v2,line,v3-v2,fieldHeight);
-
-  line += fieldSpace + fieldHeight;
-  myIDToggle->setCenterYGeometry(v1,line,v2-v1,fieldHeight);
-  myIDeflField->setCenterYGeometry(v2,line,v3-v2,fieldHeight);
-
-  line += fieldSpace + fieldHeight;
-  myLengthChangeLabel->setCenterYGeometry(v1,line,v3-v1,fontHeight);
-  line += fieldSpace + fontHeight;
-  myLengthEngineField->setCenterYGeometry(v1,line,v3-v1,fieldHeight);
 }
 
 
@@ -147,7 +101,6 @@ void FuiSpringDefCalc::buildDynamicWidgets(const FuiSpringDefCalcValues& values)
 void FuiSpringDefCalc::setValues(const FuiSpringDefCalcValues& values)
 {
   this->setLabels(values.useAngularLabels,values.useSpringLabels);
-  this->placeWidgets(this->getWidth(),this->getHeight());
 
   myVariableField->setValue(values.variable);
 
@@ -244,14 +197,14 @@ void FuiSpringDefCalc::setLabels(char isAngle, bool isSpring)
   if (IAmSpring) // Spring controlled motion
   {
     if (IAmAngular > 0) {
-      myFrame->setLabel("Stress free angle control");
+      this->setLabel("Stress free angle control");
       myVariableLabel->setLabel("Angle in model");
       myILToggle->setLabel("Constant stress free angle");
       myIDToggle->setLabel("Constant deflection");
       myLengthChangeLabel->setLabel("Stress free angle change");
     }
     else {
-      myFrame->setLabel("Stress free length control");
+      this->setLabel("Stress free length control");
       myVariableLabel->setLabel("Length in model");
       myILToggle->setLabel("Constant stress free length");
       myIDToggle->setLabel("Constant deflection");
@@ -261,12 +214,12 @@ void FuiSpringDefCalc::setLabels(char isAngle, bool isSpring)
   else         // Prescribed motion
   {
     if (IAmAngular > 0) {
-      myFrame->setLabel("Rotation control");
+      this->setLabel("Rotation control");
       myVariableLabel->setLabel("Angle in model");
       myIDToggle->setLabel("Constant rotation");
     }
     else {
-      myFrame->setLabel("Translation control");
+      this->setLabel("Translation control");
       myVariableLabel->setLabel("Length in model");
       myIDToggle->setLabel("Constant displacement");
     }

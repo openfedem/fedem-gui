@@ -38,15 +38,18 @@ void FuiCreateBeamstringPair::initWidgets()
 
   this->beamstringMenu1->setBehaviour(FuiQueryInputField::REF_NONE,true);
   this->beamstringMenu2->setBehaviour(FuiQueryInputField::REF_NONE,true);
-  this->stiffnessFunctionMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
+  this->stiffnessMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
 
-  this->useRadialSpringsToggle->setLabel("Use radial springs");
+  this->radialToggle->setLabel("Use radial springs");
 
-  this->notesText->setLabel(
-    "The Beamstring Pair Definition tool is used to generate Free Joints between the triads of a beamstring pair.\n"
-    "The primary purpose of this approach is to simulate that the inner pipe hits the outer pipe, and then the\n"
-    "inner pipe will bounce back. The Contact stiffness function provides the magnitude of the contact spring\n"
-    "that is applied on all joints. The Use radial springs check box indicates whether radial springs are to be used.");
+  this->beamstringNotes->setText(
+    "The Beamstring Pair Definition tool is used to generate Free Joints "
+    "between the triads of a beamstring pair. "
+    "The primary purpose of this approach is to simulate that the inner pipe "
+    "hits the outer pipe, and then the inner pipe will bounce back. "
+    "The Contact stiffness function provides the magnitude of the contact "
+    "spring that is applied on all joints. The \"Use radial springs\" "
+    "check box indicates whether radial springs are to be used.");
 
   this->createButton->setLabel("Generate Free Joints");
   this->eraseButton->setLabel("Erase Free Joints");
@@ -78,8 +81,8 @@ void FuiCreateBeamstringPair::onCreateButtonClicked()
 {
   this->myCBs.createCB.invoke(beamstringMenu1->getSelectedRef(),
                               beamstringMenu2->getSelectedRef(),
-                              stiffnessFunctionMenu->getSelectedRef(),
-                              useRadialSpringsToggle->getValue());
+                              stiffnessMenu->getSelectedRef(),
+                              radialToggle->getValue());
 }
 //----------------------------------------------------------------------------
 
@@ -110,7 +113,7 @@ void FuiCreateBeamstringPair::setUIValues(const FFuaUIValues* values)
   this->beamstringMenu1->setSelectedRef(NULL);
   this->beamstringMenu2->setQuery(cbpValues->beamstringQuery2);
   this->beamstringMenu2->setSelectedRef(NULL);
-  this->stiffnessFunctionMenu->setQuery(cbpValues->stiffnessFunctionQuery);
-  this->stiffnessFunctionMenu->setSelectedRef(NULL);
+  this->stiffnessMenu->setQuery(cbpValues->stiffnessFunctionQuery);
+  this->stiffnessMenu->setSelectedRef(NULL);
   this->setSensitivity(cbpValues->isSensitive);
 }

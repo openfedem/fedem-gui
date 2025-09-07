@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmUI/vpmUIComponents/FuiLinkTabs.H"
+#include "vpmUI/vpmUIComponents/FuiDynamicProperties.H"
 #include "vpmUI/vpmUIComponents/FuiPositionData.H"
 #include "vpmUI/vpmUIComponents/Fui3DPoint.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
@@ -13,7 +14,6 @@
 #include "vpmDB/FmPart.H"
 
 #include "FFuLib/FFuTable.H"
-#include "FFuLib/FFuFrame.H"
 #include "FFuLib/FFuLabel.H"
 #include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabelField.H"
@@ -50,6 +50,7 @@ void FuiLinkModelSheet::initWidgets()
   this->repositoryFileField->setSensitivity(false);
   this->importedFileField->setLabel("Imported file");
   this->importedFileField->setSensitivity(false);
+  this->importedFileField->setLabelWidth(this->repositoryFileField->myLabel->getWidthHint());
 
   this->vizFrame->setLabel("Visualization");
   this->vizField->setLabel("File:");
@@ -58,142 +59,10 @@ void FuiLinkModelSheet::initWidgets()
   this->vizChangeBtn->setActivateCB(FFaDynCB0M(FuiLinkModelSheet,this,onChangeViz));
 
   this->changeLinkBtn->setLabel("Change...");
-  this->changeLinkBtn->setActivateCB(FFaDynCB0M(FuiLinkModelSheet,this,onChangeLink));
+  this->changeLinkBtn->setActivateCB(FFaDynCB0M(FFaDynCB0,&changeLinkCB,invoke));
   this->unitConversionLabel->setLabel("No unit conversion");
 
-  this->needsReductionFrame->setLook(FFuFrame::PANEL_SUNKEN);
-  this->needsReductionLabel->setLabel("Needs\nReduction");
-
-  this->structDampFrame->setLabel("Structural Damping");
-  this->massProportionalField->setLabel("Mass proportional");
-  this->massProportionalField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->massProportionalField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-  this->stiffProportionalField->setLabel("Stiffness proportional");
-  this->stiffProportionalField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->stiffProportionalField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-
-  this->dynPropFrame->setLabel("Scaling of Dynamic Properties");
-  this->stiffScaleField->setLabel("Stiffness");
-  this->stiffScaleField->setToolTip("Scaling of stiffness");
-  this->stiffScaleField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->stiffScaleField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-  this->massScaleField->setLabel("Mass");
-  this->massScaleField->setToolTip("Scaling of mass");
-  this->massScaleField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->massScaleField->setAcceptedCB(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
-}
-
-
-void FuiLinkModelSheet::placeWidgets(int width, int height)
-{
-  int border = 6;
-  int fieldHeight = 19;
-  int fieldSpace = 6;
-  int left = border;
-  int right = width - border;
-
-  // Vertical
-
-  while (5*fieldHeight + 5*fieldSpace > height - 7*border)
-    if (5*fieldHeight >= height - 7*border) {
-      fieldHeight = (height - 7*border)/5;
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-
-  int topFrameTop = border;
-  int line1 = topFrameTop + border + fieldSpace + fieldHeight;
-  int line2 = line1 + fieldSpace + fieldHeight;
-  int topFrameBtm = line2 + border + (fieldSpace + fieldHeight)/2;
-
-  int btmFrameTop = topFrameBtm + border;
-  int line3 = btmFrameTop + border + fieldSpace + fieldHeight;
-  int line4 = line3 + fieldSpace + fieldHeight;
-  int btmFrameBtm = line4 + border + (fieldSpace + fieldHeight)/2;
-
-  int btnLeft = left;
-  int btnRight = btnLeft + this->suppressInSolverToggle->getWidthHint();
-
-  int needsReductionW = 60;
-  int needsReductionRight = right;
-  int needsReductionLeft = needsReductionRight - needsReductionW;
-
-  int fileFrameLeft = btnRight + border;
-  int fileFrameRight = needsReductionLeft - border;
-
-  int leftFrameLeft = left;
-  int leftFrameRight = width/2 - border/2;
-  int rightFrameLeft = leftFrameRight + border;
-  int rightFrameRight = right;
-
-  int changeBtnRight = fileFrameRight - border;
-  int changeBtnLeft = changeBtnRight - this->changeLinkBtn->getWidthHint();
-  int repFieldWidth = changeBtnLeft - fileFrameLeft - 2*border;
-
-  int unitConvLeft = changeBtnRight - this->unitConversionLabel->getWidthHint();
-  int impFieldWidth = unitConvLeft - fileFrameLeft - 2*border;
-
-  int buttonCenterY1 = topFrameTop + fieldHeight/2;
-  int buttonCenterY2 = buttonCenterY1 + fieldHeight;
-  int buttonCenterY3 = buttonCenterY2 + fieldSpace+fieldHeight;
-
-  // radios
-  this->feModelBtn->setCenterYGeometryWidthHint(left, buttonCenterY1, fieldHeight);
-  this->genPartBtn->setCenterYGeometryWidthHint(left, buttonCenterY2, fieldHeight);
-
-  // Suppress related things
-  this->suppressInSolverToggle->setCenterYGeometryWidthHint(left, buttonCenterY3, fieldHeight);
-  this->suppressInSolverLabel->setCenterYGeometrySizeHint(leftFrameLeft + border, line3);
-  this->suppressInSolverToggle->toFront();
-
-  // frames
-  this->feModelFrame->setEdgeGeometry(fileFrameLeft, fileFrameRight, topFrameTop, topFrameBtm);
-  this->vizFrame->setEdgeGeometry(fileFrameLeft, fileFrameRight, topFrameTop, topFrameBtm);
-  this->structDampFrame->setEdgeGeometry(leftFrameLeft, leftFrameRight, btmFrameTop, btmFrameBtm);
-  this->dynPropFrame->setEdgeGeometry(rightFrameLeft, rightFrameRight, btmFrameTop, btmFrameBtm);
-
-  // Inside visualization frame
-  this->vizField->setCenterYGeometry(fileFrameLeft + border, line1,
-				     repFieldWidth, fieldHeight);
-  this->vizChangeBtn->setCenterYGeometryWidthHint(changeBtnLeft, line1, fieldHeight);
-  this->vizLabel->setCenterYGeometry(fileFrameLeft + border, line2,
-				     repFieldWidth, fieldHeight);
-
-  // Inside finite element model frame
-  int labelWidth = this->repositoryFileField->myLabel->getWidthHint();
-  this->importedFileField->setLabelWidth(labelWidth);
-
-  this->repositoryFileField->setCenterYGeometry(fileFrameLeft + border, line1,
-						repFieldWidth, fieldHeight);
-  this->importedFileField->setCenterYGeometry(fileFrameLeft + border, line2,
-					      impFieldWidth, fieldHeight);
-  this->changeLinkBtn->setCenterYGeometryWidthHint(changeBtnLeft, line1, fieldHeight);
-  this->unitConversionLabel->setCenterYGeometrySizeHint(unitConvLeft, line2);
-
-  this->needsReductionFrame->setEdgeGeometry(needsReductionLeft, needsReductionRight,
-					     topFrameTop + border, topFrameBtm);
-  this->needsReductionLabel->setEdgeGeometry(needsReductionLeft + 2, needsReductionRight - 2,
-					     topFrameTop + border + 2, topFrameBtm - 2);
-
-  // Inside structural damping frame
-  labelWidth = this->stiffProportionalField->myLabel->getWidthHint();
-  this->massProportionalField->setLabelWidth(labelWidth);
-
-  this->massProportionalField->setCenterYGeometry(leftFrameLeft + border, line3,
-						  leftFrameRight - leftFrameLeft - 2*border, fieldHeight);
-  this->stiffProportionalField->setCenterYGeometry(leftFrameLeft + border, line4,
-						   leftFrameRight - leftFrameLeft - 2*border, fieldHeight);
-
-  // Inside dynamic properties frame
-  labelWidth = this->stiffScaleField->myLabel->getWidthHint();
-  this->massScaleField->setLabelWidth(labelWidth);
-
-  this->stiffScaleField->setCenterYGeometry(rightFrameLeft + border, line3,
-					    rightFrameRight - rightFrameLeft - 2*border, fieldHeight);
-  this->massScaleField->setCenterYGeometry(rightFrameLeft + border, line4,
-					   rightFrameRight - rightFrameLeft - 2*border, fieldHeight);
+  dynamicProps->initWidgets(FFaDynCB1M(FuiLinkModelSheet,this,onDoubleChanged,double));
 }
 
 
@@ -216,11 +85,6 @@ void FuiLinkModelSheet::setValues(const FuiLinkValues& values)
   this->importedFileField->setValue(values.importedFile);
   this->unitConversionLabel->setLabel(values.unitConversion);
 
-  if (values.reducedVersionNumber > 0)
-    this->needsReductionLabel->setLabel(FFaNumStr("Reduced\n[%d]",values.reducedVersionNumber));
-  else
-    this->needsReductionLabel->setLabel("Needs\nreduction");
-
   this->ICanChangeViz = values.allowChangeViz;
   this->vizField->setValue(values.vizFile);
   this->vizField->setSensitivity(this->IAmSensitive && this->ICanChangeViz);
@@ -231,10 +95,10 @@ void FuiLinkModelSheet::setValues(const FuiLinkValues& values)
   else
     this->vizLabel->setLabel("");
 
-  this->massProportionalField->setValue(values.massDamping);
-  this->stiffProportionalField->setValue(values.stiffDamping);
-  this->stiffScaleField->setValue(values.stiffScale);
-  this->massScaleField->setValue(values.massScale);
+  dynamicProps->setValues(values.massDamping,values.stiffDamping,
+                          values.stiffScale,values.massScale);
+
+  reductionFrame->setReducedVersion(values.reducedVersionNumber);
 
   this->update();
 }
@@ -244,10 +108,9 @@ void FuiLinkModelSheet::getValues(FuiLinkValues& values)
 {
   values.suppressInSolver = this->suppressInSolverToggle->getToggle();
   values.useGenericPart = this->genPartBtn->getToggle();
-  values.massDamping = this->massProportionalField->getValue();
-  values.stiffDamping = this->stiffProportionalField->getValue();
-  values.stiffScale = this->stiffScaleField->getValue();
-  values.massScale = this->massScaleField->getValue();
+
+  dynamicProps->getValues(values.massDamping,values.stiffDamping,
+                          values.stiffScale,values.massScale);
 }
 
 
@@ -284,18 +147,6 @@ void FuiLinkModelSheet::setChangeLinkCB(const FFaDynCB0& aDynCB)
 }
 
 
-void FuiLinkModelSheet::onChangeLink()
-{
-  this->changeLinkCB.invoke();
-}
-
-
-void FuiLinkModelSheet::setUpdateLinkCB(const FFaDynCB0& aDynCB)
-{
-  this->updateLinkCB = aDynCB;
-}
-
-
 void FuiLinkModelSheet::setChangeGPVizCB(const FFaDynCB2<const std::string&,bool>& aDynCB)
 {
   this->changeGPViz = aDynCB;
@@ -322,84 +173,33 @@ void FuiLinkModelSheet::setSensitivity(bool s)
   this->changeLinkBtn->setSensitivity(s && this->ICanChange);
   this->vizField->setSensitivity(s && this->ICanChangeViz);
   this->vizChangeBtn->setSensitivity(s && this->ICanChangeViz);
-  this->massProportionalField->setSensitivity(s);
-  this->stiffProportionalField->setSensitivity(s);
-  this->stiffScaleField->setSensitivity(s);
-  this->massScaleField->setSensitivity(s);
+
+  dynamicProps->setSensitivity(s);
 }
 
 
 void FuiLinkModelSheet::update()
 {
-  if (this->genPartBtn->getToggle()) {
+  if (genPartBtn->getToggle()) {
     feModelFrame->popDown();
-    repositoryFileField->popDown();
-    importedFileField->popDown();
-    unitConversionLabel->popDown();
-    needsReductionLabel->popDown();
-    needsReductionFrame->popDown();
-    changeLinkBtn->popDown();
-
+    reductionFrame->popDown();
     vizFrame->popUp();
-    vizField->popUp();
-    vizChangeBtn->popUp();
-    vizLabel->popUp();
   }
   else {
     feModelFrame->popUp();
-    repositoryFileField->popUp();
-    importedFileField->popUp();
-    unitConversionLabel->popUp();
-    needsReductionLabel->popUp();
-    needsReductionFrame->popUp();
-    changeLinkBtn->popUp();
-
+    reductionFrame->popUp();
     vizFrame->popDown();
-    vizField->popDown();
-    vizChangeBtn->popDown();
-    vizLabel->popDown();
   }
 
-  if (this->suppressInSolverToggle->getToggle()) {
-    needsReductionLabel->popDown();
-    needsReductionFrame->popDown();
-    structDampFrame->popDown();
-    massProportionalField->popDown();
-    stiffProportionalField->popDown();
-    dynPropFrame->popDown();
-    stiffScaleField->popDown();
-    massScaleField->popDown();
+  if (suppressInSolverToggle->getToggle()) {
     suppressInSolverLabel->popUp();
+    reductionFrame->popDown();
+    dynamicProps->popDown();
   }
   else {
-    structDampFrame->popUp();
-    dynPropFrame->popUp();
-    massProportionalField->popUp();
-    stiffProportionalField->popUp();
-    stiffScaleField->popUp();
-    massScaleField->popUp();
     suppressInSolverLabel->popDown();
+    dynamicProps->popUp();
   }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void FuiLinkOriginSheet::placeWidgets(int width, int height)
-{
-  posData->setEdgeGeometry(0, width, 0, height);
-}
-
-
-void FuiLinkOriginSheet::setEditedObjs(const std::vector<FmModelMemberBase*>& objs)
-{
-  posData->setEditedObjs(objs);
-}
-
-
-void FuiLinkOriginSheet::setSensitivity(bool s)
-{
-  posData->setSensitivity(s);
 }
 
 
@@ -409,19 +209,11 @@ void FuiLinkNodeSheet::initWidgets ()
 {
   myFENodeField->setLabel("FE Node");
   myFENodeField->setSensitivity(false);
+  myFENodeField->setMaxWidth(150);
+
   myNodePosition->setRefChangedCB(FFaDynCB1M(FuiLinkNodeSheet,this,onPosRefChanged,bool));
   myNodePosition->setSensitivity(false);
-  myViewedObj = NULL;
-}
-
-
-void FuiLinkNodeSheet::placeWidgets (int width, int height)
-{
-  int border = 6;
-  int fontHeight = this->getFontHeigth();
-  int fieldHeight = fontHeight + 5;
-  myFENodeField->setEdgeGeometry(border,width/4-border,border,border+fieldHeight);
-  myNodePosition->setEdgeGeometry(border,width/4-border,2*border+fieldHeight,height-border);
+  myNodePosition->setMaxWidth(150);
 }
 
 
@@ -463,6 +255,9 @@ void FuiLinkRedOptSheet::initWidgets()
   this->eigValToleranceField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->eigValToleranceField->setAcceptedCB(FFaDynCB1M(FuiLinkRedOptSheet,this,onDoubleChanged,double));
 
+  singCriterionField->setLabelWidth(eigValToleranceField->myLabel->getWidthHint());
+  componentModesField->setLabelWidth(eigValToleranceField->myLabel->getWidthHint());
+
   this->consistentMassBtn->setLabel("Consistent mass matrix");
   this->consistentMassBtn->setToggleCB(FFaDynCB1M(FuiLinkRedOptSheet,this,onBtnToggeled,bool));
 
@@ -472,10 +267,6 @@ void FuiLinkRedOptSheet::initWidgets()
   this->expandMSBtn->setLabel("Expand mode shapes");
   this->expandMSBtn->setToggleCB(FFaDynCB1M(FuiLinkRedOptSheet,this,onBtnToggeled,bool));
 
-  this->needsReductionFrame->setLook(FFuFrame::PANEL_SUNKEN);
-  this->needsReductionLabel->setLabel("Needs\nReduction");
-
-  this->eigValFactFrame->setLabel("Eigenvalue Factorization");
   this->massFactBtn->setLabel("Mass");
   this->stiffFactBtn->setLabel("Stiffness");
   this->eigValFactorizationGroup.insert(massFactBtn);
@@ -485,7 +276,6 @@ void FuiLinkRedOptSheet::initWidgets()
   this->eigValFactorizationGroup.setGroupToggleCB(FFaDynCB2M(FuiLinkRedOptSheet,this,
 							     onBtnToggeled,int,bool));
 
-  this->recoveryMatrixPrecisionFrame->setLabel("Recovery matrix storage precision");
   this->singlePrecisionBtn->setLabel("Single precision");
   this->doublePrecisionBtn->setLabel("Double precision");
   this->recoveryMatrixPrecisionGroup.insert(singlePrecisionBtn);
@@ -494,67 +284,6 @@ void FuiLinkRedOptSheet::initWidgets()
   this->recoveryMatrixPrecisionGroup.setValue(doublePrecisionBtn,true);
   this->recoveryMatrixPrecisionGroup.setGroupToggleCB(FFaDynCB2M(FuiLinkRedOptSheet,this,
 								 onBtnToggeled,int,bool));
-}
-
-
-void FuiLinkRedOptSheet::placeWidgets(int width, int height)
-{
-  int border = 6;
-  int top = 0;
-  int bottom = height - border;
-  int left = border;
-  int right = width - border;
-  int nLines = 6;
-  int fontHeigth = this->getFontHeigth();
-  int fieldHeight = fontHeigth+5 < bottom/nLines ? fontHeigth+5 : bottom/nLines;
-
-  int innerHeight = bottom - top;
-  int lineSpace = innerHeight/nLines;
-  int line1 = top + lineSpace/2;
-  int line2 = line1 + lineSpace;
-  int line3 = line2 + lineSpace;
-  int line4 = line3 + lineSpace;
-  int line5 = line4 + lineSpace;
-  int line6 = line5 + lineSpace;
-
-  int needsReductionW = 60;
-  int fieldWidth = (right - left)/2;
-  int frameLeft = left + fieldWidth + 3*border;
-  int frameRight = width - border;
-  int frameTop = top + border; // Eigenvalue factorization
-  int massBtnCenterY = frameTop + fontHeigth + border + fieldHeight/2;
-  int stiffBtnCenterY = massBtnCenterY + fieldHeight;
-  int frameBottom = stiffBtnCenterY + fieldHeight/2 + border;
-  int frameTopRM = frameBottom + border; // Recovery matrix data
-  int singlePrecisionBtnCenterY = frameTopRM + fontHeigth+border + fieldHeight/2;
-  int doublePrecisionBtnCenterY = singlePrecisionBtnCenterY + fieldHeight;
-  int frameBottomRM = doublePrecisionBtnCenterY + fieldHeight/2 + border;
-
-  int labelWidth = this->eigValToleranceField->myLabel->getWidthHint();
-  this->componentModesField->setLabelWidth(labelWidth);
-  this->singCriterionField->setLabelWidth(labelWidth);
-
-  this->singCriterionField->setCenterYGeometry(left, line1, fieldWidth, fieldHeight);
-  this->componentModesField->setCenterYGeometry(left, line2, fieldWidth, fieldHeight);
-  this->eigValToleranceField->setCenterYGeometry(left, line3, fieldWidth, fieldHeight);
-
-  this->consistentMassBtn->setCenterYGeometrySizeHint(left, line4);
-  this->ignoreCSBtn->setCenterYGeometrySizeHint(left, line5);
-  this->expandMSBtn->setCenterYGeometrySizeHint(left, line6);
-
-  this->needsReductionFrame->setEdgeGeometry(frameRight-needsReductionW, frameRight,
-					     frameTop+border, frameBottom);
-  this->needsReductionLabel->setEdgeGeometry(frameRight-needsReductionW+2, frameRight-2,
-					     frameTop+border+2, frameBottom-2);
-
-  this->eigValFactFrame->setEdgeGeometry(frameLeft, frameRight-needsReductionW-border,
-					 frameTop, frameBottom);
-  this->massFactBtn->setCenterYGeometrySizeHint(frameLeft + border, massBtnCenterY);
-  this->stiffFactBtn->setCenterYGeometrySizeHint(frameLeft + border, stiffBtnCenterY);
-
-  this->recoveryMatrixPrecisionFrame->setEdgeGeometry(frameLeft, frameRight, frameTopRM, frameBottomRM);
-  this->singlePrecisionBtn->setCenterYGeometrySizeHint(frameLeft + border, singlePrecisionBtnCenterY);
-  this->doublePrecisionBtn->setCenterYGeometrySizeHint(frameLeft + border, doublePrecisionBtnCenterY);
 }
 
 
@@ -578,12 +307,9 @@ void FuiLinkRedOptSheet::setValues(const FuiLinkValues& values)
   this->eigValFactorizationGroup.setValue(stiffFactBtn,values.factorStiffMx);
   this->recoveryMatrixPrecisionGroup.setValue(doublePrecisionBtn,values.recoveryMxPrec == FmPart::DOUBLE_PRECISION);
 
-  if (values.reducedVersionNumber > 0)
-    this->needsReductionLabel->setLabel(FFaNumStr("Reduced\n[%d]",values.reducedVersionNumber));
-  else
-    this->needsReductionLabel->setLabel("Needs\nreduction");
+  reductionFrame->setReducedVersion(values.reducedVersionNumber);
 
-  this->updateSensitivity();
+  this->setSensitivity(IAmSensitive);
 }
 
 
@@ -603,15 +329,8 @@ void FuiLinkRedOptSheet::getValues(FuiLinkValues& values)
 
 void FuiLinkRedOptSheet::setSensitivity(bool s)
 {
-  this->IAmSensitive = s;
-
-  this->updateSensitivity();
-}
-
-
-void FuiLinkRedOptSheet::updateSensitivity()
-{
-  bool s = this->IAmSensitive && !this->IAmLocked;
+  IAmSensitive = s;
+  if (IAmLocked) s = false;
 
   this->singCriterionField->setSensitivity(s);
   this->componentModesField->setSensitivity(s);
@@ -666,78 +385,33 @@ void FuiLinkRedOptSheet::onIgnoreCSBtnToggeled(bool doIgnore)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void FuiLinkLoadSheet::initWidgets()
+void FuiLinkLoadSheet::initWidgets(const FuiLinkValues& values)
 {
-  this->label->setLabel("Load Case  ");
-  this->label->toFront();
+  for (size_t i = 0; i < values.loadCases.size(); i++)
+  {
+    loadCase[i]->setLabel(FFaNumStr("%8d",values.loadCases[i]));
 
-  this->table->showRowHeader(true);
-  this->table->showColumnHeader(true);
-  this->table->setNumberColumns(2);
-  this->table->setColumnLabel(0,"Delay");
-  this->table->setColumnLabel(1,"Load Amplitude");
-  this->table->stretchColWidth(1,true);
-  this->table->setSelectionPolicy(FFuTable::NO_SELECTION);
-}
+    loadFact[i]->setQuery(values.loadEngineQuery);
+    loadFact[i]->setChangedCB(FFaDynCB2M(FuiLinkLoadSheet,this,
+                                         onIntDoubleChanged,int,double));
+    loadFact[i]->setButtonCB(values.editLoadEngineCB);
 
-
-void FuiLinkLoadSheet::placeWidgets(int width, int height)
-{
-  int border = 5;
-  int fieldH = 20;
-  int labelT = border + 6;
-  int labelW = this->label->getWidthHint();
-  int tableH = 2*border + (1+this->table->getNumberRows())*fieldH;
-  if (tableH > height) tableH = height;
-
-  this->label->setEdgeGeometry(border, labelW, labelT, border+fieldH);
-  this->table->setEdgeGeometry(0, width, border, tableH);
-  for (int i = 0; i < this->table->getNumberRows(); i++)
-    this->table->setRowHeight(i, fieldH);
-
-  this->table->setColumnWidth(0,75);
-  this->table->setColumnWidth(1,width-150-border);
-}
-
-
-void FuiLinkLoadSheet::buildDynamicWidgets(const FuiLinkValues& values)
-{
-  if (values.loadCases.empty()) return; // don't touch if no load cases at all
-
-  int numCols = this->table->getNumberColumns();
-  int numRows = this->table->getNumberRows();
-  for (int row = values.loadCases.size(); row < numRows; row++)
-    for (int col = 0; col < numCols; col++)
-      this->table->clearCellContents(row, col);
-
-  this->setNoLoadCases(values.loadCases.size());
-
-  this->table->setNumberRows(values.loadCases.size());
-
-  for (size_t i = 0; i < values.loadCases.size(); i++) {
-    this->loadFact[i]->setQuery(values.loadEngineQuery);
-    this->loadFact[i]->setChangedCB(FFaDynCB2M(FuiLinkLoadSheet,this,onIntDoubleChanged,int,double));
-    this->loadFact[i]->setButtonCB(values.editLoadEngineCB);
-    this->delay[i]->setAcceptedCB(FFaDynCB1M(FuiLinkLoadSheet,this,onDoubleChanged,double));
-    this->delay[i]->setValue(values.loadDelays[i]);
-    if ((int)i >= numRows) {
-      this->table->insertWidget(i, 0, this->delay[i]);
-      this->table->insertWidget(i, 1, this->loadFact[i]);
-    }
-    this->table->setRowLabel(i, FFaNumStr("%10d     ",values.loadCases[i]).c_str());
-    this->table->stretchRowHeight(i, true);
+    delay[i]->setValue(values.loadDelays[i]);
+    delay[i]->setAcceptedCB(FFaDynCB1M(FuiLinkLoadSheet,this,
+                                       onDoubleChanged,double));
   }
 }
 
 
 void FuiLinkLoadSheet::setValues(const FuiLinkValues& values)
 {
-  for (size_t i = 0; i < values.loadCases.size(); i++) {
-    this->loadFact[i]->setSelectedRef(values.selectedLoadEngines[i]);
-    this->loadFact[i]->setValue(values.loadFactors[i]);
-    this->loadFact[i]->setSensitivity(IAmSensitive);
-    this->delay[i]->setValue(values.loadDelays[i]);
-    this->delay[i]->setSensitivity(IAmSensitive && !this->loadFact[i]->isAConstant());
+  for (size_t i = 0; i < values.loadCases.size(); i++)
+  {
+    loadFact[i]->setSelectedRef(values.selectedLoadEngines[i]);
+    loadFact[i]->setValue(values.loadFactors[i]);
+    loadFact[i]->setSensitivity(IAmSensitive);
+    delay[i]->setValue(values.loadDelays[i]);
+    delay[i]->setSensitivity(IAmSensitive && !loadFact[i]->isAConstant());
   }
 }
 
@@ -748,10 +422,11 @@ void FuiLinkLoadSheet::getValues(FuiLinkValues& v)
   v.loadFactors.clear();
   v.loadDelays.clear();
   if (this->isPoppedUp())
-    for (size_t i = 0; i < this->loadFact.size(); i++) {
-      v.selectedLoadEngines.push_back(this->loadFact[i]->getSelectedRef());
-      v.loadFactors.push_back(this->loadFact[i]->getValue());
-      v.loadDelays.push_back(this->delay[i]->getDouble());
+    for (size_t i = 0; i < loadFact.size(); i++)
+    {
+      v.selectedLoadEngines.push_back(loadFact[i]->getSelectedRef());
+      v.loadFactors.push_back(loadFact[i]->getValue());
+      v.loadDelays.push_back(delay[i]->getDouble());
     }
 }
 
@@ -760,9 +435,10 @@ void FuiLinkLoadSheet::setSensitivity(bool s)
 {
   IAmSensitive = s;
 
-  for (size_t i = 0; i < this->loadFact.size(); i++) {
-    this->loadFact[i]->setSensitivity(s);
-    this->delay[i]->setSensitivity(s && !this->loadFact[i]->isAConstant());
+  for (size_t i = 0; i < loadFact.size(); i++)
+  {
+    loadFact[i]->setSensitivity(s);
+    delay[i]->setSensitivity(s && !loadFact[i]->isAConstant());
   }
 }
 
@@ -799,22 +475,13 @@ void FuiGenericPartMassSheet::initWidgets()
   this->calculateMassPropGroup.setValue(calculateMassPropExplicitBtn,true);
   this->calculateMassPropGroup.setGroupToggleCB(FFaDynCB2M(FuiGenericPartMassSheet,this,onCalculateMassPropToggeled,int,bool));
 
-  this->materialLabel->setLabel("Material");
   this->materialField->setBehaviour(FuiQueryInputField::REF_NONE);
   this->materialField->setTextForNoRefSelected("rho = 7850.0"); //TODO: How go get greek letter rho in here?
   this->materialField->setButtonMeaning(FuiQueryInputField::EDIT);
 
-  this->inertiaRefLabel->setLabel("Inertia Reference");
   this->inertiaRefMenu->setOptionSelectedCB(FFaDynCB1M(FuiGenericPartMassSheet,this,onOptionSelected,int));
   this->inertiaRefMenu->addOption("Part Orientation");
   this->inertiaRefMenu->addOption("CG Orientation");
-
-  this->inertiaLabels[IXX]->setLabel("Ixx");
-  this->inertiaLabels[IYY]->setLabel("Iyy");
-  this->inertiaLabels[IZZ]->setLabel("Izz");
-  this->inertiaLabels[IXY]->setLabel("Ixy");
-  this->inertiaLabels[IXZ]->setLabel("Ixz");
-  this->inertiaLabels[IYZ]->setLabel("Iyz");
 
   for (FFuIOField* field : this->inertias)
   {
@@ -822,88 +489,9 @@ void FuiGenericPartMassSheet::initWidgets()
     field->setAcceptedCB(FFaDynCB1M(FuiGenericPartMassSheet,this,onDoubleChanged,double));
   }
 
-  this->massInertiaFrame->setLabel("Mass and Inertias");
   this->massField->setLabel("Mass");
   this->massField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->massField->setAcceptedCB(FFaDynCB1M(FuiGenericPartMassSheet, this, onDoubleChanged, double));
-}
-
-
-void FuiGenericPartMassSheet::placeWidgets(int width, int height)
-{
-  int border = 6;
-  int fontHeigth = this->getFontHeigth();
-  int fieldHeight = 20;
-  int fieldSpace  = 10;
-
-  while (5*fieldHeight + 5*fieldSpace > height - 2*border)
-    if (5*fieldHeight > height - 2*border) {
-      fieldHeight = (height - border)/5;
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-
-  int left = border;
-  int right = width - border;
-
-  int frameTop = border;
-  int line1 = frameTop + fontHeigth + fieldSpace + fieldHeight/2;
-  int line2 = line1 + fieldHeight + fieldSpace;
-  int line3 = line2 + fieldHeight + fieldSpace;
-  int line4 = line3 + fieldHeight + fieldSpace;
-  int frameBtm = line4 + fieldHeight/2 + border;
-
-  int colWidth = (right - left - 2*border)/5;
-  int col1 = left + border;
-  int col2 = col1 + colWidth;
-  int col3 = col2 + colWidth;
-  int col4 = col3 + colWidth;
-  int col5 = col4 + colWidth;
-
-  int labelCol1 = col2 + colWidth/2;
-  int labelCol2 = col2 + 3*colWidth/4 - this->inertiaLabels[IYY]->getWidthHint()/2;
-  int labelCol3 = col3 - this->inertiaLabels[IYY]->getWidthHint();
-
-  int massFrameRight = right;
-  int massFrameLeft  = labelCol1 - border;
-  int inertRefRight  = massFrameLeft - border;
-
-  int y = frameTop + fieldHeight/2;
-  this->calculateMassPropExplicitBtn->setCenterYGeometryWidthHint(left, y, fieldHeight);
-  y += fieldHeight;
-  this->calculateMassPropFEBtn->setCenterYGeometryWidthHint(left, y, fieldHeight);
-  y += fieldHeight;
-  this->calculateMassPropGeoBtn->setCenterYGeometryWidthHint(left, y, fieldHeight);
-
-  y += fieldHeight/2;
-  this->materialLabel->setEdgeGeometry(left, inertRefRight, y, y+fontHeigth);
-  y += fontHeigth+2;
-  this->materialField->setEdgeGeometry(left, inertRefRight, y, y+fieldHeight);
-
-  y += fieldHeight+border;
-  this->inertiaRefLabel->setEdgeGeometry(left, inertRefRight, y, y+fontHeigth);
-  y += fontHeigth+2;
-  this->inertiaRefMenu->setEdgeGeometry(left, inertRefRight, y, y+fieldHeight);
-
-  this->massInertiaFrame->setEdgeGeometry(massFrameLeft, massFrameRight, frameTop, frameBtm);
-
-  this->inertiaLabels[IXX]->setCenterYGeometrySizeHint(labelCol1, line2);
-  this->inertiaLabels[IXY]->setCenterYGeometrySizeHint(labelCol1, line3);
-  this->inertiaLabels[IXZ]->setCenterYGeometrySizeHint(labelCol1, line4);
-  this->inertiaLabels[IYY]->setCenterYGeometrySizeHint(labelCol2, line3);
-  this->inertiaLabels[IYZ]->setCenterYGeometrySizeHint(labelCol2, line4);
-  this->inertiaLabels[IZZ]->setCenterYGeometrySizeHint(labelCol3, line4);
-
-  this->massField->setCenterYGeometry(labelCol1, line1, colWidth, fieldHeight);
-  this->massField->toFront();
-  this->inertias[IXX]->setCenterYGeometry(col3 + border/4, line2, colWidth-border/2, fieldHeight);
-  this->inertias[IXY]->setCenterYGeometry(col3 + border/4, line3, colWidth-border/2, fieldHeight);
-  this->inertias[IXZ]->setCenterYGeometry(col3 + border/4, line4, colWidth-border/2, fieldHeight);
-  this->inertias[IYY]->setCenterYGeometry(col4 + border/4, line3, colWidth-border/2, fieldHeight);
-  this->inertias[IYZ]->setCenterYGeometry(col4 + border/4, line4, colWidth-border/2, fieldHeight);
-  this->inertias[IZZ]->setCenterYGeometry(col5 + border/4, line4, colWidth-border/2, fieldHeight);
 }
 
 
@@ -975,7 +563,6 @@ void FuiGenericPartMassSheet::updateSensitivity()
   this->calculateMassPropGeoBtn->setSensitivity(IAmSensitive && (ICanCalculateMass == 'G' || ICanCalculateMass == 'B'));
   this->calculateMassPropFEBtn->setSensitivity(IAmSensitive && (ICanCalculateMass == 'F' || ICanCalculateMass == 'B'));
 
-  this->materialLabel->setSensitivity(IAmSensitive && this->calculateMassPropGeoBtn->getValue());
   this->materialField->setSensitivity(IAmSensitive && this->calculateMassPropGeoBtn->getValue());
 
   if (this->calculateMassPropExplicitBtn->getValue()) {
@@ -1011,9 +598,6 @@ void FuiGenericPartMassSheet::updateSensitivity()
 
 void FuiGenericPartStiffSheet::initWidgets()
 {
-  this->stiffTypeFrame->setLabel("Type");
-  this->stiffPropFrame->setLabel("Properties");
-
   this->defaultStiffTypeBtn->setLabel("Automatic");
   this->defaultStiffTypeBtn->setToolTip("This option selects an automatic stiffness computation based on the mass of the part");
   this->nodeStiffTypeBtn->setLabel("Manual");
@@ -1033,58 +617,10 @@ void FuiGenericPartStiffSheet::initWidgets()
   this->krField->setToolTip("Rotational stiffness at each triad");
   this->krField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->krField->setAcceptedCB(FFaDynCB1M(FuiGenericPartStiffSheet,this,onDoubleChanged,double));
+  this->krField->setLabelWidth(this->ktField->myLabel->getWidthHint());
 
-  this->stiffDescrLabel->setLabel("Stiffness is calulated based on the mass\nand a high target eigenfrequency");
-}
-
-
-void FuiGenericPartStiffSheet::placeWidgets(int width, int height)
-{
-  int border = 6;
-  int left   = border;
-  int right  = width - border;
-  int top    = border;
-
-  int fieldHeight = 20;
-  int fieldSpace  = 10;
-
-  while (2*fieldHeight + fieldSpace > height - border*9/5)
-    if (2*fieldHeight > height - border*9/5) {
-      fieldHeight = (height - border*9/5)/2;
-      fieldSpace = 0;
-      break;
-    }
-    else
-      fieldSpace--;
-
-  int frameTop = top;
-  int line1 = frameTop + border*5/2 + fieldHeight/2;
-  int line2 = line1 + fieldSpace + fieldHeight;
-  int frameBtm = line2 + border + fieldHeight/2;
-
-  int typeFrameLeft  = left;
-  int typeFrameRight = (width - 2*border)/3;
-  int propFrameLeft  = typeFrameRight + border;
-  int propFrameRight = right;
-
-  this->stiffTypeFrame->setEdgeGeometry(typeFrameLeft, typeFrameRight, frameTop, frameBtm);
-  this->stiffPropFrame->setEdgeGeometry(propFrameLeft, propFrameRight, frameTop, frameBtm);
-
-  int labelPropWidth = this->ktField->myLabel->getWidthHint();
-
-  this->defaultStiffTypeBtn->setCenterYGeometrySizeHint(typeFrameLeft + border, line1);
-  this->nodeStiffTypeBtn->setCenterYGeometrySizeHint(typeFrameLeft + border, line2);
-
-  this->ktField->setLabelWidth(labelPropWidth);
-  this->krField->setLabelWidth(labelPropWidth);
-
-  this->ktField->setCenterYGeometry(propFrameLeft + border, line1,
-				    propFrameRight - propFrameLeft - 2*border, fieldHeight);
-  this->krField->setCenterYGeometry(propFrameLeft + border, line2,
-				    propFrameRight - propFrameLeft - 2*border, fieldHeight);
-
-  this->stiffDescrLabel->setEdgeGeometry(propFrameLeft + border, propFrameRight - border,
-					 line1-fieldHeight/2, line1+fieldHeight*3/2);
+  this->stiffDescrLabel->setLabel("Stiffness is calulated based on the mass\n"
+                                  "and a high target eigenfrequency");
 }
 
 
@@ -1171,16 +707,6 @@ void FuiGenericPartCGSheet::initWidgets()
 }
 
 
-void FuiGenericPartCGSheet::placeWidgets(int width, int heigth)
-{
-  int left = 6;
-  int posHeigth = this->posData->getHeightHint();
-  int cgtHeigth = this->condenseCGToggle->getHeightHint();
-  this->posData->setEdgeGeometry(0, width, 0, heigth);
-  this->condenseCGToggle->setCenterYGeometryWidthHint(left,posHeigth+cgtHeigth/2,cgtHeigth);
-}
-
-
 void FuiGenericPartCGSheet::setEditedObjs(const std::vector<FmModelMemberBase*>& objs)
 {
   this->posData->setEditedObjs(objs);
@@ -1243,16 +769,6 @@ void FuiHydrodynamicsSheet::initWidgets()
 }
 
 
-void FuiHydrodynamicsSheet::placeWidgets(int, int)
-{
-  int border = 6;
-  int btHeigth = this->buoyancyToggle->getHeightHint();
-  int bfHeigth = this->buoyancyLabel->getHeightHint();
-  this->buoyancyToggle->setCenterYGeometryWidthHint(border,border+btHeigth/2,btHeigth);
-  this->buoyancyLabel->setCenterYGeometryWidthHint(border,2*border+btHeigth+bfHeigth/2,bfHeigth);
-}
-
-
 void FuiHydrodynamicsSheet::setValues(const FuiLinkValues& values)
 {
   this->buoyancyToggle->setValue(values.buoyancy);
@@ -1287,17 +803,12 @@ void FuiHydrodynamicsSheet::onOptionToggled(bool)
 
 void FuiMeshingSheet::initWidgets()
 {
-  this->materialLabel->setLabel("Material");
   this->materialField->setBehaviour(FuiQueryInputField::REF_NONE);
   this->materialField->setButtonMeaning(FuiQueryInputField::EDIT);
 
   this->minsizeField->setLabel("Minimum number of elements");
   this->minsizeField->myField->setInputCheckMode(FFuIOField::INTEGERCHECK);;
   this->minsizeField->myField->setAcceptedCB(FFaDynCB1M(FuiMeshingSheet,this,onIntChanged,int));
-
-  this->qualityLabel[0]->setLabel("Angle control");
-  this->qualityLabel[1]->setLabel("Loose");
-  this->qualityLabel[2]->setLabel("Strong");
 
   this->qualityScale->setMinMax(0,100);
   this->qualityScale->setReleaseCB(FFaDynCB0M(FuiMeshingSheet,this,onChanged));
@@ -1312,41 +823,6 @@ void FuiMeshingSheet::initWidgets()
 
   this->meshBtn->setLabel("Generate mesh");
   this->meshBtn->setActivateCB(FFaDynCB0M(FuiMeshingSheet,this,onMeshLink));
-}
-
-
-void FuiMeshingSheet::placeWidgets(int width, int)
-{
-  int border = 6;
-  int left = border;
-  int right = width/2-border;
-  int ypos = border;
-  int dy = this->meshBtn->getHeightHint();
-  int fontHeight = this->getFontHeigth();
-  int fieldHeight = 20;
-
-  this->materialLabel->setEdgeGeometry(left,right, ypos, ypos+fontHeight);
-  ypos += fontHeight + border;
-  this->materialField->setEdgeGeometry(left,right, ypos, ypos+fieldHeight);
-  ypos += fieldHeight+2*border;
-  this->noElmsLabel->setCenterYGeometry(left,ypos+dy/2,right-left,dy); ypos += dy;
-  this->noNodesLabel->setCenterYGeometry(left,ypos+dy/2,right-left,dy);
-
-  left = right + 2*border;
-  right = width - border;
-  ypos = border;
-  int qwidth0 = this->qualityLabel[0]->getWidthHint();
-  int qwidth1 = this->qualityLabel[1]->getWidthHint();
-  int qwidth2 = this->qualityLabel[2]->getWidthHint();
-  int sleft = left + qwidth0+border;
-  this->qualityLabel[1]->setCenterYGeometry(left+qwidth0+border,ypos+dy/2,qwidth1,dy);
-  this->qualityLabel[2]->setCenterYGeometry(right-qwidth2,ypos+dy/2,qwidth2,dy); ypos += dy;
-  this->qualityLabel[0]->setCenterYGeometry(left,ypos+dy/2,qwidth0,dy);
-  this->qualityScale->setCenterYGeometry(sleft,ypos+dy/2,right-sleft,dy); ypos += dy+border;
-  this->minsizeField->setCenterYGeometry(left,ypos+dy/2,right-left,dy); ypos += dy+2*border;
-  this->meshBtn->setCenterYGeometry(left,ypos+dy,width/4-border,2*dy); left += width/4+border;
-  this->linearBtn->setCenterYGeometry(left,ypos+dy/2,width/4-border,dy); ypos += dy;
-  this->parabolicBtn->setCenterYGeometry(left,ypos+dy/2,width/4-border,dy);
 }
 
 
@@ -1415,14 +891,12 @@ void FuiMeshingSheet::onMeshLink()
 
 void FuiAdvancedLinkOptsSheet::initWidgets()
 {
-  this->coordSysLabel->setLabel("Positioning algorithm for co-rotated reference coordinate system:");
   this->coordSysOptionMenu->setOptionSelectedCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onOptionSelected,int));
   this->coordSysOptionMenu->addOption("Model default");
   this->coordSysOptionMenu->addOption("Max triangle, with unit offset when necessary");
   this->coordSysOptionMenu->addOption("Max triangle, with scaled offset when necessary");
   this->coordSysOptionMenu->addOption("Mass based nodal average");
 
-  this->centripLabel->setLabel("Centripital force correction:");
   this->centripOptionMenu->setOptionSelectedCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onOptionSelected,int));
   this->centripOptionMenu->addOption("Model default");
   this->centripOptionMenu->addOption("On");
@@ -1433,9 +907,9 @@ void FuiAdvancedLinkOptsSheet::initWidgets()
   this->recoverGageToggle->setLabel("Perform strain rosette recovery during dynamics simulation");
   this->recoverGageToggle->setToggleCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onOptionToggled,bool));
 
-  this->extResToggle->setLabel("Import residual stresses from external file");
+  this->extResToggle->setLabel("Import residual stresses from external file:");
   this->extResToggle->setToggleCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onExtResToggeled,bool));
-  this->extResField->setLabel("External result file");
+  this->extResField->setLabel("");
   this->extResField->setAbsToRelPath("yes");
   this->extResField->setFileOpenedCB(FFaDynCB2M(FuiAdvancedLinkOptsSheet,this,onExtResFileChanged,const std::string&,int));
   this->extResField->setDialogType(FFuFileDialog::FFU_OPEN_FILE);
@@ -1446,46 +920,6 @@ void FuiAdvancedLinkOptsSheet::initWidgets()
   this->extResField->addDialogFilter("ABAQUS result file","fil",false);
   this->extResField->addDialogFilter("ANSYS result file",ansys,false);
   this->extResField->addDialogFilter("NASTRAN Output2 file","op2",false);
-}
-
-
-void FuiAdvancedLinkOptsSheet::placeWidgets(int width, int)
-{
-  int border = 5;
-  int left   = border;
-  int top    = border;
-
-  this->centripOptionMenu->setMinWidth(this->coordSysOptionMenu->getWidthHint());
-
-  this->coordSysLabel->setCenterYGeometrySizeHint(left, top + coordSysLabel->getHeightHint()/2);
-  this->coordSysOptionMenu->setCenterYGeometrySizeHint(left, coordSysLabel->getYPos() + coordSysLabel->getHeight() + border +
-                                                       coordSysOptionMenu->getHeightHint()/2);
-
-  this->centripLabel->setCenterYGeometrySizeHint(left, coordSysOptionMenu->getYPos() + coordSysOptionMenu->getHeight() +
-                                                 centripLabel->getHeightHint());
-  this->centripOptionMenu->setCenterYGeometrySizeHint(left, centripLabel->getYPos() + centripLabel->getHeight() + border +
-                                                      centripOptionMenu->getHeightHint()/2);
-
-  this->recoverStressToggle->setCenterYGeometrySizeHint(left, centripOptionMenu->getYPos() + centripOptionMenu->getHeight() +
-                                                        recoverStressToggle->getHeightHint());
-  this->recoverGageToggle->setCenterYGeometrySizeHint(left, recoverStressToggle->getYPos() + recoverStressToggle->getHeight() +
-                                                      recoverGageToggle->getHeightHint());
-  this->extResToggle->setCenterYGeometrySizeHint(left, recoverGageToggle->getYPos() + recoverGageToggle->getHeight() +
-						 extResToggle->getHeightHint());
-
-  int glbl = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_START);
-  int glbr = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_END);
-  int ypos = extResToggle->getYPos() + extResToggle->getHeight() + border;
-  this->extResField->setEdgeGeometry(glbl,glbr,ypos,ypos+centripOptionMenu->getHeight());
-
-  if (this->showExtRes) {
-    this->extResToggle->popUp();
-    this->extResField->popUp();
-  }
-  else {
-    this->extResToggle->popDown();
-    this->extResField->popDown();
-  }
 }
 
 
@@ -1500,11 +934,19 @@ void FuiAdvancedLinkOptsSheet::setValues(const FuiLinkValues& values)
   this->recoverStressToggle->setSensitivity(IAmSensitive && ICanRecover > 0);
   this->recoverGageToggle->setSensitivity(IAmSensitive && ICanRecover > 1);
 
-  this->showExtRes = values.extResSwitch >= 0;
   this->extResToggle->setValue(values.extResSwitch > 0);
   this->extResField->setAbsToRelPath(values.modelFilePath);
   this->extResField->setFileName(values.extResFileName);
   this->extResField->setSensitivity(values.extResSwitch > 0);
+
+  if (values.extResSwitch >= 0) {
+    extResToggle->popUp();
+    extResField->popUp();
+  }
+  else {
+    extResToggle->popDown();
+    extResField->popDown();
+  }
 }
 
 
@@ -1516,8 +958,8 @@ void FuiAdvancedLinkOptsSheet::getValues(FuiLinkValues& v)
   if (this->recoverGageToggle->getToggle()) v.recoveryOption += 2;
 
   v.extResFileName = this->extResField->getFileName();
-  if (this->showExtRes)
-    v.extResSwitch = this->extResToggle->getToggle() && !v.extResFileName.empty();
+  if (extResToggle->isPoppedUp())
+    v.extResSwitch = extResToggle->getToggle() && !v.extResFileName.empty();
   else
     v.extResSwitch = -1;
 }
@@ -1569,8 +1011,6 @@ void FuiAdvancedLinkOptsSheet::onExtResFileChanged(const std::string&, int)
 
 void FuiNonlinearLinkOptsSheet::initWidgets()
 {
-  this->nonlinearDescrLabel->setLabel("Capturing nonlinear model behaviour using CFEM");
-
   this->useNonlinearToggle->setLabel("Perform nonlinear solve for FE part");
   this->useNonlinearToggle->setToggleCB(FFaDynCB1M(FuiNonlinearLinkOptsSheet,this,
                                         onNonlinearToggeled,bool));
@@ -1588,29 +1028,6 @@ void FuiNonlinearLinkOptsSheet::initWidgets()
   this->nonlinearInputFileField->setDialogRememberKeyword("NonlinearInputFileField");
 
   this->nonlinearInputFileField->addDialogFilter("CFEM input data file","dat",true);
-}
-
-
-void FuiNonlinearLinkOptsSheet::placeWidgets(int width, int)
-{
-  int border = 5;
-  int left   = border;
-  int top    = border;
-  int right  = width - border;
-
-  this->nonlinearDescrLabel->setCenterYGeometrySizeHint(left, top + nonlinearDescrLabel->getHeightHint()/2);
-  this->useNonlinearToggle->setCenterYGeometrySizeHint(left, nonlinearDescrLabel->getYPos()
-                      + nonlinearDescrLabel->getHeight() + border + useNonlinearToggle->getHeightHint()/2);
-
-  int labelWidth = this->numberOfSolutionsField->myLabel->getWidthHint();
-  this->numberOfSolutionsField->setLabelWidth(labelWidth);
-  int ypos = useNonlinearToggle->getYPos() + useNonlinearToggle->getHeight() + border + numberOfSolutionsField->getHeightHint()/2;
-  this->numberOfSolutionsField->setCenterYGeometry(left, ypos, right-left, useNonlinearToggle->getHeight());
-
-  int glbl = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_START);
-  int glbr = this->getGridLinePos(width,border,FFuMultUIComponent::FROM_END);
-  ypos     = numberOfSolutionsField->getYPos() + useNonlinearToggle->getHeight() + border;
-  this->nonlinearInputFileField->setEdgeGeometry(glbl,glbr,ypos,ypos+useNonlinearToggle->getHeight());
 }
 
 

@@ -8,26 +8,32 @@
 #ifndef FUI_QT_PROPERTIES_H
 #define FUI_QT_PROPERTIES_H
 
-#include "FFuLib/FFuQtBaseClasses/FFuQtMultUIComponent.H"
+#include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "vpmUI/vpmUITopLevels/FuiProperties.H"
 
 
-class FuiQtProperties : public FFuQtMultUIComponent,
-			public FuiProperties
+class FuiQtStartGuide : public FFuQtWidget, public FuiStartGuide
 {
 public:
-  FuiQtProperties(QWidget* parent,
-		  int xpos =100, int ypos  =100,
-		  int width=388, int height=460,
-		  const char* name = "FuiQtProperties");
-  virtual ~FuiQtProperties() {}
+  FuiQtStartGuide(QWidget* parent, const char* name = "FuiQtStartGuide");
+
+  virtual bool initWidgets();
+};
+
+
+class FuiQtProperties : public FFuQtWidget, public FuiProperties
+{
+public:
+  FuiQtProperties(QWidget* parent, const char* name = "FuiQtProperties");
 
   virtual void setSensitivity(bool isSensitive)
   {
     this->FuiProperties::setSensitivity(isSensitive);
   }
 
-  virtual bool initStartGuide();
+protected:
+  virtual void showEvent(QShowEvent* e);
+  virtual void resizeEvent(QResizeEvent* e);
 };
 
 #endif

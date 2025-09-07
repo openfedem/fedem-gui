@@ -9,17 +9,13 @@ set ( LIB_ID FFuBase )
 
 
 ## Files with header and source with same name
-set ( COMPONENT_FILE_LIST  FFuComponentBase
-                           FFuMDIWindow
-                           FFuModalDialog
-                           FFuMultUIComponent
-                           FFuTopLevelShell
+set ( COMPONENT_FILE_LIST  FFuMDIWindow FFuModalDialog FFuTopLevelShell
                            FFuUADataHandler FFuUAExistenceHandler
                            FFuUAFinishHandler FFuUAItemsViewHandler
 )
 
 ## Pure header files, i.e., header files without a corresponding source file
-set ( HEADER_FILE_LIST FFuUACommandHandler )
+set ( HEADER_FILE_LIST FFuComponentBase FFuUACommandHandler )
 ## Pure implementation files, i.e., source files without corresponding header
 set ( SOURCE_FILE_LIST )
 
@@ -43,9 +39,7 @@ endforeach ( FILE ${SOURCE_FILE_LIST} )
 #
 # Dependencies and system libraries
 #
-set ( FT_COMMON_LIBRARIES FFaTypeCheck )
-set ( FT_GUI_LIBRARIES FFuAuxClasses )
-set ( DEPENDENCY_LIST ${FT_GUI_LIBRARIES} ${FT_COMMON_LIBRARIES} )
+set ( DEPENDENCY_LIST FFuAuxClasses FFaTypeCheck )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${CPP_SOURCE_FILES} ${HPP_HEADER_FILES} )

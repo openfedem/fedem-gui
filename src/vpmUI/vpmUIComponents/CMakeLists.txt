@@ -21,7 +21,7 @@ add_subdirectory ( vpmUIQtComponents )
 
 
 ## Files with header and source with same name
-set ( COMPONENT_FILE_LIST  Fui3DPoint FuiAnimationDefine
+set ( COMPONENT_FILE_LIST  Fui3DPoint FuiAnimationDefine FuiDynamicProperties
                            FuiCtrlElemProperties FuiFunctionProperties
                            FuiInputSelector FuiItemsListView FuiItemsListViews
                            FuiJointDOF FuiJointSummary FuiJointTabAdvanced
@@ -36,7 +36,7 @@ set ( COMPONENT_FILE_LIST  Fui3DPoint FuiAnimationDefine
 
 if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FuiCurveAxisDefinition FuiCurveDefine
-                                    FuiCurveTimeRange FuiScaleShiftWidget
+                                    FuiScaleShiftWidget
                                     FuiGraphDefine FuiSNCurveSelector )
 endif ( Qwt_LIBRARY )
 

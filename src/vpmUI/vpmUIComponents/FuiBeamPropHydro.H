@@ -8,41 +8,33 @@
 #ifndef FUI_BEAM_PROP_HYDRO_H
 #define FUI_BEAM_PROP_HYDRO_H
 
-#include "FFuLib/FFuBase/FFuMultUIComponent.H"
-#include <vector>
+#include "FFuLib/FFuBase/FFuComponentBase.H"
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
+#include <array>
 
 class FFuToggleButton;
 class FFuLabelField;
 
 
-class FuiBeamPropHydro : public virtual FFuMultUIComponent
+class FuiBeamPropHydro : public virtual FFuComponentBase
 {
-public:
-  FuiBeamPropHydro() {}
-  virtual ~FuiBeamPropHydro() {}
-
-  FFuToggleButton*    myBeamHydroToggleButton;
-  FFuLabelField*      myBeamHydroDbField;
-  FFuLabelField*      myBeamHydroDdField;
-  FFuLabelField*      myBeamHydroCdField;
-  FFuLabelField*      myBeamHydroCaField;
-  FFuLabelField*      myBeamHydroCmField;
-  FFuLabelField*      myBeamHydroCdAxialField;
-  FFuLabelField*      myBeamHydroCaAxialField;
-  FFuLabelField*      myBeamHydroCmAxialField;
-  FFuLabelField*      myBeamHydroCdSpinField;
-  FFuLabelField*      myBeamHydroDiField;
-
 protected:
-  virtual void placeWidgets(int width, int height);
-  virtual void initWidgets();
+  enum { DB, DD, CD, CA, CM,
+         CD_AXIAL, CA_AXIAL, CM_AXIAL, CD_SPIN, DI,
+         NFIELD };
+
+  FFuToggleButton*                  myToggle;
+  std::array<FFuLabelField*,NFIELD> myFields;
+
+  void initWidgets();
 
 public:
+  void setToggledCB(const FFaDynCB1<bool>& aDynCB);
   void setAcceptedCBs(const FFaDynCB1<double>& aDynCB);
   void onBeamHydroToggled(bool value);
   void setPropSensitivity(bool makeSensitive);
-  void setValues(const std::array<double,10>& values);
-  void getValues(std::array<double,10>& values) const;
+  void setValues(bool onOrOff, const std::array<double,NFIELD>& values);
+  bool getValues(std::array<double,NFIELD>& values) const;
 };
 
 #endif

@@ -32,17 +32,17 @@ FuiQtRDBSelector::FuiQtRDBSelector(int xpos, int ypos,
 {
   lvRes = new FuiQtSimModelRDBListView(NULL,"SimModelRDBListView");
   lvPos = new FuiQtRDBListView(NULL,"RDBListView");
-  notesText = new FFuQtLabel();
+  notes = new FFuQtNotes();
   dialogButtons = new FFuQtDialogButtons();
 
   this->initWidgets();
 
   QBoxLayout* layout = new QVBoxLayout(this);
   layout->addWidget(new QLabel("Existing Results"));
-  layout->addWidget(static_cast<FuiQtSimModelRDBListView*>(lvRes),3);
+  layout->addWidget(lvRes->getQtWidget(),3);
   layout->addWidget(new QLabel("Possible Results"));
-  layout->addWidget(static_cast<FuiQtRDBListView*>(lvPos),1);
-  layout->addWidget(new FFuQtNotesLabel());
-  layout->addWidget(static_cast<FFuQtLabel*>(notesText));
-  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons));
+  layout->addWidget(lvPos->getQtWidget(),1);
+  layout->addSpacing(5);
+  layout->addWidget(notes->getQtWidget());
+  layout->addWidget(dialogButtons->getQtWidget());
 }

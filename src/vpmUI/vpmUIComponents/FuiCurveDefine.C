@@ -7,18 +7,15 @@
 
 #include "vpmUI/vpmUIComponents/FuiCurveDefine.H"
 #include "vpmUI/vpmUIComponents/FuiCurveAxisDefinition.H"
-#include "vpmUI/vpmUIComponents/FuiCurveTimeRange.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
 #include "vpmUI/vpmUIComponents/FuiScaleShiftWidget.H"
 #include "vpmUI/vpmUIComponents/FuiSNCurveSelector.H"
 #include "vpmUI/Fui.H"
 #include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuLabel.H"
-#include "FFuLib/FFuTable.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuOptionMenu.H"
 #include "FFuLib/FFuColorChooser.H"
-#include "FFuLib/FFuColorDialog.H"
 #include "FFuLib/FFuPushButton.H"
 #include "FFuLib/FFuToggleButton.H"
 #include "FFuLib/FFuRadioButton.H"
@@ -30,6 +27,7 @@
 #include "FFuLib/FFuSpinBox.H"
 #include "vpmDB/FmGraph.H"
 #include "vpmDB/FmColor.H"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,9 +118,9 @@ void FuiCurveDefine::setDamageFromCurve(double damage, double interval)
 
 //----------------------------------------------------------------------------
 
-void FuiCurveDefine::onValuesChanged()
+void FuiCurveDefine::setLegend(const std::string& legend)
 {
-  this->updateDBValues();
+  this->legendField->setValue(legend.c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -130,13 +128,6 @@ void FuiCurveDefine::onValuesChanged()
 void FuiCurveDefine::setCompleteSign(bool complete)
 {
   this->curveDefSheet->setCompleteSign(complete);
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefine::setLegend(const std::string& legend)
-{
-  this->legendField->setValue(legend.c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -169,30 +160,6 @@ const char* FuiCurveDefine::getCurrentTabName() const
   static std::string tabName;
   tabName = tabStack->getCurrentTabName();
   return tabName.c_str();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefine::placeWidgets(int width, int height)
-{
-  int fieldHeight = 3*height/25;
-  int left = 0;
-  int right = width;
-  int top = 0;
-  int bottom = height;
-  int legendCenterY = (fieldHeight + top)/2;
-  int legendBtnLeft = right - this->legendButton->getWidthHint();
-  int legendFieldWidth = legendBtnLeft - 7 - left;
-  int separator = 3;
-
-  this->legendField->setCenterYGeometry(left, legendCenterY,
-					legendFieldWidth, fieldHeight),
-
-  this->legendButton->setCenterYGeometry(legendBtnLeft, legendCenterY,
-					 this->legendButton->getWidthHint(),
-					 this->legendButton->getHeightHint());
-
-  this->tabStack->setEdgeGeometry(left, right, top + fieldHeight + separator, bottom);
 }
 
 //----------------------------------------------------------------------------
@@ -244,10 +211,7 @@ void FuiCurveDefine::setUIValues(const FFuaUIValues* values)
   }
 
   this->tabStack->popUp();
-  this->tabStack->setWidth(this->tabStack->getWidth()+1);
-
   this->tabStack->setCurrentTab(tmpSel);
-  this->placeWidgets(this->getWidth(), this->getHeight());
 }
 
 //----------------------------------------------------------------------------
@@ -300,13 +264,6 @@ void FuiCurveDefine::setReloadCurveCB(const FFaDynCB0& dynCB)
   this->curveDefSheet->setReloadCurveCB(dynCB);
 }
 
-//-----------------------------------------------------------------------------
-
-void FuiCurveDefine::onFieldValueChanged(char*)
-{
-  this->updateDBValues(false);
-}
-
 //----------------------------------------------------------------------------
 
 void FuiCurveDefine::onLegendButtonToggled(bool toggle)
@@ -317,14 +274,72 @@ void FuiCurveDefine::onLegendButtonToggled(bool toggle)
 
 //----------------------------------------------------------------------------
 
-void FuiCurveDefine::onPoppedUpFromMem()
+void FuiCurveDefine::rememberSelectedTab(bool show)
 {
-  this->tabStack->setCurrentTab(selectedTab);
+  if (show)
+    tabStack->setCurrentTab(selectedTab);
+  else
+    selectedTab = tabStack->getCurrentTabPosIdx();
 }
 
-void FuiCurveDefine::onPoppedDownToMem()
+
+////////////////////////////////////////////////////////////////////////////////
+
+void FuiCurveDomain::initWidgets(bool internalToggleCB)
 {
-  this->selectedTab = this->tabStack->getCurrentTabPosIdx();
+  startField->setLabel("Start");
+  endField->setLabel("Stop");
+  entireBtn->setLabel("Entire");
+
+  startField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  startField->myField->setDoubleDisplayMode(FFuIOField::AUTO,6,1);
+
+  endField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
+  endField->myField->setDoubleDisplayMode(FFuIOField::AUTO,6,1);
+
+  if (internalToggleCB)
+    entireBtn->setToggleCB(FFaDynCB1M(FuiCurveDomain,this,
+                                      onButtonToggled,bool));
+}
+
+void FuiCurveDomain::initWidgets(const FFaDynCB1<double>& doubleCB,
+				 const FFaDynCB1<bool>& boolCB)
+{
+  this->initWidgets(false);
+
+  startField->setAcceptedCB(doubleCB);
+  endField->setAcceptedCB(doubleCB);
+  entireBtn->setToggleCB(boolCB);
+}
+
+//----------------------------------------------------------------------------
+
+void FuiCurveDomain::setValues(const std::pair<double,double>& domain,
+                               bool entire, bool isSensitive)
+{
+  entireBtn->setValue(entire);
+  startField->setValue(domain.first);
+  endField->setValue(domain.second);
+
+  entireBtn->setSensitivity(isSensitive);
+  startField->setSensitivity(isSensitive && !entire);
+  endField->setSensitivity(isSensitive && !entire);
+}
+
+//----------------------------------------------------------------------------
+
+bool FuiCurveDomain::getValues(std::pair<double,double>& domain) const
+{
+  domain = { startField->getValue(), endField->getValue() };
+  return entireBtn->getValue();
+}
+
+//----------------------------------------------------------------------------
+
+void FuiCurveDomain::onButtonToggled(bool toggle)
+{
+  startField->myField->setSensitivity(!toggle);
+  endField->myField->setSensitivity(!toggle);
 }
 
 
@@ -332,21 +347,12 @@ void FuiCurveDefine::onPoppedDownToMem()
 
 FuiCurveAppearanceSheet::FuiCurveAppearanceSheet()
 {
-  this->genAppearanceFrame = 0;
-  this->curveTypeLabel = 0;
   this->curveTypeMenu = 0;
-  this->curveWidthLabel = 0;
   this->curveWidthBox = 0;
-  this->colorLabel = 0;
   this->colorChooser = 0;
-  this->colorDialog = 0;
 
-  this->symbolFrame = 0;
-  this->curveSymbolLabel = 0;
   this->curveSymbolMenu = 0;
-  this->symbolSizeLabel = 0;
   this->symbolSizeBox = 0;
-  this->numSymbolsLabel = 0;
   this->numSymbolsBox = 0;
   this->allSymbolsButton = 0;
 }
@@ -363,10 +369,6 @@ void FuiCurveAppearanceSheet::initWidgets()
   this->curveWidthBox->setValueChangedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
 						    onIntValueChanged,int));
 
-  colorDialog->setOkButtonClickedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
-                                               onColorDialogOk,const FFuColor&));
-  colorDialog->setCancelButtonClickedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
-                                                   onColorDialogCancel,const FFuColor&));
   colorChooser->setSelectionChangedCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
                                                  onColorChanged,const FFuColor&));
 
@@ -385,18 +387,10 @@ void FuiCurveAppearanceSheet::initWidgets()
 
   this->allSymbolsButton->setLabel("All");
   this->allSymbolsButton->setToggleCB(FFaDynCB1M(FuiCurveAppearanceSheet,this,
-						 onAllSymbolsToggled,bool));
-
-  this->curveTypeLabel->setLabel("Curve type");
-  this->curveWidthLabel->setLabel("Curve thickness");
-  this->colorLabel->setLabel("Curve color");
-  this->curveSymbolLabel->setLabel("Symbol type");
-  this->symbolSizeLabel->setLabel("Symbol size");
-  this->numSymbolsLabel->setLabel("Number of symbols");
+						 onSymbolsToggled,bool));
 
   for (const FmCurveColor& color : FmGraph::getCurveDefaultColors())
     this->colorChooser->insertCol(color.first,color.second);
-  this->colorChooser->enableColorDialog(true);
 
   this->curveTypeMenu->addOption("Lines");   // 0 refer FFu2DPlotter enum
   this->curveTypeMenu->addOption("Dots");    // 1
@@ -413,94 +407,15 @@ void FuiCurveAppearanceSheet::initWidgets()
   this->curveSymbolMenu->addOption("Left triangle");// 8
   this->curveSymbolMenu->addOption("Right triangle");// 9
 
-  this->symbolFrame->setLabel("Symbols");
-  this->genAppearanceFrame->setLabel("General appearance");
-
   // These features are (not yet) supported with Qwt 6.1.2, so hide the widgets in the GUI
-  this->numSymbolsLabel->popDown();
   this->numSymbolsBox->popDown();
   this->allSymbolsButton->popDown();
 }
 
 //----------------------------------------------------------------------------
 
-void FuiCurveAppearanceSheet::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int left = border;
-  int right = width - border;
-  int top = border;
-  int bottom = height - border;
-  int fieldHeight = 4*height/25;
-  int textHeight = this->colorLabel->getHeightHint();
-  int centerX = width/2;
-
-  int frameTop = top;
-  int frameBottom = bottom;
-  int frame1Left = left;
-  int frame1Right = centerX - border/2;
-  int frame2Left = centerX + border/2;
-  int frame2Right = right;
-
-  int frameHeightAvail = frameBottom - frameTop - border;
-  int vertSpacing = frameHeightAvail/4;
-
-  int line1 = frameTop + border + vertSpacing;
-  int line2 = line1 + vertSpacing;
-  int line3 = line2 + vertSpacing;
-
-  int frame1CenterX = frame1Left + (frame1Right - frame1Left)/2;
-  int frame2CenterX = frame2Left + (frame2Right - frame2Left)/2;
-
-  int col1Left = frame1Left + border;
-  int col2Left = frame1CenterX;
-  int col2Right = frame1Right - border;
-  int col2Width = col2Right - col2Left;
-  int col3Left = frame2Left + border;
-  int col4Left = frame2CenterX;
-  int col4Right = frame2Right - border;
-  int col4Width = col4Right - col4Left;
-
-  int allSymbolsWidth = this->allSymbolsButton->getWidthHint();
-  int allSymbolsLeft = col4Right - allSymbolsWidth;
-
-  this->genAppearanceFrame->setEdgeGeometry(frame1Left, frame1Right, frameTop, frameBottom);
-
-  this->curveTypeLabel->setCenterYGeometryWidthHint(col1Left, line1, textHeight);
-  this->curveTypeMenu->setCenterYGeometry(col2Left, line1, col2Width, fieldHeight);
-
-  this->curveWidthLabel->setCenterYGeometryWidthHint(col1Left, line2, textHeight);
-  this->curveWidthBox->setCenterYGeometry(col2Left, line2, col2Width, fieldHeight);
-
-  this->colorLabel->setCenterYGeometryWidthHint(col1Left, line3, textHeight);
-  this->colorChooser->setCenterYGeometry(col2Left, line3, col2Width, fieldHeight);
-
-  this->symbolFrame->setEdgeGeometry(frame2Left, frame2Right, frameTop, frameBottom);
-
-  this->curveSymbolLabel->setCenterYGeometryWidthHint(col3Left, line1, textHeight);
-  this->curveSymbolMenu->setCenterYGeometry(col4Left, line1, col4Width, fieldHeight);
-
-  this->symbolSizeLabel->setCenterYGeometryWidthHint(col3Left, line2, textHeight);
-  this->symbolSizeBox->setCenterYGeometry(col4Left, line2, col4Width, fieldHeight);
-
-  this->numSymbolsLabel->setCenterYGeometryWidthHint(col3Left, line3, textHeight);
-  this->numSymbolsBox->setCenterYGeometry(col4Left, line3, col4Width - allSymbolsWidth - border, fieldHeight);
-  this->allSymbolsButton->setCenterYGeometry(allSymbolsLeft, line3, allSymbolsWidth, fieldHeight);
-}
-
-//-----------------------------------------------------------------------------
-
-void FuiCurveAppearanceSheet::onPoppedDownToMem()
-{
-  this->colorDialog->popDown();
-}
-
-//-----------------------------------------------------------------------------
-
 void FuiCurveAppearanceSheet::setUIValues(const FuaCurveDefineValues* curveValues)
 {
-  this->colorDialog->popDown();
-
   this->curveTypeMenu->selectOption(curveValues->curveType);
   this->curveWidthBox->setIntValue(curveValues->curveWidth);
   this->curveSymbolMenu->selectOption(curveValues->curveSymbol);
@@ -536,65 +451,24 @@ void FuiCurveAppearanceSheet::getUIValues(FuaCurveDefineValues* curveValues) con
   curveValues->color = this->colorChooser->getCurrentCol();
 }
 
-//----------------------------------------------------------------------------
-
-void FuiCurveAppearanceSheet::onAllSymbolsToggled(bool)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveAppearanceSheet::onIntValueChanged(int)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveAppearanceSheet::onColorDialogOk(const FFuColor&)
-{
-  this->colorDialog->popDown();
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveAppearanceSheet::onColorDialogCancel(const FFuColor&)
-{
-  this->colorDialog->popDown();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveAppearanceSheet::onColorChanged(const FFuColor&)
-{
-  this->dataChangedCB.invoke();
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 FuiCurveDefSheet::FuiCurveDefSheet()
 {
-  frames.fill(NULL);
   axes.fill(NULL);
 
-  sourceFrame          = 0;
   rdbResultPlotRadio   = 0;
   combCurvePlotRadio   = 0;
   extCurvePlotRadio    = 0;
   intFunctionPlotRadio = 0;
 
-  definitionFrame   = 0;
   exprField         = 0;
-  compTable         = 0;
   fileBrowseField   = 0;
   reloadCurveButton = 0;
   channelField      = 0;
   channelBtn        = 0;
   channelSelectUI   = 0;
-  functionLabel     = 0;
   functionMenu      = 0;
   startXField       = 0;
   stopXField        = 0;
@@ -605,7 +479,6 @@ FuiCurveDefSheet::FuiCurveDefSheet()
   autoExportToggle  = 0;
 
   timeRange = 0;
-  spaceObj  = 0;
   spaceOper = 0;
 
   isFuncPreview = isSpatial = isCompCurve = false;
@@ -635,16 +508,14 @@ void FuiCurveDefSheet::setUIValues(const FuaCurveDefineValues* v)
 
   this->isCompCurve = aInputMode == COMB_CURVE;
   this->isSpatial = v->inputMode == SPATIAL_RESULT || v->inputMode < 0;
-  this->timeRange->setUIValues(v->timeRange.first,v->timeRange.second,v->timeOper);
+  if (aInputMode == SPATIAL_RESULT && v->firstTriad && v->secondTriad)
+    this->timeRange->setObjLabel(v->firstTriad->getIdString() + " - " +
+                                 v->secondTriad->getIdString());
+  else
+    this->timeRange->setObjLabel("");
+  this->timeRange->setUIValues(v->timeRange.first,v->timeRange.second,
+                               v->timeOper);
   this->spaceOper->selectOption(v->spaceOper,false);
-  if (aInputMode == SPATIAL_RESULT)
-  {
-    std::string domain("Spatial domain: ");
-    if (v->firstTriad && v->secondTriad)
-      domain += v->firstTriad->getIdString() + " - " + v->secondTriad->getIdString();
-    this->spaceObj->setLabel(domain);
-  }
-
   this->setCompleteSign(v->axesComplete, aInputMode == PREVIEW_FUNCTION);
 
   if (v->manualReload) {
@@ -663,14 +534,13 @@ void FuiCurveDefSheet::setUIValues(const FuaCurveDefineValues* v)
     if (i < v->curveComps.size()) {
       this->curveComps[i]->setSelectedRef(v->curveComps[i]);
       this->curveComps[i]->setSensitivity(v->activeComps[i]);
+      this->curveComps[i]->popUp();
     }
     else {
-      this->curveComps[i]->setSelectedRef(0);
+      this->curveComps[i]->setSelectedRef(NULL);
       this->curveComps[i]->setSensitivity(true);
+      this->curveComps[i]->popDown();
     }
-
-  if (v->curveComps.empty())
-    this->compTable->popDown();
 
   this->fileBrowseField->setAbsToRelPath(v->modelFilePath);
   this->fileBrowseField->setFileName(v->filePath);
@@ -757,29 +627,14 @@ void FuiCurveDefSheet::buildDynamicWidgets(const FuaCurveDefineValues* v)
 {
   this->functionMenu->setQuery(v->functionQuery);
 
-  // Don't touch if no curve components at all
-  int numComp = v->curveComps.size();
-  if (numComp == 0) return;
+  if (v->curveComps.empty()) return;
 
-  int numCols = this->compTable->getNumberColumns();
-  int numRows = this->compTable->getNumberRows();
-  for (int row = numComp; row < numRows; row++)
-    for (int col = 0; col < numCols; col++)
-      this->compTable->clearCellContents(row, col);
-
-  this->setNoComps(numComp);
-  this->compTable->setNumberRows(numComp);
-
-  std::string label("A:");
-  for (int i = 0; i < numComp; i++) {
-    this->curveComps[i]->setBehaviour(FuiQueryInputField::REF_NONE,true);
-    this->curveComps[i]->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,onRefSelected,int));
-    this->curveComps[i]->setQuery(v->curveQuery);
-    if (i >= numRows)
-      this->compTable->insertWidget(i, 0, this->curveComps[i]);
-    this->compTable->setRowLabel(i, label.c_str());
-    this->compTable->stretchRowHeight(i, true);
-    label[0]++;
+  this->setNoComps(v->curveComps.size());
+  for (FuiQueryInputField* comp : curveComps)
+  {
+    comp->setBehaviour(FuiQueryInputField::REF_NONE,true);
+    comp->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,onRefSelected,int));
+    comp->setQuery(v->curveQuery);
   }
 }
 
@@ -800,13 +655,6 @@ FmModelMemberBase* FuiCurveDefSheet::getSelectedFunction() const
 
 //----------------------------------------------------------------------------
 
-FuiCurveAxisDefinition* FuiCurveDefSheet::getAxisUI(int dir) const
-{
-  return axes[dir];
-}
-
-//----------------------------------------------------------------------------
-
 void FuiCurveDefSheet::setProvideChannelsCB(const FFaDynCB1<const std::string&>& dynCB)
 {
   this->channelBtnClickedCB = dynCB;
@@ -816,7 +664,6 @@ void FuiCurveDefSheet::setProvideChannelsCB(const FFaDynCB1<const std::string&>&
 
 void FuiCurveDefSheet::initWidgets()
 {
-  this->sourceFrame->setLabel("Source");
   this->rdbResultPlotRadio->setLabel("From RDB");
   this->combCurvePlotRadio->setLabel("Combined curve");
   this->extCurvePlotRadio->setLabel("From file");
@@ -833,20 +680,14 @@ void FuiCurveDefSheet::initWidgets()
   inputGroup.setGroupToggleCB(FFaDynCB2M(FuiCurveDefSheet,this,
 					 onInputModeToggled,int,bool));
 
-  this->frames[FuiCurveDefine::X]->setLabel("X Axis");
-  this->frames[FuiCurveDefine::Y]->setLabel("Y Axis");
-
+  this->combFrame->setLabel("Definition");
   this->exprField->setLabel("Function of  A, B, C, ...");
   this->exprField->setToolTip("Enter a math expression in the variables A, B, ..., J\n"
 			      "and select the Curve corresponding to each variable");
   this->exprField->myField->setAcceptedCB(FFaDynCB1M(FuiCurveDefSheet,this,
 						     onExpressionChanged,char*));
 
-  this->compTable->showRowHeader(true);
-  this->compTable->showColumnHeader(false);
-  this->compTable->setNumberColumns(1);
-  this->compTable->setSelectionPolicy(FFuTable::NO_SELECTION);
-
+  this->fileFrame->setLabel("Definition");
   this->fileBrowseField->setAbsToRelPath("yes");
   this->fileBrowseField->setFileOpenedCB(FFaDynCB2M(FuiCurveDefSheet,this,
 						    onFileSelected,const std::string&,int));
@@ -855,6 +696,7 @@ void FuiCurveDefSheet::initWidgets()
   this->fileBrowseField->addDialogFilter("MTS RPC Time history file",FmGraph::rpc());
   this->fileBrowseField->setDialogRememberKeyword("ExternalCurveDefinition");
 
+  this->functionFrame->setLabel("Definition");
   this->startXField->setLabel("Start x");
   this->stopXField->setLabel("Stop x");
   this->incXField->setLabel("Increment");
@@ -869,7 +711,6 @@ void FuiCurveDefSheet::initWidgets()
   this->useSmartPointsBtn->setToggleCB(FFaDynCB1M(FuiCurveDefSheet,this,
 						  onButtonToggled,bool));
 
-  this->functionLabel->setLabel("Function");
   this->functionMenu->setBehaviour(FuiQueryInputField::REF_NONE,true);
   this->functionMenu->setRefSelectedCB(FFaDynCB1M(FuiCurveDefSheet,this,
 						  onRefSelected,int));
@@ -915,194 +756,6 @@ void FuiCurveDefSheet::initWidgets()
 
 //----------------------------------------------------------------------------
 
-void FuiCurveDefSheet::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int textHeight = this->completeLabel->getHeightHint();
-  int top = border;
-  int bottom = height - border/2;
-  int left = border;
-  int right = width - border;
-
-  // Radios
-  int intFunWidth = this->intFunctionPlotRadio->getWidthHint();
-
-  int frameTop = top/2;
-  int frameBottom = bottom - border - textHeight;
-
-  int sourceLeft = left;
-  int sourceRight = intFunWidth + 3*border;
-
-  int centerRadio = (frameBottom - frameTop - 2*border)/4;
-  int rdbTop     = frameTop + border - textHeight/2 + centerRadio;
-  int rdbBottom  = rdbTop + textHeight/2 + border/2;
-  int combTop    = rdbTop + centerRadio;
-  int combBottom = combTop + textHeight/2 + border/2;
-  int extTop     = combTop + centerRadio;
-  int extBottom  = extTop + textHeight/2 + border/2;
-  int intTop     = extTop + centerRadio;
-  int intBottom  = intTop + textHeight/2 + border/2;
-
-  int radioLeft  = sourceLeft + border;
-  int radioRight = radioLeft + intFunWidth;
-
-  // Frames
-  int sFrameTop = frameTop;
-#ifdef FT_HAS_PREVIEW
-  int sFrameBottom = frameBottom;
-#else
-  int sFrameBottom = extBottom + border;
-#endif
-  int bFrameTop = 5*frameTop/2;
-  int bFrameBottom = frameBottom;
-  int xFrameLeft = sourceRight + border/2;
-  int centerX = (width - xFrameLeft)/2 + xFrameLeft;
-  int xFrameRight = centerX - border/4;
-  int yFrameRight = right;
-  int yFrameLeft = centerX + border/4;
-
-  if (this->isSpatial && rdbResultPlotRadio->getValue()) {
-    bFrameTop = bFrameBottom - 5*textHeight/3 - border;
-    frameBottom = bFrameTop - border/2;
-  }
-
-  // Axes
-  int axisTop = frameTop + 3*border/2;
-  int axisBottom = frameBottom - border/2;
-  int xAxisLeft = xFrameLeft + border;
-  int xAxisRight = xFrameRight - border;
-  int yAxisLeft = yFrameLeft + border;
-  int yAxisRight = yFrameRight - border;
-  int xOperTop = axisBottom - textHeight-border;
-  if (xOperTop < axisTop) xOperTop = axisTop;
-  int tRangeLeft = (3*xAxisLeft+2*yAxisRight)/5;
-
-  // Placing widgets
-  this->sourceFrame->setEdgeGeometry(sourceLeft, sourceRight, sFrameTop, sFrameBottom);
-  this->rdbResultPlotRadio->setEdgeGeometry(radioLeft,radioRight,rdbTop,rdbBottom);
-  this->combCurvePlotRadio->setEdgeGeometry(radioLeft,radioRight,combTop,combBottom);
-  this->extCurvePlotRadio->setEdgeGeometry(radioLeft,radioRight,extTop,extBottom);
-  this->intFunctionPlotRadio->setEdgeGeometry(radioLeft,radioRight,intTop,intBottom);
-
-  this->frames[FuiCurveDefine::X]->setEdgeGeometry(xFrameLeft, xFrameRight, frameTop, frameBottom);
-  this->frames[FuiCurveDefine::Y]->setEdgeGeometry(yFrameLeft, yFrameRight, frameTop, frameBottom);
-  this->axes[FuiCurveDefine::X]->setEdgeGeometry(xAxisLeft, xAxisRight, axisTop, axisBottom);
-  this->axes[FuiCurveDefine::Y]->setEdgeGeometry(yAxisLeft, yAxisRight, axisTop, axisBottom);
-
-  this->definitionFrame->toBack();
-  this->definitionFrame->setEdgeGeometry(xFrameLeft, yFrameRight, bFrameTop, bFrameBottom);
-  this->timeRange->setEdgeGeometry(tRangeLeft, yAxisRight, bFrameTop+border/2, bFrameBottom-border/2);
-  this->spaceObj->setEdgeGeometry(xAxisLeft, tRangeLeft-border, bFrameTop+border/2, bFrameBottom-border/2);
-  this->spaceOper->setEdgeGeometry(xAxisLeft, xAxisRight, xOperTop, axisBottom);
-
-  // place combined curve fields
-  int fieldH = 20;
-  int fieldTop = bFrameTop + border;
-  int fieldBottom = fieldTop + fieldH;
-  int fieldRight = yAxisRight;
-  int reloadWidth = this->reloadCurveButton->getWidthHint();
-  if (this->isCompCurve && this->reloadCurveButton->isPoppedUp())
-    fieldRight -= border+reloadWidth;
-  this->exprField->setEdgeGeometry(xAxisLeft,fieldRight,fieldTop,fieldBottom);
-
-  int nRows = this->compTable->getNumberRows();
-  if (nRows > 0)
-  {
-    int fieldW = yAxisRight - xAxisLeft - 36;
-    int tableTop = fieldBottom + border;
-    int tableH = border + nRows*fieldH;
-    if (tableTop+tableH+border > frameBottom)
-    {
-      tableH = frameBottom-tableTop-border;
-      fieldW -= 17;
-    }
-    int tableBottom = tableTop + tableH;
-    this->compTable->setEdgeGeometry(xAxisLeft,yAxisRight,tableTop,tableBottom);
-
-    for (int i = 0; i < nRows; i++)
-      this->compTable->setRowHeight(i,fieldH);
-    this->compTable->setColumnWidth(0,fieldW);
-  }
-  else
-    this->compTable->popDown();
-
-  // external curve params
-  int fieldHeight = 4*height/25;
-  int channelBtnWidth = this->channelBtn->getWidthHint();
-
-  int v0 = top + 3*border/2;
-  int v1 = v0 + fieldHeight;
-  int v2 = v1 + border/2;
-  int v3 = v2 + fieldHeight;
-
-  int browseFieldLeft = sourceRight + 3*border/2;
-  int channelFieldRight = right-3*border/2-channelBtnWidth;
-
-  // place external curve fields
-  this->fileBrowseField->setEdgeGeometry(browseFieldLeft, right-border-reloadWidth-4, v0, v1);
-  if (this->isSpatial && rdbResultPlotRadio->getValue()) // special placing of reload button for beam diagrams
-    this->reloadCurveButton->setEdgeGeometry(right-border-reloadWidth, right-border, axisTop, axisTop*0.55 + axisBottom*0.45);
-  else if (this->isFuncPreview)
-    this->reloadCurveButton->setEdgeGeometry(right-border-reloadWidth, right-border, v2, v3);
-  else if (this->isCompCurve)
-    this->reloadCurveButton->setEdgeGeometry(right-border-reloadWidth, right-border, fieldTop-2, fieldBottom+2);
-  else
-    this->reloadCurveButton->setEdgeGeometry(right-border-reloadWidth, right-border, v0, v1);
-  this->channelField->setEdgeGeometry(browseFieldLeft, channelFieldRight, v2, v3);
-  this->channelBtn->setEdgeGeometry(channelFieldRight+border/2, right-border, v2, v3);
-
-  // internal function params
-  int funclWid = this->functionLabel->getWidthHint();
-  int strtlWid = this->startXField->getWidthHint();
-  int stoplWid = this->stopXField->getWidthHint();
-  int inclWid  = this->incXField->getWidthHint();
-  int smPtsWid = this->useSmartPointsBtn->getWidthHint();
-  int paramFieldWidth = (width - sourceRight-10*border-strtlWid-stoplWid-inclWid-smPtsWid)/3;
-
-  int h0  = sourceRight + 3*border/2;
-  int h01 = h0 + funclWid;
-  int h02 = h01 + border;
-  int h3  = h0 + strtlWid + border + paramFieldWidth;
-  int h4  = h3 + border;
-  int h7  = h4 + stoplWid + border/2 + paramFieldWidth;
-  int h8  = h7 + border;
-  int h11 = h8 + inclWid + border/2 + paramFieldWidth;
-  int h12 = h11 + border;
-  int h13 = h12 + smPtsWid;
-
-  // place internal function fields
-  this->startXField->setEdgeGeometry(h0,h3,v0,v1);
-  this->stopXField->setEdgeGeometry(h4,h7,v0,v1);
-  this->incXField->setEdgeGeometry(h8,h11,v0,v1);
-  this->useSmartPointsBtn->setEdgeGeometry(h12,h13,v0,v1);
-  if (this->isFuncPreview && this->reloadCurveButton->isPoppedUp())
-    h13 = right-2*border-reloadWidth;
-  this->functionLabel->setEdgeGeometry(h0,h01,v2,v3);
-  this->functionMenu->setEdgeGeometry(h02,h13,v2,v3);
-
-  int h2 = height - border/2;
-  int autoXWidth = this->autoExportToggle->getWidthHint();
-  this->completeLabel->setEdgeGeometry(sourceLeft,sourceRight,h2-textHeight,h2);
-  this->autoExportToggle->setEdgeGeometry(yAxisRight-autoXWidth,yAxisRight,
-					  h2-textHeight,h2);
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefSheet::onPoppedDownToMem()
-{
-  this->channelSelectUI->popDown();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefSheet::onReloadCurveClicked()
-{
-  this->reloadCurveCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
 void FuiCurveDefSheet::onChannelSelectOK(int index)
 {
   this->channelSelectUI->popDown();
@@ -1136,110 +789,42 @@ void FuiCurveDefSheet::onChannelBtnClicked()
 
 //----------------------------------------------------------------------------
 
-void FuiCurveDefSheet::onFileSelected(const std::string&, int)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefSheet::onExpressionChanged(char*)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefSheet::onFieldValueChanged(double)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefSheet::onButtonToggled(bool)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveDefSheet::onRefSelected(int)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
 void FuiCurveDefSheet::setDefineMode(int inputMode)
 {
-  if (inputMode == TEMPORAL_RESULT)
-    this->definitionFrame->popDown();
+  if (inputMode == TEMPORAL_RESULT || inputMode == SPATIAL_RESULT) {
+    rdbAxes->popUp();
+    for (int a = 0; a < FuiCurveDefine::NDIRS; a++)
+      if (inputMode == TEMPORAL_RESULT || a == FuiCurveDefine::Y)
+        axes[a]->popUp();
+      else
+        axes[a]->popDown();
+
+    if (inputMode == SPATIAL_RESULT) {
+      xAxisFrame->popUp();
+      timeRange->popUp();
+    }
+    else {
+      xAxisFrame->popDown();
+      timeRange->popDown();
+    }
+  }
   else
-    this->definitionFrame->popUp();
+    rdbAxes->popDown();
 
-  for (int a = 0; a < FuiCurveDefine::NDIRS; a++)
-  {
-    if (inputMode == TEMPORAL_RESULT || inputMode == SPATIAL_RESULT)
-      this->frames[a]->popUp();
-    else
-      this->frames[a]->popDown();
+  if (inputMode == COMB_CURVE)
+    combFrame->popUp();
+  else
+    combFrame->popDown();
 
-    if (inputMode == TEMPORAL_RESULT)
-      this->axes[a]->popUp();
-    else if (inputMode == SPATIAL_RESULT && a == FuiCurveDefine::Y)
-      this->axes[a]->popUp();
-    else
-      this->axes[a]->popDown();
-  }
+  if (inputMode == EXT_CURVE)
+    fileFrame->popUp();
+  else
+    fileFrame->popDown();
 
-  if (inputMode == SPATIAL_RESULT) {
-    timeRange->popUp();
-    spaceObj->popUp();
-    spaceOper->popUp();
-  }
-  else {
-    timeRange->popDown();
-    spaceObj->popDown();
-    spaceOper->popDown();
-  }
-
-  if (inputMode == COMB_CURVE) {
-    this->exprField->popUp();
-    this->compTable->popUp();
-  }
-  else {
-    this->exprField->popDown();
-    this->compTable->popDown();
-  }
-
-  if (inputMode == EXT_CURVE) {
-    this->fileBrowseField->popUp();
-    this->channelField->popUp();
-    this->channelBtn->popUp();
-  }
-  else {
-    this->fileBrowseField->popDown();
-    this->channelField->popDown();
-    this->channelBtn->popDown();
-  }
-
-  if (inputMode >= INT_FUNCTION) {
-    this->startXField->popUp();
-    this->stopXField->popUp();
-    this->incXField->popUp();
-    this->useSmartPointsBtn->popUp();
-    this->functionLabel->popUp();
-    this->functionMenu->popUp();
-  }
-  else {
-    this->startXField->popDown();
-    this->stopXField->popDown();
-    this->incXField->popDown();
-    this->useSmartPointsBtn->popDown();
-    this->functionLabel->popDown();
-    this->functionMenu->popDown();
-  }
+  if (inputMode >= INT_FUNCTION)
+    functionFrame->popUp();
+  else
+    functionFrame->popDown();
 }
 
 //----------------------------------------------------------------------------
@@ -1278,29 +863,21 @@ void FuiCurveDefSheet::setCompleteSign(bool complete, bool preview)
 
 void FuiCurveAnalysisSheet::initWidgets()
 {
-  this->dftFrame->setLabel("Fourier transform");
-  this->startField->setLabel("Start");
-  this->endField->setLabel("Stop");
-  this->entireDomainBtn->setLabel("Entire");
+  curveDomain->initWidgets(FFaDynCB1M(FuiCurveAnalysisSheet,this,
+                                      onFieldValueChanged,double),
+                           FFaDynCB1M(FuiCurveAnalysisSheet,this,
+                                      onButtonToggled,bool));
+
   this->doDftBtn->setLabel("On/Off");
   this->removeCompBtn->setLabel("No 0 Hz component");
   this->resampleBtn->setLabel("Use sample rate");
-  this->dftDomainFrame->setLabel("Time domain");
 
-  this->startField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->endField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->resampleRateField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-
-  this->startField->setAcceptedCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
-					     onFieldValueChanged,double));
-  this->endField->setAcceptedCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
-					   onFieldValueChanged,double));
   this->resampleRateField->setAcceptedCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
 						    onFieldValueChanged,double));
+
   this->doDftBtn->setToggleCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
 					 onDftToggled,bool));
-  this->entireDomainBtn->setToggleCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
-						onButtonToggled,bool));
   this->removeCompBtn->setToggleCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
 					      onButtonToggled,bool));
   this->resampleBtn->setToggleCB(FFaDynCB1M(FuiCurveAnalysisSheet,this,
@@ -1317,120 +894,38 @@ void FuiCurveAnalysisSheet::initWidgets()
 
 //----------------------------------------------------------------------------
 
-void FuiCurveAnalysisSheet::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-  int top = border/2;
-  int left = border;
-  int diffWidth = this->diffBtn->getWidthHint();
-  int frameWidth = width - diffWidth - 4*border;
-  int frameHeight = height - border;
-  int fieldHeight = 4*height/25;
-
-  int h0 = left;
-  int h1 = h0 + frameWidth;
-  int v0 = top;
-  int v1 = v0 + frameHeight;
-  this->dftFrame->setEdgeGeometry(h0,h1,v0,v1);
-
-  int v01 = v0 + 2*border;
-  int v02 = v01 + fieldHeight;
-  int v021 = v02 + border/8;
-  int v03 = v021 + 2*border;
-  int v04 = v03 + fieldHeight;
-
-  int labelWidth1 = this->startField->getWidthHint();
-  int labelWidth2 = this->endField->getWidthHint();
-  int labelWidth3 = this->entireDomainBtn->getWidthHint();
-  int labelWidth4 = this->removeCompBtn->getWidthHint();
-  int labelWidth5 = this->resampleBtn->getWidthHint();
-  int fieldWidth2 = (frameWidth - labelWidth1 - labelWidth2 - labelWidth3 - 6*border)/2;
-
-  int h21 = h0 + border/2;
-  int h212 = h21 + labelWidth4;
-  int h213 = h212 + 5*border/4;
-  int h214 = h213 + labelWidth5;
-  int h215 = h214 + border/4;
-  int h22 = h21 + border/2;
-  int h25 = h22 + labelWidth1 + border/4 + fieldWidth2;
-  int h26 = h25 + border;
-  int h29 = h26 + labelWidth2 + border/4 + fieldWidth2;
-  int h291 = h29 + 5*border/2;
-  int h292 = h291 + labelWidth3;
-  int h30 = h1 - border/2;
-
-  int v11 = v04 + border/2;
-  int v12 = v11 + border/4;
-  int v121 = v12 + fieldHeight;
-
-  if (h214 > h30) h214 = h30;
-
-  this->doDftBtn->setEdgeGeometry(h21,h21+this->doDftBtn->getWidthHint(),v01,v02);
-  this->dftDomainFrame->setEdgeGeometry(h21,h30,v021,v11);
-  this->startField->setEdgeGeometry(h22,h25,v03,v04);
-  this->endField->setEdgeGeometry(h26,h29,v03,v04);
-  this->entireDomainBtn->setEdgeGeometry(h291,h292,v03,v04);
-  this->removeCompBtn->setEdgeGeometry(h21,h212,v12,v121);
-  this->resampleBtn->setEdgeGeometry(h213,h214,v12,v121);
-  this->resampleRateField->setEdgeGeometry(h215,h30,v12,v121);
-
-  int h4 = h1 + 2*border;
-  this->diffBtn->setEdgeGeometry(h4,h4+diffWidth,v01,v02);
-  this->intBtn->setEdgeGeometry(h4,h4+diffWidth,v03,v04);
-}
-
-//----------------------------------------------------------------------------
-
 void FuiCurveAnalysisSheet::setUIValues(const FuaCurveDefineValues* v)
 {
-    bool doDft = v->dftFeasable && v->analysis == 3;
-    this->diffBtn->setValue(v->analysis == 1);
-    this->intBtn->setValue(v->analysis == 2);
-    this->doDftBtn->setValue(doDft);
-    this->entireDomainBtn->setValue(v->dftEntireDomain);
-    this->startField->setValue(v->dftDomain.first);
-    this->endField->setValue(v->dftDomain.second);
-    this->removeCompBtn->setValue(v->dftRemoveComp);
-    this->resampleBtn->setValue(v->dftResample);
-    this->resampleRateField->setValue(v->dftResampleRate);
+  bool doDft = v->dftFeasable && v->analysis == 3;
+  diffBtn->setValue(v->analysis == 1);
+  intBtn->setValue(v->analysis == 2);
+  doDftBtn->setValue(doDft);
+  removeCompBtn->setValue(v->dftRemoveComp);
+  resampleBtn->setValue(v->dftResample);
+  resampleRateField->setValue(v->dftResampleRate);
+  curveDomain->setValues(v->dftDomain,v->dftEntireDomain,doDft);
 
-    this->doDftBtn->setSensitivity(v->dftFeasable);
-    this->entireDomainBtn->setSensitivity(doDft);
-    this->startField->setSensitivity(doDft && !v->dftEntireDomain);
-    this->endField->setSensitivity(doDft && !v->dftEntireDomain);
-    this->removeCompBtn->setSensitivity(doDft);
-    this->resampleBtn->setSensitivity(doDft);
-    this->resampleRateField->setSensitivity(doDft && v->dftResample);
+  doDftBtn->setSensitivity(v->dftFeasable);
+  removeCompBtn->setSensitivity(doDft);
+  resampleBtn->setSensitivity(doDft);
+  resampleRateField->setSensitivity(doDft && v->dftResample);
 }
 
 //----------------------------------------------------------------------------
 
 void FuiCurveAnalysisSheet::getUIValues(FuaCurveDefineValues* v) const
 {
-  v->dftFeasable = this->doDftBtn->getSensitivity();
-  if (this->diffBtn->getValue()) v->analysis = 1;
-  if (this->intBtn->getValue()) v->analysis = 2;
-  if (this->doDftBtn->getValue()) v->analysis = 3;
-  v->dftDomain = { this->startField->getValue(), this->endField->getValue() };
-  v->dftResampleRate = this->resampleRateField->getDouble();
-  v->dftEntireDomain = this->entireDomainBtn->getValue();
-  v->dftRemoveComp = this->removeCompBtn->getValue();
-  v->dftResample = this->resampleBtn->getValue();
+  v->dftFeasable = doDftBtn->getSensitivity();
+  if (diffBtn->getValue())  v->analysis = 1;
+  if (intBtn->getValue())   v->analysis = 2;
+  if (doDftBtn->getValue()) v->analysis = 3;
+  v->dftRemoveComp   = removeCompBtn->getValue();
+  v->dftResample     = resampleBtn->getValue();
+  v->dftResampleRate = resampleRateField->getDouble();
+  v->dftEntireDomain = curveDomain->getValues(v->dftDomain);
 }
 
 //----------------------------------------------------------------------------
-
-void FuiCurveAnalysisSheet::onFieldValueChanged(double)
-{
-  this->dataChangedCB.invoke();
-}
-
-//----------------------------------------------------------------------------
-
-void FuiCurveAnalysisSheet::onButtonToggled(bool)
-{
-  this->dataChangedCB.invoke();
-}
 
 void FuiCurveAnalysisSheet::onDftToggled(bool toggle)
 {
@@ -1485,8 +980,9 @@ void FuiCurveInfoSheet::setCurveStatistics(double rms, double avg,
     this->probablyHasMarkers = false;
   }
 
-  if (!this->entireDomainBtn->getValue()) {
-    this->applyVerticalMarkersCB.invoke(this->startField->getValue(), this->stopField->getValue());
+  std::pair<double,double> domain;
+  if (!xDomain->getValues(domain)) {
+    this->applyVerticalMarkersCB.invoke(domain.first,domain.second);
     this->probablyHasMarkers = true;
   }
 }
@@ -1500,17 +996,8 @@ void FuiCurveInfoSheet::initWidgets()
 
   this->useScaleShiftBtn->setLabel("Use scaled/shifted");
 
-  this->startField->setLabel("Start");
-  this->startField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->startField->myField->setDoubleDisplayMode(FFuIOField::AUTO, 6, 1);
-  this->startField->setValue(0.0);
-  this->startField->myField->setSensitivity(false);
-
-  this->stopField->setLabel("Stop");
-  this->stopField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->stopField->myField->setDoubleDisplayMode(FFuIOField::AUTO, 6, 1);
-  this->stopField->setValue(1.0);
-  this->stopField->myField->setSensitivity(false);
+  xDomain->initWidgets();
+  xDomain->setValues({ 0.0, 1.0 }, true);
 
   this->rmsField->setLabel("RMS");
   this->rmsField->myField->setSensitivity(false);
@@ -1548,13 +1035,6 @@ void FuiCurveInfoSheet::initWidgets()
   this->maxField->setValue(0.0);
   this->maxField->setToolTip("Curve maximum");
 
-  this->entireDomainBtn->setLabel("Entire");
-  this->entireDomainBtn->setValue(true);
-  this->entireDomainBtn->setToggleCB(FFaDynCB1M(FuiCurveInfoSheet,this,
-						onEntireDomainToggled,bool));
-
-  this->domainFrame->setLabel("X Axis Domain");
-
   int labelW = this->avgField->myLabel->getWidthHint();
   this->rmsField->setLabelWidth(labelW);
   this->avgField->setLabelWidth(labelW);
@@ -1569,74 +1049,10 @@ void FuiCurveInfoSheet::initWidgets()
 }
 
 
-void FuiCurveInfoSheet::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-
-  int left = border;
-  int right = width - border/2;
-  int top = 0;
-  int bottom = height - border/2;
-
-  int domainFrameBtm = bottom;
-  int startStopBtm = domainFrameBtm - border;
-  int lineHeight = 20;
-  int startStopTp = startStopBtm - lineHeight;
-
-  int domainFrameTp = startStopTp - 2*border;
-
-  int toggleBtnLeft = right - this->entireDomainBtn->getWidthHint() - border;
-  this->entireDomainBtn->setEdgeGeometry(toggleBtnLeft, right - border, startStopTp, startStopBtm);
-
-  int available = toggleBtnLeft - left - border;
-
-  this->startField->setEdgeGeometry(left + border, left + available/2, startStopTp, startStopBtm);
-  this->stopField->setEdgeGeometry(this->startField->getXRightPos() + border, toggleBtnLeft - border,
-				   startStopTp, startStopBtm);
-
-  this->domainFrame->setEdgeGeometry(left, right, domainFrameTp, domainFrameBtm);
-
-  available = domainFrameTp - top;
-  int rmsCenterY = top + border + lineHeight/2;
-  int avgCenterY = rmsCenterY + lineHeight + border/2;
-
-  int calcRight = right;
-
-  int btnWidth;
-  if (this->calculateBtn->getWidthHint() > this->useScaleShiftBtn->getWidthHint())
-    btnWidth = this->calculateBtn->getWidthHint();
-  else
-    btnWidth = this->useScaleShiftBtn->getWidthHint();
-
-  int calcLeft = calcRight - btnWidth;
-
-  available = calcLeft - left;
-  int fieldWidth = (available - 3*border)/3;
-
-  int rmsLeft = left;
-  int rmsRight = left + fieldWidth;
-  int stdDevLeft = rmsRight + border;
-  int stdDevRight = stdDevLeft + fieldWidth;
-  int maxLeft = stdDevRight + border;
-  int maxRight = maxLeft + fieldWidth;
-
-  this->rmsField->setEdgeGeometry(rmsLeft, rmsRight, rmsCenterY - lineHeight/2, rmsCenterY + lineHeight/2);
-  this->avgField->setEdgeGeometry(rmsLeft, rmsRight, avgCenterY - lineHeight/2, avgCenterY + lineHeight/2);
-  this->stdDevField->setEdgeGeometry(stdDevLeft, stdDevRight, rmsCenterY - lineHeight/2, rmsCenterY + lineHeight/2);
-  this->integralField->setEdgeGeometry(stdDevLeft, stdDevRight, avgCenterY - lineHeight/2, avgCenterY + lineHeight/2);
-  this->maxField->setEdgeGeometry(maxLeft, maxRight, rmsCenterY - lineHeight/2, rmsCenterY + lineHeight/2);
-  this->minField->setEdgeGeometry(maxLeft, maxRight, avgCenterY - lineHeight/2, avgCenterY + lineHeight/2);
-
-  this->calculateBtn->setEdgeGeometry(calcLeft, calcRight, rmsCenterY - lineHeight/2, rmsCenterY + lineHeight/2);
-  this->useScaleShiftBtn->setEdgeGeometry(calcLeft, calcRight, avgCenterY - lineHeight/2, avgCenterY + lineHeight/2);
-}
-
-
 void FuiCurveInfoSheet::onBtnClicked()
 {
-  double start = this->startField->getValue();
-  double stop  = this->stopField->getValue();
-  bool entireDomain = this->entireDomainBtn->getValue();
+  std::pair<double,double> domain;
+  bool entireDomain = xDomain->getValues(domain);
   bool useScaled = this->useScaleShiftBtn->getValue();
 
   if (this->probablyHasMarkers)
@@ -1644,15 +1060,9 @@ void FuiCurveInfoSheet::onBtnClicked()
   this->probablyHasMarkers = false;
 
   Fui::noUserInputPlease();
-  this->getCurveStatisticsCB.invoke(useScaled, entireDomain, start, stop);
+  this->getCurveStatisticsCB.invoke(useScaled, entireDomain,
+                                    domain.first, domain.second);
   Fui::okToGetUserInput();
-}
-
-
-void FuiCurveInfoSheet::onEntireDomainToggled(bool toggle)
-{
-  this->startField->myField->setSensitivity(!toggle);
-  this->stopField->myField->setSensitivity(!toggle);
 }
 
 
@@ -1688,11 +1098,8 @@ void FuiCurveScaleSheet::getUIValues(FuaCurveDefineValues* v) const
 
 void FuiCurveScaleSheet::initWidgets()
 {
-  XScale->setFrameTitles("X Axis Scale and Shift", "Horizontal shift after scale");
-  YScale->setFrameTitles("Y Axis Scale and Shift", "Vertical shift after scale");
-
-  XScale->setDataChangedCB(FFaDynCB0M(FuiCurveScaleSheet,this,invokeDataChangedCB));
-  YScale->setDataChangedCB(FFaDynCB0M(FuiCurveScaleSheet,this,invokeDataChangedCB));
+  XScale->setDataChangedCB(FFaDynCB0M(FFaDynCB0,&dataChangedCB,invoke));
+  YScale->setDataChangedCB(FFaDynCB0M(FFaDynCB0,&dataChangedCB,invoke));
 }
 
 
@@ -1708,15 +1115,12 @@ void FuiCurveFatigueSheet::initWidgets()
   this->gateValueField->myField->setAcceptedCB(FFaDynCB1M(FuiCurveFatigueSheet,this,
 							  onFieldValueChanged,double));
 
-  this->resultFrame->setLabel("Fatigue results");
-
   this->damageField->setLabel("Damage");
   this->damageField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->damageField->myField->setDoubleDisplayMode(FFuIOField::AUTO, 6, 1);
   this->damageField->setValue(0.0);
   this->damageField->myField->setSensitivity(false);
 
-  this->unitLabel->setLabel("Life unit");
   this->lifeField->setLabel("Life");
   this->lifeField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
   this->lifeField->myField->setDoubleDisplayMode(FFuIOField::AUTO, 6, 1);
@@ -1727,7 +1131,7 @@ void FuiCurveFatigueSheet::initWidgets()
   this->unitTypeMenu->addOption("Hours");
   this->unitTypeMenu->addOption("Days");
   this->unitTypeMenu->setOptionSelectedCB(FFaDynCB1M(FuiCurveFatigueSheet,this,
-						     onUnitValueChanged,int));
+						     recalculateLife,int));
 
   this->calculateBtn->setLabel("Calculate\nweighted life");
   this->calculateBtn->setActivateCB(FFaDynCB0M(FuiCurveFatigueSheet,this,
@@ -1736,111 +1140,24 @@ void FuiCurveFatigueSheet::initWidgets()
   this->doRainflowBtn->setLabel("Show rainflow");
   this->doRainflowBtn->setToggleCB(FFaDynCB1M(FuiCurveFatigueSheet,this,
 					      onButtonToggled,bool));
+  calculateBtn->setMinWidth(doRainflowBtn->getWidthHint()+2);
 
-  this->domainFrame->setLabel("Time Interval");
-
-  this->startField->setLabel("Start");
-  this->startField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->startField->myField->setDoubleDisplayMode(FFuIOField::AUTO, 6, 1);
-  this->startField->setValue(0.0);
-  this->startField->myField->setSensitivity(false);
-  this->startField->myField->setAcceptedCB(FFaDynCB1M(FuiCurveFatigueSheet,this,
-						      onFieldValueChanged,double));
-
-  this->stopField->setLabel("Stop");
-  this->stopField->myField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->stopField->myField->setDoubleDisplayMode(FFuIOField::AUTO, 6, 1);
-  this->stopField->setValue(1.0);
-  this->stopField->myField->setSensitivity(false);
-  this->stopField->myField->setAcceptedCB(FFaDynCB1M(FuiCurveFatigueSheet,this,
-						     onFieldValueChanged,double));
-
-  this->entireDomainBtn->setLabel("Entire");
-  this->entireDomainBtn->setValue(true);
-  this->entireDomainBtn->setToggleCB(FFaDynCB1M(FuiCurveFatigueSheet,this,
-						onButtonToggled,bool));
-}
-
-
-void FuiCurveFatigueSheet::placeWidgets(int width, int height)
-{
-  int border = this->getBorder();
-
-  int left = border;
-  int right = width - border/2;
-  int lineHeight = (height-8*border)/3;
-
-  int gateValRight = right;
-  int gateValLeft = gateValRight - (right-left)/3;
-  int snRight = gateValLeft - 2*border;
-  int snLeft = left;
-  int snTop = border/2;
-  int snBottom = snTop + lineHeight;
-
-  this->snSelector->setEdgeGeometry(snLeft, snRight, snTop, snBottom);
-  this->gateValueField->setEdgeGeometry(gateValLeft, gateValRight, snTop, snBottom);
-
-  int resultRight = right - border;
-  if (this->showCalcBtn)
-    resultRight -= this->calculateBtn->getWidthHint() + border;
-  int labelWidth = this->unitLabel->getWidthHint();
-  int fieldWidth = (resultRight - labelWidth - 6*border)/3;
-  int damageLeft = left + border;
-  int damageRight = damageLeft + fieldWidth;
-  int lifeLeft = damageRight + border;
-  int lifeRight = lifeLeft + fieldWidth;
-  int unitLeft = lifeRight + border;
-  int unitRight = unitLeft + labelWidth;
-  int unitTypeLeft = unitRight + border;
-
-  int domainFrameTp = snBottom;
-  int damageTp = domainFrameTp + 2*border;
-  int damageBtm = damageTp + lineHeight;
-  int domainFrameBtm = damageBtm + border;
-
-  this->damageField->setEdgeGeometry(damageLeft, damageRight, damageTp, damageBtm);
-  this->lifeField->setEdgeGeometry(lifeLeft, lifeRight, damageTp, damageBtm);
-  this->unitLabel->setEdgeGeometry(unitLeft, unitRight, damageTp, damageBtm);
-  this->unitTypeMenu->setCenterYGeometry(unitTypeLeft, damageBtm - lineHeight/2,
-					 fieldWidth, lineHeight);
-  this->resultFrame->setEdgeGeometry(left, right, domainFrameTp, domainFrameBtm);
-
-  int calcLeft = unitTypeLeft + fieldWidth + border;
-  int calcRight = right - border;
-  int calcTop = domainFrameTp + 3*border/2;
-  int calcBtm = domainFrameBtm - border/2;
-  this->calculateBtn->setEdgeGeometry(calcLeft, calcRight, calcTop, calcBtm);
-
-  domainFrameTp = domainFrameBtm + border;
-  int startStopTp = domainFrameTp + 2*border;
-  int startStopBtm = startStopTp + lineHeight;
-  domainFrameBtm = startStopBtm + border;
-
-  int toggleBtnLeft = right - this->doRainflowBtn->getWidthHint();
-  this->doRainflowBtn->setEdgeGeometry(toggleBtnLeft, right, startStopTp, startStopBtm);
-  int domainRight = toggleBtnLeft - border;
-
-  toggleBtnLeft = domainRight - this->entireDomainBtn->getWidthHint() - border;
-  this->entireDomainBtn->setEdgeGeometry(toggleBtnLeft, domainRight - border,
-					 startStopTp, startStopBtm);
-
-  int startRight = left + (toggleBtnLeft - left - border)/2;
-  this->startField->setEdgeGeometry(left + border, startRight, startStopTp, startStopBtm);
-  this->stopField->setEdgeGeometry(startRight + border, toggleBtnLeft - border,
-				   startStopTp, startStopBtm);
-
-  this->domainFrame->setEdgeGeometry(left, domainRight, domainFrameTp, domainFrameBtm);
+  timeDomain->initWidgets(FFaDynCB1M(FuiCurveFatigueSheet,this,
+                                     onFieldValueChanged,double),
+                          FFaDynCB1M(FuiCurveFatigueSheet,this,
+                                     onButtonToggled,bool));
+  timeDomain->setValues({ 0.0, 1.0 }, true);
 }
 
 
 void FuiCurveFatigueSheet::calculateCurveDamage(bool eventWeighted)
 {
-  double start = this->startField->getValue();
-  double stop  = this->stopField->getValue();
-  bool entireDomain = this->entireDomainBtn->getValue();
+  std::pair<double,double> domain;
+  bool entireDomain = timeDomain->getValues(domain);
 
   Fui::noUserInputPlease();
-  this->calculateCurveDamageCB.invoke(eventWeighted,entireDomain,start,stop);
+  this->calculateCurveDamageCB.invoke(eventWeighted,entireDomain,
+                                      domain.first,domain.second);
   Fui::okToGetUserInput();
 
   if (!eventWeighted)
@@ -1854,26 +1171,17 @@ void FuiCurveFatigueSheet::onTabSelected(FFuComponentBase* selectedSheet)
     this->calculateCurveDamage();
 }
 
-void FuiCurveFatigueSheet::onButtonToggled(bool)
-{
-  this->dataChangedCB.invoke();
-}
-
-void FuiCurveFatigueSheet::onFieldValueChanged(double)
-{
-  this->dataChangedCB.invoke();
-}
-
-void FuiCurveFatigueSheet::onUnitValueChanged(int value)
-{
-  this->recalculateLife(value);
-}
-
 
 void FuiCurveFatigueSheet::setDataChangedCB(const FFaDynCB0& aCB)
 {
   this->dataChangedCB = aCB;
   this->snSelector->setDataChangedCB(aCB);
+}
+
+
+void FuiCurveFatigueSheet::setCalculateCurveDamageCB(const FFaDynCB4<bool,bool,double,double>& aCB)
+{
+  this->calculateCurveDamageCB = aCB;
 }
 
 
@@ -1884,8 +1192,7 @@ void FuiCurveFatigueSheet::getUIValues(FuaCurveDefineValues* v) const
   if (this->doRainflowBtn->getValue()) v->analysis = 4;
   v->fatigueFeasable = this->snSelector->getSensitivity();
   v->fatigueLifeUnit = this->unitTypeMenu->getSelectedOption();
-  v->fatigueDomain = { this->startField->myField->getDouble(), this->stopField->myField->getDouble() };
-  v->fatigueEntireDomain = this->entireDomainBtn->getValue();
+  v->fatigueEntireDomain = timeDomain->getValues(v->fatigueDomain);
 }
 
 
@@ -1896,9 +1203,7 @@ void FuiCurveFatigueSheet::setUIValues(const FuaCurveDefineValues* v,
   this->gateValueField->setValue(v->fatigueGateValue);
   this->doRainflowBtn->setValue(v->analysis == 4);
   this->unitTypeMenu->selectOption(v->fatigueLifeUnit);
-  this->startField->setValue(v->fatigueDomain.first);
-  this->stopField->setValue(v->fatigueDomain.second);
-  this->entireDomainBtn->setValue(v->fatigueEntireDomain);
+  timeDomain->setValues(v->fatigueDomain,v->fatigueEntireDomain);
 
   this->snSelector->setSensitivity(v->fatigueFeasable > 0);
   this->unitTypeMenu->setSensitivity(v->fatigueFeasable > 0);
@@ -1914,9 +1219,6 @@ void FuiCurveFatigueSheet::setUIValues(const FuaCurveDefineValues* v,
     this->damageField->setValue(0.0);
     this->lifeField->setValue(0.0);
   }
-
-  this->startField->myField->setSensitivity(!v->fatigueEntireDomain);
-  this->stopField->myField->setSensitivity(!v->fatigueEntireDomain);
 }
 
 

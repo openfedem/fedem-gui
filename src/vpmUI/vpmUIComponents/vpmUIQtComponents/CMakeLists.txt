@@ -14,7 +14,7 @@ endif ( Qt6Core_VERSION VERSION_GREATER_EQUAL 6.3 )
 
 
 ## Files with header and source with same name
-set ( COMPONENT_FILE_LIST  FuiQt3DPoint FuiQtAnimationDefine
+set ( COMPONENT_FILE_LIST  FuiQt3DPoint FuiQtAnimationDefine FuiQtDynamicProperties
                            FuiQtCurveAxisDefinition FuiQtCurveDefine
                            FuiQtCtrlElemProperties FuiQtFunctionProperties
                            FuiQtGraphDefine FuiQtInputSelector FuiQtItemsListView
@@ -44,7 +44,7 @@ set ( SOURCE_FILE_LIST FuiQtSummaryTable FuiQtParameterView )
 
 
 ## Header files to be moc'ed
-set ( QT_MOC_HEADER_FILE_LIST FuiQtItemsListView FuiQtScaleShiftWidget FuiQtWorkSpace )
+set ( QT_MOC_HEADER_FILE_LIST FuiQtWorkSpace )
 
 
 foreach ( FILE ${QT_MOC_HEADER_FILE_LIST} )
@@ -80,8 +80,7 @@ set ( SOURCE_FILES ${CPP_SOURCE_FILES} ${QT_MOC_SOURCE_FILES} )
 # Dependencies and system libraries
 #
 
-set ( FT_GUI_LIBRARIES vpmUIComponents FFuQtComponents FFuQtBaseClasses )
-set ( DEPENDENCY_LIST ${FT_GUI_LIBRARIES} )
+set ( DEPENDENCY_LIST vpmUIComponents FFuQtComponents FFuQtBaseClasses )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${SOURCE_FILES} ${HEADER_FILES} )

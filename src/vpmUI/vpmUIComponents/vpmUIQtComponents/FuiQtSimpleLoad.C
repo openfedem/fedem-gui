@@ -5,24 +5,23 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <QVBoxLayout>
+
 #include "FuiQtSimpleLoad.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
-#include "FFuLib/FFuQtComponents/FFuQtIOField.H"
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtQueryInputField.H"
-#include "FFuLib/FFuQtComponents/FFuQtLabelFrame.H"
 
 
-FuiQtSimpleLoad::FuiQtSimpleLoad(QWidget* parent, int xpos, int ypos,
-                 int width, int height, const char* name)
-  :FFuQtMultUIComponent(parent,xpos,ypos,width,height,name)
+FuiQtSimpleLoad::FuiQtSimpleLoad(QWidget* parent, const char* name)
+  : FFuQtLabelFrame(parent)
 {
-  myFrame       = new FFuQtLabelFrame(this);
-  myEngineField = new FuiQtQueryInputField(this);
+  this->setObjectName(name);
+  this->setLabel("Load magnitude");
+
+  myEngineField = new FuiQtQueryInputField(NULL);
 
   this->initWidgets();
-}
 
-FuiQtSimpleLoad::~FuiQtSimpleLoad()
-{
-  
+  QLayout* layout = new QVBoxLayout(this);
+  layout->setContentsMargins(5,0,5,5);
+  layout->addWidget(static_cast<FuiQtQueryInputField*>(myEngineField));
 }
