@@ -6,14 +6,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "FFuLib/FFuQtComponents/FFuQtTabbedWidgetStack.H"
-#include <QTabBar>
 
 //----------------------------------------------------------------------------
 
-FFuQtTabbedWidgetStack::FFuQtTabbedWidgetStack(QWidget* parent, const char*)
+FFuQtTabbedWidgetStack::FFuQtTabbedWidgetStack(QWidget* parent, bool docMode)
   : QTabWidget(parent)
 {
   this->setWidget(this);
+  this->setDocumentMode(docMode);
 
   connect(this, SIGNAL(currentChanged(int)), this, SLOT(onTabSelected(int)));
 }
@@ -21,43 +21,46 @@ FFuQtTabbedWidgetStack::FFuQtTabbedWidgetStack(QWidget* parent, const char*)
 
 void FFuQtTabbedWidgetStack::onTabSelected(int tab)
 {
-  if (this->isPoppedUp()) {
-    this->tabSelectedIdCB.invoke(tab);
-    FFuComponentBase* compBase = dynamic_cast<FFuComponentBase*>(this->widget(tab));
-    if (compBase)
-      this->tabSelectedWidgetCB.invoke(compBase);
-  }
+  if (!this->isPoppedUp()) return;
+
+  this->tabSelectedIdCB.invoke(tab);
+  this->tabSelectedWidgetCB.invoke(dynamic_cast<FFuComponentBase*>(this->widget(tab)));
 }
 //----------------------------------------------------------------------------
 
-bool FFuQtTabbedWidgetStack::addTabPage(FFuComponentBase* widget, const std::string& label,
+bool FFuQtTabbedWidgetStack::addTabPage(FFuComponentBase* widget,
+                                        const std::string& label,
                                         const char** icon, int idx)
 {
-  QWidget* qwidget = dynamic_cast<QWidget*>(widget);
-  if (qwidget && this->indexOf(qwidget) < 0) {
-    if (icon)
-      this->addTab(qwidget, QIcon(QPixmap(icon)), QString(label.c_str()));
-    else if (idx < 0)
-      this->addTab(qwidget, QString(label.c_str()));
-    else
-      this->insertTab(idx, qwidget, QString(label.c_str()));
-    return true;
-  }
-  return false;
-}
+  QWidget* qwidget = widget->getQtWidget();
+  if (!qwidget || this->indexOf(qwidget) >= 0)
+    return false; // widget already exists
 
-bool FFuQtTabbedWidgetStack::renameTabPage(FFuComponentBase* widget, const std::string& label)
+  if (icon)
+    this->addTab(qwidget, QIcon(QPixmap(icon)), QString(label.c_str()));
+  else if (idx < 0)
+    this->addTab(qwidget, QString(label.c_str()));
+  else
+    this->insertTab(idx, qwidget, QString(label.c_str()));
+
+  return true;
+}
+//----------------------------------------------------------------------------
+
+bool FFuQtTabbedWidgetStack::renameTabPage(FFuComponentBase* widget,
+                                           const std::string& label)
 {
-  int tab = this->indexOf(dynamic_cast<QWidget*>(widget));
+  int tab = this->indexOf(widget->getQtWidget());
   if (tab < 0) return false;
 
   this->setTabText(tab,QString(label.c_str()));
   return true;
 }
+//----------------------------------------------------------------------------
 
 bool FFuQtTabbedWidgetStack::removeTabPage(FFuComponentBase* widget)
 {
-  int tab = this->indexOf(dynamic_cast<QWidget*>(widget));
+  int tab = this->indexOf(widget->getQtWidget());
   if (tab < 0) return false;
 
   this->removeTab(tab);
@@ -65,16 +68,16 @@ bool FFuQtTabbedWidgetStack::removeTabPage(FFuComponentBase* widget)
 }
 //----------------------------------------------------------------------------
 
-void FFuQtTabbedWidgetStack::setTabSensitivity(int tab, bool makeSensitive)
+void FFuQtTabbedWidgetStack::setTabSensitivity(int tab, bool sensitive)
 {
-  this->setTabEnabled(tab,makeSensitive);
+  this->setTabEnabled(tab,sensitive);
 }
 
-void FFuQtTabbedWidgetStack::setTabSensitivity(FFuComponentBase* widget, bool makeSensitive)
+void FFuQtTabbedWidgetStack::setTabSensitivity(FFuComponentBase* widget,
+                                               bool sensitive)
 {
-  int tab = this->indexOf(dynamic_cast<QWidget*>(widget));
-  if (tab > -1)
-    this->setTabEnabled(tab,makeSensitive);
+  int tab = this->indexOf(widget->getQtWidget());
+  if (tab > -1) this->setTabEnabled(tab,sensitive);
 }
 //----------------------------------------------------------------------------
 
@@ -85,9 +88,7 @@ void FFuQtTabbedWidgetStack::setCurrentTab(int tab)
 
 void FFuQtTabbedWidgetStack::setCurrentTab(FFuComponentBase* widget)
 {
-  QWidget* qwidget = dynamic_cast<QWidget*>(widget);
-  if (qwidget)
-    this->setCurrentWidget(qwidget);
+  this->setCurrentWidget(widget->getQtWidget());
 }
 
 void FFuQtTabbedWidgetStack::setCurrentTab(const std::string& name)
@@ -104,28 +105,17 @@ void FFuQtTabbedWidgetStack::setCurrentTab(const std::string& name)
 }
 //----------------------------------------------------------------------------
 
-std::string FFuQtTabbedWidgetStack::getCurrentTabName()
+std::string FFuQtTabbedWidgetStack::getCurrentTabName() const
 {
   return this->tabText(this->currentIndex()).toStdString();
 }
-//----------------------------------------------------------------------------
 
-void FFuQtTabbedWidgetStack::setTabBarVisible(bool show)
-{
-  QTabBar* pTabBar = this->findChild<QTabBar*>();
-  if (show)
-    pTabBar->show();
-  else
-    pTabBar->hide();
-}
-//----------------------------------------------------------------------------
-
-int FFuQtTabbedWidgetStack::getCurrentTabPosIdx()
+int FFuQtTabbedWidgetStack::getCurrentTabPosIdx() const
 {
   return this->currentIndex();
 }
 
-FFuComponentBase* FFuQtTabbedWidgetStack::getCurrentTabWidget()
+FFuComponentBase* FFuQtTabbedWidgetStack::getCurrentTabWidget() const
 {
   return dynamic_cast<FFuComponentBase*>(this->currentWidget());
 }

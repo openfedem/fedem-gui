@@ -24,9 +24,6 @@
 class FFuTabbedWidgetStack : virtual public FFuComponentBase
 {
 public:
-  FFuTabbedWidgetStack() {}
-  virtual ~FFuTabbedWidgetStack() {}
-
   // If widget is not a child of the WidgetStack, it is reparented
   // (to a child of the WidgetStack)
   virtual bool addTabPage(FFuComponentBase* widget,
@@ -41,14 +38,14 @@ public:
   virtual void setCurrentTab(FFuComponentBase* widget) = 0;
   virtual void setCurrentTab(const std::string& name) = 0;
 
-  virtual void setTabSensitivity(int tab,bool makeSensitive) = 0;
-  virtual void setTabSensitivity(FFuComponentBase* widget,bool makeSensitive)=0;
+  virtual void setTabSensitivity(int tab, bool sensitive) = 0;
+  virtual void setTabSensitivity(FFuComponentBase* widget, bool sensitive) = 0;
 
-  virtual FFuComponentBase* getCurrentTabWidget() = 0;
-  virtual std::string getCurrentTabName() = 0;
+  virtual FFuComponentBase* getCurrentTabWidget() const = 0;
+  virtual std::string getCurrentTabName() const = 0;
 
   // Gets the position index of the current tab
-  virtual int getCurrentTabPosIdx() = 0;
+  virtual int getCurrentTabPosIdx() const = 0;
 
   void setTabSelectedCB(const FFaDynCB1<int>& cb) { tabSelectedIdCB = cb; }
   void setTabSelectedCB(const FFaDynCB1<FFuComponentBase*>& cb) { tabSelectedWidgetCB = cb; }

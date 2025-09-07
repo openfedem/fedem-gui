@@ -9,18 +9,18 @@
 #define FFU_QT_TABBED_WIDGET_STACK_H
 
 #include <QTabWidget>
+
 #include "FFuLib/FFuQtBaseClasses/FFuQtComponentBase.H"
 #include "FFuLib/FFuTabbedWidgetStack.H"
 
 
 class FFuQtTabbedWidgetStack : public QTabWidget, public FFuTabbedWidgetStack,
-                               virtual public FFuQtComponentBase
+                               public FFuQtComponentBase
 {
   Q_OBJECT
 
 public:
-  FFuQtTabbedWidgetStack(QWidget* parent, const char* name="FFuQtTabbedWidgetStack");
-  virtual ~FFuQtTabbedWidgetStack() {}
+  FFuQtTabbedWidgetStack(QWidget* parent = NULL, bool docMode = false);
 
   virtual bool addTabPage(FFuComponentBase* widget,
                           const std::string& label, const char** icon, int idx);
@@ -31,14 +31,13 @@ public:
   virtual void setCurrentTab(int tab);
   virtual void setCurrentTab(FFuComponentBase* widget);
   virtual void setCurrentTab(const std::string& name);
-  virtual void setTabBarVisible(bool show);
 
-  virtual FFuComponentBase* getCurrentTabWidget();
-  virtual int getCurrentTabPosIdx();
-  virtual std::string getCurrentTabName();
+  virtual FFuComponentBase* getCurrentTabWidget() const;
+  virtual int getCurrentTabPosIdx() const;
+  virtual std::string getCurrentTabName() const;
 
-  virtual void setTabSensitivity(int tab, bool makeSensitive);
-  virtual void setTabSensitivity(FFuComponentBase* widget, bool makeSensitive);
+  virtual void setTabSensitivity(int tab, bool sensitive);
+  virtual void setTabSensitivity(FFuComponentBase* widget, bool sensitive);
 
 private slots:
   virtual void onTabSelected(int tab);
