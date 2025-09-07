@@ -38,13 +38,11 @@ Fmd_SOURCE_INIT(FUI_ADVANALYSISOPTIONS,FuiAdvAnalysisOptions,FFuTopLevelShell);
 
 //----------------------------------------------------------------------------
 
-FuiAdvAnalysisOptions::FuiAdvAnalysisOptions(bool basicMode)
+FuiAdvAnalysisOptions::FuiAdvAnalysisOptions()
 {
   Fmd_CONSTRUCTOR_INIT(FuiAdvAnalysisOptions);
 
   this->labImgTop = NULL;
-  this->notesLabel = NULL;
-  this->labNotesText = NULL;
   this->btnAdvanced = this->btnRunCloud = this->btnHelp = NULL;
 
   this->tabStack = NULL;
@@ -57,14 +55,11 @@ FuiAdvAnalysisOptions::FuiAdvAnalysisOptions(bool basicMode)
   this->degradeSoilButton = NULL;
   this->autoCurveExportField = this->autoVTFField = NULL;
 
-  this->myBasicMode = basicMode;
-  this->myBasicTab = -1;
-  this->myCurrentTab = 0;
-  this->hasVTFfield = false;
+  this->myBasicMode = this->hasVTFfield = false;
 }
 //----------------------------------------------------------------------------
 
-void FuiAdvAnalysisOptions::initWidgets()
+void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
 {
   this->dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
 						     onDialogButtonClicked,int));
@@ -84,21 +79,6 @@ void FuiAdvAnalysisOptions::initWidgets()
   // Set basic mode stuff
   this->labImgTop->setPixMap(solverSetup_xpm);
   this->labImgTop->setSizeGeometry(0,0,421,106);
-
-  this->labNotesText->setLabel("Click \"Advanced\" for more settings");
-
-  if (this->myBasicMode) {
-    this->btnAdvanced->setLabel("Advanced");
-    this->btnAdvanced->setToolTip("Go to Advanced dynamics solver settings");
-  }
-  else {
-    this->btnAdvanced->setLabel("Basic");
-    this->btnAdvanced->setToolTip("Go to Basic dynamics solver settings");
-    this->labImgTop->popDown();
-    this->notesLabel->popDown();
-    this->labNotesText->popDown();
-  }
-
   this->btnAdvanced->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onAdvBtnClicked));
 
   // Set Tabs
@@ -109,12 +89,7 @@ void FuiAdvAnalysisOptions::initWidgets()
   this->tabStack->addTabPage(this->options[EQOPTIONS],"Initial Equilibrium");
 #ifdef FT_HAS_SOLVERS
   this->tabStack->addTabPage(this->options[OUTPUTOPTIONS],"Output");
-  this->myBasicTab = 6;
-#else
-  this->myBasicTab = 5;
 #endif
-  if (this->myBasicMode)
-    this->tabStack->addTabPage(this->options[BASICOPTIONS],"Basic");
 
   // Dialog buttons labels
   this->dialogButtons->setButtonLabel(FFuDialogButtons::LEFTBUTTON,"Run!");
@@ -421,6 +396,8 @@ void FuiAdvAnalysisOptions::initWidgets()
                                                                         onOverwriteToggled,bool));
 #endif
 
+  this->showBasicMode(myBasicMode = basicMode);
+
   // Set minimum TLS size to avoid hiding info
   Fui::Geo myGeo = Fui::getGeo(Fui::ADVANALYSISOPTIONS_GEO);
   this->setMinWidth(myGeo.width);
@@ -435,6 +412,32 @@ void FuiAdvAnalysisOptions::initWidgets()
 
   // Create the UA-object of this UI
   FFuUAExistenceHandler::invokeCreateUACB(this);
+}
+//----------------------------------------------------------------------------
+
+void FuiAdvAnalysisOptions::setBasicMode(bool basicMode)
+{
+  if (myBasicMode != basicMode)
+    this->showBasicMode(myBasicMode = basicMode);
+}
+//----------------------------------------------------------------------------
+
+void FuiAdvAnalysisOptions::showBasicMode(bool doShow)
+{
+  if (doShow) {
+    this->tabStack->popDown();
+    this->labImgTop->popUp();
+    this->options[BASICOPTIONS]->popUp();
+    this->btnAdvanced->setLabel("Advanced");
+    this->btnAdvanced->setToolTip("Go to Advanced dynamics solver settings");
+  }
+  else {
+    this->tabStack->popUp();
+    this->labImgTop->popDown();
+    this->options[BASICOPTIONS]->popDown();
+    this->btnAdvanced->setLabel("Basic");
+    this->btnAdvanced->setToolTip("Return to Basic dynamics solver settings");
+  }
 }
 //----------------------------------------------------------------------------
 
@@ -560,7 +563,7 @@ bool FuiAdvAnalysisOptions::updateDBValues(bool)
   for (iOpt = 0; iOpt < NOPTIONS && status; iOpt++) {
     for (IOFieldMap::value_type& io : this->doubleFields[iOpt])
       if (!values.valueStatus[iOpt][io.first]) {
-        this->tabStack->setCurrentTab(iOpt > 0 ? iOpt-1 : myBasicTab);
+        if (iOpt > 0) tabStack->setCurrentTab(iOpt-1);
         io.second->highlight();
         std::cout << '\a' << std::flush; // bleep
         status = false;
@@ -568,7 +571,7 @@ bool FuiAdvAnalysisOptions::updateDBValues(bool)
 
     for (IOFieldMap::value_type& io : this->integerFields[iOpt])
       if (!values.valueStatus[iOpt][io.first]) {
-        this->tabStack->setCurrentTab(iOpt > 0 ? iOpt-1 : myBasicTab);
+        if (iOpt > 0) tabStack->setCurrentTab(iOpt-1);
         io.second->highlight();
         std::cout << '\a' << std::flush; // bleep
         status = false;
@@ -921,29 +924,7 @@ void FuiAdvAnalysisOptions::onOverwriteToggled(bool onOrOff)
 void FuiAdvAnalysisOptions::onAdvBtnClicked()
 {
   // Toggle basic mode
-  this->myBasicMode = !this->myBasicMode;
-
-  // Pop down/up basic mode stuff
-  if (this->myBasicMode) {
-    myCurrentTab = this->tabStack->getCurrentTabPosIdx();
-    this->tabStack->addTabPage(this->options[BASICOPTIONS],"Basic");
-    this->tabStack->setCurrentTab(myBasicTab);
-    this->labImgTop->popUp();
-    this->notesLabel->popUp();
-    this->labNotesText->popUp();
-    this->btnAdvanced->setLabel("Advanced");
-    this->btnAdvanced->setToolTip("Go to Advanced dynamics solver settings");
-  }
-  else {
-    this->tabStack->removeTabPage(this->options[BASICOPTIONS]);
-    this->tabStack->setCurrentTab(myCurrentTab);
-    this->labImgTop->popDown();
-    this->notesLabel->popDown();
-    this->labNotesText->popDown();
-    this->btnAdvanced->setLabel("Basic");
-    this->btnAdvanced->setToolTip("Return to Basic dynamics solver settings");
-  }
-
+  this->showBasicMode(myBasicMode = !myBasicMode);
   this->placeAdvancedButton(this->getWidth(), this->getHeight());
 }
 
@@ -1042,9 +1023,6 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
     this->autoVTFField->popDown();
   }
 #endif
-
-  // tab
-  this->tabStack->setCurrentTab(this->myBasicMode ? myBasicTab : myCurrentTab);
 
   // set sensitivities
   this->onCutbackToggled(advValues->toggleValues[TIMEOPTIONS][CUTBACK]);
@@ -1152,9 +1130,6 @@ bool FuiAdvAnalysisOptions::getMyUIValues(FuaAdvAnalysisOptionsValues* values)
   }
   else
     values->autoVTFFileType = -1;
-
-  if (!this->myBasicMode)
-    myCurrentTab = this->tabStack->getCurrentTabPosIdx();
 
   return validValues;
 }

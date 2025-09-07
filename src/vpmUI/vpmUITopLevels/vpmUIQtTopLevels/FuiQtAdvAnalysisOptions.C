@@ -33,34 +33,26 @@ public:
 
 // Qt implementation of static create method in FuiAdvAnalysisOptions
 FuiAdvAnalysisOptions* FuiAdvAnalysisOptions::create(int xpos, int ypos,
-						     int width, int height, bool basicMode,
-						     const char* title,
-						     const char* name)
+                                                     int width, int height,
+                                                     bool basicMode)
 {
-  return new FuiQtAdvAnalysisOptions(xpos,ypos,width,height,
-                                     basicMode,title,name);
+  return new FuiQtAdvAnalysisOptions(xpos,ypos,width,height,basicMode);
 }
 
 
 FuiQtAdvAnalysisOptions::FuiQtAdvAnalysisOptions(int xpos, int ypos,
-						 int width, int height,
-						 bool basicMode,
-						 const char* title,
-						 const char* name)
-  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,title,name),
-    FuiAdvAnalysisOptions(basicMode)
+                                                 int width, int height,
+                                                 bool basicMode)
+  : FFuQtTopLevelShell(NULL,xpos,ypos,width,height,
+                       "Solver", "AnalysisOptions")
 {
   // Widget creation
-  FFuQtTabbedWidgetStack* myTabStack;
-  tabStack = myTabStack = new FFuQtTabbedWidgetStack(NULL);
+
+  tabStack = new FFuQtTabbedWidgetStack(NULL,true);
   dialogButtons = new FFuQtDialogButtons(NULL,false);
   btnRunCloud = new FFuQtPushButton();
   btnHelp = new FFuQtPushButton();
-
-  // Set basic mode stuff
   labImgTop = new FFuQtLabel();
-  notesLabel = new FFuQtNotesLabel();
-  labNotesText = new FFuQtLabel();
   btnAdvanced = new FFuQtPushButton(this);
 
 #ifdef FT_HAS_SOLVERS
@@ -261,39 +253,32 @@ FuiQtAdvAnalysisOptions::FuiQtAdvAnalysisOptions(int xpos, int ypos,
   toggleButtons[BASICOPTIONS][FRA_TOGGLE]   = new FFuQtToggleButton();
 #endif
 
-  this->initWidgets();
+  // Initialize the widget components
+  // and their positioning using layout managers
+
+  this->initWidgets(basicMode);
   for (size_t iOpt = 0; iOpt < myOptions.size(); iOpt++)
     this->initLayout(myOptions[iOpt],iOpt);
 
-  myTabStack->setTabBarVisible(!myBasicMode);
-  myTabStack->setDocumentMode(true);
-
-  QWidget* qNotes = new QWidget();
-  QBoxLayout* layout = new QVBoxLayout(qNotes);
-  layout->setContentsMargins(12,0,0,0);
-  layout->setSpacing(0);
-  layout->addWidget(dynamic_cast<FFuQtNotesLabel*>(notesLabel));
-  layout->addWidget(static_cast<FFuQtLabel*>(labNotesText));
-
-  QWidget* qButtons = new QWidget();
-  QWidget* tButtons = new QWidget();
-  layout = new QHBoxLayout(tButtons);
+  QBoxLayout* layout = new QHBoxLayout();
   layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(static_cast<FFuQtDialogButtons*>(dialogButtons));
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(btnRunCloud));
+  layout->addWidget(dialogButtons->getQtWidget());
+  layout->addWidget(btnRunCloud->getQtWidget());
   layout->addStretch(1);
-  layout->addWidget(dynamic_cast<FFuQtPushButton*>(btnHelp));
-  layout = new QVBoxLayout(qButtons);
-  layout->addWidget(new FFuQtSeparator());
-  layout->addWidget(tButtons);
+  layout->addWidget(btnHelp->getQtWidget());
+  QBoxLayout* layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(10,5,10,10);
+  layout2->setSpacing(5);
+  layout2->addWidget(new FFuQtSeparator());
+  layout2->addLayout(layout);
 
   layout = new QVBoxLayout(this);
   layout->setContentsMargins(0,0,0,0);
   layout->setSpacing(0);
-  layout->addWidget(static_cast<FFuQtLabel*>(labImgTop));
-  layout->addWidget(myTabStack,1);
-  layout->addWidget(qNotes);
-  layout->addWidget(qButtons);
+  layout->addWidget(labImgTop->getQtWidget());
+  layout->addWidget(myOptions[BASICOPTIONS],1);
+  layout->addWidget(tabStack->getQtWidget(),1);
+  layout->addLayout(layout2);
 }
 
 
@@ -301,46 +286,45 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
 {
   auto&& toggleButton = [iOpt,this](int iField)
   {
-    return dynamic_cast<FFuQtToggleButton*>(toggleButtons[iOpt][iField]);
+    return toggleButtons[iOpt][iField]->getQtWidget();
   };
   auto&& radioButton = [iOpt,this](int iField)
   {
-    return dynamic_cast<FFuQtRadioButton*>(radioButtons[iOpt][iField]);
+    return radioButtons[iOpt][iField]->getQtWidget();
   };
   auto&& integerField = [iOpt,this](int iField)
   {
-    return static_cast<FFuQtIOField*>(integerFields[iOpt][iField]);
+    return integerFields[iOpt][iField]->getQtWidget();
   };
   auto&& doubleField = [iOpt,this](int iField)
   {
-    return static_cast<FFuQtIOField*>(doubleFields[iOpt][iField]);
+    return doubleFields[iOpt][iField]->getQtWidget();
   };
   auto&& label = [iOpt,this](int iField)
   {
-    return dynamic_cast<FFuQtLabel*>(labels[iOpt][iField]);
+    return labels[iOpt][iField]->getQtWidget();
   };
 
-  auto&& frameLayout = [iOpt,this](int i, int topMarg = 0, int bottomMarg = 10)
+  LabelFrameMap& frame = labelFrames[iOpt];
+  auto&& frameLayout = [&frame](int i, int topMarg = 0, int bottomMarg = 10)
   {
-    QGridLayout* gl = new QGridLayout(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][i]));
+    QGridLayout* gl = new QGridLayout(frame[i]->getQtWidget());
     gl->setContentsMargins(10,topMarg,10,bottomMarg);
     return gl;
   };
 
-  QWidget* qFields = NULL;
-  QWidget* qField2 = NULL;
   QGridLayout* gl = NULL;
+  QGridLayout* gl2 = NULL;
   QBoxLayout* layout = NULL;
   int labelColWidth = 200;
 
   switch (iOpt) {
   case BASICOPTIONS:
-    layout = new QHBoxLayout(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][IEQ_FRAME]));
+    layout = new QHBoxLayout(frame[IEQ_FRAME]->getQtWidget());
     layout->setContentsMargins(10,5,10,5);
     layout->addWidget(toggleButton(IEQ_TOGGLE));
 
-    qFields = new QWidget();
-    gl = new QGridLayout(qFields);
+    gl = new QGridLayout();
     gl->setContentsMargins(18,0,0,0);
     gl->setVerticalSpacing(3);
     gl->addWidget(label(START), 0,0);
@@ -348,25 +332,24 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->addWidget(toggleButton(STOP), 1,0);
     gl->addWidget(doubleField(STOP), 1,1);
     gl->addWidget(label(INCREMENT), 2,0);
-    gl->addWidget(static_cast<FuiQtQueryInputField*>(myBasTimeIncQueryField), 2,1);
+    gl->addWidget(myBasTimeIncQueryField->getQtWidget(), 2,1);
     gl->setRowMinimumHeight(2,20);
     gl->setColumnMinimumWidth(0,labelColWidth-18);
 
-    qField2 = new QWidget();
-    gl = new QGridLayout(qField2);
-    gl->setContentsMargins(18,0,0,0);
-    gl->setVerticalSpacing(2);
-    gl->addWidget(radioButton(QS_COMPLETE), 0,0);
-    gl->addWidget(radioButton(QS_UPTOTIME), 1,0);
-    gl->addWidget(doubleField(QS_UPTOTIME), 1,1);
-    gl->setColumnMinimumWidth(0,labelColWidth-18);
+    gl2 = new QGridLayout();
+    gl2->setContentsMargins(18,0,0,0);
+    gl2->setVerticalSpacing(2);
+    gl2->addWidget(radioButton(QS_COMPLETE), 0,0);
+    gl2->addWidget(radioButton(QS_UPTOTIME), 1,0);
+    gl2->addWidget(doubleField(QS_UPTOTIME), 1,1);
+    gl2->setColumnMinimumWidth(0,labelColWidth-18);
 
-    layout = new QVBoxLayout(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][TIME_FRAME]));
+    layout = new QVBoxLayout(frame[TIME_FRAME]->getQtWidget());
     layout->setContentsMargins(10,5,10,5);
     layout->addWidget(toggleButton(TIME_TOGGLE));
-    layout->addWidget(qFields);
+    layout->addLayout(gl);
     layout->addWidget(toggleButton(QS_TOGGLE));
-    layout->addWidget(qField2);
+    layout->addLayout(gl2);
 
     gl = frameLayout(MODES_FRAME,5,5);
     gl->setVerticalSpacing(5);
@@ -376,19 +359,21 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->setColumnMinimumWidth(0,labelColWidth);
 
 #ifdef FT_HAS_FREQDOMAIN
-    layout = new QHBoxLayout(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][FRA_FRAME]));
+    layout = new QHBoxLayout(frame[FRA_FRAME]->getQtWidget());
     layout->setContentsMargins(10,5,10,5);
     layout->addWidget(toggleButton(FRA_TOGGLE));
 #endif
 
     layout = new QVBoxLayout(parentSheet);
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][IEQ_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][TIME_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][MODES_FRAME]));
+    layout->addWidget(frame[IEQ_FRAME]->getQtWidget());
+    layout->addWidget(frame[TIME_FRAME]->getQtWidget());
+    layout->addWidget(frame[MODES_FRAME]->getQtWidget());
 #ifdef FT_HAS_FREQDOMAIN
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][FRA_FRAME]));
+    layout->addWidget(frame[FRA_FRAME]->getQtWidget());
 #endif
     layout->addStretch();
+    layout->addWidget(new FFuQtNotes(NULL,
+                      "Click \"Advanced\" for more settings."));
     break;
 
   case TIMEOPTIONS:
@@ -399,7 +384,7 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->addWidget(label(MIN_TIME_INCR), 3,0);
     gl->addWidget(doubleField(START), 0,1);
     gl->addWidget(doubleField(STOP), 1,1);
-    gl->addWidget(static_cast<FuiQtQueryInputField*>(myAdvTimeIncQueryField), 2,1);
+    gl->addWidget(myAdvTimeIncQueryField->getQtWidget(), 2,1);
     gl->addWidget(doubleField(MIN_TIME_INCR), 3,1);
     gl->setRowMinimumHeight(2,20);
     gl->setColumnMinimumWidth(0,labelColWidth);
@@ -419,18 +404,18 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->setColumnMinimumWidth(0,labelColWidth);
 
 #ifndef FT_HAS_SOLVERS
-    layout = new QHBoxLayout(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][ADDITIONAL_FRAME]));
-    layout->addWidget(static_cast<FFuQtIOField*>(addOptions));
+    layout = new QHBoxLayout(frame[ADDITIONAL_FRAME]->getQtWidget());
+    layout->addWidget(addOptions->getQtWidget());
 #endif
 
     layout = new QVBoxLayout(parentSheet);
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][TIME_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][CUTBACK_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][RESTART_FRAME]));
+    layout->addWidget(frame[TIME_FRAME]->getQtWidget());
+    layout->addWidget(frame[CUTBACK_FRAME]->getQtWidget());
+    layout->addWidget(frame[RESTART_FRAME]->getQtWidget());
 #ifndef FT_HAS_SOLVERS
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][ADDITIONAL_FRAME]));
+    layout->addWidget(frame[ADDITIONAL_FRAME]->getQtWidget());
 #endif
-    layout->addWidget(dynamic_cast<FFuQtPushButton*>(degradeSoilButton));
+    layout->addWidget(degradeSoilButton->getQtWidget());
     layout->addStretch();
     break;
 
@@ -469,15 +454,15 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->addWidget(doubleField(TOL_MATRIX_UPDATE), 4,1);
 
     layout = new QVBoxLayout(parentSheet);
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][INT_ALG_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][ITERATION_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][MATRIX_UPDATE_FRAME]));
+    layout->addWidget(frame[INT_ALG_FRAME]->getQtWidget());
+    layout->addWidget(frame[ITERATION_FRAME]->getQtWidget());
+    layout->addWidget(frame[MATRIX_UPDATE_FRAME]->getQtWidget());
     layout->addSpacing(10);
-    layout->addWidget(static_cast<FFuQtLabel*>(labels[iOpt][SHADOW_POS_ALG_LABEL]));
-    layout->addWidget(static_cast<FFuQtOptionMenu*>(shadowPosAlgMenu));
+    layout->addWidget(labels[iOpt][SHADOW_POS_ALG_LABEL]->getQtWidget());
+    layout->addWidget(shadowPosAlgMenu->getQtWidget());
     layout->addSpacing(10);
-    layout->addWidget(dynamic_cast<FFuQtToggleButton*>(toggleButtons[INTOPTIONS][DYN_STRESS_STIFF]));
-    layout->addWidget(dynamic_cast<FFuQtToggleButton*>(toggleButtons[INTOPTIONS][MOMENT_CORRECTION]));
+    layout->addWidget(toggleButtons[iOpt][DYN_STRESS_STIFF]->getQtWidget());
+    layout->addWidget(toggleButtons[iOpt][MOMENT_CORRECTION]->getQtWidget());
     layout->addStretch();
     break;
 
@@ -551,19 +536,18 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->setColumnMinimumWidth(0,labelColWidth);
 
     layout = new QVBoxLayout(parentSheet);
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][DIS_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][VEL_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][RES_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabelFrame*>(labelFrames[iOpt][ENERGY_FRAME]));
-    layout->addWidget(static_cast<FFuQtLabel*>(labels[iOpt][A_DESCR]));
-    layout->addWidget(static_cast<FFuQtLabel*>(labels[iOpt][O_DESCR]));
-    layout->addWidget(static_cast<FFuQtLabel*>(labels[iOpt][I_DESCR]));
+    layout->addWidget(frame[DIS_FRAME]->getQtWidget());
+    layout->addWidget(frame[VEL_FRAME]->getQtWidget());
+    layout->addWidget(frame[RES_FRAME]->getQtWidget());
+    layout->addWidget(frame[ENERGY_FRAME]->getQtWidget());
+    layout->addWidget(labels[iOpt][A_DESCR]->getQtWidget());
+    layout->addWidget(labels[iOpt][O_DESCR]->getQtWidget());
+    layout->addWidget(labels[iOpt][I_DESCR]->getQtWidget());
     layout->addStretch();
     break;
 
   case EIGENOPTIONS:
-    qFields = new QWidget();
-    gl = new QGridLayout(qFields);
+    gl = new QGridLayout();
     gl->setContentsMargins(0,0,0,0);
     gl->addWidget(label(NUM_EMODES), 0,0);
     gl->addWidget(label(EMODE_INTV), 1,0);
@@ -575,7 +559,7 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
 
     layout = new QVBoxLayout(parentSheet); 
     layout->addWidget(toggleButton(EMODE_SOL));
-    layout->addWidget(qFields);
+    layout->addLayout(gl);
     layout->addWidget(toggleButton(EMODE_BC));
     layout->addWidget(toggleButton(EMODE_DAMPED));
     layout->addWidget(toggleButton(EMODE_STRESS_STIFF));
@@ -609,11 +593,11 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
   case OUTPUTOPTIONS:
     layout = new QVBoxLayout(parentSheet); 
     layout->addWidget(toggleButton(AUTO_CURVE_EXPORT));
-    layout->addWidget(static_cast<FFuQtFileBrowseField*>(autoCurveExportField));
+    layout->addWidget(autoCurveExportField->getQtWidget());
     layout->addWidget(label(AUTO_CURVE_EXPORT), 0, Qt::AlignRight);
     layout->addSpacing(5);
     layout->addWidget(toggleButton(AUTO_VTF_EXPORT));
-    layout->addWidget(static_cast<FFuQtFileBrowseField*>(autoVTFField));
+    layout->addWidget(autoVTFField->getQtWidget());
     layout->addSpacing(10);
     layout->addWidget(toggleButton(AUTO_ANIM));
     layout->addWidget(toggleButton(OVERWRITE));
@@ -627,13 +611,4 @@ void FuiQtAdvAnalysisOptions::resizeEvent(QResizeEvent* e)
 {
   this->QWidget::resizeEvent(e);
   this->placeAdvancedButton(this->width(),this->height());
-}
-
-
-void FuiQtAdvAnalysisOptions::onAdvBtnClicked()
-{
-  // Hide/show tab-line
-  static_cast<FFuQtTabbedWidgetStack*>(tabStack)->setTabBarVisible(myBasicMode);
-
-  this->FuiAdvAnalysisOptions::onAdvBtnClicked();
 }
