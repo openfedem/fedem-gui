@@ -28,30 +28,6 @@ class FuiQueryInputFieldValues;
 class FmModelMemberBase;
 class FFuaQueryBase;
 
-typedef std::map<int,FFuLabelFrame*> LabelFrameMap;
-typedef LabelFrameMap::iterator LabelFrameIter;
-
-typedef std::map<int,double> DoubleMap;
-typedef DoubleMap::iterator DoubleIter;
-
-typedef std::map<int,int> IntegerMap;
-typedef IntegerMap::iterator IntegerIter;
-
-typedef std::map<int,bool> BoolMap;
-typedef BoolMap::iterator BoolIter;
-
-typedef std::map<int,FFuRadioButton*> RadioButtonMap;
-typedef RadioButtonMap::iterator RadioIter;
-
-typedef std::map<int,FFuToggleButton*> ToggleButtonMap;
-typedef ToggleButtonMap::iterator ToggleIter;
-
-typedef std::map<int,FFuIOField*> IOFieldMap;
-typedef IOFieldMap::iterator IOFieldIter;
-
-typedef std::map<int,FFuLabel*> LabelMap;
-typedef LabelMap::iterator LabelIter;
-
 
 class FuiAdvAnalysisOptions : public FuiTopLevelDialog
 {
@@ -67,7 +43,7 @@ public:
                                        int width, int height,
                                        bool basicMode = false);
 
-  enum { // Options
+  enum Options {
     BASICOPTIONS,
     TIMEOPTIONS,
     INTOPTIONS,
@@ -78,7 +54,7 @@ public:
     NOPTIONS
   };
 
-  enum { // Basic & Time options
+  enum TimeOpts {
     IEQ_FRAME,
     IEQ_FRAME_END,
     IEQ_TOGGLE,
@@ -120,7 +96,7 @@ public:
     ADDITIONAL
   };
 
-  enum { // Integration options
+  enum IntegrationOps {
     INT_ALG_FRAME,
     INT_ALG_FRAME_END,
     NEWMARK,
@@ -149,7 +125,7 @@ public:
     SHADOW_POS_ALG
   };
 
-  enum { // Convergence options
+  enum ConvergenceOpts {
     // Displacement
     DIS_FRAME, DIS_FRAME_END,
     AOI_DIS_1, AOI_DIS_2, AOI_DIS_3,
@@ -175,7 +151,7 @@ public:
     A_DESCR, O_DESCR, I_DESCR
   };
 
-  enum { // Eigen options
+  enum EigenOpts {
     // toggle
     EMODE_SOL,
     EMODE_BC,
@@ -188,7 +164,7 @@ public:
     NUM_EMODES
   };
 
-  enum { // Equilibrium options
+  enum EquilibriumOpts {
     // toggle
     EQL_ITER,
     EQL_STRESS_STIFF,
@@ -206,32 +182,29 @@ public:
     RAMP_DELAY
   };
 
-  enum { // Output options
+  enum OutputOpts {
     AUTO_CURVE_EXPORT,
     AUTO_VTF_EXPORT,
     AUTO_ANIM,
     OVERWRITE
   };
 
-  void setBasicMode(bool basicMode);
+  void setBasicMode(bool basicMode, bool initializing = false);
 
-  //Field Settings
-  //see FFuIOField for mode and policy
+  // Field settings (see FFuIOField for mode and policy)
   void setAllFieldAcceptPolicy(int policy);
   void setAllDoubleDisplayMode(int mode, int precision, int zeroPrecision);
   virtual void setUIValues(const FFuaUIValues* values);
-  // sensitivities
   virtual void setSensitivity(bool sens);
 
 protected:
-  void initWidgets(bool basicMode);
+  void initWidgets();
   void showBasicMode(bool doShow);
-  void placeAdvancedButton(int width, int height);
-  void onAdvBtnClicked();
+  void placeAdvancedButton();
 
 private:
   void setAlphaLabel(int iop, const char* sub, double a1, double a2);
-  void setMyUIValues(FuaAdvAnalysisOptionsValues* values, bool invalidValuesAlso);
+  void setMyUIValues(FuaAdvAnalysisOptionsValues* values, bool includeInvalids);
   bool getMyUIValues(FuaAdvAnalysisOptionsValues* values);
 
   // actions
@@ -239,6 +212,7 @@ private:
 
   // callbacks
   void onDialogButtonClicked(int button);
+  void onAdvBtnClicked();
   void onRunCloudBtnClicked();
   void onHelpBtnClicked();
 
@@ -308,7 +282,7 @@ private:
   void onAutoVTFFileChanged(const std::string&, int);
   void onOverwriteToggled(bool);
 
-  // Basic toggles
+  // Basic mode toggles
   void onDSToggled(bool onOrOff);
   void onStopToggled(bool onOrOff);
   void onQSToggled(bool onOrOff);
@@ -316,21 +290,27 @@ private:
   void onQRadio2Toggled(bool onOrOff);
 
 protected:
-  FFuLabel* labImgTop;
+  FFuLabel*      labImgTop;
+  FFuIOField*    addOptions;
   FFuPushButton* btnAdvanced;
   FFuPushButton* btnRunCloud;
   FFuPushButton* btnHelp;
-  FFuIOField* addOptions;
 
-  FFuTabbedWidgetStack* tabStack;
+  FFuTabbedWidgetStack*                  tabStack;
   std::array<FFuComponentBase*,NOPTIONS> options;
-  std::array<RadioButtonMap   ,NOPTIONS> radioButtons;
-  std::array<ToggleButtonMap  ,NOPTIONS> toggleButtons;
-  std::array<IOFieldMap       ,NOPTIONS> doubleFields;
-  std::array<IOFieldMap       ,NOPTIONS> integerFields;
-  std::array<LabelMap         ,NOPTIONS> labels;
-  std::array<LabelFrameMap    ,NOPTIONS> labelFrames;
-  std::array<BoolMap          ,NOPTIONS> isTopOfRadioLabel;
+
+  using FrameMap  = std::map<int,FFuLabelFrame*>;
+  using RadioMap  = std::map<int,FFuRadioButton*>;
+  using ToggleMap = std::map<int,FFuToggleButton*>;
+  using FieldMap  = std::map<int,FFuIOField*>;
+  using LabelMap  = std::map<int,FFuLabel*>;
+
+  std::array<RadioMap ,NOPTIONS> radioButtons;
+  std::array<ToggleMap,NOPTIONS> toggleButtons;
+  std::array<FieldMap ,NOPTIONS> doubleFields;
+  std::array<FieldMap ,NOPTIONS> integerFields;
+  std::array<LabelMap ,NOPTIONS> labels;
+  std::array<FrameMap ,NOPTIONS> labelFrames;
 
   FuiQueryInputField* myAdvTimeIncQueryField;
   FuiQueryInputField* myBasTimeIncQueryField;
@@ -346,10 +326,14 @@ protected:
   FFuFileBrowseField* autoVTFField;
 
 private:
-  bool myBasicMode; //!< If \e true, the Basic options sheet is shown
+  bool myBasicMode; //!< If \e true, the Basic mode sheet is shown
   bool hasVTFfield; //!< If \e true, automatic VTF export is licensed
 };
 
+
+using DoubleMap  = std::map<int,double>;
+using IntegerMap = std::map<int,int>;
+using BoolMap    = std::map<int,bool>;
 
 class FuaAdvAnalysisOptionsValues : public FFuaUIValues
 {

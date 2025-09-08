@@ -226,7 +226,7 @@ FuiQtAdvAnalysisOptions::FuiQtAdvAnalysisOptions(int xpos, int ypos,
   autoVTFField         = new FFuQtFileBrowseField(NULL);
 #endif
 
-  // Basic options
+  // Basic mode options
   labelFrames[BASICOPTIONS][IEQ_FRAME]      = new FFuQtLabelFrame();
   toggleButtons[BASICOPTIONS][IEQ_TOGGLE]   = new FFuQtToggleButton();
 
@@ -256,7 +256,7 @@ FuiQtAdvAnalysisOptions::FuiQtAdvAnalysisOptions(int xpos, int ypos,
   // Initialize the widget components
   // and their positioning using layout managers
 
-  this->initWidgets(basicMode);
+  this->initWidgets();
   for (size_t iOpt = 0; iOpt < myOptions.size(); iOpt++)
     this->initLayout(myOptions[iOpt],iOpt);
 
@@ -279,6 +279,10 @@ FuiQtAdvAnalysisOptions::FuiQtAdvAnalysisOptions(int xpos, int ypos,
   layout->addWidget(myOptions[BASICOPTIONS],1);
   layout->addWidget(tabStack->getQtWidget(),1);
   layout->addLayout(layout2);
+
+  // Pop up/down the basic mode sheet
+  this->setBasicMode(basicMode,true);
+  this->placeAdvancedButton();
 }
 
 
@@ -305,7 +309,7 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     return labels[iOpt][iField]->getQtWidget();
   };
 
-  LabelFrameMap& frame = labelFrames[iOpt];
+  FrameMap& frame = labelFrames[iOpt];
   auto&& frameLayout = [&frame](int i, int topMarg = 0, int bottomMarg = 10)
   {
     QGridLayout* gl = new QGridLayout(frame[i]->getQtWidget());
@@ -333,7 +337,6 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->addWidget(doubleField(STOP), 1,1);
     gl->addWidget(label(INCREMENT), 2,0);
     gl->addWidget(myBasTimeIncQueryField->getQtWidget(), 2,1);
-    gl->setRowMinimumHeight(2,20);
     gl->setColumnMinimumWidth(0,labelColWidth-18);
 
     gl2 = new QGridLayout();
@@ -386,7 +389,6 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
     gl->addWidget(doubleField(STOP), 1,1);
     gl->addWidget(myAdvTimeIncQueryField->getQtWidget(), 2,1);
     gl->addWidget(doubleField(MIN_TIME_INCR), 3,1);
-    gl->setRowMinimumHeight(2,20);
     gl->setColumnMinimumWidth(0,labelColWidth);
 
     gl = frameLayout(CUTBACK_FRAME,5);
@@ -516,7 +518,7 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
       gl->addWidget(radioButton(MT_RES+i), 2,1+i, Qt::AlignHCenter);
       gl->addWidget(radioButton(MR_RES+i), 3,1+i, Qt::AlignHCenter);
       gl->setColumnMinimumWidth(1+i, i == 2 ? 25 : 30);
-   }
+    }
     gl->setColumnMinimumWidth(0,labelColWidth);
 
     gl = frameLayout(ENERGY_FRAME);
@@ -610,5 +612,5 @@ void FuiQtAdvAnalysisOptions::initLayout(QWidget* parentSheet, int iOpt)
 void FuiQtAdvAnalysisOptions::resizeEvent(QResizeEvent* e)
 {
   this->QWidget::resizeEvent(e);
-  this->placeAdvancedButton(this->width(),this->height());
+  this->placeAdvancedButton();
 }
