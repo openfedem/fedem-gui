@@ -16,7 +16,7 @@ class FuiQt3DPoint : public FFuQtWidget, public Fui3DPoint
 {
 public:
   FuiQt3DPoint(QWidget* parent = NULL, const char* name = "D3Point",
-               bool refMenu = true);
+               int refMenu = 1);
 
   virtual void setSensitivity(bool sensitive)
   {

@@ -16,7 +16,7 @@
 #include "FuiQt3DPoint.H"
 
 
-FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name, bool refMenu)
+FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name, int refMenu)
   : FFuQtWidget(parent,name)
 {
   myXField = new FFuQtIOField();
@@ -34,20 +34,20 @@ FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name, bool refMenu)
   gl->addWidget(new QLabel("X"),0,0);
   gl->addWidget(new QLabel("Y"),1,0);
   gl->addWidget(new QLabel("Z"),2,0);
-  gl->addWidget(static_cast<FFuQtIOField*>(myXField),0,1);
-  gl->addWidget(static_cast<FFuQtIOField*>(myYField),1,1);
-  gl->addWidget(static_cast<FFuQtIOField*>(myZField),2,1);
+  gl->addWidget(myXField->getQtWidget(),0,1);
+  gl->addWidget(myYField->getQtWidget(),1,1);
+  gl->addWidget(myZField->getQtWidget(),2,1);
 
   if (refMenu)
   {
-    QWidget* qRef = new QWidget();
-    QBoxLayout* layout = new QHBoxLayout(qRef);
-    layout->setContentsMargins(0,0,0,0);
-    layout->addWidget(new QLabel("Reference"));
-    layout->addWidget(static_cast<FFuQtOptionMenu*>(myRefMenu));
-    layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0,0,0,0);
-    layout->addWidget(qRef);
+    QLayout* layoutRef = new QHBoxLayout();
+    layoutRef->setContentsMargins(0,0,0,0);
+    layoutRef->addWidget(new QLabel("Reference"));
+    layoutRef->addWidget(myRefMenu->getQtWidget());
+    QBoxLayout* layout = new QVBoxLayout(this);
+    if (refMenu == 1)
+      layout->setContentsMargins(0,0,0,0);
+    layout->addLayout(layoutRef);
     layout->addWidget(qPoint);
   }
 }
