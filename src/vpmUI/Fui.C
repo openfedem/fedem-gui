@@ -69,10 +69,8 @@
 // Initializing static variables
 ////////////////////////////////
 
-static int uiTitleBarHeight = 0;
 static int uiScreenHeight = 0;
 static int uiScreenWidth = 0;
-static int uiBorderWidth = 0;
 
 static FuiMainWindow* mainWindow = NULL;
 
@@ -83,10 +81,10 @@ void Fui::init(int& argc, char** argv)
 {
   bool consoleOnly = FFaAppInfo::isConsole();
 
-  // Init the UAExistenceHandler
+  // Initialize the UA-existence handler
   FapUAExistenceHandler::init();
 
-  // GUI lib initialisation
+  // GUI library initialisation (Qt)
   FFuaApplication::init(argc,argv,!consoleOnly);
 
 #ifdef FT_HAS_WND
@@ -98,7 +96,7 @@ void Fui::init(int& argc, char** argv)
 #endif
 #endif
 
-  // Init user feedback method
+  // Initialize user feedback method
   FFaMsg::setMessager(new FuiMsg);
   if (consoleOnly) return;
 
@@ -114,13 +112,6 @@ void Fui::init(int& argc, char** argv)
 
 void Fui::start()
 {
-  if (!mainWindow) return;
-
-  // Get decoration properties from project UI
-  // FIXME - find these values somehow.
-  uiTitleBarHeight = 23;
-  uiBorderWidth = 8;
-
   // Create the other UIs
   Fui::outputListUI(false,true);
   Fui::modellerUI(false,true);
@@ -135,13 +126,11 @@ void Fui::mainUI()
   FuiModes::setMode(FuiModes::EXAM_MODE);
 
   // Pop up the different ui's
-
   mainWindow->popUp();
   Fui::updateUICommands();
   Fui::modellerUI();
 
   // Make all the ui's actually redraw themselves (handle redraw event etc..)
-
   FFuaApplication::handlePendingEvents();
 
   FFaMsg::setStatus("Ready");
@@ -255,17 +244,32 @@ int Fui::genericDialog(const char* msg, const char** texts, int nButtons, int ty
 
 void Fui::noUserInputPlease()
 {
-  if (!mainWindow) return;
-
-  FFuaApplication::blockUserEvents(true);
+  if (mainWindow)
+    FFuaApplication::blockUserEvents(true);
 }
 
 
 void Fui::okToGetUserInput()
 {
-  if (!mainWindow) return;
+  if (mainWindow)
+    FFuaApplication::blockUserEvents(false);
+}
 
-  FFuaApplication::blockUserEvents(false);
+
+namespace
+{
+  template<class T> void lockUI(bool yesOrNo)
+  {
+    FFuTopLevelShell* tls;
+    if ((tls = FFuTopLevelShell::getInstanceByType(T::getClassTypeID())))
+    {
+      tls->setSensitivity(!yesOrNo);
+#ifdef FUI_DEBUG
+      std::cout << (yesOrNo ? "L" : "Unl") <<"ocking top-level UI "
+                << tls->getTypeIDName() << std::endl;
+#endif
+    }
+  }
 }
 
 
@@ -279,52 +283,23 @@ void Fui::lockModel(bool yesOrNo)
   if (FuiCtrlModes::isCtrlModellerOpen())
     FuiCtrlModes::cancel();
 
-  // Lock other top-level dialogs.
-  FFuTopLevelShell* tls;
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiAdvAnalysisOptions::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiPreferences::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiModelPreferences::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiSeaEnvironment::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiEventDefinition::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
+  // Lock some other top-level dialogs
+  lockUI<FuiAdvAnalysisOptions>(yesOrNo);
+  lockUI<FuiPreferences>(yesOrNo);
+  lockUI<FuiModelPreferences>(yesOrNo);
+  lockUI<FuiSeaEnvironment>(yesOrNo);
+  lockUI<FuiEventDefinition>(yesOrNo);
 #ifdef FT_HAS_WND
-  tls = FFuTopLevelShell::getInstanceByType(FuiAirEnvironment::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiTurbWind::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiAirfoilDefinition::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiBladeDefinition::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineTower::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
+  lockUI<FuiAirEnvironment>(yesOrNo);
+  lockUI<FuiTurbWind>(yesOrNo);
+  lockUI<FuiAirfoilDefinition>(yesOrNo);
+  lockUI<FuiBladeDefinition>(yesOrNo);
+  lockUI<FuiCreateTurbineAssembly>(yesOrNo);
+  lockUI<FuiCreateTurbineTower>(yesOrNo);
 #endif
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiCreateBeamstringPair::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiObjectBrowser::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
-
-  tls = FFuTopLevelShell::getInstanceByType(FuiModelExport::getClassTypeID());
-  if (tls) tls->setSensitivity(!yesOrNo);
+  lockUI<FuiCreateBeamstringPair>(yesOrNo);
+  lockUI<FuiObjectBrowser>(yesOrNo);
+  lockUI<FuiModelExport>(yesOrNo);
 }
 
 
@@ -417,11 +392,16 @@ void Fui::cancel()
 
 Fui::Geo Fui::getGeo(UIgeom fuiType)
 {
+#if defined(win32) || defined(win64)
+  const int mainWidth =  910;
+  const int mainHeight = 800;
+#else
   const int mainWidth = 1020;
-  const int mainHeight = 820;
+  const int mainHeight = 850;
+#endif
 
-  const int modellerWidth  = mainWidth *783/1000; // 78.3% of main window width
-  const int modellerHeight = mainHeight*648/1000; // 64.8% of main window height
+  const int modellerWidth  = mainWidth *779/1000; // 77.9% of main window width
+  const int modellerHeight = mainHeight*625/1000; // 62.5% of main window height
 
   Geo geo;
 
@@ -449,7 +429,7 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       geo.width  = 600;
       geo.height = 150;
       geo.xPos   = uiScreenWidth - geo.width - 3;
-      geo.yPos   = uiScreenHeight - geo.height - 40; // Room for Windows task bar
+      geo.yPos   = uiScreenHeight - geo.height - 50; // Room for Windows task bar
       break;
     case APPEARANCE_GEO:
       geo.xPos   = 4*modellerWidth/5;
@@ -469,7 +449,7 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       break;
     case STRESSOPTIONS_GEO:
       geo.xPos   = 2*modellerWidth/9;
-      geo.yPos   = modellerHeight - (275-uiBorderWidth-uiTitleBarHeight);
+      geo.yPos   = modellerHeight - 275;
       geo.width  = 375;
       geo.height = 550;
       break;
@@ -477,7 +457,7 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       geo.width  = 350;
       geo.height = 460;
       geo.xPos   = modellerWidth - geo.width;
-      geo.yPos   = modellerHeight - 275 - 210 - uiBorderWidth;
+      geo.yPos   = modellerHeight - 275 - 210;
       break;
     case GAGEOPTIONS_GEO:
       geo.xPos   = 100;
@@ -499,13 +479,13 @@ Fui::Geo Fui::getGeo(UIgeom fuiType)
       break;
     case VIEWSETTINGS_GEO:
       geo.xPos   = uiScreenWidth - 300;
-      geo.yPos   = 2*uiTitleBarHeight + uiBorderWidth;
+      geo.yPos   = 40;
       geo.width  = 300;
-      geo.height = 900;
+      geo.height = uiScreenHeight - 100;
       break;
     case RDBSELECTOR_GEO:
       geo.width  = 300;
-      geo.height = modellerHeight - 2*uiBorderWidth - uiTitleBarHeight;
+      geo.height = modellerHeight;
       geo.xPos   = 10;
       geo.yPos   = 20;
       break;
@@ -627,23 +607,22 @@ void Fui::animationUI(bool onScreen, bool)
 }
 
 
-void Fui::appearanceUI(bool onScreen, bool inMem)
+void Fui::appearanceUI(bool onScreen, bool)
 {
   if (!mainWindow) return;
 
-  inMem = true; // Always keep FuiAppearance in memory,
-  // because the Done button has not finished when this function is called.
-  // Deleting the window will make the Done button access already-freed memory.
-
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiAppearance::getClassTypeID());
 
-  if ((onScreen || inMem) && uic == NULL)
-    {
-      Fui::Geo geo = Fui::getGeo(APPEARANCE_GEO);
-      uic = FuiAppearance::create(geo.xPos, geo.yPos, geo.width, geo.height);
-    }
+  if (uic == NULL)
+  {
+    Fui::Geo geo = Fui::getGeo(APPEARANCE_GEO);
+    uic = FuiAppearance::create(geo.xPos, geo.yPos, geo.width, geo.height);
+  }
 
-  if (uic) uic->manage(onScreen,inMem);
+  // Always keep the FuiAppearance instance in memory,
+  // because the Done button has not finished when this function is called.
+  // Deleting the window will make the Done button access already-freed memory.
+  if (uic) uic->manage(onScreen,true);
 }
 
 
@@ -654,10 +633,10 @@ void Fui::viewSettingsUI(bool onScreen, bool inMem)
   FFuTopLevelShell* uic = FFuTopLevelShell::getInstanceByType(FuiViewSettings::getClassTypeID());
 
   if ((onScreen || inMem) && uic == NULL)
-    {
-      Fui::Geo geo = Fui::getGeo(VIEWSETTINGS_GEO);
-      uic = FuiViewSettings::create(geo.xPos, geo.yPos, geo.width, geo.height);
-    }
+  {
+    Fui::Geo geo = Fui::getGeo(VIEWSETTINGS_GEO);
+    uic = FuiViewSettings::create(geo.xPos, geo.yPos, geo.width, geo.height);
+  }
 
   if (uic) uic->manage(onScreen,inMem);
 }
@@ -1124,7 +1103,7 @@ void Fui::modelExportUI(bool onScreen, bool inMem)
     uic = FuiModelExport::create(geo.xPos, geo.yPos, geo.width, geo.height);
   }
 
-  if (uic) uic->manage(onScreen, inMem);
+  if (uic) uic->manage(onScreen,inMem);
 }
 
 void Fui::beamCSSelectorUI(bool onScreen, bool inMem)
