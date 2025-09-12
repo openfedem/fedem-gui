@@ -743,32 +743,18 @@ void FuiStartGuide::placeWidgets(int width, int height)
 {
   const int cx2 = width*2/11;
 
-  // Adjust start guide font size (seems not working)
-  std::string text = myContentLabel->getLabel();
-  size_t ipos = text.find("font-size:");
-  if (ipos != std::string::npos)
-  {
-    int nFontSize, w = width-cx2, h = height-27;
-    if (w >= 1105 && h >= 260)
-      nFontSize = 12;
-    else if (w >= 1015 && h >= 247)
-      nFontSize = 11;
-    else if (w >= 900 && h >= 220)
-      nFontSize = 10;
-    else if (w >= 860 && h >= 195)
-      nFontSize = 9;
-    else
-      nFontSize = 8;
-
-    char buf[16];
-    sprintf(buf,"font-size:%dpt;",nFontSize);
-    if (text.find(buf) != ipos)
-    {
-      size_t jpos = text.find("pt;",ipos);
-      text.replace(ipos,jpos-ipos+3,buf);
-      myContentLabel->setLabel(text);
-    }
-  }
+  // Adjust the start guide font size
+  int w = width-cx2, h = height-27;
+  if (w > 865 && h > 180)
+    myContentLabel->setFontSize(12);
+  else if (w > 800 && h > 170)
+    myContentLabel->setFontSize(11);
+  else if (w > 695 && h > 160)
+    myContentLabel->setFontSize(10);
+  else if (w > 645 && h > 150)
+    myContentLabel->setFontSize(9);
+  else
+    myContentLabel->setFontSize(8);
 
   const float aspectRatio = 8.0f/4.13f;
   const int hwide = cx2/aspectRatio;
@@ -776,16 +762,16 @@ void FuiStartGuide::placeWidgets(int width, int height)
     myLogoImage->setSizeGeometry(0, 0, cx2, hwide);
   else // tall container
   {
-    int w = height*aspectRatio;
+    w = height*aspectRatio;
     myLogoImage->setSizeGeometry(cx2-w, 0, w, height);
   }
 
   this->setSizeGeometry(0, 0, width, height);
   myHeading->setSizeGeometry(cx2+8, 3, width-cx2-78, 22);
-  myContentLabel->setSizeGeometry(cx2+3, 27, width-cx2-4, height-28);
+  myContentLabel->setSizeGeometry(cx2+3, 30, width-cx2-4, height-31);
   myLogoBorderTop->setSizeGeometry(0, 0, cx2, 3);
-  myLogoBorderRight->setSizeGeometry(cx2, 0, 4, 27);
-  myBorderTop->setSizeGeometry(cx2+1, 24, width-cx2-1, 3);
+  myLogoBorderRight->setSizeGeometry(cx2, 0, 4, 30);
+  myBorderTop->setSizeGeometry(cx2+1, 27, width-cx2-1, 3);
   myBorderRight->setSizeGeometry(width-3, 27, 3, height);
   myBorderBottom->setSizeGeometry(cx2, height-1, width-cx2-3, 1);
 }

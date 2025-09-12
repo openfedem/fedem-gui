@@ -27,8 +27,8 @@ FuiModeller* FuiModeller::create(FFuComponentBase* parent,
 				 const char* title,
 				 const char* name)
 {
-  return new FuiQtModeller(dynamic_cast<QWidget*>(parent),
-			   xpos,ypos,width,height,title,name);
+  return new FuiQtModeller(parent->getQtWidget(),
+                           xpos,ypos,width,height,title,name);
 }
 
 
@@ -40,7 +40,7 @@ FuiQtModeller::FuiQtModeller(QWidget* parent,
   : FFuQtMDIWindow(parent,xpos,ypos,width,height,title,name)
 {
   this->myPlayPanel = new FuiQtPlayPanel(this);
-  this->my3DpointUI = new FuiQt3DPoint(this);
+  this->my3DpointUI = new FuiQt3DPoint(this,"XYZ",2);
 #ifdef USE_INVENTOR
   this->myViewer = FdViewer::create(this);
 #else

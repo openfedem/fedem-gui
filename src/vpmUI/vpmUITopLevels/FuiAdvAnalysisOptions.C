@@ -59,27 +59,30 @@ FuiAdvAnalysisOptions::FuiAdvAnalysisOptions()
 }
 //----------------------------------------------------------------------------
 
-void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
+void FuiAdvAnalysisOptions::initWidgets()
 {
-  this->dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
-						     onDialogButtonClicked,int));
+  labImgTop->setPixMap(solverSetup_xpm);
 
-  // Run in the cloud button
-  this->btnRunCloud->setLabel("Run in cloud");
-  this->btnRunCloud->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onRunCloudBtnClicked));
-  if (FapSolveCmds::haveCloud())
-    this->btnRunCloud->popUp();
-  else
-    this->btnRunCloud->popDown();
+  btnAdvanced->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,
+                                        onAdvBtnClicked));
 
-  // Help button
-  this->btnHelp->setLabel("Help");
-  this->btnHelp->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onHelpBtnClicked));
+  dialogButtons->setButtonLabel(FFuDialogButtons::LEFTBUTTON,"Run!");
+  dialogButtons->setButtonLabel(FFuDialogButtons::MIDBUTTON,"Apply");
+  dialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON,"Cancel");
+#ifndef FT_HAS_SOLVERS
+  // Deactivate the Run button if no solver available
+  dialogButtons->setButtonSensitivity(FFuDialogButtons::LEFTBUTTON,false);
+#endif
+  dialogButtons->setButtonClickedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
+                                               onDialogButtonClicked,int));
 
-  // Set basic mode stuff
-  this->labImgTop->setPixMap(solverSetup_xpm);
-  this->labImgTop->setSizeGeometry(0,0,421,106);
-  this->btnAdvanced->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onAdvBtnClicked));
+  btnRunCloud->setLabel("Run in cloud");
+  btnRunCloud->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onRunCloudBtnClicked));
+  if (!FapSolveCmds::haveCloud())
+    btnRunCloud->popDown();
+
+  btnHelp->setLabel("Help");
+  btnHelp->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onHelpBtnClicked));
 
   // Set Tabs
   this->tabStack->addTabPage(this->options[TIMEOPTIONS],"Time");
@@ -91,16 +94,7 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
   this->tabStack->addTabPage(this->options[OUTPUTOPTIONS],"Output");
 #endif
 
-  // Dialog buttons labels
-  this->dialogButtons->setButtonLabel(FFuDialogButtons::LEFTBUTTON,"Run!");
-  this->dialogButtons->setButtonLabel(FFuDialogButtons::MIDBUTTON,"Apply");
-  this->dialogButtons->setButtonLabel(FFuDialogButtons::RIGHTBUTTON,"Cancel");
-#ifndef FT_HAS_SOLVERS
-  // Deactivate the Run button if no solver available
-  this->dialogButtons->setButtonSensitivity(FFuDialogButtons::LEFTBUTTON,false);
-#endif
-
-  // Setting of toggle button callbacks
+  // Setting of field and toggle button callbacks
 
   // Time options
   this->doubleFields[TIMEOPTIONS][START]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
@@ -175,7 +169,14 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
   this->toggleButtons[EQOPTIONS][RAMP_UP]->setToggleCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
                                                                   onRampUpToggled,bool));
 
-  // Basic options
+  // Basic mode options
+  this->doubleFields[BASICOPTIONS][START]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
+                                                                    onStartTimeAccepted,double));
+  this->doubleFields[BASICOPTIONS][STOP]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
+                                                                   onStopTimeAccepted,double));
+  this->integerFields[BASICOPTIONS][MODES_COUNT]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
+                                                                           onNumModesAccepted,int));
+
   this->toggleButtons[BASICOPTIONS][IEQ_TOGGLE]->setToggleCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
                                                                         onEqlIterToggled,bool));
   this->toggleButtons[BASICOPTIONS][TIME_TOGGLE]->setToggleCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
@@ -191,21 +192,25 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
   this->toggleButtons[BASICOPTIONS][MODES_TOGGLE]->setToggleCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
                                                                           onEModeSolToggled,bool));
 
+  // Query fields
+
+  std::array<FuiQueryInputField*,2> timeIncFields{ myBasTimeIncQueryField, myAdvTimeIncQueryField };
+  for (FuiQueryInputField* tField : timeIncFields)
+  {
+    tField->setBehaviour(FuiQueryInputField::REF_NUMBER);
+    tField->setButtonMeaning(FuiQueryInputField::EDIT);
+    tField->setTextForNoRefSelected("Constant");
+    tField->setChangedCB(FFaDynCB2M(FuiAdvAnalysisOptions,this,onTimeIncQueryChanged,int,double));
+  }
+
   // Field check modes
 
   for (int iOpt = 0; iOpt < NOPTIONS; iOpt++) {
-    for (const IOFieldMap::value_type& io : this->doubleFields[iOpt])
+    for (const FieldMap::value_type& io : this->doubleFields[iOpt])
       io.second->setInputCheckMode(FFuIOField::DOUBLECHECK);
-    for (const IOFieldMap::value_type& io : this->integerFields[iOpt])
+    for (const FieldMap::value_type& io : this->integerFields[iOpt])
       io.second->setInputCheckMode(FFuIOField::INTEGERCHECK);
   }
-
-  // Query field
-  this->myAdvTimeIncQueryField->setBehaviour(FuiQueryInputField::REF_NUMBER);
-  this->myAdvTimeIncQueryField->setButtonMeaning(FuiQueryInputField::EDIT);
-  this->myAdvTimeIncQueryField->setTextForNoRefSelected("Constant");
-  this->myAdvTimeIncQueryField->setChangedCB(FFaDynCB2M(FuiAdvAnalysisOptions,this,
-							onTimeIncQueryChanged,int,double));
 
   // Label definitions
 
@@ -255,12 +260,10 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
   shadowPosAlgMenu->addOption("Max triangle for Parts, mass-based nodal average for Beams");
   shadowPosAlgMenu->addOption("Mass-based nodal average for Parts only");
 
-  this->degradeSoilButton->setLabel("Degrade soil springs at current stop time");
-  this->degradeSoilButton->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onDegradeSoilActivated));
-  if (FapLicenseManager::hasFeature("FA-WND") || FapLicenseManager::hasFeature("FA-RIS"))
-    this->degradeSoilButton->popUp();
-  else
-    this->degradeSoilButton->popDown();
+  degradeSoilButton->setLabel("Degrade soil springs at current stop time");
+  degradeSoilButton->setActivateCB(FFaDynCB0M(FuiAdvAnalysisOptions,this,onDegradeSoilActivated));
+  if (!FapLicenseManager::hasFeature("FA-WND") && !FapLicenseManager::hasFeature("FA-RIS"))
+    degradeSoilButton->popDown();
 
   // Convergence options
   const char* lbl[3] = { "A", "O", "I" };
@@ -270,10 +273,6 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
     this->labels[CONVOPTIONS][AOI_VEL_1+i]->setLabel(lbl[i]);
     this->labels[CONVOPTIONS][AOI_RES_1+i]->setLabel(lbl[i]);
     this->labels[CONVOPTIONS][AOI_EN_1+i]->setLabel(lbl[i]);
-    this->isTopOfRadioLabel[CONVOPTIONS][AOI_DIS_1+i] = true;
-    this->isTopOfRadioLabel[CONVOPTIONS][AOI_VEL_1+i] = true;
-    this->isTopOfRadioLabel[CONVOPTIONS][AOI_RES_1+i] = true;
-    this->isTopOfRadioLabel[CONVOPTIONS][AOI_EN_1+i]  = true;
   }
   this->labels[CONVOPTIONS][A_DESCR]->setLabel("A: Set of tests where ALL must be satisfied");
   this->labels[CONVOPTIONS][O_DESCR]->setLabel("O: Set of tests where ONE must be satisfied");
@@ -321,17 +320,6 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
   this->labels[EQOPTIONS][RAMP_LENGTH]->setLabel("Total length (in time) of ramp-up stage");
   this->labels[EQOPTIONS][RAMP_DELAY]->setLabel("Time with constant loads after ramp-up");
 
-  // Output options
-#ifdef FT_HAS_SOLVERS
-  this->toggleButtons[OUTPUTOPTIONS][AUTO_CURVE_EXPORT]->setLabel("Automatic curve export");
-  this->toggleButtons[OUTPUTOPTIONS][AUTO_CURVE_EXPORT]->setToggleCB(FFaDynCB1M(FFuComponentBase,autoCurveExportField,
-                                                                                setSensitivity,bool));
-
-  this->autoCurveExportField->setAbsToRelPath("yes");
-  this->autoCurveExportField->setDialogType(FFuFileDialog::FFU_SAVE_FILE);
-  this->autoCurveExportField->setDialogRememberKeyword("AutoCurveExportField");
-#endif
-
   // Basic options
   this->labelFrames[BASICOPTIONS][IEQ_FRAME]->setLabel("Initial equilibrium");
   this->toggleButtons[BASICOPTIONS][IEQ_TOGGLE]->setLabel("Enable");
@@ -354,20 +342,15 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
   this->toggleButtons[BASICOPTIONS][FRA_TOGGLE]->setLabel("Enable");
 #endif
 
-  this->doubleFields[BASICOPTIONS][START]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
-								    onStartTimeAccepted,double));
-  this->doubleFields[BASICOPTIONS][STOP]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
-								   onStopTimeAccepted,double));
-  this->integerFields[BASICOPTIONS][MODES_COUNT]->setAcceptedCB(FFaDynCB1M(FuiAdvAnalysisOptions,this,
-									   onNumModesAccepted,int));
-
-  this->myBasTimeIncQueryField->setBehaviour(FuiQueryInputField::REF_NUMBER);
-  this->myBasTimeIncQueryField->setButtonMeaning(FuiQueryInputField::EDIT);
-  this->myBasTimeIncQueryField->setTextForNoRefSelected("Constant");
-  this->myBasTimeIncQueryField->setChangedCB(FFaDynCB2M(FuiAdvAnalysisOptions,this,
-							onTimeIncQueryChanged,int,double));
-
 #ifdef FT_HAS_SOLVERS
+  // Output options
+  this->toggleButtons[OUTPUTOPTIONS][AUTO_CURVE_EXPORT]->setLabel("Automatic curve export");
+  this->toggleButtons[OUTPUTOPTIONS][AUTO_CURVE_EXPORT]->setToggleCB(FFaDynCB1M(FFuComponentBase,autoCurveExportField,
+                                                                                setSensitivity,bool));
+  this->autoCurveExportField->setAbsToRelPath("yes");
+  this->autoCurveExportField->setDialogType(FFuFileDialog::FFU_SAVE_FILE);
+  this->autoCurveExportField->setDialogRememberKeyword("AutoCurveExportField");
+
   std::vector<std::string> rpcExts = { "rsp", "drv", "tim" };
   this->autoCurveExportField->addDialogFilter("MTS RPC file, PC formatting", rpcExts, false, FuaAdvAnalysisOptionsValues::RPC_LITTLE_ENDIAN);
   this->autoCurveExportField->addDialogFilter("MTS RPC file, UNIX formatting", rpcExts, false, FuaAdvAnalysisOptionsValues::RPC_BIG_ENDIAN);
@@ -396,13 +379,10 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
                                                                         onOverwriteToggled,bool));
 #endif
 
-  this->showBasicMode(myBasicMode = basicMode);
-
   // Set minimum TLS size to avoid hiding info
   Fui::Geo myGeo = Fui::getGeo(Fui::ADVANALYSISOPTIONS_GEO);
   this->setMinWidth(myGeo.width);
   this->setMinHeight(myGeo.height);
-  this->placeAdvancedButton(myGeo.width,myGeo.height);
 
   // Set value accept policy
   this->setAllFieldAcceptPolicy(FFuIOField::ENTERONLY);
@@ -415,9 +395,9 @@ void FuiAdvAnalysisOptions::initWidgets(bool basicMode)
 }
 //----------------------------------------------------------------------------
 
-void FuiAdvAnalysisOptions::setBasicMode(bool basicMode)
+void FuiAdvAnalysisOptions::setBasicMode(bool basicMode, bool initializing)
 {
-  if (myBasicMode != basicMode)
+  if (initializing || myBasicMode != basicMode)
     this->showBasicMode(myBasicMode = basicMode);
 }
 //----------------------------------------------------------------------------
@@ -493,14 +473,14 @@ void FuiAdvAnalysisOptions::setSensitivity(bool sens)
 }
 //----------------------------------------------------------------------------
 
-void FuiAdvAnalysisOptions::placeAdvancedButton(int width, int height)
+void FuiAdvAnalysisOptions::placeAdvancedButton()
 {
   // The Advanced/Basic button still needs to be positioned explicitly,
   // since we want it to appear "inside" frame of the tabbed sheet
   int w = btnHelp->getWidthHint();
   int h = btnHelp->getHeightHint();
-  int x = width - w - 10;
-  int y = height - dialogButtons->getHeightHint() - h - 30;
+  int x = this->getWidth() - w - 10;
+  int y = this->getHeight() - dialogButtons->getHeightHint() - h - 30;
   btnAdvanced->setSizeGeometry(x,y,w,h);
   btnAdvanced->toFront();
 }
@@ -509,7 +489,7 @@ void FuiAdvAnalysisOptions::placeAdvancedButton(int width, int height)
 void FuiAdvAnalysisOptions::setAllFieldAcceptPolicy(int policy)
 {
   for (int iOpt = 0; iOpt < NOPTIONS; iOpt++)
-    for (IOFieldMap::value_type& io : this->doubleFields[iOpt])
+    for (FieldMap::value_type& io : this->doubleFields[iOpt])
       io.second->setAcceptPolicy(policy);
 }
 //----------------------------------------------------------------------------
@@ -517,7 +497,7 @@ void FuiAdvAnalysisOptions::setAllFieldAcceptPolicy(int policy)
 void FuiAdvAnalysisOptions::setAllDoubleDisplayMode(int mode, int precision, int zeroPrecision)
 {
   for (int iOpt = 0; iOpt < NOPTIONS; iOpt++)
-    for (IOFieldMap::value_type& io : this->doubleFields[iOpt]) {
+    for (FieldMap::value_type& io : this->doubleFields[iOpt]) {
       io.second->setDoubleDisplayMode(mode);
       io.second->setDoubleDisplayPrecision(precision);
       io.second->setZeroDisplayPrecision(zeroPrecision);
@@ -531,9 +511,9 @@ bool FuiAdvAnalysisOptions::updateDBValues(bool)
 
   //unhighligh fields since qt enables mult field highlighting (qt bug ?)
   for (iOpt = 0; iOpt < NOPTIONS; iOpt++) {
-    for (IOFieldMap::value_type& io : this->doubleFields[iOpt])
+    for (FieldMap::value_type& io : this->doubleFields[iOpt])
       io.second->unHighlight();
-    for (IOFieldMap::value_type& io : this->integerFields[iOpt])
+    for (FieldMap::value_type& io : this->integerFields[iOpt])
       io.second->unHighlight();
   }
 
@@ -561,7 +541,7 @@ bool FuiAdvAnalysisOptions::updateDBValues(bool)
   // Check validity of the field values in UI or DB
   bool status = true;
   for (iOpt = 0; iOpt < NOPTIONS && status; iOpt++) {
-    for (IOFieldMap::value_type& io : this->doubleFields[iOpt])
+    for (FieldMap::value_type& io : this->doubleFields[iOpt])
       if (!values.valueStatus[iOpt][io.first]) {
         if (iOpt > 0) tabStack->setCurrentTab(iOpt-1);
         io.second->highlight();
@@ -569,7 +549,7 @@ bool FuiAdvAnalysisOptions::updateDBValues(bool)
         status = false;
       }
 
-    for (IOFieldMap::value_type& io : this->integerFields[iOpt])
+    for (FieldMap::value_type& io : this->integerFields[iOpt])
       if (!values.valueStatus[iOpt][io.first]) {
         if (iOpt > 0) tabStack->setCurrentTab(iOpt-1);
         io.second->highlight();
@@ -592,7 +572,6 @@ void FuiAdvAnalysisOptions::onDialogButtonClicked(int button)
   switch (button)
     {
     case FFuDialogButtons::LEFTBUTTON:
-
       if (myBasicMode)
         this->myBasTimeIncQueryField->accept();
       else
@@ -925,7 +904,7 @@ void FuiAdvAnalysisOptions::onAdvBtnClicked()
 {
   // Toggle basic mode
   this->showBasicMode(myBasicMode = !myBasicMode);
-  this->placeAdvancedButton(this->getWidth(), this->getHeight());
+  this->placeAdvancedButton();
 }
 
 void FuiAdvAnalysisOptions::onHelpBtnClicked()
@@ -949,31 +928,35 @@ void FuiAdvAnalysisOptions::setUIValues(const FFuaUIValues* values)
 //----------------------------------------------------------------------------
 
 void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues,
-                                          bool invalidValuesAlso)
+                                          bool includeInvalids)
 {
+  using DoubleIter  = DoubleMap::const_iterator;
+  using IntegerIter = IntegerMap::const_iterator;
+  using BoolIter    = BoolMap::const_iterator;
+
   for (int iOpt = 0; iOpt < NOPTIONS; iOpt++)
   {
     // field values
-    for (IOFieldMap::value_type& io : this->doubleFields[iOpt])
-      if (invalidValuesAlso || advValues->valueStatus[iOpt][io.first]) {
+    for (FieldMap::value_type& io : this->doubleFields[iOpt])
+      if (includeInvalids || advValues->valueStatus[iOpt][io.first]) {
         DoubleIter vi = advValues->doubleValues[iOpt].find(io.first);
         if (vi != advValues->doubleValues[iOpt].end())
           io.second->setValue(vi->second);
       }
-    for (IOFieldMap::value_type& io : this->integerFields[iOpt])
-      if (invalidValuesAlso || advValues->valueStatus[iOpt][io.first]) {
+    for (FieldMap::value_type& io : this->integerFields[iOpt])
+      if (includeInvalids || advValues->valueStatus[iOpt][io.first]) {
         IntegerIter vi = advValues->integerValues[iOpt].find(io.first);
         if (vi != advValues->integerValues[iOpt].end())
           io.second->setValue(vi->second);
       }
 
     // toggle values
-    for (RadioButtonMap::value_type& r : this->radioButtons[iOpt]) {
+    for (RadioMap::value_type& r : this->radioButtons[iOpt]) {
       BoolIter vi = advValues->toggleValues[iOpt].find(r.first);
       if (vi != advValues->toggleValues[iOpt].end())
         r.second->setValue(vi->second);
     }
-    for (ToggleButtonMap::value_type& t : this->toggleButtons[iOpt]) {
+    for (ToggleMap::value_type& t : this->toggleButtons[iOpt]) {
       BoolIter vi = advValues->toggleValues[iOpt].find(t.first);
       if (vi != advValues->toggleValues[iOpt].end())
         t.second->setValue(vi->second);
@@ -1024,7 +1007,8 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
   }
 #endif
 
-  // set sensitivities
+  // Set sensitivities
+
   this->onCutbackToggled(advValues->toggleValues[TIMEOPTIONS][CUTBACK]);
   if (advValues->toggleValues[INTOPTIONS][HHT_ALPHA])
     this->onNewmarkToggled(1,true);
@@ -1045,8 +1029,6 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
   this->doubleFields[CONVOPTIONS][MR_RES]->setSensitivity(!advValues->toggleValues[CONVOPTIONS][MR_RES_3]);
   this->doubleFields[CONVOPTIONS][AVG_EN]->setSensitivity(!advValues->toggleValues[CONVOPTIONS][AVG_EN_3]);
   this->doubleFields[CONVOPTIONS][MAX_EN]->setSensitivity(!advValues->toggleValues[CONVOPTIONS][MAX_EN_3]);
-
-  // basic options
 
   bool onOrOffTime = advValues->toggleValues[BASICOPTIONS][TIME_TOGGLE];
   bool onOrOffStop = onOrOffTime && advValues->toggleValues[BASICOPTIONS][STOP];
@@ -1083,7 +1065,7 @@ bool FuiAdvAnalysisOptions::getMyUIValues(FuaAdvAnalysisOptionsValues* values)
   for (int iOpt = 0; iOpt < NOPTIONS; iOpt++)
   {
     // field values
-    for (const IOFieldMap::value_type& io : this->doubleFields[iOpt])
+    for (const FieldMap::value_type& io : this->doubleFields[iOpt])
       if ((values->valueStatus[iOpt][io.first] = io.second->isDouble()))
         values->doubleValues[iOpt][io.first] = io.second->getDouble();
       else {
@@ -1091,7 +1073,7 @@ bool FuiAdvAnalysisOptions::getMyUIValues(FuaAdvAnalysisOptionsValues* values)
         validValues = false;
       }
 
-    for (const IOFieldMap::value_type& io : this->integerFields[iOpt])
+    for (const FieldMap::value_type& io : this->integerFields[iOpt])
       if ((values->valueStatus[iOpt][io.first] = io.second->isInt()))
         values->integerValues[iOpt][io.first] = io.second->getInt();
       else {
@@ -1100,9 +1082,9 @@ bool FuiAdvAnalysisOptions::getMyUIValues(FuaAdvAnalysisOptionsValues* values)
       }
 
     // toggle values
-    for (const RadioButtonMap::value_type& r : this->radioButtons[iOpt])
+    for (const RadioMap::value_type& r : this->radioButtons[iOpt])
       values->toggleValues[iOpt][r.first] = r.second->getValue();
-    for (const ToggleButtonMap::value_type& t : this->toggleButtons[iOpt])
+    for (const ToggleMap::value_type& t : this->toggleButtons[iOpt])
       values->toggleValues[iOpt][t.first] = t.second->getValue();
   }
 

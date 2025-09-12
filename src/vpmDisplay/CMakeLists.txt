@@ -127,9 +127,11 @@ target_link_libraries ( ${LIB_ID} ${DEPENDENCY_LIST} )
 # Install the dependent shared object libraries
 
 list ( REMOVE_ITEM EXTERNAL_LIBRARIES ${DSO_LIBGL} )
-if ( NOT WIN )
+if ( WIN )
+  list ( APPEND EXTERNAL_LIBRARIES Qt6::OpenGLWidgets )
+else ( WIN )
   list ( REMOVE_ITEM EXTERNAL_LIBRARIES Qt6::OpenGL )
-endif ( NOT WIN )
+endif ( WIN )
 foreach ( LIB ${EXTERNAL_LIBRARIES} )
   if ( TARGET ${LIB} )
     get_target_property ( LIB_PATH ${LIB} LOCATION )
