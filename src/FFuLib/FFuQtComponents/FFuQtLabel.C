@@ -14,6 +14,17 @@
 extern const char* info_xpm[];
 
 
+namespace
+{
+  void setQFontSize(QLabel* label, int npt)
+  {
+    char cstyle[32];
+    sprintf(cstyle,"QLabel { font-size: %dpt; }",npt);
+    label->setStyleSheet(cstyle);
+  }
+}
+
+
 FFuQtLabel::FFuQtLabel(QWidget* parent) : QLabel(parent)
 {
   this->setWidget(this);
@@ -39,6 +50,12 @@ void FFuQtLabel::setPixMap(const char** pixmap, bool stretch)
 void FFuQtLabel::setLabel(const char* label)
 {
   this->setText(label);
+}
+
+
+void FFuQtLabel::setFontSize(int npt)
+{
+  setQFontSize(this,npt);
 }
 
 
@@ -81,4 +98,10 @@ FFuQtNotes::FFuQtNotes(QWidget* parent, const char* text,
   layout->setSpacing(spacing);
   layout->addWidget(new FFuQtNotesLabel());
   layout->addWidget(myLabel);
+}
+
+
+void FFuQtNotes::setFontSize(int npt)
+{
+  setQFontSize(myLabel,npt);
 }

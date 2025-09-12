@@ -20,6 +20,7 @@ class FFuLabel : virtual public FFuComponentBase
 public:
   virtual void setPixMap(const char** pixmap, bool stretch = false) = 0;
   virtual void setLabel(const char* label) = 0;
+  virtual void setFontSize(int npt) = 0;
 
   void setLabel(const std::string& label) { this->setLabel(label.c_str()); }
   virtual std::string getLabel() const = 0;
@@ -35,6 +36,7 @@ class FFuNotes : virtual public FFuComponentBase
 {
 public:
   virtual void setText(const char* text) = 0;
+  virtual void setFontSize(int npt) = 0;
 };
 
 #endif

@@ -23,6 +23,7 @@ public:
 
   virtual void setPixMap(const char** pixmap, bool stretch);
   virtual void setLabel(const char* label);
+  virtual void setFontSize(int npt);
 
   virtual std::string getLabel() const;
 
@@ -45,6 +46,7 @@ public:
              int margin = 0, int spacing = 5);
 
   virtual void setText(const char* text) { myLabel->setText(text); }
+  virtual void setFontSize(int npt);
 
 private:
   QLabel* myLabel;
