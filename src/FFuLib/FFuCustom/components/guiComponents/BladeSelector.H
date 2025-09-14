@@ -19,9 +19,8 @@
 class QTreeView;
 class QToolButton;
 class QLineEdit;
-class QHBoxLayout;
-class QVBoxLayout;
 class BladeSelectionModel;
+class DataNode;
 
 
 class BladeSelector : public QWidget
@@ -53,9 +52,6 @@ private:
   BladeSelectionModel* apBladeSelectionModel;
   QLineEdit* apPathField;
 
-  QHBoxLayout* apMainLayout;
-  QVBoxLayout* apButtonLayout;
-
   QString propPath;
   QString currentPath;
   bool    expanded;
@@ -68,6 +64,10 @@ public slots:
 
 signals:
   void selectionModelChanged();
+
+private:
+  DataNode* getCurrentNode() const;
+  DataNode* getNodeAt(int r, int c) const;
 };
 
 #endif
