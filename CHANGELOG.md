@@ -8,6 +8,23 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.0.7] (2025-09-16)
+
+### :rocket: Added
+
+No new features in this release, but the use of Qt layout managers of positioning
+the various GUI components is now complete, also for all the property views.
+
+### :bug: Fixed
+
+- The `Qt6OpenGLWidgets.dll` file is missing in the Windows installation.
+- The GUI freezes when the Airfoil Browser dialog is launched on Windows.
+- Some GUI components appear and disappear instantly when the Dynamics Solver dialog is launched the first time.
+- The "File of type:" menu in the file selection dialog contains "All files (*)" only.
+- When creating a sea wave function, the default function type is wrong (should be Sine).
+- Issue https://github.com/openfedem/fedem-gui/issues/83:
+  Deleting and pasting does not work for Linear derivative functions.
+
 ## [fedem-8.1.0] (2025-07-10)
 
 ### :rocket: Initial release of FEDEM R8.1
@@ -281,3 +298,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.0.9]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.8...fedem-8.0.9
 [fedem-8.0.9.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9.2...fedem-8.0.9.7
 [fedem-8.1.0]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9...fedem-8.1.0
+[fedem-8.1.9.0]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.0.7...fedem-8.1.0
