@@ -25,90 +25,93 @@
 #include "FFuLib/FFuCustom/inputTables/InputTable.H"
 
 
-InputTable::InputTable(int rows, int columns, TableOrdering orderingType, QWidget* parent) :
-		QWidget(parent)
+InputTable::InputTable(int rows, int cols, TableOrdering oType, QWidget* parent)
+  : QWidget(parent)
 {
-	apTableView = new QTableView();
+  apTableView = new QTableView();
+  apTableView->setAcceptDrops(true);
 
-	apLayout = new QVBoxLayout();
+  QLayout* layout = new QVBoxLayout(this);
+  layout->addWidget(apTableView);
 
-	apTableView->setAcceptDrops(true);
+  // ******* Actions *******
 
-	apLayout->addWidget(apTableView);
-	setLayout(apLayout);
+  // Copy
+  copyAction = new QAction("&Copy",this);
+  copyAction->setShortcut(QKeySequence("Ctrl+c"));
+  QObject::connect(copyAction, SIGNAL(triggered()), this, SLOT(Copy()));
+  apTableView->addAction(copyAction);
 
-	ResizeToContents();
+  // Paste
+  pasteAction = new QAction("&Paste",this);
+  pasteAction->setShortcut(QKeySequence("Ctrl+v"));
+  QObject::connect(pasteAction, SIGNAL(triggered()), this, SLOT(Paste()));
+  apTableView->addAction(pasteAction);
 
-	// ******* Actions *******
-	// Copy
-	copyAction = new QAction("&Copy",this);
-	copyAction->setShortcut(QKeySequence(tr("Ctrl+c")));
-	QObject::connect(copyAction, SIGNAL(activated()), this, SLOT(Copy()) );
-	apTableView->addAction(copyAction);
-	// Paste
-	pasteAction = new QAction("&Paste",this);
-	pasteAction->setShortcut(QKeySequence(tr("Ctrl+v")));
-	QObject::connect(pasteAction, SIGNAL(activated()), this, SLOT(Paste()) );
-	apTableView->addAction(pasteAction);
-	// Delete
-	deleteAction = new QAction("&Delete", this);
-	deleteAction->setShortcut(QKeySequence(tr("delete")));
-	QObject::connect(deleteAction, SIGNAL(activated()), this, SLOT(Delete()) );
-	apTableView->addAction(deleteAction);
-	// Insert row
-	insertRowAction = new QAction("&Insert Row", this);
-	insertRowAction->setShortcut(QKeySequence(tr("Ctrl+i")));
-	QObject::connect(insertRowAction, SIGNAL(activated()), this, SLOT(InsertRow()) );
-	apTableView->addAction(insertRowAction);
-	// Remove row
-	removeRowAction = new QAction("&Remove Row", this);
-	removeRowAction->setShortcut(QKeySequence(tr("Ctrl+r")));
-	QObject::connect(removeRowAction, SIGNAL(activated()), this, SLOT(RemoveRow()) );
-	apTableView->addAction(removeRowAction);
-	// Insert column
-	insertColumnAction = new QAction("&Insert Column", this);
-	insertColumnAction->setShortcut(QKeySequence(tr("Ctrl+k")));
-	QObject::connect(insertColumnAction, SIGNAL(activated()), this, SLOT(InsertColumn()) );
-	apTableView->addAction(insertRowAction);
-	// Remove column
-	removeColumnAction = new QAction("&Remove Column", this);
-	removeColumnAction->setShortcut(QKeySequence(tr("Ctrl+l")));
-	QObject::connect(removeColumnAction, SIGNAL(activated()), this, SLOT(RemoveColumn()) );
-	apTableView->addAction(removeColumnAction);
+  // Delete
+  deleteAction = new QAction("&Delete", this);
+  deleteAction->setShortcut(QKeySequence("delete"));
+  QObject::connect(deleteAction, SIGNAL(triggered()), this, SLOT(Delete()));
+  apTableView->addAction(deleteAction);
 
-	//***************
-	//Create model
-	apTableModel = new TableModel(rows, columns, orderingType);
-	apTableView->setModel(apTableModel);
+  // Insert row
+  insertRowAction = new QAction("&Insert Row", this);
+  insertRowAction->setShortcut(QKeySequence("Ctrl+i"));
+  QObject::connect(insertRowAction, SIGNAL(triggered()), this, SLOT(InsertRow()));
+  apTableView->addAction(insertRowAction);
 
-	// Context menu for table
-	apTableView->setContextMenuPolicy(Qt::CustomContextMenu);
-	QObject::connect(apTableView, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuTable(const QPoint &)));
+  // Remove row
+  removeRowAction = new QAction("&Remove Row", this);
+  removeRowAction->setShortcut(QKeySequence("Ctrl+r"));
+  QObject::connect(removeRowAction, SIGNAL(triggered()), this, SLOT(RemoveRow()) );
+  apTableView->addAction(removeRowAction);
 
-	switch(orderingType){
-		case COLUMN_DOMINANT:
-			// Context menu for horizontal header
-			apTableView->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-			QObject::connect(apTableView->horizontalHeader(), SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuHorizontalHeader(const QPoint &)));
+  // Insert column
+  insertColumnAction = new QAction("&Insert Column", this);
+  insertColumnAction->setShortcut(QKeySequence("Ctrl+k"));
+  QObject::connect(insertColumnAction, SIGNAL(triggered()), this, SLOT(InsertColumn()) );
+  apTableView->addAction(insertRowAction);
 
-			apTableView->verticalHeader()->setSectionsClickable(false);
-			apTableView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-			break;
-		case ROW_DOMINANT:
-			// Context menu for vertical header
-			apTableView->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-			QObject::connect(apTableView->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuVerticalHeader(const QPoint &)));
+  // Remove column
+  removeColumnAction = new QAction("&Remove Column", this);
+  removeColumnAction->setShortcut(QKeySequence("Ctrl+l"));
+  QObject::connect(removeColumnAction, SIGNAL(triggered()), this, SLOT(RemoveColumn()));
+  apTableView->addAction(removeColumnAction);
 
-			apTableView->horizontalHeader()->setSectionsClickable(false);
-			apTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-			break;
-	}
-	
-	apTableView->setAlternatingRowColors(true);
+  /***************/
+  // Create model
+  apTableModel = new TableModel(rows, cols, oType);
+  apTableView->setModel(apTableModel);
 
-	apTableView->setLocale(QLocale::C);
+  // Context menu for table
+  apTableView->setContextMenuPolicy(Qt::CustomContextMenu);
+  QObject::connect(apTableView, SIGNAL(customContextMenuRequested(const QPoint&)),
+                   this, SLOT(contextMenuTable(const QPoint&)));
 
-	ResizeToContents();
+  switch(oType) {
+  case COLUMN_DOMINANT:
+    // Context menu for horizontal header
+    apTableView->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(apTableView->horizontalHeader(), SIGNAL(customContextMenuRequested(const QPoint&)),
+                     this, SLOT(contextMenuHorizontalHeader(const QPoint&)));
+
+    apTableView->verticalHeader()->setSectionsClickable(false);
+    apTableView->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    break;
+  case ROW_DOMINANT:
+    // Context menu for vertical header
+    apTableView->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(apTableView->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint&)),
+                     this, SLOT(contextMenuVerticalHeader(const QPoint&)));
+
+    apTableView->horizontalHeader()->setSectionsClickable(false);
+    apTableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    break;
+  }
+
+  apTableView->setAlternatingRowColors(true);
+  apTableView->setLocale(QLocale::C);
+  apTableView->resizeColumnsToContents();
 }
 
 void InputTable::ResizeToContents(){

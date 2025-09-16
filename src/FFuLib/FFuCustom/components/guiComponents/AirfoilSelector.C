@@ -16,16 +16,18 @@
 #include "FFuLib/FFuCustom/mvcModels/AirfoilSelectionModel.H"
 #include "FFuLib/Icons/turbineBlade.xpm"
 
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QRadioButton>
 #include <QPushButton>
 #include <QLineEdit>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QComboBox>
 #include <QAbstractItemView>
 #include <QFileDialog>
 #include <QDir>
+
+#include <iostream>
 
 
 AirfoilSelector::AirfoilSelector(const std::string& instPath, QWidget* parent) : QWidget(parent)
@@ -33,7 +35,7 @@ AirfoilSelector::AirfoilSelector(const std::string& instPath, QWidget* parent) :
   customFolder = standardFolder = QString(instPath.c_str());
 
   // Initialize widgets
-  apBanner = new QLabel(this);
+  QLabel* apBanner = new QLabel(this);
   apBanner->setPixmap(QPixmap(turbineBlade_xpm));
 
   apCustomFolderRadioButton = new QRadioButton("Custom folder", this);
@@ -54,9 +56,9 @@ AirfoilSelector::AirfoilSelector(const std::string& instPath, QWidget* parent) :
   apPathField->setEnabled(false);
 
   // Layouts
-  apButtonLayout = new QVBoxLayout();
-  apFolderLayout = new QHBoxLayout();
-  apMainLayout = new QVBoxLayout();
+  QBoxLayout* apMainLayout = new QVBoxLayout(this);
+  QBoxLayout* apButtonLayout = new QVBoxLayout();
+  QBoxLayout* apFolderLayout = new QHBoxLayout();
 
   apMainLayout->setContentsMargins(2, 0, 2, 0);
   apButtonLayout->setContentsMargins(2, 0, 2, 0);
@@ -72,7 +74,6 @@ AirfoilSelector::AirfoilSelector(const std::string& instPath, QWidget* parent) :
   apMainLayout->addLayout(apButtonLayout);
   apMainLayout->addWidget(apAvailableAirfoilsPullDown);
 
-  this->setLayout(apMainLayout);
   this->setMinimumHeight(25);
 
   // Connections
@@ -97,14 +98,13 @@ void AirfoilSelector::selectItem(const QString& value)
     return;
   }
 
-  int nNode = static_cast<DataNode*>(apAirfoilSelectionModel->index(0,0).internalPointer())->getParentNode()->subNodeCount();
+  DataNode* dNode = this->getNodeAt(0,0);
+  int nNode = dNode ? dNode->getParentNode()->subNodeCount() : 0;
   for (int i = 0; i < nNode; i++)
-  {
-    DataNode* dNode = static_cast<DataNode*>(apAirfoilSelectionModel->index(i,0).internalPointer());
-    for (int j = 0; j < dNode->subNodeCount(); j++)
-      if (value == dNode->getData(0).toString() + dNode->subNode(j)->getData(0).toString())
-        apAvailableAirfoilsPullDown->setCurrentIndex(j);
-  }
+    if ((dNode = this->getNodeAt(i,0)))
+      for (int j = 0; j < dNode->subNodeCount(); j++)
+        if (value == dNode->getData(0).toString() + dNode->subNode(j)->getData(0).toString())
+          apAvailableAirfoilsPullDown->setCurrentIndex(j);
 }
 
 
@@ -200,10 +200,11 @@ void AirfoilSelector::refresh()
   int i, numOfChildren = apAirfoilSelectionModel->rowCount();
   for (i = 0; i < numOfChildren; i++)
   {
-    QString path = static_cast<DataNode*>(apAirfoilSelectionModel->index(i,0).internalPointer())->getData(0).toString();
+    DataNode* dNode = this->getNodeAt(i,0);
+    QString path = dNode->getData(0).toString();
     path.resize(path.size()-1);//remove last slash
     directories.push_back(path);
-    readOnlyStates.push_back(static_cast<DataNode*>(apAirfoilSelectionModel->index(i,0).internalPointer())->getData(1).toBool());
+    readOnlyStates.push_back(dNode->getData(1).toBool());
   }
 
   // remove all directories
@@ -211,7 +212,18 @@ void AirfoilSelector::refresh()
 
   // add all directories
   for (i = numOfChildren-1; i >= 0; i--)
-    apAirfoilSelectionModel->addDirectory(0, QString(directories.at(i)), readOnlyStates.at(i));
+    apAirfoilSelectionModel->addDirectory(0, directories.at(i), readOnlyStates.at(i));
 
   this->radioButtonsChanged();
+}
+
+
+DataNode* AirfoilSelector::getNodeAt(int r, int c) const
+{
+  void* ptr = apAirfoilSelectionModel->index(r,c).internalPointer();
+  if (ptr) return static_cast<DataNode*>(ptr);
+
+  std::cerr <<"  ** BladeSelector: Internal pointer at ("
+            << r <<","<< c <<") is NULL"<< std::endl;
+  return NULL;
 }

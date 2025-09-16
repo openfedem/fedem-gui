@@ -11,6 +11,11 @@
  *      Author: runarhr
  */
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QSignalMapper>
 #include <QTextStream>
 #include <QFileDialog>
 #include <QFile>
@@ -20,27 +25,33 @@
 #include <QHeaderView>
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QSplitter>
 
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtAirfoilDefinition.H"
 #include "vpmUI/Fui.H"
 #include "vpmPM/FpPM.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
+#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 #include "FFuLib/FFuCustom/mvcModels/AirfoilSelectionModel.H"
+#include "FFuLib/FFuCustom/components/guiComponents/AirfoilSelector.H"
+#include "FFuLib/FFuCustom/inputTables/InputTable.H"
 #include "FFuLib/FFuCustom/inputTables/delegates/DoubleFieldDelegate.H"
-
-extern const char* info_xpm[];
 
 
 FuiAirfoilDefinition* FuiAirfoilDefinition::create(int xpos, int ypos,
-		int width, int height, const char* title, const char* name)
+                                                   int width, int height,
+                                                   const char* title,
+                                                   const char* name)
 {
-  return new FuiQtAirfoilDefinition(0, xpos, ypos, width, height, title, name);
+  return new FuiQtAirfoilDefinition(xpos, ypos, width, height, title, name);
 }
 
-FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
-		int xpos, int ypos, int width, int height, const char* title,
-		const char* name) :
-		FFuQtTopLevelShell(parent, xpos, ypos, width, height, title, name)
+
+FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(int xpos, int ypos,
+                                               int width, int height,
+                                               const char* title,
+                                               const char* name)
+  : FFuQtTopLevelShell(NULL, xpos, ypos, width, height, title, name)
 {
 	this->setFixedWidth(size().width());
 
@@ -50,11 +61,9 @@ FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
 	apSplitter->setChildrenCollapsible(false);
 	QWidget* apBottomContainer = new QWidget(this);
 
-	apNotesLabel = new QLabel("<b>Notes<\b>",this);
-	apNotesLabelImage = new QLabel(this);
-	apNotesLabelImage->setPixmap(QPixmap(info_xpm));
-	apNotesText = new QLabel("Use this dialog to view and modify airfoil files in the AeroDyn format.");
-	apNotesText->setWordWrap(true);
+	QWidget* apNotes = new FFuQtNotes(this,
+					  "Use this dialog to view and modify "
+					  "airfoil files in the AeroDyn format.");
 
 	apAddRowButton = new QPushButton("Add Row",this);
 	apRemoveRowButton = new QPushButton("Remove Row",this);
@@ -66,32 +75,22 @@ FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
 	apCreateAirfoilButton = new QPushButton("&New Airfoil",this);
 
 	//Line edits
-	apNumLabel = new QLabel("Number of airfoil tables in this file:", this);
 	apNumEdit = new QLineEdit(this);
 	apNumEdit->setFixedWidth(200);
-	//apNumEdit->setEnabled(false);
-	apIDLabel = new QLabel("Table ID parameter:", this);
 	apIDEdit = new QLineEdit(this);
 	apIDEdit->setFixedWidth(200);
-	apStallLabel = new QLabel("Stall angle[deg]:", this);
 	apStallEdit = new QLineEdit(this);
 	apStallEdit->setFixedWidth(200);
-	apCnAnglekLabel = new QLabel("Zero C<sub>n</sub> angle of attack[deg]:", this);
 	apCnAngleEdit = new QLineEdit(this);
 	apCnAngleEdit->setFixedWidth(200);
-	apCnSlopeLabel = new QLabel("C<sub>n</sub> slope for zero lift (dimensionless):", this);
 	apCnSlopeEdit = new QLineEdit(this);
 	apCnSlopeEdit->setFixedWidth(200);
-	apCnExtrapolLabel = new QLabel("C<sub>n</sub> extrapolated to value at positive stall angle of attack:", this);
 	apCnExtrapolEdit = new QLineEdit(this);
 	apCnExtrapolEdit->setFixedWidth(200);
-	apCnStallLabel = new QLabel("C<sub>n</sub> at stall value for negative angle of attack:", this);
 	apCnStallEdit = new QLineEdit(this);
 	apCnStallEdit->setFixedWidth(200);
-	apAttackLabel = new QLabel("Angle of attack for minimum C<sub>D</sub>[deg]:", this);
 	apAttackEdit = new QLineEdit(this);
 	apAttackEdit->setFixedWidth(200);
-	apMinCDLabel = new QLabel("Minimum C<sub>D</sub> value:", this);
 	apMinCDEdit = new QLineEdit(this);
 	apMinCDEdit->setFixedWidth(200);
 
@@ -113,40 +112,28 @@ FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
 	apAirfoilSelector = new AirfoilSelector(instPath,this);
 
 	// Setup Tables
-	apAirfoilTable = new TableT(2,4, ROW_DOMINANT, this);
+	apAirfoilTable = new InputTable(2,4, ROW_DOMINANT, this);
 	apAirfoilTable->setFixedWidth(420);
 
 	apAirfoilTable->GetView()->verticalHeader()->setDefaultSectionSize(20);
 	apAirfoilTable->GetView()->horizontalHeader()->setFixedHeight(20);
 
 	//Setup vertical headers for tables
-	QStringList headers;
-	headers << "alpha" << "CL" << "CD" << "CM";
+	QStringList headers({ "alpha", "CL", "CD", "CM" });
 	apAirfoilTable->GetModel()->setHeaders(headers);
 
 	//Add delegate
-	DoubleFieldDelegate* pDoubleDelegate = new DoubleFieldDelegate(4, 0.1,apAirfoilTable->GetView());
-	apAirfoilTable->GetView()->setItemDelegate(pDoubleDelegate);
+	apAirfoilTable->GetView()->setItemDelegate(new DoubleFieldDelegate(4,0.1,apAirfoilTable->GetView()));
 
 	// ** Create layouts **
-	apMainLayout = new QVBoxLayout;
-	apContentLayout = new QHBoxLayout;
-	apLineEditLayout = new QVBoxLayout;
-	apTableButtonLayout = new QHBoxLayout;
-	apTableLayout  = new QVBoxLayout;
-	apDialogButtonLayout = new QHBoxLayout;
-	apNotesLabelLayout = new QHBoxLayout;
-	apNotesLayout = new QVBoxLayout;
+	QBoxLayout* apMainLayout = new QVBoxLayout(this);
+	QBoxLayout* apContentLayout = new QHBoxLayout();
+	QBoxLayout* apLineEditLayout = new QVBoxLayout();
+	QBoxLayout* apTableButtonLayout = new QHBoxLayout();
+	QBoxLayout* apTableLayout  = new QVBoxLayout();
+	QBoxLayout* apDialogButtonLayout = new QHBoxLayout();
 
 	// ** Initialize layouts **
-	apNotesLabel->setAlignment(Qt::AlignTop);
-	apNotesLabelImage->setAlignment(Qt::AlignTop);
-	apNotesLabelLayout->addWidget(apNotesLabelImage);
-	apNotesLabelLayout->addWidget(apNotesLabel);
-	apNotesLabelLayout->addStretch(-1);
-	apNotesLayout->addLayout(apNotesLabelLayout);
-	apNotesLayout->addWidget(apNotesText);
-
 	apDialogButtonLayout->addWidget(apSaveButton);
 	apDialogButtonLayout->addWidget(apCloseButton);
 	apDialogButtonLayout->addWidget(apHelpButton);
@@ -160,25 +147,25 @@ FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
 
 	apTableLayout->addLayout(apTableButtonLayout);
 	apTableLayout->addWidget(apAirfoilTable);
-	apTableLayout->addLayout(apNotesLayout);
+	apTableLayout->addWidget(apNotes);
 
-	apLineEditLayout->addWidget(apNumLabel);
+	apLineEditLayout->addWidget(new QLabel("Number of airfoil tables in this file:"));
 	apLineEditLayout->addWidget(apNumEdit);
-	apLineEditLayout->addWidget(apIDLabel);
+	apLineEditLayout->addWidget(new QLabel("Table ID parameter:"));
 	apLineEditLayout->addWidget(apIDEdit);
-	apLineEditLayout->addWidget(apStallLabel);
+	apLineEditLayout->addWidget(new QLabel("Stall angle[deg]:"));
 	apLineEditLayout->addWidget(apStallEdit);
-	apLineEditLayout->addWidget(apCnAnglekLabel);
+	apLineEditLayout->addWidget(new QLabel("Zero C<sub>n</sub> angle of attack[deg]:"));
 	apLineEditLayout->addWidget(apCnAngleEdit);
-	apLineEditLayout->addWidget(apCnSlopeLabel);
+	apLineEditLayout->addWidget(new QLabel("C<sub>n</sub> slope for zero lift (dimensionless):"));
 	apLineEditLayout->addWidget(apCnSlopeEdit);
-	apLineEditLayout->addWidget(apCnExtrapolLabel);
+	apLineEditLayout->addWidget(new QLabel("C<sub>n</sub> extrapolated to value at positive stall angle of attack:"));
 	apLineEditLayout->addWidget(apCnExtrapolEdit);
-	apLineEditLayout->addWidget(apCnStallLabel);
+	apLineEditLayout->addWidget(new QLabel("C<sub>n</sub> at stall value for negative angle of attack:"));
 	apLineEditLayout->addWidget(apCnStallEdit);
-	apLineEditLayout->addWidget(apAttackLabel);
+	apLineEditLayout->addWidget(new QLabel("Angle of attack for minimum C<sub>D</sub>[deg]:"));
 	apLineEditLayout->addWidget(apAttackEdit);
-	apLineEditLayout->addWidget(apMinCDLabel);
+	apLineEditLayout->addWidget(new QLabel("Minimum C<sub>D</sub> value:"));
 	apLineEditLayout->addWidget(apMinCDEdit);
 	apLineEditLayout->addLayout(apDialogButtonLayout);
 
@@ -193,7 +180,6 @@ FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
 
 	apMainLayout->addWidget(apSplitter);
 	apMainLayout->setContentsMargins(0,0,0,10);
-	setLayout(apMainLayout);
 
 	connections();
 
@@ -203,7 +189,15 @@ FuiQtAirfoilDefinition::FuiQtAirfoilDefinition(QWidget* parent,
 
 void FuiQtAirfoilDefinition::showEvent(QShowEvent*)
 {
+  /* Note: Removing this refresh() call as it causes the GUI to hang after
+   * the upgrade to Qt 6.8, when the Airfoil browser dialog is launched.
+   * This does not happen on Linux with Qt 6.2.
+   * Not sure why, but the call seems unnecessary anyway as the dialog opens
+   * nicely without it. Therefore removing it as a temporary solution. Revist
+   * this when/if further work on Airfoils editing requires it. KMO 15.09.25 */
+#ifdef linux64
   apAirfoilSelector->refresh();
+#endif
   apAirfoilSelector->selectItem("");
 }
 
@@ -212,13 +206,13 @@ void FuiQtAirfoilDefinition::closeEvent(QCloseEvent* event)
 {
   // Check for unsaved airfoil, and pop-up save-message
   if (currentAirfoilTouched)
-    switch (QMessageBox::warning(this, tr("Closing"), tr("Do you want to save changes to the current file?"),
+    switch (QMessageBox::warning(this, "Closing", "Do you want to save changes to the current file?",
 				 QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel)) {
     case QMessageBox::Cancel:
       event->ignore();
       return;
     case QMessageBox::Yes:
-      this->save(this->apAirfoilSelector->getCurrentItem());
+      this->saveAirfoil(apAirfoilSelector->getCurrentItem());
     default:
       break;
     }
@@ -240,7 +234,7 @@ void FuiQtAirfoilDefinition::connections(){
 	QObject::connect(apCreateAirfoilButton, SIGNAL(clicked()), this, SLOT(createAirfoil()));
 
 	// Line edits
-	QObject::connect(apLineEditMapper, SIGNAL(mapped(int)), this, SLOT(lineEditChanged(int)));
+	QObject::connect(apLineEditMapper, SIGNAL(mappedInt(int)), this, SLOT(lineEditChanged(int)));
 
 	QObject::connect(apNumEdit, SIGNAL(textEdited(const QString &)), apLineEditMapper, SLOT(map()));
 	QObject::connect(apIDEdit, SIGNAL(textEdited(const QString &)), apLineEditMapper, SLOT(map()));
@@ -255,33 +249,29 @@ void FuiQtAirfoilDefinition::connections(){
 	QObject::connect(apAirfoilTable->GetModel(), SIGNAL(dataChanged(const QModelIndex &, const QModelIndex &)), this, SLOT(currentModelChanged()));
 
 	// Selection model
-	QObject::connect( apAirfoilSelector->getComboBox(), SIGNAL(currentIndexChanged(const QString &)), this, SLOT(airfoilSelected()));
+	QObject::connect(apAirfoilSelector->getComboBox(), SIGNAL(currentTextChanged(const QString&)), this, SLOT(airfoilSelected()));
 }
 
-void FuiQtAirfoilDefinition::insertSegment(){
-	switch(apAirfoilTable->GetModel()->getTableOrdering()){
-	case ROW_DOMINANT:
-		apAirfoilTable->GetModel()->insertRow(apAirfoilTable->GetModel()->rowCount());
-		break;
-	default:
-		break;
-	}
+
+void FuiQtAirfoilDefinition::insertSegment()
+{
+  TableModel* model = apAirfoilTable->GetModel();
+  if (model->getTableOrdering() == ROW_DOMINANT)
+    model->insertRow(model->rowCount());
 }
 
-void FuiQtAirfoilDefinition::removeSegment(){
-	switch(apAirfoilTable->GetModel()->getTableOrdering()){
-	case ROW_DOMINANT:
-		apAirfoilTable->GetModel()->removeRow(apAirfoilTable->GetModel()->rowCount()-1);
-		break;
-	default:
-		break;
-	}
+
+void FuiQtAirfoilDefinition::removeSegment()
+{
+  TableModel* model = apAirfoilTable->GetModel();
+  if (model->getTableOrdering() == ROW_DOMINANT)
+    model->removeRow(model->rowCount()-1);
 }
 
 
 void FuiQtAirfoilDefinition::acceptClicked()
 {
-  this->save(apAirfoilSelector->getCurrentItem());
+  this->saveAirfoil(apAirfoilSelector->getCurrentItem());
 }
 
 
@@ -291,16 +281,13 @@ void FuiQtAirfoilDefinition::airfoilSelected()
 }
 
 
-void FuiQtAirfoilDefinition::setCurrentAirfoil(QString airfoilPath){
-	// Check if the current airfoil is unsaved, and pop-up save-message, before changing to new airfoil
-	if(currentAirfoilTouched){
-		int ret = QMessageBox::warning(this, tr("Closing"), tr("Do you want to save changes to the previous file?"),
-			QMessageBox::Yes | QMessageBox::No );
-
-		if(ret == QMessageBox::Yes){
-			save(currentAirfoil);
-		}
-	}
+void FuiQtAirfoilDefinition::setCurrentAirfoil(const QString& airfoilPath)
+{
+  // Check if the current airfoil is unsaved, and pop-up save-message, before changing to new airfoil
+  if (currentAirfoilTouched && QMessageBox::warning(this, "Closing",
+                                                    "Do you want to save changes to the previous file?",
+                                                    QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    this->saveAirfoil(currentAirfoil);
 
 	QFile file(airfoilPath);
 
@@ -435,21 +422,32 @@ void FuiQtAirfoilDefinition::createAirfoil(){
 		return;
 	}
 
-	QMessageBox::warning(this,tr("Could not create file!"), tr("The program was unable to create a new airfoil-file in the specified directory. Please try a different path"), QMessageBox::Ok);
+	QMessageBox::warning(this, "Could not create file!",
+                             "The program was unable to create a new airfoil-file in the specified directory. "
+                             "Please try a different path", QMessageBox::Ok);
 }
 
-bool FuiQtAirfoilDefinition::save(QString airfoilPath){
-	// Don't save if airfoil is a locked airfoil, or if it is not changed
+
+bool FuiQtAirfoilDefinition::saveAirfoil(const QString& airfoilPath)
+{
+  if (QFile::exists(airfoilPath))
+  {
+    // Don't save if airfoil is locked, or if it is unchanged
     bool readOnly = true;
     apAirfoilSelector->getModel()->itemIsReadOnly(readOnly,airfoilPath);
-	if (readOnly) return false; // Airfoil is locked, so don't save
+    if (readOnly) return false; // Airfoil is locked, so don't save
+  }
+  else
+  {
+    // Query for a new airfoil path
+    QString path = QFileDialog::getSaveFileName(this, "Save airfoil",
+	                                        airfoilPath, "Airfoil(*.dat)");
+    if (path.isEmpty() || path == airfoilPath)
+      return false; // Airfoil path was not changed, so don't save
 
-	if (!QFile::exists(airfoilPath)) {
-		QString filePath = QFileDialog::getSaveFileName(this, "Save airfoil", airfoilPath, "Airfoil(*.dat)");
-		if (filePath.isEmpty() || filePath == airfoilPath) return false; // Airfoil path was not changed, so don't save
-		if (!QFile::exists(filePath)) return false;
-		airfoilPath = filePath;
-	}
+    // Start over with the new path
+    return this->saveAirfoil(path);
+  }
 
 	// Save to file
 	QFile file(airfoilPath);
@@ -509,14 +507,8 @@ bool FuiQtAirfoilDefinition::save(QString airfoilPath){
 	return true;
 }
 
-void FuiQtAirfoilDefinition::lineEditChanged(int){
-	currentAirfoilTouched = true;
-	apSaveButton->setEnabled(true);
-}
-
 void FuiQtAirfoilDefinition::currentModelChanged(){
-	currentAirfoilTouched = true;
-	apSaveButton->setEnabled(true);
+  apSaveButton->setEnabled(currentAirfoilTouched = true);
 }
 
 void FuiQtAirfoilDefinition::help(){

@@ -27,6 +27,8 @@
 #include <QFileDialog>
 #include <QDir>
 
+#include <iostream>
+
 
 BladeSelector::BladeSelector(const std::string& dPath, QWidget* parent) : QWidget(parent)
 {
@@ -56,8 +58,8 @@ BladeSelector::BladeSelector(const std::string& dPath, QWidget* parent) : QWidge
   apPathField->hide();
 
   // Layouts
-  apMainLayout = new QHBoxLayout();
-  apButtonLayout = new QVBoxLayout();
+  QBoxLayout* apMainLayout = new QHBoxLayout(this);
+  QBoxLayout* apButtonLayout = new QVBoxLayout();
 
   apMainLayout->setContentsMargins(2, 0, 2, 0);
   apButtonLayout->setContentsMargins(2, 0, 2, 0);
@@ -70,7 +72,6 @@ BladeSelector::BladeSelector(const std::string& dPath, QWidget* parent) : QWidge
   apButtonLayout->addWidget(apAddLibButton, 0, Qt::AlignRight | Qt::AlignTop );
   apButtonLayout->addWidget(apRemoveLibButton, 0, Qt::AlignRight | Qt::AlignTop );
 
-  this->setLayout(apMainLayout);
   this->setMaximumHeight(200);
 
   // Connections
@@ -106,11 +107,33 @@ void BladeSelector::hideShow()
 }
 
 
+DataNode* BladeSelector::getCurrentNode() const
+{
+  void* ptr = apAvailableBladesView->currentIndex().internalPointer();
+  if (ptr) return static_cast<DataNode*>(ptr);
+
+  std::cerr <<"  ** BladeSelector: Internal pointer of current index is NULL"
+            << std::endl;
+  return NULL;
+}
+
+
+DataNode* BladeSelector::getNodeAt(int r, int c) const
+{
+  void* ptr = apBladeSelectionModel->index(r,c).internalPointer();
+  if (ptr) return static_cast<DataNode*>(ptr);
+
+  std::cerr <<"  ** BladeSelector: Internal pointer at ("
+            << r <<","<< c <<") is NULL"<< std::endl;
+  return NULL;
+}
+
+
 void BladeSelector::bladeSelected()
 {
   if (apAvailableBladesView->currentIndex().isValid())
-    apPathField->setText(static_cast<DataNode*>(apAvailableBladesView->currentIndex().internalPointer())->getParentNode()->getData(0).toString() +
-			 apBladeSelectionModel->data(apAvailableBladesView->currentIndex(), Qt::DisplayRole).toString());
+    apPathField->setText(this->getCurrentNode()->getParentNode()->getData(0).toString() +
+                         apBladeSelectionModel->data(apAvailableBladesView->currentIndex(), Qt::DisplayRole).toString());
   else
     apPathField->setText("No Blade Selected");
 }
@@ -118,29 +141,30 @@ void BladeSelector::bladeSelected()
 
 void BladeSelector::selectItem(const QString& value)
 {
-  int nNode = static_cast<DataNode*>(apBladeSelectionModel->index(0,0).internalPointer())->getParentNode()->subNodeCount();
+  DataNode* dNode = this->getNodeAt(0,0);
+  int nNode = dNode ? dNode->getParentNode()->subNodeCount() : 0;
   if (value == "")
   {
     for (int i = 0; i < nNode; i++)
-      if (static_cast<DataNode*>(apBladeSelectionModel->index(i,0).internalPointer())->subNodeCount() > 0)
+      if ((dNode = this->getNodeAt(i,0)) && dNode->subNodeCount() > 0)
       {
-	apAvailableBladesView->setCurrentIndex(apBladeSelectionModel->index(0,0,apBladeSelectionModel->index(i,0)));
-	this->bladeSelected();
-	return;
+        apAvailableBladesView->setCurrentIndex(apBladeSelectionModel->index(0,0,apBladeSelectionModel->index(i,0)));
+        this->bladeSelected();
+        return;
       }
   }
   else if (apBladeSelectionModel->index(0,0).isValid())
+  {
     for (int i = 0; i < nNode; i++)
-    {
-      DataNode* dNode = static_cast<DataNode*>(apBladeSelectionModel->index(i,0).internalPointer());
-      for (int j = 0; j < dNode->subNodeCount(); j++)
-        if (value == dNode->getData(0).toString() + dNode->subNode(j)->getData(0).toString())
-        {
-          apAvailableBladesView->setCurrentIndex(apBladeSelectionModel->index(j,0,apBladeSelectionModel->index(i,0)));
-          this->bladeSelected();
-          return;
-        }
-    }
+      if ((dNode = this->getNodeAt(i,0)))
+        for (int j = 0; j < dNode->subNodeCount(); j++)
+          if (value == dNode->getData(0).toString() + dNode->subNode(j)->getData(0).toString())
+          {
+            apAvailableBladesView->setCurrentIndex(apBladeSelectionModel->index(j,0,apBladeSelectionModel->index(i,0)));
+            this->bladeSelected();
+            return;
+          }
+  }
 }
 
 
@@ -199,9 +223,9 @@ void BladeSelector::removeLibrary()
 {
   // Removes the currently selected library
   if (apAvailableBladesView->currentIndex().parent() == apAvailableBladesView->rootIndex() &&
-      static_cast<DataNode*>(apBladeSelectionModel->index(0,0).internalPointer())->getParentNode()->subNodeCount() > 1)
+      this->getNodeAt(0,0)->getParentNode()->subNodeCount() > 1)
   {
-    if (static_cast<DataNode*>(apAvailableBladesView->currentIndex().internalPointer())->getData(0).toString() != propPath)
+    if (this->getCurrentNode()->getData(0).toString() != propPath)
     {
       apBladeSelectionModel->removeDirectory(apAvailableBladesView->currentIndex().row(), apAvailableBladesView->currentIndex().parent());
       emit(this->selectionModelChanged());
@@ -221,10 +245,11 @@ void BladeSelector::refresh()
   int i, numOfChildren = apBladeSelectionModel->rowCount(apAvailableBladesView->rootIndex());
   for (i = 0; i < numOfChildren; i++)
   {
-    QString path = (static_cast<DataNode*>( apBladeSelectionModel->index(i,0).internalPointer()))->getData(0).toString();
+    DataNode* dNode = this->getNodeAt(i,0);
+    QString path = dNode->getData(0).toString();
     path.resize(path.size()-1);//remove last slash
-    directories.push_back( path );
-    readOnlyStates.push_back(static_cast<DataNode*>(apBladeSelectionModel->index(i,0).internalPointer())->getData(1).toBool());
+    directories.push_back(path);
+    readOnlyStates.push_back(dNode->getData(1).toBool());
   }
 
   // remove all directories
@@ -232,7 +257,7 @@ void BladeSelector::refresh()
 
   // add all directories
   for (i = numOfChildren-1; i >= 0; i--)
-    apBladeSelectionModel->addDirectory(0, QString(directories.at(i)), readOnlyStates.at(i));
+    apBladeSelectionModel->addDirectory(0, directories.at(i), readOnlyStates.at(i));
 }
 
 

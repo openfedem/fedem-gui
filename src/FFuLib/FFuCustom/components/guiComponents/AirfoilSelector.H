@@ -16,15 +16,13 @@
 
 #include <QWidget>
 
-class QLabel;
-class QComboBox;
 class QRadioButton;
 class QPushButton;
 class QLineEdit;
-class QVBoxLayout;
-class QHBoxLayout;
+class QComboBox;
 class QAbstractItemView;
 class AirfoilSelectionModel;
+class DataNode;
 
 
 class AirfoilSelector : public QWidget
@@ -48,7 +46,6 @@ public:
   void refresh();
 
 private:
-  QLabel* apBanner;
   QComboBox* apAvailableAirfoilsPullDown;
   QRadioButton* apCustomFolderRadioButton;
   QRadioButton* apDefaultFolderRadioButton;
@@ -56,10 +53,6 @@ private:
   QLineEdit* apPathField;
 
   AirfoilSelectionModel* apAirfoilSelectionModel;
-
-  QVBoxLayout* apMainLayout;
-  QVBoxLayout* apButtonLayout;
-  QHBoxLayout* apFolderLayout;
 
   QString customFolder;
   QString standardFolder;
@@ -71,6 +64,9 @@ public slots:
 
 signals:
   void selectionModelChanged();
+
+private:
+  DataNode* getNodeAt(int r, int c) const;
 };
 
 #endif

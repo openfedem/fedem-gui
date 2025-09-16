@@ -10,6 +10,7 @@
  *  Created on: Jan 17, 2012
  *      Author: runarhr
  */
+
 #include <QMimeData>
 #include <QRegularExpressionValidator>
 
@@ -50,79 +51,64 @@ TableModel::~TableModel() {
 }
 
 
-int TableModel::rowCount(const QModelIndex &parent) const{
-    Q_UNUSED(parent);
-    switch(aOrder){
-    case ROW_DOMINANT:
-    	return apModelVector->size();
-		break;
-    case COLUMN_DOMINANT:
-    	if(apModelVector->size()){
-    		return apModelVector->at(0)->size();
-    	}
-    	else{
-    		return 0;
-    	}
-		break;
-    default:
-    	return 0;
-    }
+int TableModel::rowCount(const QModelIndex&) const
+{
+  switch (aOrder) {
+  case ROW_DOMINANT:
+    return apModelVector->size();
+  case COLUMN_DOMINANT:
+    if (apModelVector->size())
+      return apModelVector->at(0)->size();
+  }
+  return 0;
 }
 
-int TableModel::columnCount(const QModelIndex &parent) const{
-    Q_UNUSED(parent);
-    switch(aOrder){
-    case ROW_DOMINANT:
-    	if(apModelVector->size()){
-    		return apModelVector->at(0)->size();
-    	}
-    	else{
-    		return 0;
-    	}
-    	return 4;
-    	break;
-    case COLUMN_DOMINANT:
-    	return apModelVector->size(); break;
-    default:
-    	return 0;
-    }
+int TableModel::columnCount(const QModelIndex&) const
+{
+  switch (aOrder) {
+  case COLUMN_DOMINANT:
+    return apModelVector->size();
+  case ROW_DOMINANT:
+    if (apModelVector->size())
+      return apModelVector->at(0)->size();
+  }
+  return 0;
 }
 
-QVariant TableModel::data(const QModelIndex &index, int role) const{
-  	if (!index.isValid())
-        return QVariant();
-
-    if(role == Qt::SizeHintRole){
-    	return aCellSizeHint;
-    }
-
-    // Check if index is outside of model
-    if (index.row() >= rowCount() || index.column() >= columnCount()|| index.row() < 0 || index.column() < 0){
-        return QVariant();
-  	}
-
-  	// Handle roles
-    if (role == Qt::DisplayRole || role == Qt::EditRole) {
-    	switch(aOrder){
-    	case ROW_DOMINANT:
-			return apModelVector->at(index.row())->at(index.column()); break;
-    	case COLUMN_DOMINANT:
-    		return apModelVector->at(index.column())->at(index.row()); break;
-    	}
-    }
-    else if(role == Qt::TextAlignmentRole ){
-    	return QVariant(Qt::AlignRight);
-    }
-    else if(role == Qt::ToolTipRole) {
-    	switch(aOrder){
-    	case ROW_DOMINANT:
-			return apModelVector->at(index.row())->at(index.column()); break;
-    	case COLUMN_DOMINANT:
-    		return apModelVector->at(index.column())->at(index.row()); break;
-    	}
-    }
-
+QVariant TableModel::data(const QModelIndex& index, int role) const
+{
+  if (!index.isValid())
     return QVariant();
+
+  if (role == Qt::SizeHintRole)
+    return aCellSizeHint;
+
+  int irow = index.row();
+  int icol = index.column();
+  if (irow >= 0 && icol >= 0)
+    switch (role) {
+    case Qt::DisplayRole:
+    case Qt::EditRole:
+    case Qt::ToolTipRole:
+      switch (aOrder) {
+      case ROW_DOMINANT:
+        if (irow < apModelVector->size())
+          if (icol < apModelVector->at(irow)->size())
+            return apModelVector->at(irow)->at(icol);
+        break;
+      case COLUMN_DOMINANT:
+        if (icol < apModelVector->size())
+          if (irow < apModelVector->at(icol)->size())
+            return apModelVector->at(icol)->at(irow);
+        break;
+      }
+      break;
+
+    case Qt::TextAlignmentRole:
+      return QVariant(Qt::AlignRight);
+    }
+
+  return QVariant();
 }
 
 QVariant TableModel::headerData(int section, Qt::Orientation orientation, int role) const{

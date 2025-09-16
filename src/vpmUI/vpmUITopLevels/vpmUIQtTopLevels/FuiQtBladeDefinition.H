@@ -8,15 +8,6 @@
 #ifndef FUI_QT_BLADE_DEFINITION_H
 #define FUI_QT_BLADE_DEFINITION_H
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QCheckBox>
-#include <QComboBox>
-#include <QLineEdit>
-#include <QSignalMapper>
-
 #include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
 #include "vpmUI/vpmUITopLevels/FuiBladeDefinition.H"
 
@@ -25,18 +16,23 @@ class Blade;
 class BladeDrawer;
 class BladeSelector;
 class FileFieldDelegate;
+class QPushButton;
+class QCheckBox;
+class QComboBox;
+class QLineEdit;
+class QSignalMapper;
+class QTabWidget;
 
 
-class FuiQtBladeDefinition: public FFuQtTopLevelShell,
-		public FuiBladeDefinition {
-Q_OBJECT
+class FuiQtBladeDefinition : public FFuQtTopLevelShell,
+                             public FuiBladeDefinition
+{
+  Q_OBJECT
+
 public:
-	FuiQtBladeDefinition(QWidget* parent = 0,
-			int xpos =100, int ypos =100,
-			int width=100, int height=100,
-			const char* title= "Fedem",
-			const char* name = "FuiQtBladeDefinition");
-	~FuiQtBladeDefinition();
+  FuiQtBladeDefinition(int xpos, int ypos, int width, int height,
+                       const char* title, const char* name);
+  ~FuiQtBladeDefinition();
 
 private:
 	//**********Widgets**********
@@ -44,12 +40,7 @@ private:
 	BladeDrawer* apBladeDrawer;
 	QTabWidget* apTabWidget;
 
-	QLabel* apNameLabel;
 	QLineEdit* apNameEdit;
-
-	QLabel* apNotesLabel;
-	QLabel* apNotesLabelImage;
-	QLabel* apNotesText;
 
 	BladeSelector* apBladeSelector;
 
@@ -68,18 +59,6 @@ private:
 
 	QWidget* apStructureTab;
 
-	//**********Layouts**********
-	QVBoxLayout* apMainLayout;
-	QVBoxLayout* apStiffnessLayout;
-
-	QHBoxLayout* apViewLayout;
-	QHBoxLayout* apBladeSelectorLayout;
-	QHBoxLayout* apDialogButtonLayout;
-	QHBoxLayout* apCheckBoxLayout;
-
-	QHBoxLayout* apNotesLabelLayout;
-	QVBoxLayout* apNotesLayout;
-
 	InputTable* apAerodynamicTable;
 	InputTable* apStructureTable;
 
@@ -95,10 +74,9 @@ private:
 	bool saveBlade(Blade* blade);
 	void resolveAirfoils(Blade* pBlade);
 
-	void showEvent ( QShowEvent * pEvent );
-	void closeEvent ( QCloseEvent * pEvent );
-
-	virtual void setSensitivity(bool) {}
+  virtual void showEvent(QShowEvent*);
+  virtual void closeEvent(QCloseEvent* event);
+  virtual void setSensitivity(bool) {}
 
 public slots:
 	void initializeBlades();

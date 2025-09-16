@@ -8,8 +8,7 @@
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtTurbWind.H"
 #include "vpmUI/Fui.H"
 #include "vpmUI/Pixmaps/turbWind.xpm"
-
-extern const char* info_xpm[];
+#include "FFuLib/FFuQtComponents/FFuQtLabel.H"
 
 #include <QStandardPaths>
 #include <QComboBox>
@@ -117,20 +116,9 @@ FuiQtTurbWind::FuiQtTurbWind(int xpos, int ypos, int width, int height,
   cmbIECturbc->setGeometry(100, 200, 126, 22);
   cmbIECturbc->setEditable(true);
 
-  label = new QLabel(frmTurbSpc);
-  label->setObjectName("labInfoA1");
-  label->setGeometry(10, 229, 21, 16);
-  label->setPixmap(QPixmap(info_xpm));
-  label = new QLabel(frmTurbSpc);
-  label->setObjectName("labInfoA2");
-  label->setGeometry(30, 231, 46, 13);
-  label->setText("<b>Note</b>");
-
-  QLabel* labInfoA3 = new QLabel(frmTurbSpc);
+  FFuQtNotes* labInfoA3 = new FFuQtNotes(frmTurbSpc);
   labInfoA3->setObjectName("labInfoA3");
-  labInfoA3->setGeometry(10, 244, 231, 65);
-  labInfoA3->setAlignment(Qt::AlignJustify | Qt::AlignVCenter);
-  labInfoA3->setWordWrap(true);
+  labInfoA3->setGeometry(10, 230, 245, 90);
 
   QGroupBox* frmGenerate = new QGroupBox(this);
   frmGenerate->setObjectName("frmGenerate");
@@ -213,20 +201,9 @@ FuiQtTurbWind::FuiQtTurbWind(int xpos, int ypos, int width, int height,
   btnHelp->setObjectName("btnHelp");
   btnHelp->setGeometry(480, 410, 91, 26);
 
-  label = new QLabel(this);
-  label->setObjectName("labInfoB1");
-  label->setGeometry(280, 332, 21, 16);
-  label->setPixmap(QPixmap(info_xpm));
-  label = new QLabel(this);
-  label->setObjectName("labInfoB2");
-  label->setGeometry(300, 334, 46, 13);
-  label->setText("<b>Note</b>");
-
-  QLabel* labInfoB3 = new QLabel(this);
+  FFuQtNotes* labInfoB3 = new FFuQtNotes(this);
   labInfoB3->setObjectName("labInfoB3");
-  labInfoB3->setGeometry(280, 347, 301, 65);
-  labInfoB3->setAlignment(Qt::AlignJustify | Qt::AlignVCenter);
-  labInfoB3->setWordWrap(false);
+  labInfoB3->setGeometry(280, 333, 300, 90);
 
   textEdit = new QTextEdit(this);
   textEdit->setObjectName("textEdit");
@@ -290,7 +267,7 @@ FuiQtTurbWind::FuiQtTurbWind(int xpos, int ypos, int width, int height,
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Please fill in the fields above before generating a wind file.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">Fill in the fields above before generating a wind file.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">- The template file is copied and filled in by this tool.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">- The output folder receives all output from the tool.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:8pt;\">- Additional parameters are available in the template file.</span></p>\n"
