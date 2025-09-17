@@ -9,7 +9,11 @@ set ( LIB_ID vpmDisplay )
 
 # Dependencies and system libraries
 
-find_package ( Qt6 REQUIRED COMPONENTS Widgets Core OpenGL )
+if ( WIN )
+  find_package ( Qt6 REQUIRED COMPONENTS Widgets Core OpenGL OpenGLWidgets )
+else ( WIN )
+  find_package ( Qt6 REQUIRED COMPONENTS Widgets Core OpenGL )
+endif ( WIN )
 
 if ( WIN )
   set ( SDK_ROOT "C:/Program Files (x86)/Windows Kits/10/Lib" )
