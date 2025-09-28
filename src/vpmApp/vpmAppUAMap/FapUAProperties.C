@@ -923,6 +923,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myLinkValues.coordSysOption = item->myCSOption.getValue();
       pv->myLinkValues.centripOption  = item->myCentripOption.getValue();
       pv->myLinkValues.recoveryOption = item->recoveryDuringSolve.getValue();
+      pv->myLinkValues.ignoreRecovery = item->ignoreInRecovery.getValue();
       if (item->hasStrainRosettes()) pv->myLinkValues.recoveryOption += 10;
       pv->myLinkValues.modelFilePath += FFaFilePath::getPathSeparator();
       if (FapLicenseManager::hasFeature("FA-EXR")) {
@@ -2884,6 +2885,8 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
         item->myCentripOption.setValue((FmPart::CentripOption)pv->myLinkValues.centripOption);
         if (selectedTab < 0 || !isGenPart)
           item->recoveryDuringSolve.setValue(pv->myLinkValues.recoveryOption);
+        if (!isGenPart)
+          item->ignoreInRecovery.setValue(pv->myLinkValues.ignoreRecovery);
       }
       if (selectedTab < 0 && pv->myLinkValues.extResSwitch >= 0) {
         item->useExternalResFile.setValue(pv->myLinkValues.extResSwitch);

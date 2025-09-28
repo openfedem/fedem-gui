@@ -102,6 +102,7 @@ struct FuiLinkValues
   int    coordSysOption = 0;
   int    centripOption = 0;
   int    recoveryOption = 0;
+  bool   ignoreRecovery = false;
   char   extResSwitch = false;
   std::string extResFileName;
   std::string modelFilePath;
@@ -477,6 +478,7 @@ protected:
 
   FFuToggleButton* recoverStressToggle;
   FFuToggleButton* recoverGageToggle;
+  FFuToggleButton* ignoreRecoveryToggle;
 
   FFuToggleButton*    extResToggle;
   FFuFileBrowseField* extResField;

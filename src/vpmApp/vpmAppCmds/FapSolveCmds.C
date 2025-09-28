@@ -454,11 +454,16 @@ bool FapSolveCmds::solveAll(bool prepareForBatchOnly)
   if (doStressRecovery(analysis,true))
     for (FmPart* part : allParts)
     {
-      proc = new FapStressExpander(part,event,prepareForBatchOnly,last);
-      if (!last && analysis->autoStressVTFExport.getValue())
-        vtfFile = proc->eventName(analysis->stressVTFname.getValue());
-      FapSolutionProcessManager::instance()->pushSolverProcess(proc);
-      last = false;
+      if (part->ignoreInRecovery.getValue())
+        ListUI <<"===> Skipping recovery for "<< part->getIdString(true) <<"\n";
+      else
+      {
+        proc = new FapStressExpander(part,event,prepareForBatchOnly,last);
+        if (!last && analysis->autoStressVTFExport.getValue())
+          vtfFile = proc->eventName(analysis->stressVTFname.getValue());
+        FapSolutionProcessManager::instance()->pushSolverProcess(proc);
+        last = false;
+      }
     }
 
   if (!vtfFile.empty())
@@ -541,12 +546,17 @@ void FapSolveCmds::solveEvents()
   if (doStressRecovery(analysis,true))
     for (FmPart* part : allParts)
     {
-      for (FmSimulationEvent* event : allEvents)
+      if (part->ignoreInRecovery.getValue())
+        ListUI <<"===> Skipping recovery for "<< part->getIdString(true) <<"\n";
+      else
       {
-        proc = new FapStressExpander(part,event,false,last);
-        FapSolutionProcessManager::instance()->pushSolverProcess(proc);
+        for (FmSimulationEvent* event : allEvents)
+        {
+          proc = new FapStressExpander(part,event,false,last);
+          FapSolutionProcessManager::instance()->pushSolverProcess(proc);
+        }
+        last = false;
       }
-      last = false;
     }
 
   if (!last && analysis->autoStressVTFExport.getValue())
@@ -666,13 +676,16 @@ bool FapSolveCmds::solveStress(bool prepareForBatchOnly)
   FmDB::getFEParts(allParts,true);
 
   for (FmPart* part : allParts)
-  {
-    proc = new FapStressExpander(part,event,prepareForBatchOnly,last);
-    if (last && analysis->autoStressVTFExport.getValue())
-      vtfFile = proc->eventName(analysis->stressVTFname.getValue());
-    FapSolutionProcessManager::instance()->pushSolverProcess(proc);
-    last = false;
-  }
+    if (part->ignoreInRecovery.getValue())
+      ListUI <<"===> Skipping recovery for "<< part->getIdString(true) <<"\n";
+    else
+    {
+      proc = new FapStressExpander(part,event,prepareForBatchOnly,last);
+      if (last && analysis->autoStressVTFExport.getValue())
+        vtfFile = proc->eventName(analysis->stressVTFname.getValue());
+      FapSolutionProcessManager::instance()->pushSolverProcess(proc);
+      last = false;
+    }
 
   if (!vtfFile.empty())
     // Create VTF-file for stress results

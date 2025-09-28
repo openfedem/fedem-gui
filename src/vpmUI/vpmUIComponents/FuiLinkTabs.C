@@ -566,7 +566,6 @@ void FuiGenericPartMassSheet::updateSensitivity()
   this->materialField->setSensitivity(IAmSensitive && this->calculateMassPropGeoBtn->getValue());
 
   if (this->calculateMassPropExplicitBtn->getValue()) {
-
     this->inertiaRefMenu->setSensitivity(IAmSensitive);
     this->massField->setSensitivity(IAmSensitive);
     this->inertias[IXX]->setSensitivity(IAmSensitive);
@@ -906,6 +905,8 @@ void FuiAdvancedLinkOptsSheet::initWidgets()
   this->recoverStressToggle->setToggleCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onOptionToggled,bool));
   this->recoverGageToggle->setLabel("Perform strain rosette recovery during dynamics simulation");
   this->recoverGageToggle->setToggleCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onOptionToggled,bool));
+  this->ignoreRecoveryToggle->setLabel("Skip stress recovery for this part");
+  this->ignoreRecoveryToggle->setToggleCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onOptionToggled,bool));
 
   this->extResToggle->setLabel("Import residual stresses from external file:");
   this->extResToggle->setToggleCB(FFaDynCB1M(FuiAdvancedLinkOptsSheet,this,onExtResToggeled,bool));
@@ -931,8 +932,10 @@ void FuiAdvancedLinkOptsSheet::setValues(const FuiLinkValues& values)
   this->centripOptionMenu->selectOption(values.centripOption);
   this->recoverStressToggle->setValue(values.recoveryOption%2 > 0);
   this->recoverGageToggle->setValue(values.recoveryOption%10 >= 2);
+  this->ignoreRecoveryToggle->setValue(values.ignoreRecovery);
   this->recoverStressToggle->setSensitivity(IAmSensitive && ICanRecover > 0);
   this->recoverGageToggle->setSensitivity(IAmSensitive && ICanRecover > 1);
+  this->ignoreRecoveryToggle->setSensitivity(IAmSensitive && ICanRecover > 0);
 
   this->extResToggle->setValue(values.extResSwitch > 0);
   this->extResField->setAbsToRelPath(values.modelFilePath);
@@ -956,6 +959,7 @@ void FuiAdvancedLinkOptsSheet::getValues(FuiLinkValues& v)
   v.centripOption = this->centripOptionMenu->getSelectedOption();
   v.recoveryOption = this->recoverStressToggle->getToggle() ? 1 : 0;
   if (this->recoverGageToggle->getToggle()) v.recoveryOption += 2;
+  v.ignoreRecovery = this->ignoreRecoveryToggle->getToggle();
 
   v.extResFileName = this->extResField->getFileName();
   if (extResToggle->isPoppedUp())
@@ -973,6 +977,7 @@ void FuiAdvancedLinkOptsSheet::setSensitivity(bool s)
   this->centripOptionMenu->setSensitivity(s);
   this->recoverStressToggle->setSensitivity(s && ICanRecover > 0);
   this->recoverGageToggle->setSensitivity(s && ICanRecover > 1);
+  this->ignoreRecoveryToggle->setSensitivity(s && ICanRecover > 0);
 }
 
 
