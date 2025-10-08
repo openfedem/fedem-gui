@@ -24,6 +24,7 @@
 
 class SoState;
 class SoGLRenderAction;
+class FaVec3;
 
 #ifdef win32
 #include <SoWinLeaveScope.h>
@@ -39,13 +40,13 @@ public:
 
   Fd2DPoints();
 
-  // Dummy overloading of write() to avoid any output to file.
-  virtual void write(SoWriteAction *writeAction);
+  // Override write() to avoid any output when this node is writing itself.
+  void write(SoWriteAction*) override {}
 
-  long addPoint(SbVec3f position);
-  void movePoint(long id, SbVec3f position);
+  long addPoint(const FaVec3& position);
+  void movePoint(long id, const FaVec3& position);
   void removePoint(long id);
-  void removeAllPoints(void);
+  void removeAllPoints();
   void changeForgrColor(SbColor newcol);
   void changeBckgrColor(SbColor newcol);
 
@@ -69,7 +70,6 @@ private:
   float backgrf[3];
   unsigned char backgr[3], foregr[3];
 };
-
 
 #ifdef win32
 #include <SoWinEnterScope.h>

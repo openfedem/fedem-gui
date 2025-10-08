@@ -7,39 +7,70 @@
 
 #include "vpmDisplay/FdPickedPoints.H"
 #include "vpmDisplay/Fd2DPoints.H"
-#include "vpmDisplay/FdConverter.H"
+#include "FFaLib/FFaAlgebra/FFaMat34.H"
+#include "FFaLib/FFaAlgebra/FFaVec3.H"
+#include <map>
 
 
-Fd2DPoints* FdPickedPoints::pointHighlighter = NULL;
+namespace
+{
+  using FdInts = std::pair<int,long int>;
+  using FdNode = FdPickedPoints::FdNode;
 
-std::vector<FdPickedPoints::EditablePickedPoint> FdPickedPoints::ourEditablePPoints;
+  struct EditablePickedPoint
+  {
+    long int highlightId = -1;
+    FaVec3   globPoint;
+    FaMat34  objectToWorldMatrix;
+    FaMat34  worldToObjectMatrix;
+  };
 
-std::vector<FdInts> FdPickedPoints::ourSelectedNodes; // NodeID, HighlightID
-std::map<int,FdNode> FdPickedPoints::ourNodeSet; // NodeID, HighlightID, globPos
+  // Picked points, used when creating and moving objects:
+  std::vector<EditablePickedPoint> ourEditablePPoints;
+
+  std::vector<FdInts>  ourSelectedNodes; // NodeID, HighlightID
+  std::map<int,FdNode> ourNodeSet;       // NodeID, HighlightID, globPos
+
+  Fd2DPoints* ourHighlighter = NULL;
+}
 
 
 void FdPickedPoints::init()
 {
-  pointHighlighter = new Fd2DPoints();
-  pointHighlighter->changeForgrColor(SbColor(0.5f, 0.5f, 0.5f));
-  pointHighlighter->changeBckgrColor(SbColor(1.0f, 1.0f, 1.0f));
-  pointHighlighter->scale.setValue(1);
-  FdPickedPoints::resetPPs();
+  // Set up the point highlight node
+  ourHighlighter = new Fd2DPoints();
+  ourHighlighter->changeForgrColor(SbColor(0.5f, 0.5f, 0.5f));
+  ourHighlighter->changeBckgrColor(SbColor(1.0f, 1.0f, 1.0f));
+  ourHighlighter->scale.setValue(1);
+
+  resetPPs();
 }
 
 
-long FdPickedPoints::add2DPoint(const FaVec3& point)
+SoNode* FdPickedPoints::getHighlighter()
 {
-  if (pointHighlighter)
-    return pointHighlighter->addPoint(FdConverter::toSbVec3f(point));
+  return ourHighlighter;
+}
+
+
+long int FdPickedPoints::add2DPoint(const FaVec3& point)
+{
+  if (ourHighlighter)
+    return ourHighlighter->addPoint(point);
   else
     return -1;
 }
 
-void FdPickedPoints::remove2DPoint(long id)
+void FdPickedPoints::remove2DPoint(long int id)
 {
-  if (pointHighlighter)
-    pointHighlighter->removePoint(id);
+  if (ourHighlighter && id > 0)
+    ourHighlighter->removePoint(id);
+}
+
+
+size_t FdPickedPoints::hasPickedPoints()
+{
+  return ourEditablePPoints.size();
 }
 
 
@@ -63,7 +94,7 @@ const FaVec3& FdPickedPoints::getSecondPickedPoint()
 }
 
 
-FaVec3 FdPickedPoints::getPickedPoint(unsigned int idx, bool global)
+FaVec3 FdPickedPoints::getPickedPoint(size_t idx, bool global)
 {
   if (idx >= ourEditablePPoints.size())
     return FaVec3();
@@ -80,61 +111,65 @@ void FdPickedPoints::getAllPickedPointsGlobal(std::vector<FaVec3>& globalPoints)
     globalPoints.push_back(ourEditablePPoints[i].globPoint);
 }
 
-void FdPickedPoints::setPickedPoint(unsigned int idx, bool global, const FaVec3& point)
+void FdPickedPoints::setPickedPoint(size_t idx, bool global, const FaVec3& point)
 {
   if (idx >= ourEditablePPoints.size())
     ourEditablePPoints.resize(idx+1);
 
-  FaVec3& globPoint = ourEditablePPoints[idx].globPoint;
+  EditablePickedPoint& newPoint = ourEditablePPoints[idx];
+  FaVec3& globPoint = newPoint.globPoint;
   if (global)
     globPoint = point;
   else
-    globPoint = ourEditablePPoints[idx].objectToWorldMatrix * point;
+    globPoint = newPoint.objectToWorldMatrix * point;
 
-  if (pointHighlighter)
+  if (ourHighlighter)
   {
-    if (ourEditablePPoints[idx].highlightId == -1)
-      ourEditablePPoints[idx].highlightId = pointHighlighter->addPoint(FdConverter::toSbVec3f(globPoint));
+    if (newPoint.highlightId == -1)
+      newPoint.highlightId = ourHighlighter->addPoint(globPoint);
     else
-      pointHighlighter->movePoint(ourEditablePPoints[idx].highlightId, FdConverter::toSbVec3f(globPoint));
+      ourHighlighter->movePoint(newPoint.highlightId,globPoint);
   }
 }
 
 
-void FdPickedPoints::setPP(unsigned int idx, const FaVec3& point, const FaMat34& objToWorld)
+void FdPickedPoints::setPP(size_t idx, const FaVec3& point, const FaMat34& objToWorld)
 {
   if (idx >= ourEditablePPoints.size())
     ourEditablePPoints.resize(idx+1);
 
-  ourEditablePPoints[idx].globPoint = point;
-  ourEditablePPoints[idx].objectToWorldMatrix = objToWorld;
-  for (int i = 0; i < 3; i++)
-    ourEditablePPoints[idx].objectToWorldMatrix[i].normalize();
-  ourEditablePPoints[idx].worldToObjectMatrix = ourEditablePPoints[idx].objectToWorldMatrix.inverse();
+  EditablePickedPoint& newPoint = ourEditablePPoints[idx];
 
-  if (pointHighlighter)
+  newPoint.globPoint = point;
+  newPoint.objectToWorldMatrix = objToWorld;
+  for (int i = 0; i < 3; i++)
+    newPoint.objectToWorldMatrix[i].normalize();
+  newPoint.worldToObjectMatrix = newPoint.objectToWorldMatrix.inverse();
+
+  if (ourHighlighter)
   {
-    if (ourEditablePPoints[idx].highlightId == -1)
-      ourEditablePPoints[idx].highlightId = pointHighlighter->addPoint(FdConverter::toSbVec3f(point));
+    if (newPoint.highlightId == -1)
+      newPoint.highlightId = ourHighlighter->addPoint(point);
     else
-      pointHighlighter->movePoint(ourEditablePPoints[idx].highlightId, FdConverter::toSbVec3f(point));
+      ourHighlighter->movePoint(newPoint.highlightId,point);
   }
 }
 
-void FdPickedPoints::removePP(unsigned int idx)
+
+void FdPickedPoints::delPP(size_t idx)
 {
   if (idx >= ourEditablePPoints.size()) return;
 
-  if (pointHighlighter && ourEditablePPoints[idx].highlightId != -1)
-    pointHighlighter->removePoint(ourEditablePPoints[idx].highlightId);
+  remove2DPoint(ourEditablePPoints[idx].highlightId);
 
   ourEditablePPoints[idx] = EditablePickedPoint();
 }
 
+
 void FdPickedPoints::resetPPs()
 {
-  if (pointHighlighter)
-    pointHighlighter->removeAllPoints();
+  if (ourHighlighter)
+    ourHighlighter->removeAllPoints();
 
   ourEditablePPoints.clear();
 }
@@ -144,15 +179,14 @@ void FdPickedPoints::resetPPs()
   Highlights and stores the node numbers for the strain gage command.
 */
 
-void FdPickedPoints::selectNode(unsigned int number, int nodeID, const FaVec3& worldNodePos)
+void FdPickedPoints::selectNode(size_t number, int nodeID, const FaVec3& worldNodePos)
 {
-  if (number >= ourSelectedNodes.size())
-    ourSelectedNodes.resize(number+1,std::make_pair(-1,-1));
+  if (number < ourSelectedNodes.size())
+    remove2DPoint(ourSelectedNodes[number].second);
+  else
+    ourSelectedNodes.resize(number+1, { -1, -1 });
 
-  if (ourSelectedNodes[number].second != -1)
-    FdPickedPoints::remove2DPoint(ourSelectedNodes[number].second);
-
-  ourSelectedNodes[number] = std::make_pair(nodeID,FdPickedPoints::add2DPoint(worldNodePos));
+  ourSelectedNodes[number] = { nodeID, add2DPoint(worldNodePos) };
 }
 
 /*!
@@ -164,17 +198,21 @@ void FdPickedPoints::deselectNode(int number)
 {
   if (number < 0)
   {
-    for (size_t i = 0; i < ourSelectedNodes.size(); i++)
-      if (ourSelectedNodes[i].second != -1)
-        FdPickedPoints::remove2DPoint(ourSelectedNodes[i].second);
+    for (const FdInts& node : ourSelectedNodes)
+      remove2DPoint(node.second);
     ourSelectedNodes.clear();
   }
-  else if (number < (int)ourSelectedNodes.size())
+  else if (number < static_cast<int>(ourSelectedNodes.size()))
   {
-    if (ourSelectedNodes[number].second != -1)
-      FdPickedPoints::remove2DPoint(ourSelectedNodes[number].second);
-    ourSelectedNodes[number] = std::make_pair(-1,-1);
+    remove2DPoint(ourSelectedNodes[number].second);
+    ourSelectedNodes[number] = { -1, -1 };
   }
+}
+
+
+int FdPickedPoints::getSelectedNode()
+{
+  return ourSelectedNodes.empty() ? -1 : ourSelectedNodes.front().first;
 }
 
 
@@ -198,7 +236,8 @@ std::vector<int> FdPickedPoints::getSelectedNodes()
   Returns whether the node now is a part of the selection.
 */
 
-bool FdPickedPoints::selectNodeSet(int nodeID, const FaVec3& worldNodePos, int selectionType)
+bool FdPickedPoints::selectNodeSet(int nodeID, const FaVec3& worldNodePos,
+                                   int selectionType)
 {
   std::map<int,FdNode>::iterator it = ourNodeSet.find(nodeID);
   if (it != ourNodeSet.end())
@@ -207,13 +246,13 @@ bool FdPickedPoints::selectNodeSet(int nodeID, const FaVec3& worldNodePos, int s
     // Deselect if we are toggle or removing from selection, else nothing.
     if (selectionType == TOGGLE_SELECT || selectionType == REMOVE_SELECT)
     {
-      FdPickedPoints::remove2DPoint(it->second.first);
+      remove2DPoint(it->second.first);
       ourNodeSet.erase(it);
       return false;
     }
   }
   else if (selectionType != REMOVE_SELECT)
-    ourNodeSet[nodeID] = std::make_pair(FdPickedPoints::add2DPoint(worldNodePos),worldNodePos);
+    ourNodeSet[nodeID] = { add2DPoint(worldNodePos), worldNodePos };
   else
     return false;
 
@@ -222,9 +261,8 @@ bool FdPickedPoints::selectNodeSet(int nodeID, const FaVec3& worldNodePos, int s
 
 void FdPickedPoints::clearNodeSet()
 {
-  std::map<int,FdNode>::const_iterator it;
-  for (it = ourNodeSet.begin(); it != ourNodeSet.end(); ++it)
-    FdPickedPoints::remove2DPoint(it->second.first);
+  for (const std::pair<const int,FdNode>& node : ourNodeSet)
+    remove2DPoint(node.second.first);
 
   ourNodeSet.clear();
 }
@@ -232,8 +270,13 @@ void FdPickedPoints::clearNodeSet()
 void FdPickedPoints::getNodeSet(std::vector<FdNode>& nodeSet)
 {
   nodeSet.clear();
+  nodeSet.reserve(ourNodeSet.size());
 
-  std::map<int,FdNode>::const_iterator it;
-  for (it = ourNodeSet.begin(); it != ourNodeSet.end(); ++it)
-    nodeSet.push_back(std::make_pair(it->first,it->second.second));
+  for (const std::pair<const int,FdNode>& node : ourNodeSet)
+    nodeSet.emplace_back(node.first,node.second.second);
+}
+
+bool FdPickedPoints::hasNodeSet()
+{
+  return !ourNodeSet.empty();
 }
