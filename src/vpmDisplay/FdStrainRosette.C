@@ -78,7 +78,7 @@ bool FdStrainRosette::updateFdTopology(bool)
 
 bool FdStrainRosette::updateFdApperance()
 {
-  if (this->highlightRefCount < 1) // This test makes sure we do not
+  if (highlightRefCount < 1) // This test makes sure we do not
     // un-highlight something when it is supposed to be highlighted
     itsKit->setPart("appearance.material",FdSymbolDefs::getStrainRosetteMaterial());
 
@@ -89,9 +89,8 @@ bool FdStrainRosette::updateFdApperance()
 bool FdStrainRosette::updateFdCS()
 {
   // Set link relative transformation for symbols
-  bool rosetteOK = true;
   FmStrainRosette* fmRosette = static_cast<FmStrainRosette*>(itsFmOwner);
-  FaMat34 posMx = fmRosette->getSymbolPosMx(rosetteOK);
+  FaMat34 posMx = fmRosette->getSymbolPosMx();
 
   SoTransform* transLocal = new SoTransform;
   transLocal->setMatrix(FdConverter::toSbMatrix(posMx));
@@ -110,31 +109,25 @@ bool FdStrainRosette::updateFdCS()
 
 bool FdStrainRosette::updateFdDetails()
 {
-  FdSymbolKit * smallSymbol = 0;
-  FdSymbolKit * largeSymbol = 0;
+  FmStrainRosette* fmRosette = static_cast<FmStrainRosette*>(itsFmOwner);
 
-  FmStrainRosette* fmRosette = (FmStrainRosette*)(this->itsFmOwner);
-
-  SoCoordinate3 * coords = (SoCoordinate3*)this->itsKit->getPart("elmCoords", true);//SO_GET_PART(this->itsKit, "elmCoords", SoCoordinate3);
-  SoIndexedLineSet * shape = SO_GET_PART(this->itsKit, "elmShape", SoIndexedLineSet);
-
-  coords->point.deleteValues(0, -1);
-  if (fmRosette->numNodes.getValue() > 0)
-    coords->point.set1Value(0, FdConverter::toSbVec3f(fmRosette->nodePos1.getValue()));
-  if (fmRosette->numNodes.getValue() > 1)
-    coords->point.set1Value(1, FdConverter::toSbVec3f(fmRosette->nodePos2.getValue()));
-  if (fmRosette->numNodes.getValue() > 2)
-    coords->point.set1Value(2, FdConverter::toSbVec3f(fmRosette->nodePos3.getValue()));
-  if (fmRosette->numNodes.getValue() > 3)
-    coords->point.set1Value(3, FdConverter::toSbVec3f(fmRosette->nodePos4.getValue()));
+  SoCoordinate3* coords = (SoCoordinate3*)itsKit->getPart("elmCoords", true);
+  SoIndexedLineSet* shape = SO_GET_PART(itsKit, "elmShape", SoIndexedLineSet);
 
   int i;
+  coords->point.deleteValues(0,-1);
   shape->coordIndex.deleteValues(0,-1);
-  for (i = 0; i < fmRosette->numNodes.getValue(); ++i)
-    shape->coordIndex.set1Value(i, i);
+
+  for (i = 0; i < fmRosette->getNoNodes(); i++)
+  {
+    coords->point.set1Value(i,FdConverter::toSbVec3f(fmRosette->getNodePos(i)));
+    shape->coordIndex.set1Value(i,i);
+  }
   shape->coordIndex.set1Value(i,0);
   shape->coordIndex.set1Value(i+1,-1);
 
+  FdSymbolKit* smallSymbol = NULL;
+  FdSymbolKit* largeSymbol = NULL;
   switch (fmRosette->rosetteType.getValue())
     {
     case FmStrainRosette::SINGLE_GAGE:

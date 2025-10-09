@@ -171,8 +171,7 @@ void FapEditStrainRosetteDirCmd::eventCB(void*, SoEventCallback* eventCallbackNo
   // Lambda function displaying the proposed rosette direction vectors.
   auto&& showRosetteDirection = [](const FaVec3& p0, const FaVec3& p1)
   {
-    bool dummy;
-    FaMat34 rosT = ourStrainRosette->getGlobSymbolPosMx(dummy);
+    FaMat34 rosT = ourStrainRosette->getSymbolPosMx(true);
     ourDirection = p1 - p0;
     ourDirection -= (rosT[2] * ourDirection) * rosT[2];
     FdExtraGraphics::showDirection(rosT[3], ourDirection);

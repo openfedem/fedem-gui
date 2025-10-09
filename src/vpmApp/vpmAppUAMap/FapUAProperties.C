@@ -1265,15 +1265,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->myStrRosIsEditable = FpPM::isModelTouchable() && !FpRDBExtractorManager::instance()->hasResults(item);
 
-      IntVec nodes;
-      nodes.push_back(item->node1.getValue());
-      nodes.push_back(item->node2.getValue());
-      if (item->numNodes.getValue() > 2)
-        nodes.push_back(item->node3.getValue());
-      if (item->numNodes.getValue() > 3)
-        nodes.push_back(item->node4.getValue());
-
-      pv->myStrRosNodes = nodes;
+      FmPart* rosettePart = item->getTopology(pv->myStrRosNodes);
       pv->myStrRosAngle = item->angle.getValue() * 180.0/M_PI;
 
       const Strings& rosetteTypes = FmStrainRosette::getRosetteUINames();
@@ -1289,7 +1281,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       // Topology view:
 
-      this->addTopologyItem(pv->myTopology,item->rosetteLink);
+      this->addTopologyItem(pv->myTopology,rosettePart);
     }
 
   // Element Group

@@ -734,7 +734,7 @@ IStrainRosette* CaApplication::CreateStrainRosette(StrainRosetteType SRType,
   if (strainRosette == NULL)
     AfxThrowOleException(E_OUTOFMEMORY);
 
-  if (!strainRosette->setTopology(pCaPart->m_pGenPart,Node1,Node2,Node3,Node4))
+  if (!strainRosette->setTopology(pCaPart->m_pGenPart,{Node1,Node2,Node3,Node4}))
   {
     strainRosette->erase();
     AfxThrowOleException(E_INVALIDARG);
@@ -763,7 +763,7 @@ IStrainRosette* CaApplication::CreateStrainRosette(StrainRosetteType SRType,
     strainRosette->setUserDescription(std::string(CW2A(Desc.bstrVal)));
 
   strainRosette->onChanged();
-  strainRosette->syncWithFEModel();
+  strainRosette->syncWithFEModel(true);
   strainRosette->draw();
 
   pCaStrainRosette->m_pStrainRosette = strainRosette;

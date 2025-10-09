@@ -233,14 +233,14 @@ long CaStrainRosette::get_Node1()
 {
   CA_CHECK(m_pStrainRosette);
 
-  return m_pStrainRosette->node1.getValue();
+  return m_pStrainRosette->node[0].getValue();
 }
 
 void CaStrainRosette::put_Node1(long val)
 {
   CA_CHECK(m_pStrainRosette);
 
-  m_pStrainRosette->setNode(val,1);
+  m_pStrainRosette->setNode(val,0);
   m_pStrainRosette->onChanged();
   m_pStrainRosette->draw();
 }
@@ -249,14 +249,14 @@ long CaStrainRosette::get_Node2()
 {
   CA_CHECK(m_pStrainRosette);
 
-  return m_pStrainRosette->node2.getValue();
+  return m_pStrainRosette->node[1].getValue();
 }
 
 void CaStrainRosette::put_Node2(long val)
 {
   CA_CHECK(m_pStrainRosette);
 
-  m_pStrainRosette->setNode(val,2);
+  m_pStrainRosette->setNode(val,1);
   m_pStrainRosette->onChanged();
   m_pStrainRosette->draw();
 }
@@ -265,14 +265,14 @@ long CaStrainRosette::get_Node3()
 {
   CA_CHECK(m_pStrainRosette);
 
-  return m_pStrainRosette->node3.getValue();
+  return m_pStrainRosette->node[2].getValue();
 }
 
 void CaStrainRosette::put_Node3(long val)
 {
   CA_CHECK(m_pStrainRosette);
 
-  m_pStrainRosette->setNode(val,3);
+  m_pStrainRosette->setNode(val,2);
   m_pStrainRosette->onChanged();
   m_pStrainRosette->draw();
 }
@@ -281,14 +281,14 @@ long CaStrainRosette::get_Node4()
 {
   CA_CHECK(m_pStrainRosette);
 
-  return m_pStrainRosette->node4.getValue();
+  return m_pStrainRosette->node[3].getValue();
 }
 
 void CaStrainRosette::put_Node4(long val)
 {
   CA_CHECK(m_pStrainRosette);
 
-  m_pStrainRosette->setNode(val,4);
+  m_pStrainRosette->setNode(val,3);
   m_pStrainRosette->onChanged();
   m_pStrainRosette->draw();
 }

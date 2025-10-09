@@ -224,20 +224,9 @@ void FapEditStrainRosetteNodesCmd::eventCB(void*, SoEventCallback*) {}
 void FapEditStrainRosetteNodesCmd::setStrainRosetteNodes()
 {
 #ifdef USE_INVENTOR
-  ourStrainRosette->node1 = FdPickedPoints::getSelectedNode(0);
-  ourStrainRosette->node2 = FdPickedPoints::getSelectedNode(1);
-  ourStrainRosette->node3 = FdPickedPoints::getSelectedNode(2);
-  ourStrainRosette->node4 = FdPickedPoints::getSelectedNode(3);
-  ourStrainRosette->numNodes = ourStrainRosette->node4.getValue() > 0 ? 4 : 3;
+  ourStrainRosette->setTopology(NULL,FdPickedPoints::getSelectedNodes());
 #endif
-
-  // Invalidate node positions, making the node IDs count during syncronization
-  ourStrainRosette->nodePos1 = FaVec3();
-  ourStrainRosette->nodePos2 = FaVec3();
-  ourStrainRosette->nodePos3 = FaVec3();
-  ourStrainRosette->nodePos4 = FaVec3();
-
-  ourStrainRosette->syncWithFEModel();
+  ourStrainRosette->syncWithFEModel(true);
   ourStrainRosette->draw();
 
   FapUAProperties* uap = FapUAProperties::getPropertiesHandler();

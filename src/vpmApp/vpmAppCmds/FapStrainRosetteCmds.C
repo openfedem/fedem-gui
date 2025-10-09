@@ -199,19 +199,13 @@ void FapStrainRosetteCmds::done()
     case N_3_ACCEPTED:
     case N_4_SELECTED:
       ourCreatedStrainRosette = new FmStrainRosette();
-      ourCreatedStrainRosette->rosetteLink = ourRosettePart;
-      ourCreatedStrainRosette->rosetteType = FmStrainRosette::SINGLE_GAGE;
 #ifdef USE_INVENTOR
-      ourCreatedStrainRosette->numNodes = FdPickedPoints::numSelectedNodes();
-      ourCreatedStrainRosette->node1    = FdPickedPoints::getSelectedNode(0);
-      ourCreatedStrainRosette->node2    = FdPickedPoints::getSelectedNode(1);
-      ourCreatedStrainRosette->node3    = FdPickedPoints::getSelectedNode(2);
-      ourCreatedStrainRosette->node4    = FdPickedPoints::getSelectedNode(3);
+      ourCreatedStrainRosette->setTopology(ourRosettePart,
+                                           FdPickedPoints::getSelectedNodes());
 #endif
-      ourCreatedStrainRosette->angleOrigin = FmStrainRosette::LINK_VECTOR;
-      ourCreatedStrainRosette->angleOriginVector = ourDirection;
+      ourCreatedStrainRosette->angleOriginVector.setValue(ourDirection);
       ourCreatedStrainRosette->connect();
-      ourCreatedStrainRosette->syncWithFEModel();
+      ourCreatedStrainRosette->syncWithFEModel(true);
       ourCreatedStrainRosette->draw();
       FapStrainRosetteCmds::setState(START_DIRECTION);
       break;
@@ -263,8 +257,7 @@ void FapStrainRosetteCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
   // Lambda function displaying the proposed rosette direction vectors.
   auto&& showRosetteDirection = [](const FaVec3& p0, const FaVec3& p1)
   {
-    bool dummy;
-    FaMat34 rosT = ourCreatedStrainRosette->getGlobSymbolPosMx(dummy);
+    FaMat34 rosT = ourCreatedStrainRosette->getSymbolPosMx(true);
     ourDirection = p1 - p0;
     ourDirection -= (rosT[2] * ourDirection) * rosT[2];
     FdExtraGraphics::showDirection(rosT[3], ourDirection);
