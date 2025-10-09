@@ -331,13 +331,8 @@ void FdDB::start()
 
   FdDB::selectionRoot->setPickMatching(false);
 
-  // Set up point highlight node:
-  // Initialize static class to handle highlighting and changing of picked points
-  Fd2DPoints *phl = new Fd2DPoints;
-  phl->changeForgrColor(SbColor(0.5f, 0.5f, 0.5f));
-  phl->changeBckgrColor(SbColor(1.0f, 1.0f, 1.0f));
-  phl->scale.setValue(1);
-  FdPickedPoints::init(phl,FdDB::viewer);
+  // Initialize static class to handle changing of picked points
+  FdPickedPoints::init();
 
   // Make axis cross with g-vector
   FdDB::axisCross = new FdAxisCross;
@@ -408,7 +403,7 @@ void FdDB::start()
   FdDB::ourRoot->addChild(screenInfoSep);
   screenInfoSep->addChild(axisCross);
   screenInfoSep->addChild(animationInfo);
-  screenInfoSep->addChild(phl);
+  screenInfoSep->addChild(FdPickedPoints::getHighlighter());
   screenInfoSep->addChild(FdDB::demoWarning);
 #ifdef USE_SMALLCHANGE
   screenInfoSep->addChild(legend);
