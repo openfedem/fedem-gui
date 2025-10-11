@@ -14,8 +14,6 @@
 #include "vpmApp/vpmAppProcess/FapLinkReducer.H"
 #include "vpmApp/vpmAppCmds/FapFileCmds.H"
 #include "vpmApp/vpmAppCmds/FapStrainRosetteCmds.H"
-#include "vpmApp/vpmAppCmds/FapEditStrainRosetteNodesCmd.H"
-#include "vpmApp/vpmAppCmds/FapEditStrainRosetteDirCmd.H"
 #include "vpmApp/vpmAppProcess/FapSolutionProcessMgr.H"
 #include "vpmApp/vpmAppProcess/FapSimEventHandler.H"
 
@@ -135,8 +133,8 @@ FapUAProperties::FapUAProperties(FuiProperties* uic)
   pv.mySpringCharValues.yieldForceFieldMinButtonCB   = FFaDynCB1M(FapUAProperties, this, onQIFieldButtonCB, FuiQueryInputFieldValues&);
 
   pv.myFlipZCB         = FFaDynCB0S(FapStrainRosetteCmds::flipStrainRosetteZDirection);
-  pv.myEditNodesCB     = FFaDynCB0S(FapEditStrainRosetteNodesCmd::editStrainRosetteNodes);
-  pv.myEditDirectionCB = FFaDynCB0S(FapEditStrainRosetteDirCmd::editStrainRosetteDir);
+  pv.myEditNodesCB     = FFaDynCB0S([](){ FuiModes::setMode(FuiModes::EDITSTRAINROSETTENODES_MODE); });
+  pv.myEditDirectionCB = FFaDynCB0S([](){ FuiModes::setMode(FuiModes::EDITSTRAINROSETTEDIR_MODE); });
 
   pv.myLinkValues.linkMeshCB      = FFaDynCB1M(FapUAProperties, this, linkMeshCB, bool);
   pv.myLinkValues.linkChangeCB    = FFaDynCB0M(FapUAProperties, this, linkChangeCB);

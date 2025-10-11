@@ -9,8 +9,6 @@
 #include "vpmApp/vpmAppCmds/FapStrainRosetteCmds.H"
 #include "vpmApp/vpmAppCmds/FapGeneralSpiderCmds.H"
 #include "vpmApp/vpmAppCmds/FapCylinderSpiderCmds.H"
-#include "vpmApp/vpmAppCmds/FapEditStrainRosetteNodesCmd.H"
-#include "vpmApp/vpmAppCmds/FapEditStrainRosetteDirCmd.H"
 #include "vpmApp/vpmAppCmds/FapCreateSensorCmd.H"
 #include "vpmApp/vpmAppCmds/FapAddResProbeCmd.H"
 #include "vpmApp/vpmAppCmds/FapMoveToCenterCmds.H"

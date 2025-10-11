@@ -38,7 +38,6 @@ set ( COMPONENT_FILE_LIST  FapAddResProbeCmd FapAllignCSCmds
                            FapAnimationCmds FapCmdsBase
                            FapCreateSensorCmd FapCtrl3DObjCmds
                            FapCylinderSpiderCmds FapDBCreateCmds FapEditCmds
-                           FapEditStrainRosetteDirCmd FapEditStrainRosetteNodesCmd
                            FapExportCmds FapFileCmds FapFunctionCmds
                            FapGeneralSpiderCmds FapGraphCmds FapHelpCmds
                            FapLinkVisualCmds FapListViewCmds FapMainWinCmds
