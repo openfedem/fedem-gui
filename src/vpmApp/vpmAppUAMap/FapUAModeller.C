@@ -103,6 +103,13 @@ void FapUAModeller::init(FuiModeller* ui)
 }
 
 
+void FapUAModeller::setNodeChangedCB(const FFaDynCB1<int>& cb)
+{
+  if (ourPointUI)
+    ourPointUI->setNodeChangedCB(cb);
+}
+
+
 void FapUAModeller::updateMode()
 {
   switch (FuiModes::getMode())
@@ -271,7 +278,10 @@ void FapUAModeller::updateState(int newState)
 void FapUAModeller::cancel()
 {
   if (ourPointUI)
+  {
+    ourPointUI->setValue(-1);
     ourPointUI->popDown();
+  }
 }
 
 
@@ -298,5 +308,16 @@ void FapUAModeller::updatePointUI(int globalOnly, int idx)
 
   ourPointUI->setValue(point);
 #endif
+  ourPointUI->popUp();
+}
+
+
+void FapUAModeller::updateNodeUI(int nodeId, const FaVec3& nodePos)
+{
+  if (!ourPointUI) return;
+
+  ourPointUI->setLocal(true);
+  ourPointUI->setValue(nodePos);
+  ourPointUI->setValue(nodeId);
   ourPointUI->popUp();
 }

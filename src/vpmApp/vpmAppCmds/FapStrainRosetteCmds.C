@@ -6,16 +6,18 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmApp/vpmAppCmds/FapStrainRosetteCmds.H"
-#include "vpmApp/FapEventManager.H"
 #include "vpmApp/vpmAppUAMap/FapUAProperties.H"
+#include "vpmApp/vpmAppUAMap/FapUAModeller.H"
+#include "vpmApp/FapEventManager.H"
 
-#include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
 #include "vpmUI/Icons/FuiIconPixmaps.H"
-#include "vpmDB/FmStrainRosette.H"
+#include "FFuLib/FFuAuxClasses/FFuaCmdItem.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
+
+#include "vpmDB/FmStrainRosette.H"
 
 #ifdef USE_INVENTOR
 #include <Inventor/nodes/SoEventCallback.h>
@@ -29,7 +31,6 @@
 #include "vpmDisplay/FdExtraGraphics.H"
 #include "vpmDisplay/FdPickFilter.H"
 #include "vpmDisplay/FdPickedPoints.H"
-#include "vpmDisplay/FdFEModel.H"
 #include "vpmDisplay/FdPart.H"
 #include "vpmDisplay/FdConverter.H"
 #include "vpmDisplay/FdEvent.H"
@@ -68,6 +69,12 @@ namespace
     return dynamic_cast<FmStrainRosette*>(selectedItem);
   }
 
+  //! \brief Helper for global-to-local transformation.
+  FaVec3 toLocal(const FaVec3& X)
+  {
+    return ourFEPart ? ourFEPart->getGlobalCS().inverse() * X : X;
+  }
+
   //! \brief Updates \a ourState in the rosette creation process and sets tip.
   void setCreateRosetteState(State newState)
   {
@@ -87,6 +94,7 @@ namespace
         FdExtraGraphics::hideLine();
         FdExtraGraphics::hideDirection();
 #endif
+        FapUAModeller::updateNodeUI(0,FaVec3());
         Fui::tip("Select first node of the strain gage element");
         break;
       case N_1_SELECTED:
@@ -116,6 +124,7 @@ namespace
                  "or pick again to select a different node");
         break;
       case START_DIRECTION:
+        FapUAModeller::cancel();
         Fui::tip("Select a reference direction for the strain rosette "
                  "(select Points or Lines)");
         break;
@@ -225,6 +234,7 @@ namespace
             {
               // Select first node, and highlight it
               FdPickedPoints::selectNode(0,nodeID,worldNodePos);
+              FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
               setCreateRosetteState(N_1_SELECTED);
 
               // Store the associated FE Part
@@ -251,6 +261,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(1,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_2_SELECTED);
           }
           break;
@@ -260,6 +271,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(2,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_3_SELECTED);
           }
           break;
@@ -269,6 +281,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(3,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_4_SELECTED);
           }
           break;
@@ -398,6 +411,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(0,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_1_SELECTED);
           }
           break;
@@ -407,6 +421,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(1,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_2_SELECTED);
           }
           break;
@@ -416,6 +431,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(2,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_3_SELECTED);
           }
           break;
@@ -425,6 +441,7 @@ namespace
           if (FdPickFilter::findNodeHit(nodeID,worldNodePos,ppl,rosettePart))
           {
             FdPickedPoints::selectNode(3,nodeID,worldNodePos);
+            FapUAModeller::updateNodeUI(nodeID,toLocal(worldNodePos));
             setCreateRosetteState(N_4_SELECTED);
           }
           break;
@@ -440,6 +457,55 @@ namespace
     eventCallbackNode->setHandled();
   }
 #endif
+
+  //! \brief Call-back invoked when the user edits a node number field directly.
+  void editNodeCB(int nodeID)
+  {
+    if (!ourFEPart) return;
+
+    FaVec3 nodePos;
+    double* X = nodePos.getPt();
+    if (ourFEPart->getNodePos(nodeID,X,X+1,X+2))
+    {
+      ListUI <<" *** No node "<< nodeID <<" in "<< ourFEPart->getIdString()
+             <<".\n";
+      return;
+    }
+
+    switch (ourState)
+      {
+      case START:
+      case N_1_SELECTED:
+        FdPickedPoints::selectNode(0,nodeID,ourFEPart->getGlobalCS()*nodePos);
+        FapUAModeller::updateNodeUI(nodeID,nodePos);
+        setCreateRosetteState(N_1_SELECTED);
+        break;
+
+      case N_1_ACCEPTED:
+      case N_2_SELECTED:
+        FdPickedPoints::selectNode(1,nodeID,ourFEPart->getGlobalCS()*nodePos);
+        FapUAModeller::updateNodeUI(nodeID,nodePos);
+        setCreateRosetteState(N_2_SELECTED);
+        break;
+
+      case N_2_ACCEPTED:
+      case N_3_SELECTED:
+        FdPickedPoints::selectNode(2,nodeID,ourFEPart->getGlobalCS()*nodePos);
+        FapUAModeller::updateNodeUI(nodeID,nodePos);
+        setCreateRosetteState(N_3_SELECTED);
+        break;
+
+      case N_3_ACCEPTED:
+      case N_4_SELECTED:
+        FdPickedPoints::selectNode(3,nodeID,ourFEPart->getGlobalCS()*nodePos);
+        FapUAModeller::updateNodeUI(nodeID,nodePos);
+        setCreateRosetteState(N_4_SELECTED);
+        break;
+
+      default:
+        break;
+      }
+  }
 }
 
 
@@ -460,6 +526,7 @@ void FapStrainRosetteCmds::enterMode()
 #ifdef USE_INVENTOR
   FdEvent::addEventCB(createRosetteCB);
 #endif
+  FapUAModeller::setNodeChangedCB(FFaDynCB1S(editNodeCB,int));
   setCreateRosetteState(START);
 }
 
@@ -528,6 +595,7 @@ void FapStrainRosetteCmds::done()
       setCreateRosetteState(START);
       break;
     default:
+      FapUAModeller::cancel();
       FuiModes::cancel();
       break;
     }
@@ -613,6 +681,9 @@ void FapEditStrainRosetteNodesCmd::enterMode()
   ourState   = START;
   ourRosette = selectedStrainRosette();
   ourFEPart  = ourRosette->rosetteLink.getPointer();
+  FapUAModeller::setNodeChangedCB(FFaDynCB1S(editNodeCB,int));
+  FapUAModeller::updateNodeUI(ourRosette->node[0].getValue(),
+                              ourRosette->nodePos[0].getValue());
 }
 
 
@@ -637,12 +708,16 @@ void FapEditStrainRosetteNodesCmd::done()
     case N_1_SELECTED:
       Fui::tip("Select second node of the strain gage element");
       ourState = N_1_ACCEPTED;
+      FapUAModeller::updateNodeUI(ourRosette->node[1].getValue(),
+                                  ourRosette->nodePos[1].getValue());
       break;
     case N_1_ACCEPTED:
       break;
     case N_2_SELECTED:
       Fui::tip("Select third node of the strain gage element");
       ourState = N_2_ACCEPTED;
+      FapUAModeller::updateNodeUI(ourRosette->node[2].getValue(),
+                                  ourRosette->nodePos[2].getValue());
       break;
     case N_2_ACCEPTED:
       break;
@@ -650,6 +725,9 @@ void FapEditStrainRosetteNodesCmd::done()
       Fui::tip("Select fourth node of the strain gage element, "
                "or press Done to finish");
       ourState = N_3_ACCEPTED;
+      FapUAModeller::updateNodeUI(std::max(ourRosette->node[3].getValue(),0),
+                                  ourRosette->node[3].getValue() > 0 ?
+                                  ourRosette->nodePos[3].getValue() : FaVec3());
       break;
     case N_3_ACCEPTED:
     case N_4_SELECTED:
@@ -663,6 +741,7 @@ void FapEditStrainRosetteNodesCmd::done()
 
     default:
       FuiModes::cancel();
+      FapUAModeller::cancel();
       break;
     }
 }
