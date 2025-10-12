@@ -283,7 +283,7 @@ void FapUAModeller::updatePointUI(int globalOnly, int idx)
     whichPoint = idx;
 
   if (globalOnly > 0)
-    ourPointUI->setGlobalOnly();
+    ourPointUI->setGlobal(true);
   else if (globalOnly == 0)
     ourPointUI->setLocal();
 

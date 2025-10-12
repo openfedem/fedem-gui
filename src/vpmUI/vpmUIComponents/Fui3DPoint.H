@@ -8,12 +8,14 @@
 #ifndef FUI_3D_POINT_H
 #define FUI_3D_POINT_H
 
+#include <array>
+
 #include "FFuLib/FFuBase/FFuComponentBase.H"
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
-#include "FFaLib/FFaAlgebra/FFaVec3.H"
 
 class FFuIOField;
 class FFuOptionMenu;
+class FaVec3;
 
 
 /*!
@@ -22,43 +24,52 @@ class FFuOptionMenu;
 
 class Fui3DPoint : virtual public FFuComponentBase
 {
+  using DynCB0 = FFaDynCB1<int>;
+  using DynCB1 = FFaDynCB1<bool>;
+  using DynCB2 = FFaDynCB2<const FaVec3&,bool>;
+
 public:
+  Fui3DPoint() { myFields.fill(NULL); myRefMenu = NULL; }
+
   virtual void setSensitivity(bool sensitive);
+  virtual void showNodeField(int ID = -1) = 0;
 
   void setXvalue(double value);
   void setYvalue(double value);
   void setZvalue(double value);
   void setValue(double x, double y, double z);
-  void setValue(const FaVec3& X) { this->setValue(X[0],X[1],X[2]); }
+  void setValue(const FaVec3& X);
+  void setValue(int nodeNo);
 
   double getXvalue() const;
   double getYvalue() const;
   double getZvalue() const;
   FaVec3 getValue () const;
+  int    getNodeNo() const;
 
-  void setGlobal();
-  void setGlobalOnly();
-  void setLocal();
-  void enableLocal();
+  void setGlobal(bool globalOnly = false) { this->setCSRef(0,globalOnly); }
+  void setLocal(bool localOnly = false)   { this->setCSRef(1,localOnly); }
   bool isGlobal() const;
 
-  void setPointChangedCB(const FFaDynCB2<const FaVec3&,bool>& aDynCB);
-  void setRefChangedCB  (const FFaDynCB1<bool>&               aDynCB);
+  void setNodeChangedCB (const DynCB0& cb) { myNodeChangedCB = cb; }
+  void setRefChangedCB  (const DynCB1& cb) { myRefChangedCB = cb; }
+  void setPointChangedCB(const DynCB2& cb) { myPointChangedCB = cb; }
 
 protected:
   void init();
 
-  void callPointChangedCB(double d);
-  void callRefChangedCB(int choice);
-
-  FFuIOField*    myZField;
-  FFuIOField*    myYField;
-  FFuIOField*    myXField;
+  std::array<FFuIOField*,4> myFields;
   FFuOptionMenu* myRefMenu;
 
 private:
-  FFaDynCB2<const FaVec3&,bool> myPointChangedCB;
-  FFaDynCB1<bool>               myRefChangedCB;
+  void setCSRef(int cs, bool only);
+  void callNodeChangedCB(int);
+  void callRefChangedCB(int);
+  void callPointChangedCB(double);
+
+  DynCB0 myNodeChangedCB;
+  DynCB1 myRefChangedCB;
+  DynCB2 myPointChangedCB;
 };
 
 #endif

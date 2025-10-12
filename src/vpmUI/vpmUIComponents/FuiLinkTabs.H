@@ -205,8 +205,7 @@ public:
 protected:
   void initWidgets();
 
-  FFuLabelField* myFENodeField;
-  Fui3DPoint*    myNodePosition;
+  Fui3DPoint* myNodePosition;
 
 private:
   void onPosRefChanged(bool toGlobal);

@@ -16,38 +16,74 @@
 #include "FuiQt3DPoint.H"
 
 
-FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name, int refMenu)
+FuiQt3DPoint::FuiQt3DPoint(QWidget* parent, const char* name,
+                           int refMenu, bool nodeField)
   : FFuQtWidget(parent,name)
 {
-  myXField = new FFuQtIOField();
-  myYField = new FFuQtIOField();
-  myZField = new FFuQtIOField();
-  myRefMenu = refMenu ? new FFuQtOptionMenu() : NULL;
+  for (int i = 0; i < 3; i++)
+    myFields[i] = new FFuQtIOField();
+  if (nodeField)
+    myFields[3] = new FFuQtIOField();
+  if (refMenu)
+    myRefMenu = new FFuQtOptionMenu();
 
   this->init();
 
-  QWidget* qPoint = refMenu ? new QWidget() : this;
-  QGridLayout* gl = new QGridLayout(qPoint);
-  if (refMenu) gl->setContentsMargins(0,0,0,0);
+  QWidget* qPoint = this;
+  QBoxLayout* myLayout = NULL;
+  QGridLayout* gl = new QGridLayout();
+  if (refMenu || nodeField)
+  {
+    qPoint = new QWidget();
+    myLayout = new QVBoxLayout(this);
+    gl->setContentsMargins(0,0,0,0);
+  }
   gl->setHorizontalSpacing(20);
   gl->setVerticalSpacing(2);
-  gl->addWidget(new QLabel("X"),0,0);
-  gl->addWidget(new QLabel("Y"),1,0);
-  gl->addWidget(new QLabel("Z"),2,0);
-  gl->addWidget(myXField->getQtWidget(),0,1);
-  gl->addWidget(myYField->getQtWidget(),1,1);
-  gl->addWidget(myZField->getQtWidget(),2,1);
+  qPoint->setLayout(gl);
+
+  char label[2] = "X";
+  for (int i = 0; i < 3; i++, label[0]++)
+  {
+    gl->addWidget(new QLabel(label),i,0);
+    gl->addWidget(myFields[i]->getQtWidget(),i,1);
+  }
+
+  if (nodeField)
+  {
+    myNodeField = new QWidget();
+    QLayout* layout = new QHBoxLayout(myNodeField);
+    layout->setContentsMargins(0,0,0,0);
+    layout->addWidget(new QLabel("FE node"));
+    layout->addWidget(myFields[3]->getQtWidget());
+    if (refMenu == 1)
+      myLayout->setContentsMargins(0,0,0,0);
+    myLayout->addStretch(2);
+    myLayout->addWidget(myNodeField);
+  }
 
   if (refMenu)
   {
-    QLayout* layoutRef = new QHBoxLayout();
-    layoutRef->setContentsMargins(0,0,0,0);
-    layoutRef->addWidget(new QLabel("Reference"));
-    layoutRef->addWidget(myRefMenu->getQtWidget());
-    QBoxLayout* layout = new QVBoxLayout(this);
+    QLayout* layout = new QHBoxLayout();
+    layout->setContentsMargins(0,0,0,0);
+    layout->addWidget(new QLabel("Reference"));
+    layout->addWidget(myRefMenu->getQtWidget());
     if (refMenu == 1)
-      layout->setContentsMargins(0,0,0,0);
-    layout->addLayout(layoutRef);
-    layout->addWidget(qPoint);
+      myLayout->setContentsMargins(0,0,0,0);
+    myLayout->addStretch(3);
+    myLayout->addLayout(layout);
+    myLayout->addStretch(1);
   }
+
+  if (myLayout)
+    myLayout->addWidget(qPoint);
+}
+
+
+void FuiQt3DPoint::showNodeField(int ID)
+{
+  if (ID > 0)
+    myNodeField->show();
+  else if (ID < 0)
+    myNodeField->hide();
 }

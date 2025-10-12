@@ -40,7 +40,7 @@ FuiQtModeller::FuiQtModeller(QWidget* parent,
   : FFuQtMDIWindow(parent,xpos,ypos,width,height,title,name)
 {
   this->myPlayPanel = new FuiQtPlayPanel(this);
-  this->my3DpointUI = new FuiQt3DPoint(this,"XYZ",2);
+  this->my3DpointUI = new FuiQt3DPoint(this,"XYZ",2,true);
 #ifdef USE_INVENTOR
   this->myViewer = FdViewer::create(this);
 #else

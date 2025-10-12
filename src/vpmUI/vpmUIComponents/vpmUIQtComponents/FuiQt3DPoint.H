@@ -16,12 +16,17 @@ class FuiQt3DPoint : public FFuQtWidget, public Fui3DPoint
 {
 public:
   FuiQt3DPoint(QWidget* parent = NULL, const char* name = "D3Point",
-               int refMenu = 1);
+               int refMenu = 1, bool nodeField = false);
 
   virtual void setSensitivity(bool sensitive)
   {
     this->Fui3DPoint::setSensitivity(sensitive);
   }
+
+  virtual void showNodeField(int ID);
+
+private:
+  QWidget* myNodeField;
 };
 
 #endif

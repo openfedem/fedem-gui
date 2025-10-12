@@ -10,6 +10,7 @@
 #include "vpmUI/Icons/FuiIconPixmaps.H"
 #include "FFuLib/FFuLabelField.H"
 #include "FFuLib/FFuPushButton.H"
+#include "FFaLib/FFaAlgebra/FFaVec3.H"
 
 
 void FuiPointEditor::initWidgets()

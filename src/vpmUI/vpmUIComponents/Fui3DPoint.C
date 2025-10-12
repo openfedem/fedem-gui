@@ -8,6 +8,7 @@
 #include "vpmUI/vpmUIComponents/Fui3DPoint.H"
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuOptionMenu.H"
+#include "FFaLib/FFaAlgebra/FFaVec3.H"
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -17,20 +18,23 @@
 
 void Fui3DPoint::init()
 {
-  this->myXField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->myXField->setAcceptPolicy(FFuIOField::ENTERONLY);
-  this->myXField->setDoubleDisplayMode(FFuIOField::AUTO);
-  this->myXField->setAcceptedCB(FFaDynCB1M(Fui3DPoint,this,callPointChangedCB,double));
-
-  this->myYField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->myYField->setAcceptPolicy(FFuIOField::ENTERONLY);
-  this->myYField->setDoubleDisplayMode(FFuIOField::AUTO);
-  this->myYField->setAcceptedCB(FFaDynCB1M(Fui3DPoint,this,callPointChangedCB,double));
-
-  this->myZField->setInputCheckMode(FFuIOField::DOUBLECHECK);
-  this->myZField->setAcceptPolicy(FFuIOField::ENTERONLY);
-  this->myZField->setDoubleDisplayMode(FFuIOField::AUTO);
-  this->myZField->setAcceptedCB(FFaDynCB1M(Fui3DPoint,this,callPointChangedCB,double));
+  int fieldNo = 0;
+  for (FFuIOField*& fld : myFields)
+    if (fld)
+    {
+      fld->setAcceptPolicy(FFuIOField::ENTERONLY);
+      if (++fieldNo < 4)
+      {
+        fld->setInputCheckMode(FFuIOField::DOUBLECHECK);
+        fld->setDoubleDisplayMode(FFuIOField::AUTO);
+        fld->setAcceptedCB(FFaDynCB1M(Fui3DPoint,this,callPointChangedCB,double));
+      }
+      else
+      {
+        fld->setInputCheckMode(FFuIOField::INTEGERCHECK);
+        fld->setAcceptedCB(FFaDynCB1M(Fui3DPoint,this,callNodeChangedCB,int));
+      }
+    }
 
   if (!this->myRefMenu) return;
 
@@ -42,9 +46,8 @@ void Fui3DPoint::init()
 
 void Fui3DPoint::setSensitivity(bool sensitive)
 {
-  this->myZField->setSensitivity(sensitive);
-  this->myYField->setSensitivity(sensitive);
-  this->myXField->setSensitivity(sensitive);
+  for (FFuIOField* fld : myFields)
+    if (fld) fld->setSensitivity(sensitive);
 }
 
 
@@ -55,45 +58,68 @@ void Fui3DPoint::setSensitivity(bool sensitive)
 
 void Fui3DPoint::setXvalue(double value)
 {
-  this->myXField->setValue(value);
+  myFields[0]->setValue(value);
 }
 
 void Fui3DPoint::setYvalue(double value)
 {
-  this->myYField->setValue(value);
+  myFields[1]->setValue(value);
 }
 
 void Fui3DPoint::setZvalue(double value)
 {
-  this->myZField->setValue(value);
+  myFields[2]->setValue(value);
 }
 
 void Fui3DPoint::setValue(double x, double y, double z)
 {
-  this->myXField->setValue(x);
-  this->myYField->setValue(y);
-  this->myZField->setValue(z);
+  myFields[0]->setValue(x);
+  myFields[1]->setValue(y);
+  myFields[2]->setValue(z);
+}
+
+void Fui3DPoint::setValue(const FaVec3& X)
+{
+  this->setValue(X.x(),X.y(),X.z());
+}
+
+
+void Fui3DPoint::setValue(int nodeNo)
+{
+  if (myFields[3])
+  {
+    this->showNodeField(nodeNo);
+    if (nodeNo > 0)
+      myFields[3]->setValue(nodeNo);
+    for (int i = 0; i < 3; i++)
+      myFields[i]->setSensitivity(nodeNo < 0);
+  }
 }
 
 
 double Fui3DPoint::getXvalue() const
 {
-  return this->myXField->getDouble();
+  return myFields[0]->getDouble();
 }
 
 double Fui3DPoint::getYvalue() const
 {
-  return this->myYField->getDouble();
+  return myFields[1]->getDouble();
 }
 
 double Fui3DPoint::getZvalue() const
 {
-  return this->myZField->getDouble();
+  return myFields[2]->getDouble();
 }
 
 FaVec3 Fui3DPoint::getValue() const
 {
   return FaVec3(this->getXvalue(),this->getYvalue(),this->getZvalue());
+}
+
+int Fui3DPoint::getNodeNo() const
+{
+  return myFields[3] ? myFields[3]->getInt() : -1;
 }
 
 
@@ -102,61 +128,17 @@ FaVec3 Fui3DPoint::getValue() const
 // Setting and getting coordinate references
 //
 
-void Fui3DPoint::setGlobal()
+void Fui3DPoint::setCSRef(int cs, bool only)
 {
-  if (!this->myRefMenu) return;
+  if (!myRefMenu) return;
 
-  this->myRefMenu->selectOption(0);
-}
-
-void Fui3DPoint::setGlobalOnly()
-{
-  if (!this->myRefMenu) return;
-
-  this->myRefMenu->selectOption(0);
-  this->myRefMenu->setSensitivity(false);
-}
-
-void Fui3DPoint::setLocal()
-{
-  if (!this->myRefMenu) return;
-
-  this->myRefMenu->selectOption(1);
-  this->myRefMenu->setSensitivity(true);
-}
-
-void Fui3DPoint::enableLocal()
-{
-  if (!this->myRefMenu) return;
-
-  this->myRefMenu->setSensitivity(true);
+  myRefMenu->selectOption(cs);
+  myRefMenu->setSensitivity(!only);
 }
 
 bool Fui3DPoint::isGlobal() const
 {
-  if (!this->myRefMenu) return true;
-
-  return !this->myRefMenu->getSelectedOption();
-}
-
-
-/*!
-  Callback to notify new coords and isGlobal()
-*/
-
-void Fui3DPoint::setPointChangedCB(const FFaDynCB2<const FaVec3&,bool>& aDynCB)
-{
-  this->myPointChangedCB = aDynCB;
-}
-
-
-/*!
-  Callback to notify when ref changed. Called with isGlobal()
-*/
-
-void Fui3DPoint::setRefChangedCB(const FFaDynCB1<bool>& aDynCB)
-{
-  this->myRefChangedCB = aDynCB;
+  return myRefMenu ? myRefMenu->getSelectedOption() == 0 : 1;
 }
 
 
@@ -164,12 +146,17 @@ void Fui3DPoint::setRefChangedCB(const FFaDynCB1<bool>& aDynCB)
   Internal Callbacks
 */
 
-void Fui3DPoint::callPointChangedCB(double)
+void Fui3DPoint::callNodeChangedCB(int)
 {
-  this->myPointChangedCB.invoke(this->getValue(),this->isGlobal());
+  this->myNodeChangedCB.invoke(this->getNodeNo());
 }
 
 void Fui3DPoint::callRefChangedCB(int)
 {
   this->myRefChangedCB.invoke(this->isGlobal());
+}
+
+void Fui3DPoint::callPointChangedCB(double)
+{
+  this->myPointChangedCB.invoke(this->getValue(),this->isGlobal());
 }
