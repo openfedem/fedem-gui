@@ -18,13 +18,14 @@ typedef std::pair<long,FaVec3> FdNode;
 typedef std::pair<int,long>    FdInts;
 
 class Fd2DPoints;
-class FdQtViewer;
 
 
 class FdPickedPoints
 {
 public:
-  static void init(Fd2DPoints* highlighter, FdQtViewer* v);
+  static void init();
+
+  static Fd2DPoints* getHighlighter() { return pointHighlighter; }
 
   // Methods used to add and remove points that are not picked points
 
@@ -36,7 +37,7 @@ public:
   static void selectNode(unsigned int number, int nodeID, const FaVec3& worldNodePos);
   static void deselectNode(int number = -1);
   static int getSelectedNode(size_t i = 0) { return i < ourSelectedNodes.size() ? ourSelectedNodes[i].first : -1; }
-  static size_t numSelectedNodes() { return ourSelectedNodes.size(); }
+  static std::vector<int> getSelectedNodes();
 
   // Node set selection, used by general spider commands
 
@@ -75,7 +76,6 @@ private:
   // Picked points, used when creating and moving objects:
 
   static Fd2DPoints* pointHighlighter;
-  static FdQtViewer* viewer;
 
   struct EditablePickedPoint
   {

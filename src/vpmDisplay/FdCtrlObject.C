@@ -55,10 +55,10 @@ void FdCtrlObject::erase()
 }
 
 
-SbVec3f FdCtrlObject::findSnapPoint(const SbVec3f&, const SbMatrix&,
-                                    SoDetail*, SoPickedPoint*)
+FaVec3 FdCtrlObject::findSnapPoint(const SbVec3f&, const SbMatrix&,
+                                   SoDetail*, SoPickedPoint*)
 {
-  return SbVec3f();
+  return FaVec3();
 }
 
 

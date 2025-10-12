@@ -65,8 +65,9 @@ public:
   // Internally (for vpmDisplay) used methods:
 
   virtual void smartMove(const FaVec3&, const FaVec3&, const FaDOF&) {}
-  virtual SbVec3f findSnapPoint(const SbVec3f&, const SbMatrix&,
-                                SoDetail* = NULL, SoPickedPoint* = NULL);
+  virtual FaVec3 findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail* = NULL, SoPickedPoint* = NULL);
   virtual int getDegOfFreedom(SbVec3f&, SbVec3f&) { return RIGID; }
 
   virtual void removeDisplayData() {}

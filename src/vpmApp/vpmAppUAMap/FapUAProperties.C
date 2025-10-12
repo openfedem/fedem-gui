@@ -923,6 +923,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myLinkValues.coordSysOption = item->myCSOption.getValue();
       pv->myLinkValues.centripOption  = item->myCentripOption.getValue();
       pv->myLinkValues.recoveryOption = item->recoveryDuringSolve.getValue();
+      pv->myLinkValues.ignoreRecovery = item->ignoreInRecovery.getValue();
       if (item->hasStrainRosettes()) pv->myLinkValues.recoveryOption += 10;
       pv->myLinkValues.modelFilePath += FFaFilePath::getPathSeparator();
       if (FapLicenseManager::hasFeature("FA-EXR")) {
@@ -1264,15 +1265,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       pv->myStrRosIsEditable = FpPM::isModelTouchable() && !FpRDBExtractorManager::instance()->hasResults(item);
 
-      IntVec nodes;
-      nodes.push_back(item->node1.getValue());
-      nodes.push_back(item->node2.getValue());
-      if (item->numNodes.getValue() > 2)
-        nodes.push_back(item->node3.getValue());
-      if (item->numNodes.getValue() > 3)
-        nodes.push_back(item->node4.getValue());
-
-      pv->myStrRosNodes = nodes;
+      FmPart* rosettePart = item->getTopology(pv->myStrRosNodes);
       pv->myStrRosAngle = item->angle.getValue() * 180.0/M_PI;
 
       const Strings& rosetteTypes = FmStrainRosette::getRosetteUINames();
@@ -1288,7 +1281,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       // Topology view:
 
-      this->addTopologyItem(pv->myTopology,item->rosetteLink);
+      this->addTopologyItem(pv->myTopology,rosettePart);
     }
 
   // Element Group
@@ -2884,6 +2877,8 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
         item->myCentripOption.setValue((FmPart::CentripOption)pv->myLinkValues.centripOption);
         if (selectedTab < 0 || !isGenPart)
           item->recoveryDuringSolve.setValue(pv->myLinkValues.recoveryOption);
+        if (!isGenPart)
+          item->ignoreInRecovery.setValue(pv->myLinkValues.ignoreRecovery);
       }
       if (selectedTab < 0 && pv->myLinkValues.extResSwitch >= 0) {
         item->useExternalResFile.setValue(pv->myLinkValues.extResSwitch);

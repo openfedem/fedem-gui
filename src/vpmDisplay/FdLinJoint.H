@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FDLINJOINT_H
-#define FDLINJOINT_H
+#ifndef FD_LIN_JOINT_H
+#define FD_LIN_JOINT_H
 
 #include "vpmDisplay/FdBase.H"
 
@@ -20,17 +20,16 @@ class FdLinJoint : public FdObject
 public:
   FdLinJoint(FmMMJointBase* pt);
 
-  virtual bool updateFdTopology(bool updateChildrenDisplay = true);
+  virtual bool updateFdTopology(bool updateChildrenDisplay);
   virtual bool updateFdDetails();
   virtual bool updateFdApperance();
   virtual void hide();
 
   virtual void smartMove(const FaVec3& firstPoint, const FaVec3& secondPoint,
-			 const FaDOF& dof);
-  virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail* pickDetail = 0,
-				SoPickedPoint* pPoint = 0);
+                         const FaDOF& dof);
+  virtual FaVec3 findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail* pickDetail, SoPickedPoint* pPoint);
   virtual int getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction);
 
 protected:
@@ -40,13 +39,6 @@ protected:
 
   virtual void showHighlight();
   virtual void hideHighlight();
-
-  int isNotBetween(const FaVec3& p, const FaVec3& p1,
-		   const FaVec3& p2, bool& isClosestToFirst);
-
-  bool stickerOnFirstMaster;
-  bool stickerOnLastMaster;
-  bool stickerOnSlave;
 };
 
 #endif

@@ -135,7 +135,7 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
 	{
 	  offset[n] = linkCS * offset[n];
 	  point[n]  = triadPos[n].translation() + offset[n];
-	  offset[n] = triadPos[n].direction().transpose() * offset[n];
+	  offset[n] = offset[n] * triadPos[n].direction();
 	}
 	else
 	  point[n] = triadPos[n].translation();
@@ -143,7 +143,7 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
 
       // Compute the position of the triangle spanned by the three points
       // relative to the computational link coordinate system
-      triPos.makeCS_X_YX(point[0],point[1],point[2]);
+      triPos.makeCS_X_XY(point[0],point[1],point[2]);
       triRelPos = triPos.inverse() * linkPos;
 #ifdef FAP_DEBUG
       std::cout <<"\nFapAnimationCreator: Link "<< link->getBaseID()
@@ -251,7 +251,7 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
 		point[n] += rotMat * (triadPos[n].direction() * offset[n]);
 	      }
 	    }
-	    triPos.makeCS_X_YX(point[0],point[1],point[2]);
+	    triPos.makeCS_X_XY(point[0],point[1],point[2]);
 	    curPos = triPos*triRelPos;
 
 #ifdef USE_INVENTOR
@@ -342,7 +342,7 @@ bool FapAnimationCreator::modesAnimation (FmAnimation* animation,
           point[n] += rotMat * (triadPos[n].direction() * offset[n]);
         }
       }
-      triPos.makeCS_X_YX(point[0],point[1],point[2]);
+      triPos.makeCS_X_XY(point[0],point[1],point[2]);
       curPos = triPos*triRelPos;
 
 #ifdef USE_INVENTOR
@@ -935,10 +935,9 @@ bool FapAnimationCreator::getEigenVector (FFrExtractor* rdb, FmPart* part,
       {
 #ifdef USE_INVENTOR
         FaMat33 rotMat;
-        FFlNode* node = NULL;
         std::map<int,size_t>::const_iterator it = rotMap.end();
         for (FFlVisEdge* eccEdge : fdpart->getGroupPartCreator()->getEccEd())
-          if ((node = eccEdge->getFirstVertex()->getNode()))
+          if (FFlNode* node = eccEdge->getFirstVertex()->getNode(); node)
             if ((it = rotMap.find(node->getID())) != rotMap.end())
             {
               // Calculate deformations of the eccentric vertex
@@ -1039,11 +1038,10 @@ bool FapAnimationCreator::getEigenVector (FFrExtractor* rdb, FmPart* part,
 #ifdef USE_INVENTOR
   entry.varRefType = "ROT3";
   FaMat33 rotMat;
-  FFlNode* node = NULL;
   FaVec3Vec rotVec(eigVec.size());
   FaVec3* ImVec = isComplex ? &rotVec[2] : NULL;
   for (FFlVisEdge* eccEdge : fdpart->getGroupPartCreator()->getEccEd())
-    if ((node = eccEdge->getFirstVertex()->getNode()))
+    if (FFlNode* node = eccEdge->getFirstVertex()->getNode(); node)
       if (readNodalDef(node->getID(),rotVec.front(),&rotVec[1],ImVec,true))
       {
         // Calculate deformations of the eccentric vertex

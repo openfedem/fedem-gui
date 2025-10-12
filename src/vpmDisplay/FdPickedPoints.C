@@ -7,12 +7,10 @@
 
 #include "vpmDisplay/FdPickedPoints.H"
 #include "vpmDisplay/Fd2DPoints.H"
-#include "vpmDisplay/qtViewers/FdQtViewer.H"
 #include "vpmDisplay/FdConverter.H"
 
 
 Fd2DPoints* FdPickedPoints::pointHighlighter = NULL;
-FdQtViewer* FdPickedPoints::viewer = NULL;
 
 std::vector<FdPickedPoints::EditablePickedPoint> FdPickedPoints::ourEditablePPoints;
 
@@ -20,10 +18,12 @@ std::vector<FdInts> FdPickedPoints::ourSelectedNodes; // NodeID, HighlightID
 std::map<int,FdNode> FdPickedPoints::ourNodeSet; // NodeID, HighlightID, globPos
 
 
-void FdPickedPoints::init(Fd2DPoints* highlighter, FdQtViewer* v)
+void FdPickedPoints::init()
 {
-  FdPickedPoints::pointHighlighter = highlighter;
-  FdPickedPoints::viewer = v;
+  pointHighlighter = new Fd2DPoints();
+  pointHighlighter->changeForgrColor(SbColor(0.5f, 0.5f, 0.5f));
+  pointHighlighter->changeBckgrColor(SbColor(1.0f, 1.0f, 1.0f));
+  pointHighlighter->scale.setValue(1);
   FdPickedPoints::resetPPs();
 }
 
@@ -175,6 +175,19 @@ void FdPickedPoints::deselectNode(int number)
       FdPickedPoints::remove2DPoint(ourSelectedNodes[number].second);
     ourSelectedNodes[number] = std::make_pair(-1,-1);
   }
+}
+
+
+std::vector<int> FdPickedPoints::getSelectedNodes()
+{
+  std::vector<int> nodes;
+  nodes.reserve(ourSelectedNodes.size());
+
+  for (const FdInts& node : ourSelectedNodes)
+    if (node.first > 0)
+      nodes.push_back(node.first);
+
+  return nodes;
 }
 
 

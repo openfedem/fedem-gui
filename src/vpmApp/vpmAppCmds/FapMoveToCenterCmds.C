@@ -292,7 +292,7 @@ void FapMoveToCenterCmds::eventCB(void*, SoEventCallback* eventCallbackNode)
         FapEventManager::permUnselectLast();
       FapEventManager::permSelect(pickedObject->getFmOwner());
 
-      FaVec3 worldPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint));
+      FaVec3 worldPoint = pickedObject->findSnapPoint(pointOnObject,objToWorld,pickDetail,interestingPickedPoint);
       delete pickDetail;
 
       unsigned int pointIdx = 0;

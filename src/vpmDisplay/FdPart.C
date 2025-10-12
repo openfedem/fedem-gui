@@ -436,9 +436,9 @@ void FdPart::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
 }
 
 
-SbVec3f FdPart::findSnapPoint(const SbVec3f& pointOnObject,
-			      const SbMatrix& objToWorld,
-			      SoDetail* detail, SoPickedPoint* pPoint)
+FaVec3 FdPart::findSnapPoint(const SbVec3f& pointOnObject,
+                             const SbMatrix& objToWorld,
+                             SoDetail* detail, SoPickedPoint* pPoint)
 {
   // PointOnObject is the local point, objToWorld is the global system
 
@@ -449,14 +449,12 @@ SbVec3f FdPart::findSnapPoint(const SbVec3f& pointOnObject,
   if (!linkHandler)
     return this->FdLink::findSnapPoint(pointOnObject,objToWorld,detail,pPoint);
 
-  SbVec3f nearestWorld;
   FaVec3 point = FdConverter::toFaVec3(pointOnObject);
-  if (linkHandler->findNode(point))
-    objToWorld.multVecMatrix(FdConverter::toSbVec3f(point),nearestWorld);
-  else
-    objToWorld.multVecMatrix(pointOnObject,nearestWorld);
+  if (!linkHandler->findNode(point))
+    return this->FdObject::findSnapPoint(pointOnObject,objToWorld,detail,pPoint);
 
-  return nearestWorld;
+  return this->FdObject::findSnapPoint(FdConverter::toSbVec3f(point),
+                                       objToWorld,detail,pPoint);
 }
 
 

@@ -80,52 +80,47 @@ FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
 
   this->initWidgets();
 
-  QWidget* qButtons = new QWidget();
-  QBoxLayout* layout = new QVBoxLayout(qButtons);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(feModelBtn->getQtWidget());
-  layout->addWidget(genPartBtn->getQtWidget());
-  layout->addWidget(suppressInSolverToggle->getQtWidget());
+  QBoxLayout* layout1 = new QHBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->addWidget(repositoryFileField->getQtWidget());
+  layout1->addWidget(changeLinkBtn->getQtWidget());
 
-  QWidget* qRepoFld = new QWidget();
-  layout = new QHBoxLayout(qRepoFld);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(repositoryFileField->getQtWidget());
-  layout->addWidget(changeLinkBtn->getQtWidget());
+  QBoxLayout* layout2 = new QHBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(importedFileField->getQtWidget());
+  layout2->addWidget(unitConversionLabel->getQtWidget());
 
-  QWidget* qImportFld = new QWidget();
-  layout = new QHBoxLayout(qImportFld);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(importedFileField->getQtWidget());
-  layout->addWidget(unitConversionLabel->getQtWidget());
-
-  layout = new QVBoxLayout(feModelFrame->getQtWidget());
+  QBoxLayout* layout = new QVBoxLayout(feModelFrame->getQtWidget());
   layout->setContentsMargins(5,0,5,5);
-  layout->addWidget(qRepoFld);
-  layout->addWidget(qImportFld);
+  layout->addLayout(layout1);
+  layout->addLayout(layout2);
 
-  QWidget* qVizFld = new QWidget();
-  layout = new QHBoxLayout(qVizFld);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(vizField->getQtWidget());
-  layout->addWidget(vizChangeBtn->getQtWidget());
+  layout1 = new QHBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->addWidget(vizField->getQtWidget());
+  layout1->addWidget(vizChangeBtn->getQtWidget());
 
   layout = new QVBoxLayout(vizFrame->getQtWidget());
   layout->setContentsMargins(5,0,5,5);
-  layout->addWidget(qVizFld);
+  layout->addLayout(layout1);
   layout->addWidget(vizLabel->getQtWidget());
 
-  QWidget* qUpper = new QWidget();
-  layout = new QHBoxLayout(qUpper);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qButtons);
-  layout->addWidget(feModelFrame->getQtWidget());
-  layout->addWidget(vizFrame->getQtWidget());
-  layout->addWidget(reductionFrame->getQtWidget());
+  layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addWidget(feModelBtn->getQtWidget());
+  layout2->addWidget(genPartBtn->getQtWidget());
+  layout2->addWidget(suppressInSolverToggle->getQtWidget());
+
+  layout1 = new QHBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->addLayout(layout2);
+  layout1->addWidget(feModelFrame->getQtWidget());
+  layout1->addWidget(vizFrame->getQtWidget());
+  layout1->addWidget(reductionFrame->getQtWidget());
 
   layout = new QVBoxLayout(this);
   layout->setContentsMargins(5,5,5,5);
-  layout->addWidget(qUpper);
+  layout->addLayout(layout1);
   layout->addWidget(dynamicProps->getQtWidget());
   layout->addWidget(suppressInSolverLabel->getQtWidget());
 }
@@ -166,18 +161,17 @@ FuiQtLinkRedOptSheet::FuiQtLinkRedOptSheet(QWidget* parent, const char* name)
 
   this->initWidgets();
 
-  QWidget* qLeft = new QWidget();
-  QBoxLayout* layout = new QVBoxLayout(qLeft);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(singCriterionField->getQtWidget());
-  layout->addWidget(componentModesField->getQtWidget());
-  layout->addWidget(eigValToleranceField->getQtWidget());
-  layout->addWidget(consistentMassBtn->getQtWidget());
-  layout->addWidget(ignoreCSBtn->getQtWidget());
-  layout->addWidget(expandMSBtn->getQtWidget());
+  QLayout* layout1 = new QVBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->addWidget(singCriterionField->getQtWidget());
+  layout1->addWidget(componentModesField->getQtWidget());
+  layout1->addWidget(eigValToleranceField->getQtWidget());
+  layout1->addWidget(consistentMassBtn->getQtWidget());
+  layout1->addWidget(ignoreCSBtn->getQtWidget());
+  layout1->addWidget(expandMSBtn->getQtWidget());
 
   QGroupBox* eigValFactFrame = new QGroupBox("Eigenvalue Factorization");
-  layout = new QVBoxLayout(eigValFactFrame);
+  QBoxLayout* layout = new QVBoxLayout(eigValFactFrame);
   layout->setContentsMargins(5,0,5,5);
   layout->addWidget(massFactBtn->getQtWidget());
   layout->addWidget(stiffFactBtn->getQtWidget());
@@ -188,22 +182,20 @@ FuiQtLinkRedOptSheet::FuiQtLinkRedOptSheet(QWidget* parent, const char* name)
   layout->addWidget(singlePrecisionBtn->getQtWidget());
   layout->addWidget(doublePrecisionBtn->getQtWidget());
 
-  QWidget* qTopRight = new QWidget();
-  layout = new QHBoxLayout(qTopRight);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(eigValFactFrame,1);
-  layout->addWidget(reductionFrame->getQtWidget());
+  QBoxLayout* layout3 = new QHBoxLayout();
+  layout3->setContentsMargins(0,0,0,0);
+  layout3->addWidget(eigValFactFrame,1);
+  layout3->addWidget(reductionFrame->getQtWidget());
 
-  QWidget* qRight = new QWidget();
-  layout = new QVBoxLayout(qRight);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qTopRight);
-  layout->addWidget(recPrecFrame);
+  QBoxLayout* layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addLayout(layout3);
+  layout2->addWidget(recPrecFrame);
 
   layout = new QHBoxLayout(this);
   layout->setContentsMargins(5,5,5,5);
-  layout->addWidget(qLeft);
-  layout->addWidget(qRight,1);
+  layout->addLayout(layout1);
+  layout->addLayout(layout2,1);
 }
 
 
@@ -302,19 +294,18 @@ FuiQtGenericPartMassSheet::FuiQtGenericPartMassSheet(QWidget* parent,
 
   this->initWidgets();
 
-  QWidget* qLeft = new QWidget();
-  QBoxLayout* layout = new QVBoxLayout(qLeft);
-  layout->setContentsMargins(0,0,0,0);
-  layout->setSpacing(1);
-  layout->addWidget(calculateMassPropExplicitBtn->getQtWidget());
-  layout->addWidget(calculateMassPropFEBtn->getQtWidget());
-  layout->addWidget(calculateMassPropGeoBtn->getQtWidget());
-  layout->addStretch(2);
-  layout->addWidget(new QLabel("Material"));
-  layout->addWidget(materialField->getQtWidget());
-  layout->addStretch(1);
-  layout->addWidget(new QLabel("Inertia reference"));
-  layout->addWidget(inertiaRefMenu->getQtWidget());
+  QBoxLayout* layout1 = new QVBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->setSpacing(1);
+  layout1->addWidget(calculateMassPropExplicitBtn->getQtWidget());
+  layout1->addWidget(calculateMassPropFEBtn->getQtWidget());
+  layout1->addWidget(calculateMassPropGeoBtn->getQtWidget());
+  layout1->addStretch(2);
+  layout1->addWidget(new QLabel("Material"));
+  layout1->addWidget(materialField->getQtWidget());
+  layout1->addStretch(1);
+  layout1->addWidget(new QLabel("Inertia reference"));
+  layout1->addWidget(inertiaRefMenu->getQtWidget());
 
   QGroupBox* qRight = new QGroupBox("Mass and inertias");
   QGridLayout* gl = new QGridLayout(qRight);
@@ -334,8 +325,8 @@ FuiQtGenericPartMassSheet::FuiQtGenericPartMassSheet(QWidget* parent,
   gl->addWidget(inertias[IYZ]->getQtWidget(), 3,4);
   gl->addWidget(inertias[IZZ]->getQtWidget(), 3,5);
 
-  layout = new QHBoxLayout(this);
-  layout->addWidget(qLeft,2);
+  QBoxLayout* layout = new QHBoxLayout(this);
+  layout->addLayout(layout1,2);
   layout->addWidget(qRight,3);
 }
 
@@ -408,46 +399,42 @@ FuiQtMeshingSheet::FuiQtMeshingSheet(QWidget* parent, const char* name)
 
   this->initWidgets();
 
-  QWidget* qLeft = new QWidget();
-  QBoxLayout* layout = new QVBoxLayout(qLeft);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(new QLabel("Material"));
-  layout->addWidget(materialField->getQtWidget());
-  layout->addWidget(noElmsLabel->getQtWidget());
-  layout->addWidget(noNodesLabel->getQtWidget());
-  layout->addStretch(1);
+  QBoxLayout* layout1 = new QVBoxLayout();
+  layout1->setContentsMargins(0,0,0,0);
+  layout1->addWidget(new QLabel("Material"));
+  layout1->addWidget(materialField->getQtWidget());
+  layout1->addWidget(noElmsLabel->getQtWidget());
+  layout1->addWidget(noNodesLabel->getQtWidget());
+  layout1->addStretch(1);
 
-  QWidget* qQuality = new QWidget();
-  QGridLayout* gl = new QGridLayout(qQuality);
-  gl->setContentsMargins(0,0,0,0);
-  gl->setHorizontalSpacing(20);
-  gl->setColumnStretch(1,1);
-  gl->setColumnStretch(2,1);
-  gl->addWidget(new QLabel("Loose"), 0,1);
-  gl->addWidget(new QLabel("Strong"), 0,2, Qt::AlignRight);
-  gl->addWidget(new QLabel("Angle control"), 1,0);
-  gl->addWidget(qtScale, 1,1,1,2);
+  QGridLayout* gl1 = new QGridLayout();
+  gl1->setContentsMargins(0,0,0,0);
+  gl1->setHorizontalSpacing(20);
+  gl1->setColumnStretch(1,1);
+  gl1->setColumnStretch(2,1);
+  gl1->addWidget(new QLabel("Loose"), 0,1);
+  gl1->addWidget(new QLabel("Strong"), 0,2, Qt::AlignRight);
+  gl1->addWidget(new QLabel("Angle control"), 1,0);
+  gl1->addWidget(qtScale, 1,1,1,2);
 
-  QWidget* qGenerate = new QWidget();
-  gl = new QGridLayout(qGenerate);
-  gl->setContentsMargins(0,0,0,0);
-  gl->setHorizontalSpacing(20);
-  gl->addWidget(meshBtn->getQtWidget(), 0,0,2,1);
-  gl->addWidget(linearBtn->getQtWidget(), 0,1);
-  gl->addWidget(parabolicBtn->getQtWidget(), 1,1);
+  QGridLayout* gl2 = new QGridLayout();
+  gl2->setContentsMargins(0,0,0,0);
+  gl2->setHorizontalSpacing(20);
+  gl2->addWidget(meshBtn->getQtWidget(), 0,0,2,1);
+  gl2->addWidget(linearBtn->getQtWidget(), 0,1);
+  gl2->addWidget(parabolicBtn->getQtWidget(), 1,1);
 
-  QWidget* qRight = new QWidget();
-  layout = new QVBoxLayout(qRight);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qQuality);
-  layout->addWidget(minsizeField->getQtWidget());
-  layout->addWidget(qGenerate);
-  layout->addStretch(1);
+  QBoxLayout* layout2 = new QVBoxLayout();
+  layout2->setContentsMargins(0,0,0,0);
+  layout2->addLayout(gl1);
+  layout2->addWidget(minsizeField->getQtWidget());
+  layout2->addLayout(gl2);
+  layout2->addStretch(1);
 
-  layout = new QHBoxLayout(this);
+  QBoxLayout* layout = new QHBoxLayout(this);
   layout->setSpacing(20);
-  layout->addWidget(qLeft);
-  layout->addWidget(qRight);
+  layout->addLayout(layout1);
+  layout->addLayout(layout2);
 }
 
 
@@ -460,40 +447,34 @@ FuiQtAdvancedLinkOptsSheet::FuiQtAdvancedLinkOptsSheet(QWidget* parent,
 
   recoverStressToggle = new FFuQtToggleButton();
   recoverGageToggle = new FFuQtToggleButton();
+  ignoreRecoveryToggle = new FFuQtToggleButton();
 
   extResToggle = new FFuQtToggleButton();
   extResField = new FFuQtFileBrowseField(NULL);
 
   this->initWidgets();
 
-  QWidget* qCoordSysMenu = new QWidget();
-  QLabel* qCoordSysLabel = new QLabel("Positioning algorithm for the co-\n"
-                                      "rotated reference coordinate system:");
-  coordSysOptionMenu->setMinHeight(qCoordSysLabel->sizeHint().height()-3);
-  QBoxLayout* layout = new QHBoxLayout(qCoordSysMenu);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(qCoordSysLabel);
-  layout->addWidget(coordSysOptionMenu->getQtWidget(),1);
-
-  QWidget* qCentripMenu = new QWidget();
-  layout = new QHBoxLayout(qCentripMenu);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(new QLabel("Centripital force correction:"));
-  layout->addWidget(centripOptionMenu->getQtWidget(),1);
-
-  QWidget* qExtRes = new QWidget();
-  layout = new QHBoxLayout(qExtRes);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(extResToggle->getQtWidget());
-  layout->addWidget(extResField->getQtWidget());
-
-  layout = new QVBoxLayout(this);
+  QBoxLayout* layout = new QVBoxLayout(this);
   layout->setSpacing(1);
-  layout->addWidget(qCoordSysMenu);
-  layout->addWidget(qCentripMenu);
-  layout->addWidget(recoverStressToggle->getQtWidget());
-  layout->addWidget(recoverGageToggle->getQtWidget());
-  layout->addWidget(qExtRes);
+  std::array<QBoxLayout*,5> layouts;
+  for (QBoxLayout*& hl : layouts)
+  {
+    hl = new QHBoxLayout();
+    hl->setContentsMargins(0,0,0,0);
+    hl->setSpacing(10);
+    layout->addLayout(hl);
+  }
+
+  layouts[0]->addWidget(new QLabel("Positioning algorithm for the co-\n"
+                                   "rotated reference coordinate system:"));
+  layouts[1]->addWidget(new QLabel("Centripital force correction:"));
+  layouts[0]->addWidget(coordSysOptionMenu->getQtWidget(),1);
+  layouts[1]->addWidget(centripOptionMenu->getQtWidget(),1);
+  layouts[2]->addWidget(recoverStressToggle->getQtWidget(),1);
+  layouts[2]->addWidget(ignoreRecoveryToggle->getQtWidget());
+  layouts[3]->addWidget(recoverGageToggle->getQtWidget());
+  layouts[4]->addWidget(extResToggle->getQtWidget());
+  layouts[4]->addWidget(extResField->getQtWidget());
 }
 
 

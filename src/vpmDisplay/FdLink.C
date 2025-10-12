@@ -171,9 +171,9 @@ bool FdLink::updateFdAll(bool updateChildrenDisplay)
 
   if (!link->isEarthLink()) {
 
-    // Delete Old visualization
+    // Delete old visualization
 
-    this->removeVisualizationData();
+    this->removeVisualizationData(false);
 
     // Setting the coordinate system symbol:
 
@@ -751,13 +751,11 @@ void FdLink::updateElementVisibility()
 }
 
 
-SbVec3f FdLink::findSnapPoint(const SbVec3f& pointOnObject,
-			      const SbMatrix& objToWorld,
-			      SoDetail* detail, SoPickedPoint* pPoint)
+FaVec3 FdLink::findSnapPoint(const SbVec3f& pointOnObject,
+                             const SbMatrix& objToWorld,
+                             SoDetail* detail, SoPickedPoint* pPoint)
 {
   // PointOnObject is the local point, objToWorld is the global system
-
-  SbVec3f nearestWorld;
 
   SoFaceDetail* faceDet = NULL;
   SoLineDetail* lineDet = NULL;
@@ -799,82 +797,68 @@ SbVec3f FdLink::findSnapPoint(const SbVec3f& pointOnObject,
           vxProp = NULL;
       }
       else
-      {
-        objToWorld.multVecMatrix(pointOnObject, nearestWorld);
-        return nearestWorld;
-      }
+	return this->FdObject::findSnapPoint(pointOnObject,objToWorld);
     }
 
-    if (faceDet)
+    if (faceDet && (vrmlCoords || coords || vxProp))
     {
-      if (vrmlCoords || coords || vxProp)
+      SbVec3f sbp;
+      float length = 0.0f;
+      int idx = 0;
+      int n = faceDet->getNumPoints();
+      for (int i=0; i<n; i++)
       {
-        SbVec3f sbp;
-        float length = 0.0f;
-        int idx = 0;
-        int n = faceDet->getNumPoints();
-	for (int i=0; i<n; i++)
+        int temp = faceDet->getPoints()[i].getCoordinateIndex();
+        if (vrmlCoords)
+          sbp = vrmlCoords->point[temp];
+        else if (coords)
+          sbp = coords->point[temp];
+        else
+          sbp = vxProp->vertex[temp];
+        float l = (sbp - pointOnObject).length();
+        if (i == 0 || l < length)
         {
-	  int temp = faceDet->getPoints()[i].getCoordinateIndex();
-	  if (vrmlCoords)
-	    sbp = vrmlCoords->point[temp];
-	  else if (coords)
-	    sbp = coords->point[temp];
-	  else
-	    sbp = vxProp->vertex[temp];
-	  float l = (sbp - pointOnObject).length();
-	  if (i == 0 || l < length)
-          {
-	    length = l;
-	    idx = temp;
-	  }
-	}
-	if (vrmlCoords)
-	  objToWorld.multVecMatrix(vrmlCoords->point[idx], nearestWorld);
-	else if (coords)
-	  objToWorld.multVecMatrix(coords->point[idx], nearestWorld);
-	else
-	  objToWorld.multVecMatrix(vxProp->vertex[idx], nearestWorld);
+          length = l;
+          idx = temp;
+        }
       }
+
+      if (vrmlCoords)
+        return this->FdObject::findSnapPoint(vrmlCoords->point[idx],objToWorld);
+      else if (coords)
+        return this->FdObject::findSnapPoint(coords->point[idx],objToWorld);
       else
-	objToWorld.multVecMatrix(pointOnObject, nearestWorld);
+        return this->FdObject::findSnapPoint(vxProp->vertex[idx],objToWorld);
     }
-    else if (lineDet)
+    else if (lineDet && (vrmlCoords || vxProp))
     {
-      if (vrmlCoords || vxProp)
-      {
-        int cordIdx0 = lineDet->getPoint0()->getCoordinateIndex();
-        int cordIdx1 = lineDet->getPoint1()->getCoordinateIndex();
+      int cordIdx0 = lineDet->getPoint0()->getCoordinateIndex();
+      int cordIdx1 = lineDet->getPoint1()->getCoordinateIndex();
 
-	SbVec3f sbp0,sbp1;
-	if (vrmlCoords) {
-	  sbp0 = vrmlCoords->point[cordIdx0];
-	  sbp1 = vrmlCoords->point[cordIdx1];
-	}
-	else if (coords) {
-	  sbp0 = coords->point[cordIdx0];
-	  sbp1 = coords->point[cordIdx1];
-	}
-	else {
-	  sbp0 = vxProp->vertex[cordIdx0];
-	  sbp1 = vxProp->vertex[cordIdx1];
-	}
-
-	SbVec3f dist0 = sbp0 - pointOnObject;
-	SbVec3f dist1 = sbp1 - pointOnObject;
-	if (dist0.length() < dist1.length())
-	  objToWorld.multVecMatrix(sbp0, nearestWorld);
-	else
-	  objToWorld.multVecMatrix(sbp1, nearestWorld);
+      SbVec3f sbp0,sbp1;
+      if (vrmlCoords) {
+        sbp0 = vrmlCoords->point[cordIdx0];
+        sbp1 = vrmlCoords->point[cordIdx1];
       }
+      else if (coords) {
+        sbp0 = coords->point[cordIdx0];
+        sbp1 = coords->point[cordIdx1];
+      }
+      else {
+        sbp0 = vxProp->vertex[cordIdx0];
+        sbp1 = vxProp->vertex[cordIdx1];
+      }
+
+      SbVec3f dist0 = sbp0 - pointOnObject;
+      SbVec3f dist1 = sbp1 - pointOnObject;
+      if (dist0.length() < dist1.length())
+	return this->FdObject::findSnapPoint(sbp0,objToWorld);
       else
-	objToWorld.multVecMatrix(pointOnObject, nearestWorld);
+        return this->FdObject::findSnapPoint(sbp1,objToWorld);
     }
   }
-  else
-    objToWorld.multVecMatrix(pointOnObject, nearestWorld);
 
-  return nearestWorld;
+  return this->FdObject::findSnapPoint(pointOnObject,objToWorld);
 }
 
 

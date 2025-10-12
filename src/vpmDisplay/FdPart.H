@@ -31,10 +31,9 @@ public:
   bool updateSpecialLines(double scale = 0.0);
 
   virtual void smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof);
-  virtual SbVec3f findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail* pickDetail = NULL,
-				SoPickedPoint* pPoint = NULL);
+  virtual FaVec3 findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail* pickDetail, SoPickedPoint* pPoint);
   bool findNode(int& nodeID, FaVec3& worldNodePos,
                 const SbVec3f& pickPoint) const;
   virtual int getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction);

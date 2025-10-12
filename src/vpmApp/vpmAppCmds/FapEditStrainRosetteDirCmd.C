@@ -153,10 +153,31 @@ void FapEditStrainRosetteDirCmd::eventCB(void*, SoEventCallback* eventCallbackNo
 {
   if (!ourStrainRosette) return;
 
-  const SoPickedPoint* pPoint = eventCallbackNode->getPickedPoint();
-  const SoEvent*       event  = eventCallbackNode->getEvent();
+  const SoEvent* event = eventCallbackNode->getEvent();
   if (!event) return;
 
+  // Lambda function returning the snapped-to location of the picked point.
+  auto&& findSnapPoint = [](const SoPickedPoint* point)
+  {
+    FdObject* pickedObject = FdPickFilter::findFdObject(point->getPath());
+    if (!pickedObject)
+      return FdConverter::toFaVec3(point->getPoint());
+
+    return pickedObject->findSnapPoint(point->getObjectPoint(),
+                                       point->getObjectToWorld(), NULL,
+                                       const_cast<SoPickedPoint*>(point));
+  };
+
+  // Lambda function displaying the proposed rosette direction vectors.
+  auto&& showRosetteDirection = [](const FaVec3& p0, const FaVec3& p1)
+  {
+    FaMat34 rosT = ourStrainRosette->getSymbolPosMx(true);
+    ourDirection = p1 - p0;
+    ourDirection -= (rosT[2] * ourDirection) * rosT[2];
+    FdExtraGraphics::showDirection(rosT[3], ourDirection);
+  };
+
+  const SoPickedPoint* pPoint = eventCallbackNode->getPickedPoint();
   if (event->isOfType(SoMouseButtonEvent::getClassTypeId()) &&
       SoMouseButtonEvent::isButtonPressEvent(event,SoMouseButtonEvent::BUTTON1))
     switch (FapEditStrainRosetteDirCmd::ourState)
@@ -186,31 +207,19 @@ void FapEditStrainRosetteDirCmd::eventCB(void*, SoEventCallback* eventCallbackNo
                 FaMat34 objToWorld = FdConverter::toFaMat34(pPoint->getObjectToWorld());
                 FaVec3 p0 = objToWorld * FdConverter::toFaVec3(sbp0);
                 FaVec3 p1 = objToWorld * FdConverter::toFaVec3(sbp1);
-
-                bool dummy;
-                FaMat34 rosMx = ourStrainRosette->getGlobSymbolPosMx(dummy);
-                ourDirection  = p1 - p0;
-                ourDirection -= (rosMx[2]*ourDirection)*rosMx[2];
+                showRosetteDirection(p0,p1);
+                FdExtraGraphics::showLine(p0,p1);
 
                 FdPickedPoints::resetPPs();
-                FdExtraGraphics::showDirection(rosMx[3],ourDirection);
-                FdExtraGraphics::showLine(p0,p1);
                 FapEditStrainRosetteDirCmd::setState(DIR_EDGE_SELECTED);
               }
             }
           else
             {
-              FaVec3 wPoint = FdConverter::toFaVec3(pPoint->getPoint());
-              FdObject* pickedObject = FdPickFilter::findFdObject(pPoint->getPath());
-              if (pickedObject)
-                wPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pPoint->getObjectPoint(),
-                                                                           pPoint->getObjectToWorld(),NULL,
-                                                                           const_cast<SoPickedPoint*>(pPoint)));
-
               FdExtraGraphics::hideLine();
               FdExtraGraphics::hideDirection();
-              FdPickedPoints::setFirstPP(wPoint,FdConverter::toFaMat34(pPoint->getObjectToWorld()));
-
+              FdPickedPoints::setFirstPP(findSnapPoint(pPoint),
+                                         FdConverter::toFaMat34(pPoint->getObjectToWorld()));
               FapEditStrainRosetteDirCmd::setState(DIR_POINT_1_SELECTED);
             }
         }
@@ -219,20 +228,10 @@ void FapEditStrainRosetteDirCmd::eventCB(void*, SoEventCallback* eventCallbackNo
       case DIR_POINT_1_ACCEPTED:
       case DIR_POINT_2_SELECTED:
         if (pPoint) {
-          FaVec3 wPoint = FdConverter::toFaVec3(pPoint->getPoint());
-          FdObject* pickedObject = FdPickFilter::findFdObject(pPoint->getPath());
-          if (pickedObject)
-            wPoint = FdConverter::toFaVec3(pickedObject->findSnapPoint(pPoint->getObjectPoint(),
-                                                                       pPoint->getObjectToWorld(),NULL,
-                                                                       const_cast<SoPickedPoint*>(pPoint)));
-
-          FdPickedPoints::setSecondPP(wPoint,FdConverter::toFaMat34(pPoint->getObjectToWorld()));
-
-          bool dummy;
-          FaMat34 rosMx = ourStrainRosette->getGlobSymbolPosMx(dummy);
-          ourDirection  = FdPickedPoints::getSecondPickedPoint() - FdPickedPoints::getFirstPickedPoint();
-          ourDirection -= (rosMx[2]*ourDirection)*rosMx[2];
-          FdExtraGraphics::showDirection(rosMx[3], ourDirection);
+          FdPickedPoints::setSecondPP(findSnapPoint(pPoint),
+                                      FdConverter::toFaMat34(pPoint->getObjectToWorld()));
+          showRosetteDirection(FdPickedPoints::getFirstPickedPoint(),
+                               FdPickedPoints::getSecondPickedPoint());
 
           FapEditStrainRosetteDirCmd::setState(DIR_POINT_2_SELECTED);
         }

@@ -87,6 +87,7 @@ bool FdSensor::updateFdTopology(bool)
   // Get triads to place sensor between
 
   std::vector<FmTriad*> triads;
+  triads.reserve(2);
   if (itsFmOwner->isOfType(FmSimpleSensor::getClassTypeID()))
     {
       FmIsMeasuredBase* measured = ((FmSimpleSensor*)itsFmOwner)->getMeasured();
@@ -117,14 +118,13 @@ bool FdSensor::updateFdTopology(bool)
     {
       std::vector<FmIsMeasuredBase*> measured;
       ((FmRelativeSensor*)itsFmOwner)->getMeasured(measured);
-      for (unsigned int i = 0; i < measured.size(); i++)
-	if (measured[i]->isOfType(FmTriad::getClassTypeID()))
-	  triads.push_back((FmTriad*)measured[i]);
+      for (FmIsMeasuredBase* obj : measured)
+        triads.push_back(dynamic_cast<FmTriad*>(obj));
     }
 
   // Setting up connections:
 
-  if (triads.size() != 2)
+  if (triads.size() != 2 || !triads.front() || !triads.back())
     return false;
 
   // First Triad:
@@ -149,13 +149,12 @@ bool FdSensor::updateFdTopology(bool)
 }
 
 
-SbVec3f FdSensor::findSnapPoint(const SbVec3f& pointOnObject,
-				const SbMatrix& objToWorld,
-				SoDetail*, SoPickedPoint*)
+FaVec3 FdSensor::findSnapPoint(const SbVec3f& pointOnObject,
+                               const SbMatrix& objToWorld,
+                               SoDetail*, SoPickedPoint*)
 {
-  SbVec3f nearestWorld(0,0,0);
   if (((FmSensorBase*)itsFmOwner)->isDrawable())
-    objToWorld.multVecMatrix(pointOnObject,nearestWorld);
+    return this->FdObject::findSnapPoint(pointOnObject,objToWorld);
 
-  return nearestWorld;
+  return FaVec3();
 }

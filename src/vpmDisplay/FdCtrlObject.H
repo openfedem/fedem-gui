@@ -31,8 +31,8 @@ public:
 
   virtual bool updateFdApperance();
 
-  virtual SbVec3f findSnapPoint(const SbVec3f&, const SbMatrix&,
-                                SoDetail*, SoPickedPoint*);
+  virtual FaVec3 findSnapPoint(const SbVec3f&, const SbMatrix&,
+                               SoDetail*, SoPickedPoint*);
 
   void erase();
 
