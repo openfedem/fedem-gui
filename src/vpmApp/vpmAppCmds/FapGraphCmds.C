@@ -110,7 +110,8 @@ void FapGraphCmds::show()
 
   // Running through the selected curves to see if any of their
   // owners are not in vector of graphs to show
-  for (FmCurveSet* curve : selCurves) {
+  for (FmCurveSet* curve : selCurves)
+  {
     FmGraph* owner = curve->getOwnerGraph();
     if (std::find(selGraphs.begin(),selGraphs.end(),owner) == selGraphs.end())
       selGraphs.push_back(owner);
@@ -125,8 +126,7 @@ void FapGraphCmds::show()
 void FapGraphCmds::show(FmGraph* graph)
 {
 #ifdef FT_HAS_GRAPHVIEW
-  FapUAGraphViewTLS* tls = FapGraphCmds::getTLS(graph);
-  if (tls)
+  if (FapUAGraphViewTLS* tls = FapGraphCmds::getTLS(graph); tls)
     tls->getUI()->popUp();
   else {
     FapEventManager::setLoadingGraph(graph);
@@ -189,8 +189,8 @@ void FapGraphCmds::editAxis(int axis, FmCurveSet* curve)
 
   Fui::rdbSelectorUI(true);
 
-  FapUAExistenceHandler* uas = FapUAExistenceHandler::getFirstOfType(FapUARDBSelector::getClassTypeID());
-  if (uas) static_cast<FapUARDBSelector*>(uas)->edit(curve,axis);
+  if (FapUAExistenceHandler* uas = FapUAExistenceHandler::getFirstOfType(FapUARDBSelector::getClassTypeID()); uas)
+    static_cast<FapUARDBSelector*>(uas)->edit(curve,axis);
 }
 
 //----------------------------------------------------------------------------
@@ -234,16 +234,20 @@ std::vector<FmCurveSet*> FapGraphCmds::findSelectedCurves(bool& curvesOnly)
   if (!tmpSelection && permSelection.empty())
     curvesOnly = false;
   else if (tmpSelection)
-    if (dynamic_cast<FmCurveSet*>(tmpSelection))
-      curves.push_back((FmCurveSet*)tmpSelection);
+  {
+    if (FmCurveSet* curve = dynamic_cast<FmCurveSet*>(tmpSelection); curve)
+      curves.push_back(curve);
     else
       curvesOnly = false;
+  }
   else
+  {
     for (FFaViewItem* item : permSelection)
-      if (dynamic_cast<FmCurveSet*>(item))
-	curves.push_back(static_cast<FmCurveSet*>(item));
+      if (FmCurveSet* curve = dynamic_cast<FmCurveSet*>(item); curve)
+        curves.push_back(curve);
       else
-	curvesOnly = false;
+        curvesOnly = false;
+  }
 
   return curves;
 }
@@ -261,16 +265,20 @@ std::vector<FmGraph*> FapGraphCmds::findSelectedGraphs(bool& graphsOnly)
   if (!tmpSelection && permSelection.empty())
     graphsOnly = false;
   else if (tmpSelection)
-    if (dynamic_cast<FmGraph*>(tmpSelection))
-      graphs.push_back((FmGraph*)tmpSelection);
+  {
+    if (FmGraph* graph = dynamic_cast<FmGraph*>(tmpSelection); graph)
+      graphs.push_back(graph);
     else
       graphsOnly = false;
+  }
   else
+  {
     for (FFaViewItem* item : permSelection)
-      if (dynamic_cast<FmGraph*>(item))
-	graphs.push_back(static_cast<FmGraph*>(item));
+      if (FmGraph* graph = dynamic_cast<FmGraph*>(item); graph)
+        graphs.push_back(graph);
       else
-	graphsOnly = false;
+        graphsOnly = false;
+  }
 
   return graphs;
 }
@@ -283,7 +291,8 @@ FapUAGraphViewTLS* FapGraphCmds::getTLS(FmGraph* graph)
   std::vector<FapUAExistenceHandler*> allTLS;
   FapUAExistenceHandler::getAllOfType(FapUAGraphViewTLS::getClassTypeID(), allTLS);
 
-  for (FapUAExistenceHandler* tls : allTLS) {
+  for (FapUAExistenceHandler* tls : allTLS)
+  {
     FuiGraphViewTLS* tlsui = (FuiGraphViewTLS*)tls->getUI();
     if (((FapUAGraphView*)tlsui->getGraphViewComp()->getUA())->getDBPointer() == graph)
       return (FapUAGraphViewTLS*)tls;
@@ -330,7 +339,8 @@ void FapGraphCmds::getRepeatCurveSensitivity(bool& sensitivity)
 
   FFaResultDescription res = curveToRepeat->getResult(FmCurveSet::YAXIS);
   FmModelMemberBase* obj = res.baseId > 0 ? FmDB::findObject(res.baseId) : NULL;
-  if (!obj) {
+  if (!obj)
+  {
     res = curveToRepeat->getResult(FmCurveSet::YAXIS);
     obj = res.baseId > 0 ? FmDB::findObject(res.baseId) : NULL;
   }
@@ -364,14 +374,14 @@ void FapGraphCmds::repeatCurve(int fromID, int toID)
   if (!xObj && !yObj) return; // selected curve does not plot result quantity
 
   FmModelMemberBase* obj = yObj ? yObj : xObj;
-  std::vector<FmModelMemberBase*> objects;
+  std::vector<FmModelMemberBase*> allObjects;
   if (toID < 0)
-    FmDB::getAllOfType(objects,obj->getTypeID());
+    FmDB::getAllOfType(allObjects,obj->getTypeID());
   else
-    FmDB::getAllOfType(objects,-obj->getTypeID(),
+    FmDB::getAllOfType(allObjects,-obj->getTypeID(),
                        dynamic_cast<FmSubAssembly*>(obj->getParentAssembly()));
 
-  if (toID == 0 && objects.size() > 2)
+  if (toID == 0 && allObjects.size() > 2)
   {
     // Launch dialog to prompt for userID range
     FuiRepeatCurve* dialog = FuiRepeatCurve::getUI(true);
@@ -382,49 +392,56 @@ void FapGraphCmds::repeatCurve(int fromID, int toID)
       dialog->setValues(fromID,toID);
     }
     dialog->setLabel("Enter " + std::string(obj->getUITypeName()) +
-		     " ID range\nto generate curves for");
+                     " ID range\nto generate curves for");
     dialog->setDialogButtonClickedCB(FFaDynCB1S(FapGraphCmds::onRepeatCurveDone,int));
     dialog->execute();
     return;
   }
 
+  // Find all objects within specified user ID range,
+  // excluding the object of the copied curve itself
+  std::vector<FmModelMemberBase*> objects;
+  objects.reserve(allObjects.size()-1);
+  for (FmModelMemberBase* mmb : allObjects)
+    if (toID < 1 || (mmb->getID() >= fromID && mmb->getID() <= toID))
+      if (mmb != obj) objects.push_back(mmb);
+  if (objects.empty()) return;
+
 #ifdef FT_HAS_GRAPHVIEW
   // If the owner graph is visible, pop it down while adding the curves
   FapUAGraphViewTLS* tls = NULL;
-  FmGraph* graph = curveToRepeat->getOwnerGraph();
-  if (graph && (tls = FapGraphCmds::getTLS(graph)))
-  {
-    if (tls->getUI()->isPoppedUp())
-      tls->getUI()->popDown();
-    else
-      tls = NULL;
-  }
+  if (FmGraph* graph = curveToRepeat->getOwnerGraph(); graph)
+    if ((tls = FapGraphCmds::getTLS(graph)))
+    {
+      if (tls->getUI()->isPoppedUp())
+        tls->getUI()->popDown();
+      else
+        tls = NULL;
+    }
 #endif
 
-  FmCurveSet* newCurve;
   size_t nObjs = objects.size();
   for (size_t i = 0; i < nObjs; i++)
   {
-    if (objects[i] == obj)
-      newCurve = curveToRepeat;
-    else if (toID < 1 || (objects[i]->getID() >= fromID && objects[i]->getID() <= toID)) {
-      newCurve = new FmCurveSet;
-      newCurve->clone(curveToRepeat, FmBase::DEEP_APPEND);
-      if (xObj && (!yObj || xObj == yObj)) {
-	xRes = newCurve->getResult(FmCurveSet::XAXIS);
-	xRes.baseId = objects[i]->getBaseID();
-	xRes.userId = objects[i]->getID();
-	newCurve->setResult(FmCurveSet::XAXIS, xRes);
-      }
-      if (yObj) {
-	yRes = newCurve->getResult(FmCurveSet::YAXIS);
-	yRes.baseId = objects[i]->getBaseID();
-	yRes.userId = objects[i]->getID();
-	newCurve->setResult(FmCurveSet::YAXIS, yRes);
-      }
+    FmCurveSet* newCurve = new FmCurveSet();
+    newCurve->clone(curveToRepeat,FmBase::DEEP_APPEND);
+    newCurve->connect(); // Fix issue #89
+
+    if (xObj && (!yObj || xObj == yObj))
+    {
+      xRes = newCurve->getResult(FmCurveSet::XAXIS);
+      xRes.baseId = objects[i]->getBaseID();
+      xRes.userId = objects[i]->getID();
+      newCurve->setResult(FmCurveSet::XAXIS, xRes);
     }
-    else
-      continue; // object is outside specified user ID range
+
+    if (yObj)
+    {
+      yRes = newCurve->getResult(FmCurveSet::YAXIS);
+      yRes.baseId = objects[i]->getBaseID();
+      yRes.userId = objects[i]->getID();
+      newCurve->setResult(FmCurveSet::YAXIS, yRes);
+    }
 
     float r = 0.0f;
     float g = i <= nObjs/2 ? 0.0f : (i-nObjs/2)/(float)(nObjs/2);
@@ -434,7 +451,8 @@ void FapGraphCmds::repeatCurve(int fromID, int toID)
   }
 
 #ifdef FT_HAS_GRAPHVIEW
-  if (tls) {
+  if (tls)
+  {
     tls->getUI()->popUp();
     ((FapUAGraphView*)tls->getUI()->getGraphViewComp()->getUA())->updateSession();
   }
@@ -457,11 +475,10 @@ void FapGraphCmds::onRepeatCurveDone(int button)
 
 void FapGraphCmds::toggleAutoExport(bool enable)
 {
-  FmSubAssembly* group = NULL;
   std::vector<FFaViewItem*> selection;
   if (FapCmdsBase::getCurrentSelection(selection))
     for (FFaViewItem* item : selection)
-      if ((group = dynamic_cast<FmSubAssembly*>(item)))
+      if (FmSubAssembly* group = dynamic_cast<FmSubAssembly*>(item); group)
       {
         std::vector<FmModelMemberBase*> curves;
         FmDB::getAllOfType(curves,FmCurveSet::getClassTypeID(),group);
