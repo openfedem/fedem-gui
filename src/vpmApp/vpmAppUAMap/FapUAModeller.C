@@ -15,38 +15,103 @@
 
 #ifdef USE_INVENTOR
 #include "vpmDisplay/FdAnimateModel.H"
-#include "vpmDisplay/FdPickedPoints.H"
 #include "vpmDisplay/FdDB.H"
 #endif
 
-enum pointType { POINT_1, POINT_2 };
 
-int FapUAModeller::whichPoint = 0;
-FuiModeller* FapUAModeller::ourFuiModeller = NULL;
-
-
-void FapUAModeller::init(FuiModeller* aFuiModeller)
+namespace
 {
-  ourFuiModeller = aFuiModeller;
-  if (ourFuiModeller)
-    {
-      ourFuiModeller->setPointChangedCB    (FFaDynCB2S(FapUAModeller::onPointChanged,const FaVec3&,bool));
-      ourFuiModeller->setRefChangedCB      (FFaDynCB1S(FapUAModeller::onPointRefChanged,bool));
-      ourFuiModeller->setAnimTypeChangedCB (FFaDynCB1S(FapUAModeller::onAnimTypeChange,int));
-      ourFuiModeller->setAnimationPressCB  (FFaDynCB1S(FapUAModeller::onAnimationPress,int));
-      ourFuiModeller->setRealTimeCB        (FFaDynCB0S(FapUAModeller::onRealTimePress));
-      ourFuiModeller->setSpeedScaleChangeCB(FFaDynCB1S(FapUAModeller::onSpeedScaleChange,int));
-      ourFuiModeller->setCloseAnimCB       (FFaDynCB0S(FapUAModeller::closeAnimation));
-      ourFuiModeller->setAllFramesCB       (FFaDynCB1S(FapUAModeller::onAllFramesToggle,bool));
-    }
+  enum PointType { POINT_1, POINT_2 };
+
+  int         whichPoint = 0;
+  Fui3DPoint* ourPointUI = NULL;
+}
+
+
+void FapUAModeller::init(FuiModeller* ui)
+{
+  if (!ui) return;
+
+  ourPointUI = ui->getPickedPointUIC();
+  FuiPlayPanel* pp = ui->getPlayPanelUIC();
+  if (!ourPointUI || !pp) return;
+
+  ourPointUI->setRefChangedCB(FFaDynCB1S([](bool) { updatePointUI(); }, bool));
+#ifdef USE_INVENTOR
+  ourPointUI->setPointChangedCB(FFaDynCB2S([](const FaVec3& newPoint, bool isGlobal) {
+                                             if (FdDB::setPPoint(whichPoint,isGlobal,newPoint))
+                                               FuiModes::notifyCreatePointChange();
+                                             updatePointUI();
+                                           }, const FaVec3&,bool));
+
+  pp->setAnimTypeChangedCB(FFaDynCB1S([](int animationType) {
+                                        switch (animationType) {
+                                        case FuiPlayPanel::ONESHOT:
+                                          FapAnimationCmds::animationType(FdAnimateModel::ONESHOT);
+                                          break;
+                                        case FuiPlayPanel::CONTINOUS:
+                                          FapAnimationCmds::animationType(FdAnimateModel::LOOP);
+                                          break;
+                                        case FuiPlayPanel::CONTINOUS_CYCLE:
+                                          FapAnimationCmds::animationType(FdAnimateModel::PINGPONG);
+                                          break;
+                                        }
+                                      }, int));
+#endif
+  pp->setAnimationPressCB(FFaDynCB1S([](int action) {
+                                       switch (action) {
+                                       case FuiPlayPanel::TO_LAST:
+                                         FapAnimationCmds::animationToLastFrame();
+                                         break;
+                                       case FuiPlayPanel::TO_FIRST:
+                                         FapAnimationCmds::animationToFirstFrame();
+                                         break;
+                                       case FuiPlayPanel::PLAY_REW:
+                                         FapAnimationCmds::animationPlayReverse();
+                                         break;
+                                       case FuiPlayPanel::STEP_REW:
+                                         FapAnimationCmds::animationStepRwd();
+                                         break;
+                                       case FuiPlayPanel::STOP:
+                                         FapAnimationCmds::animationStop();
+                                         break;
+                                       case FuiPlayPanel::PAUSE:
+                                         FapAnimationCmds::animationPause();
+                                         break;
+                                       case FuiPlayPanel::PLAY_FWD:
+                                         FapAnimationCmds::animationPlay();
+                                         break;
+                                       case FuiPlayPanel::STEP_FWD:
+                                         FapAnimationCmds::animationStepFwd();
+                                         break;
+                                       }
+                                     }, int));
+
+  pp->setRealTimeCB(FFaDynCB0S([]() {
+                                 FapAnimationCmds::absoluteAnimationFrequency(100);
+                               }));
+
+  pp->setSpeedScaleChangeCB(FFaDynCB1S([](int value) {
+                                         FapAnimationCmds::animationFrequencyScale((float)value);
+                                       }, int));
+
+  pp->setCloseAnimCB(FFaDynCB0S(FapAnimationCmds::hide));
+
+  pp->setAllFramesCB(FFaDynCB1S([](bool onOrOff) {
+                                  FapAnimationCmds::animationToggleSkip(!onOrOff);
+                                }, bool));
+}
+
+
+void FapUAModeller::setNodeChangedCB(const FFaDynCB1<int>& cb)
+{
+  if (ourPointUI)
+    ourPointUI->setNodeChangedCB(cb);
 }
 
 
 void FapUAModeller::updateMode()
 {
-  if (!ourFuiModeller)
-    return;
-
   switch (FuiModes::getMode())
     {
       // Modes that initially have a default global point
@@ -65,9 +130,7 @@ void FapUAModeller::updateMode()
     case FuiModes::MAKECAMJOINT_MODE:
     case FuiModes::COMPICKPOINT_MODE:
       whichPoint = POINT_1;
-      ourFuiModeller->getPickedPointUIC()->setGlobalOnly();
-      FapUAModeller::updatePointUI();
-      ourFuiModeller->getPickedPointUIC()->popUp();
+      FapUAModeller::updatePointUI(true);
       break;
     default:
       break;
@@ -76,53 +139,40 @@ void FapUAModeller::updateMode()
 
 void FapUAModeller::updateState(int newState)
 {
-  if (!ourFuiModeller)
-    return;
-
-  Fui3DPoint* pointUIC = ourFuiModeller->getPickedPointUIC();
-
   switch (FuiModes::getMode())
     {
     case FuiModes::MAKEGENERALSPIDER_MODE:
       switch (newState)
-	{
-	case 0:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 1:
-	  pointUIC->popDown();
-	  break;
-	}
+        {
+        case 0:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
+        case 1:
+          FapUAModeller::cancel();
+          break;
+        }
       break;
 
     case FuiModes::PTPMOVE_MODE:
       switch (newState)
-	{
-	case 0:
-	  pointUIC->popDown();
-	  break;
-	case 1:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 2:
-	  whichPoint = POINT_2;
-	  pointUIC->setGlobalOnly();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 3:
-	  whichPoint = POINT_2;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	}
+        {
+        case 0:
+          FapUAModeller::cancel();
+          break;
+        case 1:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
+        case 2:
+          whichPoint = POINT_2;
+          FapUAModeller::updatePointUI(true);
+          break;
+        case 3:
+          whichPoint = POINT_2;
+          FapUAModeller::updatePointUI(false);
+          break;
+        }
       break;
 
     case FuiModes::MAKEFORCE_MODE:
@@ -133,35 +183,29 @@ void FapUAModeller::updateState(int newState)
     case FuiModes::MAKERIGIDJOINT_MODE:
     case FuiModes::COMPICKPOINT_MODE:
       switch (newState)
-	{
-	case 0:
-	  whichPoint = POINT_1;
-	  pointUIC->setGlobalOnly();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 1:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	}
+        {
+        case 0:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(true);
+          break;
+        case 1:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
+        }
       break;
 
     case FuiModes::MAKEFREEJOINTBETWEENTRIADS_MODE:
       switch (newState)
-      {
-      case 2:
-        whichPoint = POINT_1;
-        pointUIC->setGlobalOnly();
-        FapUAModeller::updatePointUI();
-        pointUIC->popUp();
-        break;
-      default:
-        pointUIC->popDown();
-        break;
-      }
+        {
+        case 2:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(true);
+          break;
+        default:
+          FapUAModeller::cancel();
+          break;
+        }
       break;
 
     case FuiModes::MAKESPRING_MODE:
@@ -170,76 +214,58 @@ void FapUAModeller::updateState(int newState)
     case FuiModes::MAKECYLJOINT_MODE:
     case FuiModes::MAKEPRISMJOINT_MODE:
       switch (newState)
-	{
-	case 0:
-	  whichPoint = POINT_1;
-	  pointUIC->setGlobalOnly();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 1:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 2:
-	  whichPoint = POINT_2;
-	  pointUIC->setGlobalOnly();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 3:
-	  whichPoint = POINT_2;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	}
+        {
+        case 0:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(true);
+          break;
+        case 1:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
+        case 2:
+          whichPoint = POINT_2;
+          FapUAModeller::updatePointUI(true);
+          break;
+        case 3:
+          whichPoint = POINT_2;
+          FapUAModeller::updatePointUI(false);
+          break;
+        }
       break;
 
     case FuiModes::MAKECAMJOINT_MODE:
       switch (newState)
-	{
-	case 0:
-	  whichPoint = POINT_1;
-	  pointUIC->setGlobalOnly();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 1:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 2:
-	  whichPoint = POINT_1;
-	  pointUIC->setGlobalOnly();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	case 3:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
-	}
+        {
+        case 0:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(true);
+          break;
+        case 1:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
+        case 2:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(true);
+          break;
+        case 3:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
+        }
       break;
 
     case FuiModes::MAKESTICKER_MODE:
       switch (newState)
-	{
-	case 0:
-	  pointUIC->popDown();
-	  break;
-	case 1:
-	  whichPoint = POINT_1;
-	  pointUIC->setLocal();
-	  FapUAModeller::updatePointUI();
-	  pointUIC->popUp();
-	  break;
+        {
+        case 0:
+          FapUAModeller::cancel();
+          break;
+        case 1:
+          whichPoint = POINT_1;
+          FapUAModeller::updatePointUI(false);
+          break;
 	}
       break;
 
@@ -248,36 +274,31 @@ void FapUAModeller::updateState(int newState)
     }
 }
 
+
 void FapUAModeller::cancel()
 {
-  if (ourFuiModeller)
-    ourFuiModeller->getPickedPointUIC()->popDown();
+  if (ourPointUI)
+  {
+    ourPointUI->setValue(-1);
+    ourPointUI->popDown();
+  }
 }
 
-void FapUAModeller::onPointChanged(const FaVec3& newPoint, bool isGlobal)
+
+void FapUAModeller::updatePointUI(int globalOnly, int idx)
 {
+  if (!ourPointUI) return;
+
+  if (idx >= 0)
+    whichPoint = idx;
+
+  if (globalOnly > 0)
+    ourPointUI->setGlobal(true);
+  else if (globalOnly == 0)
+    ourPointUI->setLocal();
+
 #ifdef USE_INVENTOR
-  if (FdDB::setPPoint(whichPoint,isGlobal,newPoint))
-    FuiModes::notifyCreatePointChange();
-#else
-  std::cout <<"FapUAModeller::onPointChanged("<< newPoint
-            <<" "<< std::boolalpha << isGlobal <<") does nothing."<< std::endl;
-#endif
-  FapUAModeller::updatePointUI();
-}
-
-void FapUAModeller::onPointRefChanged(bool)
-{
-  FapUAModeller::updatePointUI();
-}
-
-void FapUAModeller::updatePointUI()
-{
-#ifdef USE_INVENTOR
-  if (!ourFuiModeller) return;
-
-  Fui3DPoint* pointUIC = ourFuiModeller->getPickedPointUIC();
-  FaVec3 point = FdDB::getPPoint(whichPoint,pointUIC->isGlobal());
+  FaVec3 point = FdDB::getPPoint(whichPoint,ourPointUI->isGlobal());
 
   // Trim small numbers (due to round-off in global-to-local transformations?)
   const double ptol = 1.0e-8;
@@ -285,104 +306,18 @@ void FapUAModeller::updatePointUI()
     if (point[i] < ptol && -point[i] < ptol)
       point[i] = 0.0;
 
-  pointUIC->setValue(point);
+  ourPointUI->setValue(point);
 #endif
+  ourPointUI->popUp();
 }
 
-void FapUAModeller::setGlobalOnly()
-{
-  ourFuiModeller->getPickedPointUIC()->setGlobalOnly();
-}
 
-void FapUAModeller::setLocal()
+void FapUAModeller::updateNodeUI(int nodeId, const FaVec3& nodePos)
 {
-  ourFuiModeller->getPickedPointUIC()->setLocal();
-}
+  if (!ourPointUI) return;
 
-void FapUAModeller::showPointUI(bool doShow)
-{
-  if (doShow)
-    ourFuiModeller->getPickedPointUIC()->popUp();
-  else
-    ourFuiModeller->getPickedPointUIC()->popDown();
-}
-
-//////////////////////////////////
-//
-//  Animation Control
-//  Callbacks :
-//
-/////////////////////////////////
-
-void FapUAModeller::onAllFramesToggle(bool onOrOff)
-{
-  FapAnimationCmds::animationToggleSkip(!onOrOff);
-}
-
-void FapUAModeller::onSpeedScaleChange(int value)
-{
-  FapAnimationCmds::animationFrequencyScale((float)value);
-}
-
-void FapUAModeller::onAnimationPress(int action)
-{
-  switch (action)
-    {
-    case FuiPlayPanel::TO_LAST:
-      FapAnimationCmds::animationToLastFrame();
-      break;
-    case FuiPlayPanel::TO_FIRST:
-      FapAnimationCmds::animationToFirstFrame();
-      break;
-    case FuiPlayPanel::PLAY_REW:
-      FapAnimationCmds::animationPlayReverse();
-      break;
-    case FuiPlayPanel::STEP_REW:
-      FapAnimationCmds::animationStepRwd();
-      break;
-    case FuiPlayPanel::STOP:
-      FapAnimationCmds::animationStop();
-      break;
-    case FuiPlayPanel::PAUSE:
-      FapAnimationCmds::animationPause();
-      break;
-    case FuiPlayPanel::PLAY_FWD:
-      FapAnimationCmds::animationPlay();
-      break;
-    case FuiPlayPanel::STEP_FWD:
-      FapAnimationCmds::animationStepFwd();
-      break;
-    }
-}
-
-void FapUAModeller::onRealTimePress()
-{
-  FapAnimationCmds::absoluteAnimationFrequency(100);
-}
-
-void FapUAModeller::closeAnimation()
-{
-  FapAnimationCmds::hide();
-}
-
-void FapUAModeller::onAnimTypeChange(int animationType)
-{
-  switch (animationType)
-    {
-    case FuiPlayPanel::ONESHOT:
-#ifdef USE_INVENTOR
-      FapAnimationCmds::animationType(FdAnimateModel::ONESHOT);
-#endif
-      break;
-    case FuiPlayPanel::CONTINOUS:
-#ifdef USE_INVENTOR
-      FapAnimationCmds::animationType(FdAnimateModel::LOOP);
-#endif
-      break;
-    case FuiPlayPanel::CONTINOUS_CYCLE:
-#ifdef USE_INVENTOR
-      FapAnimationCmds::animationType(FdAnimateModel::PINGPONG);
-#endif
-      break;
-    }
+  ourPointUI->setLocal(true);
+  ourPointUI->setValue(nodePos);
+  ourPointUI->setValue(nodeId);
+  ourPointUI->popUp();
 }

@@ -129,13 +129,11 @@ FuiQtLinkModelSheet::FuiQtLinkModelSheet(QWidget* parent, const char* name)
 FuiQtLinkNodeSheet::FuiQtLinkNodeSheet(QWidget* parent, const char* name)
   : FFuQtWidget(parent,name)
 {
-  myFENodeField = new FFuQtLabelField();
-  myNodePosition = new FuiQt3DPoint();
+  myNodePosition = new FuiQt3DPoint(NULL,"FE node",true,true);
 
   this->initWidgets();
 
   QLayout* layout = new QVBoxLayout(this);
-  layout->addWidget(myFENodeField->getQtWidget());
   layout->addWidget(myNodePosition->getQtWidget());
 }
 

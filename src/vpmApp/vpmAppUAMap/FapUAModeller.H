@@ -8,51 +8,33 @@
 #ifndef FAP_UA_MODELLER_H
 #define FAP_UA_MODELLER_H
 
+#include "FFaLib/FFaDynCalls/FFaDynCB.H"
+#include <cstddef>
+
 class FuiModeller;
 class FaVec3;
 
 
-//! \brief Mapper class between FuiModeller and the application.
+//! \brief Interface between FuiModeller and the application.
 
-class FapUAModeller
+namespace FapUAModeller
 {
-public:
-  static void init(FuiModeller* aFuiModeller);
-
-  static FuiModeller* getFuiModeller() { return ourFuiModeller; }
+  void init(FuiModeller* ui);
 
   // Mode and state interface
 
-  static void updateMode();
-  static void updateState(int newState);
-  static void cancel();
+  void updateMode();
+  void updateState(int newState);
+  void cancel();
 
   // 3D point select UI interface
 
-  static void onPointChanged(const FaVec3& newPoint, bool isGlobal);
-  static void onPointRefChanged(bool isGlobal);
+  void updatePointUI(int globalOnly = -1, int idx = -1);
 
-  static void updatePointUI();
-  static void setPointIdx(int idx) { whichPoint = idx; }
-  static void setGlobalOnly();
-  static void setLocal();
-  static void showPointUI(bool doShow);
+  // FE node select UI interface
 
-  // Animation control:
-
-  static void onAllFramesToggle(bool onOrOff);
-  static void onSpeedScaleChange(int value);
-
-  static void onAnimationPress(int action);
-  static void onRealTimePress();
-
-  static void onAnimTypeChange(int animationType);
-  static void closeAnimation();
-
-private:
-  // 3D point select UI interface
-  static int          whichPoint;
-  static FuiModeller* ourFuiModeller;
-};
+  void updateNodeUI(int nodeId, const FaVec3& nodePos);
+  void setNodeChangedCB(const FFaDynCB1<int>& cb);
+}
 
 #endif

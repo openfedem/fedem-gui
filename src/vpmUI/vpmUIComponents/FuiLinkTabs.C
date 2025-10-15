@@ -205,23 +205,19 @@ void FuiLinkModelSheet::update()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void FuiLinkNodeSheet::initWidgets ()
+void FuiLinkNodeSheet::initWidgets()
 {
-  myFENodeField->setLabel("FE Node");
-  myFENodeField->setSensitivity(false);
-  myFENodeField->setMaxWidth(150);
-
   myNodePosition->setRefChangedCB(FFaDynCB1M(FuiLinkNodeSheet,this,onPosRefChanged,bool));
   myNodePosition->setSensitivity(false);
   myNodePosition->setMaxWidth(150);
 }
 
 
-void FuiLinkNodeSheet::setValues (const FuiLinkValues& values)
+void FuiLinkNodeSheet::setValues(const FuiLinkValues& values)
 {
-  myFENodeField->myField->setValue(values.feNode);
-  myPos = values.feNodePos;
   if (values.feNode > 0) {
+    myNodePosition->setValue(values.feNode);
+    myPos = values.feNodePos;
     this->onPosRefChanged(myNodePosition->isGlobal());
     myNodePosition->popUp();
   }
@@ -230,7 +226,7 @@ void FuiLinkNodeSheet::setValues (const FuiLinkValues& values)
 }
 
 
-void FuiLinkNodeSheet::onPosRefChanged (bool toGlobal)
+void FuiLinkNodeSheet::onPosRefChanged(bool toGlobal)
 {
   if (toGlobal && myViewedObj)
     myNodePosition->setValue(myViewedObj->getGlobalCS()*myPos);

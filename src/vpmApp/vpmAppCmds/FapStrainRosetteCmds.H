@@ -8,14 +8,8 @@
 #ifndef FAP_STRAIN_ROSETTE_CMDS_H
 #define FAP_STRAIN_ROSETTE_CMDS_H
 
-#include "FapCmdsBase.H"
+#include "vpmApp/vpmAppCmds/FapCmdsBase.H"
 #include "FFaLib/FFaPatterns/FFaInitialisation.H"
-#include "FFaLib/FFaAlgebra/FFaVec3.H"
-
-
-class SoEventCallback;
-class FmPart;
-class FmStrainRosette;
 
 
 class FapStrainRosetteCmds : public FapCmdsBase
@@ -23,8 +17,7 @@ class FapStrainRosetteCmds : public FapCmdsBase
 private:
   static void init();
 
-  static void setState(int newState);
-  static void eventCB(void*, SoEventCallback* eventCallbackNode);
+  friend class FFaInitialisation<FapStrainRosetteCmds>;
 
 public:
   static void enterMode();
@@ -32,19 +25,24 @@ public:
   static void done();
 
   static void flipStrainRosetteZDirection();
-
-private:
-  static int    ourState;
-  static FaVec3 ourDirection;
-  static FaVec3 ourDirP1;
-  static FaVec3 ourDirP2;
-
-  static FmPart*          ourRosettePart;
-  static FmStrainRosette* ourCreatedStrainRosette;
-
-  friend class FFaInitialisation<FapStrainRosetteCmds>;
 };
 
 static FFaInitialisation<FapStrainRosetteCmds> FapStrainRosetteCmds_Init;
+
+
+namespace FapEditStrainRosetteDirCmd
+{
+  void enterMode();
+  void cancelMode();
+  void done();
+}
+
+
+namespace FapEditStrainRosetteNodesCmd
+{
+  void enterMode();
+  void cancelMode();
+  void done();
+}
 
 #endif

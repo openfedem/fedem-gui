@@ -8,6 +8,20 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.1] (2025-10-15)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/88:
+  Check box on part to ignore it when doing stress recovery .
+- Issue https://github.com/openfedem/fedem-gui/issues/91:
+  Type node numbers directly when creating/editing Strain Rosette objects.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/89:
+  Repeat curve for all objects does not work.
+
 ## [fedem-8.1.0.8] (2025-09-16)
 
 ### :rocket: Added

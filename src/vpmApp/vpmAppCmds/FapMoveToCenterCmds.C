@@ -106,9 +106,9 @@ void FapMoveToCenterCmds::setState(int newState)
       FdPickedPoints::resetPPs();
       FdExtraGraphics::hideCylinder();
 #endif
-      ourCirclePoints.clear();
-      FapUAModeller::showPointUI(false);
+      FapUAModeller::cancel();
       ourNumSelectedToMove = 0;
+      ourCirclePoints.clear();
       break;
     case OBJECT_SELECTED:
       Fui::tip("Accept by pressing Done,\n"
@@ -117,45 +117,30 @@ void FapMoveToCenterCmds::setState(int newState)
     case OBJECT_ACCEPTED:
       ourNumSelectedToMove = FapEventManager::getNumPermSelected();
       Fui::tip("Select the first of three points on the circle circumference");
-      FapUAModeller::setPointIdx(0);
-      FapUAModeller::setGlobalOnly();
-      FapUAModeller::updatePointUI();
-      FapUAModeller::showPointUI(true);
+      FapUAModeller::updatePointUI(true,0);
       break;
     case P_1_SELECTED:
       Fui::tip("Accept by pressing Done,\n"
                "or pick again to reselect first circle point.");
-      FapUAModeller::showPointUI(true);
-      FapUAModeller::setLocal();
-      FapUAModeller::updatePointUI();
+      FapUAModeller::updatePointUI(false);
       break;
     case P_1_ACCEPTED:
       Fui::tip("Select second point at the circle circumference.");
-      FapUAModeller::setGlobalOnly();
-      FapUAModeller::setPointIdx(1);
-      FapUAModeller::updatePointUI();
-      FapUAModeller::showPointUI(true);
+      FapUAModeller::updatePointUI(true,1);
       break;
     case P_2_SELECTED:
       Fui::tip("Accept by pressing Done,\n"
                "or pick again to reselect the second circle point");
-      FapUAModeller::setLocal();
-      FapUAModeller::updatePointUI();
-      FapUAModeller::showPointUI(true);
+      FapUAModeller::updatePointUI(false);
       break;
     case P_2_ACCEPTED:
       Fui::tip("Select third point at the circle circumference");
-      FapUAModeller::setPointIdx(2);
-      FapUAModeller::setGlobalOnly();
-      FapUAModeller::updatePointUI();
-      FapUAModeller::showPointUI(true);
+      FapUAModeller::updatePointUI(true,2);
       break;
     case P_3_SELECTED:
       Fui::tip("Accept by pressing Done,\n"
                "or pick again to reselect the third circle point");
-      FapUAModeller::setLocal();
-      FapUAModeller::updatePointUI();
-      FapUAModeller::showPointUI(true);
+      FapUAModeller::updatePointUI(false);
 #ifdef USE_INVENTOR
       FdPickedPoints::getAllPickedPointsGlobal(ourCirclePoints);
       FdExtraGraphics::showCylinder(FaMat34(),ourCirclePoints);
@@ -168,15 +153,12 @@ void FapMoveToCenterCmds::setState(int newState)
 #endif
       Fui::tip("Accept position by pressing Done,\n"
                "or select a point to place the object along the circle axis");
-      FapUAModeller::setPointIdx(3);
-      FapUAModeller::showPointUI(false);
+      FapUAModeller::updatePointUI(true,3);
       break;
     case AXISPOS_SELECTED:
       Fui::tip("Accept by pressing Done,\n"
                "or pick again to reselect the position along the axis");
-      FapUAModeller::setLocal();
-      FapUAModeller::updatePointUI();
-      FapUAModeller::showPointUI(true);
+      FapUAModeller::updatePointUI(false);
       break;
     }
 }
