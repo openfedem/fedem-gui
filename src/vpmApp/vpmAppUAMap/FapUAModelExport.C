@@ -61,7 +61,8 @@ void FapUAModelExport::setDBValues(FFuaUIValues* values)
 
   //FMU
   changed |= exp->fmuFilename.setValue(exportValues->fmuFilename);
-  changed |= exp->fmuAppExport.setValue(exportValues->fmuAppExport);
+  changed |= exp->inclExtFuncFile.setValue(exportValues->includeExtFuncFile);
+  changed |= exp->fmuExport.setValue(exportValues->fmuAppExport);
 
   if (changed) FpPM::touchModel(); // Indicate that the model needs save
 }
@@ -93,7 +94,8 @@ void FapUAModelExport::getDBValues(FFuaUIValues* values)
 
   //FMU
   exportValues->fmuFilename = exp->fmuFilename.getValue();
-  exportValues->fmuAppExport = exp->fmuAppExport.getValue();
+  exportValues->includeExtFuncFile = exp->inclExtFuncFile.getValue();
+  exportValues->fmuAppExport = exp->fmuExport.getValue();
 
   // Delete the temporary object
   if (!FmDB::getModelExportOptions(false)) exp->erase();

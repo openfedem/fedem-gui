@@ -26,7 +26,6 @@ class FuiModelExport : virtual public FFuTopLevelShell,
 
 public:
   FuiModelExport();
-  virtual ~FuiModelExport() {}
 
   static FuiModelExport* create(int xpos = 100, int ypos = 100,
                                 int width = 100, int height = 100,
@@ -54,39 +53,24 @@ using DTOutput = std::tuple<std::string,std::string,std::string>;
 class FuaModelExportValues : public FFuaUIValues
 {
 public:
-  FuaModelExportValues()
-  {
-    this->streamWindowSize = 10;
-    this->streamTransferState = false;
-    this->streamAppExport = false;
-
-    this->batchSurfaceOnly = true;
-    this->batchStressRecovery = true;
-    this->batchAllFEParts = false;
-    this->batchAppExport = false;
-
-    this->fmuAppExport = false;
-  }
-
-  virtual ~FuaModelExportValues() {}
-
   //Stream
   std::string streamFilename;
   std::string streamInputIndGroup;
   std::string streamOutputIndGroup;
-  double streamWindowSize;
-  bool streamTransferState;
-  bool streamAppExport;
+  double streamWindowSize = 10;
+  bool streamTransferState = false;
+  bool streamAppExport = false;
   //Batch
   std::string batchFilename;
   std::string batchInputIndGroup;
-  bool batchSurfaceOnly;
-  bool batchStressRecovery;
-  bool batchAllFEParts;
-  bool batchAppExport;
+  bool batchSurfaceOnly = true;
+  bool batchStressRecovery = true;
+  bool batchAllFEParts = false;
+  bool batchAppExport = false;
   //FMU
   std::string fmuFilename;
-  bool fmuAppExport;
+  bool fmuAppExport = false;
+  bool includeExtFuncFile = false;
   // Indicators
   std::vector<DTInput>  inputs;
   std::vector<DTOutput> outputs;

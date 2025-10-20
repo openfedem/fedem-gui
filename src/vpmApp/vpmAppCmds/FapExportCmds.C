@@ -1895,12 +1895,13 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
 
   // Collecting info on input and output functions. Vectors inputs and outputs will contain:
   // <name, description, ExternalFuncId/funcId> for each input and output
+  bool useExtFile = options->inclExtFuncFile.getValue();
   using Indicator = std::tuple<std::string,std::string,int>;
   std::vector<Indicator> inputs, outputs;
   std::vector<FmEngine*> engines;
   FmDB::getAllEngines(engines);
   for (FmEngine* e : engines)
-    if (e->isExternalFunc())
+    if (e->isExternalFunc() && !useExtFile)
     {
       std::string name = e->getTag();
       if (name.empty())
@@ -1989,9 +1990,9 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
   FmAnalysis* analysis = FmDB::getActiveAnalysis();
   bool freqChanged = analysis->solveEigenvalues.setValue(false);
   bool aexpChanged = analysis->autoCurveExportSwitch.setValue(false);
-  bool uexfChanged = analysis->useExternalFuncFile.setValue(false);
+  bool uexfChanged = !useExtFile && analysis->useExternalFuncFile.setValue(false);
   std::string exff = analysis->externalFuncFileName.getValue();
-  bool exffChanged = analysis->externalFuncFileName.setValue("");
+  bool exffChanged = !useExtFile && analysis->externalFuncFileName.setValue("");
 
   std::string& addOpts = analysis->solverAddOpts.getValue();
   std::string oldOpts(addOpts);
@@ -2006,7 +2007,8 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
   // Restore solver options
   analysis->solveEigenvalues.setValue(freqChanged);
   analysis->autoCurveExportSwitch.setValue(aexpChanged);
-  analysis->useExternalFuncFile.setValue(uexfChanged);
+  if (!useExtFile)
+    analysis->useExternalFuncFile.setValue(uexfChanged);
   if (exffChanged)
     analysis->externalFuncFileName.setValue(exff);
 
@@ -2047,7 +2049,7 @@ void FapExportCmds::exportApps()
   FmModelExpOptions* options = FmDB::getModelExportOptions();
   if (options->streamAppExport.getValue()) exportDTSApp(options);
   if (options->batchAppExport.getValue()) exportDTSBatchApp(options);
-  if (options->fmuAppExport.getValue()) exportFMUApp(options);
+  if (options->fmuExport.getValue()) exportFMUApp(options);
 }
 
 //----------------------------------------------------------------------------
