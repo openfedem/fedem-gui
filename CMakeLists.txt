@@ -128,7 +128,7 @@ install ( FILES ${FEDEM_DOCS} DESTINATION "${BINARY_DIR}/Doc" )
 
 # Download and install the FMU libraries
 
-set ( FMU_VER fmu-8.1.0 )
+set ( FMU_VER fmu-8.1.1 )
 set ( FMU_URL https://github.com/openfedem/fedem-solvers/releases/download/${FMU_VER} )
 set ( FMU_DIR "${CMAKE_CURRENT_BINARY_DIR}" )
 set ( FMU_FILES libfedem_fmu.so fedem_fmu.dll )

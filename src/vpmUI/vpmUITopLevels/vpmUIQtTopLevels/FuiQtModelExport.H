@@ -8,37 +8,33 @@
 #ifndef FUI_QT_MODEL_EXPORT_H
 #define FUI_QT_MODEL_EXPORT_H
 
-#include <QObject>
-
 #include "FFuLib/FFuQtBaseClasses/FFuQtTopLevelShell.H"
 #include "vpmUI/vpmUITopLevels/FuiModelExport.H"
 
-class QPushButton;
-class QHBoxLayout;
-class QVBoxLayout;
-class QLabel;
-class QLineEdit;
 class QGroupBox;
-class QGridLayout;
 class QCheckBox;
-class QFileDialog;
+class QLineEdit;
 class QTableWidget;
+class QPushButton;
 
-class FileSelectorWidget : public QWidget
+
+class FuiQtFileSelector : public QWidget
 {
   Q_OBJECT
 
-private:
-  QLineEdit* label;
-  QPushButton* button;
-  QHBoxLayout* layout;
-  QString filter;
+public:
+  FuiQtFileSelector(const char* filter);
+
+  std::string getLabel() const;
+  void setLabel(const std::string& label);
+
 public slots:
   void browse();
-public:
-  FileSelectorWidget(QWidget* parent, const char* f);
-  std::string getLabel() const;
-  void setLabel(const std::string& lbl);
+
+private:
+  QLineEdit*   myLabel;
+  QPushButton* myButton;
+  QString      myFilter;
 };
 
 
@@ -47,18 +43,12 @@ class FuiQtModelExport : public FFuQtTopLevelShell, public FuiModelExport
   Q_OBJECT
 
 public:
-  FuiQtModelExport(int xpos  = 100, int ypos = 100,
-                   int width = 100, int height = 100,
-                   const char* title = "Fedem",
-                   const char* name = "FuiQtModelExport");
-  virtual ~FuiQtModelExport() {}
+  FuiQtModelExport(int xpos, int ypos, int width, int height,
+                   const char* title, const char* name);
 
-private:
-  void showEvent(QShowEvent* pEvent);
-  void closeEvent(QCloseEvent* pEvent);
-
-  void setUIValues(const FFuaUIValues* values);
-  void getUIValues(FFuaUIValues* values);
+protected:
+  void setUIValues(const FFuaUIValues* values) override;
+  void getUIValues(FFuaUIValues* values) override;
 
 public slots:
   void xport();
@@ -68,55 +58,34 @@ public slots:
 private:
   // Stream
   QGroupBox* apStreamBox;
-  QGridLayout* apStreamGrid;
-
-  FileSelectorWidget* apStreamFileDialog;
-  QLabel* apStreamFileLabel;
-  QLabel* apStreamInpIndLabel;
+  FuiQtFileSelector* apStreamFileDialog;
   QLineEdit* apStreamInpIndEdit;
-  QLabel* apStreamOutIndLabel;
   QLineEdit* apStreamOutIndEdit;
-  QLabel* apStreamWindowLabel;
   QLineEdit* apStreamWindowEdit;
-  QCheckBox* apStreamStateCheckbox;
+  QCheckBox* apStreamStateToggle;
 
   // Batch
   QGroupBox* apBatchBox;
-  QGridLayout* apBatchGrid;
-
-  FileSelectorWidget* apBatchFileDialog;
-  QLabel* apBatchFileLabel;
-  QLabel* apBatchInpIndLabel;
+  FuiQtFileSelector* apBatchFileDialog;
   QLineEdit* apBatchInpIndEdit;
-  QCheckBox* apBatchSurfCheckbox;
-  QCheckBox* apBatchStressCheckbox;
-  QCheckBox* apBatchFECheckbox;
+  QCheckBox* apBatchSurfToggle;
+  QCheckBox* apBatchStressToggle;
+  QCheckBox* apBatchFEToggle;
 
   // FMU
   QGroupBox* apFMUBox;
-  QGridLayout* apFMUGrid;
-
-  FileSelectorWidget* apFMUFileDialog;
-  QLabel* apFMUFileLabel;
+  FuiQtFileSelector* apFMUFileDialog;
+  QCheckBox* apFMUFileToggle;
 
   // Functions
-  QLabel* apInputsLabel;
-  QLabel* apOutputsLabel;
+  QTableWidget* inputTable;
+  QTableWidget* outputTable;
 
-  // Main
+  // Dialog buttons
   QPushButton* apExportButton;
   QPushButton* apApplyButton;
   QPushButton* apCancelButton;
   QPushButton* apHelpButton;
-
-  QVBoxLayout* apAppLayout;
-  QVBoxLayout* apFunctionLayout;
-  QHBoxLayout* apWidgetLayout;
-  QVBoxLayout* apMainLayout;
-  QHBoxLayout* apDialogButtonLayout;
-
-  QTableWidget* inputTable;
-  QTableWidget* outputTable;
 };
 
 #endif

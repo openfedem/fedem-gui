@@ -118,7 +118,7 @@ protected:
   FFuFrame* myHelpFrame;
   FFuLabel* myHelpLabel;
 
-  enum { LIST, VIEW, FILE, UDWS, MATH, NPRM };
+  enum { LIST, VIEW, FILE, UDWS, MATH, EXTF, NPRM };
   std::array<FFuLabelFrame*,NPRM> myParameterFrames;
 
   FFuMemo*       myExprMemo;
@@ -139,6 +139,8 @@ protected:
   FFuIOField*      myScaleFactorField;
   FFuLabelField*   myVerticalShiftField;
   FFuToggleButton* myZeroAdjustToggle;
+
+  std::array<FFuIOField*,3> myExtFuncFields;
 
   FuiParameterView* myParameterView;
   FFuPushButton*    myExpandButton;

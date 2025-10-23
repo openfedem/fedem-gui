@@ -129,10 +129,10 @@ void FuiGraphDefine::getUIValues(FFuaUIValues* values)
 {
   FuaGraphDefineValues* graphValues = (FuaGraphDefineValues*) values;
 
-  graphValues->title = this->titleField->getValue();
-  graphValues->subtitle = this->subtitleField->getValue();
-  graphValues->xAxisLabel = this->xAxisField->getValue();
-  graphValues->yAxisLabel = this->yAxisField->getValue();
+  graphValues->title      = titleField->getText();
+  graphValues->subtitle   = subtitleField->getText();
+  graphValues->xAxisLabel = xAxisField->getText();
+  graphValues->yAxisLabel = yAxisField->getText();
 
   for (size_t i = 0; i < this->fontSizeBox.size() && i < graphValues->fontSize.size(); i++)
     graphValues->fontSize[i] = this->fontSizeBox[i]->getIntValue();

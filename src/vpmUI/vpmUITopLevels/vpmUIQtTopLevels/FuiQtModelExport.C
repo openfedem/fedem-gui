@@ -5,17 +5,16 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QPushButton>
+#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QTableWidget>
 #include <QHeaderView>
-#include <QCloseEvent>
 #include <QLineEdit>
 #include <QLabel>
 #include <QGroupBox>
-#include <QGridLayout>
 #include <QCheckBox>
+#include <QPushButton>
 #include <QFileDialog>
 
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtModelExport.H"
@@ -24,31 +23,37 @@
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
 
-FileSelectorWidget::FileSelectorWidget(QWidget* parent, const char* f) : QWidget(parent), filter(f)
+FuiQtFileSelector::FuiQtFileSelector(const char* filter) : myFilter(filter)
 {
-	label = new QLineEdit();
-	button = new QPushButton("Browse ...");
-	connect(button, SIGNAL(clicked()), SLOT(browse()));
-	layout = new QHBoxLayout();
-	layout->addWidget(label);
-	layout->addWidget(button);
-	setLayout(layout);
+  myLabel  = new QLineEdit();
+  myButton = new QPushButton("Browse ...");
+
+  this->connect(myButton, SIGNAL(clicked()), SLOT(browse()));
+
+  QLayout* layout = new QHBoxLayout(this);
+  layout->setContentsMargins(0,0,0,0);
+  layout->addWidget(myLabel);
+  layout->addWidget(myButton);
 }
 
-void FileSelectorWidget::browse()
+
+std::string FuiQtFileSelector::getLabel() const
 {
-  QString dir = QFileDialog::getSaveFileName(this, "Choose location", label->text(), filter);
+  return myLabel->text().toStdString();
+}
+
+
+void FuiQtFileSelector::setLabel(const std::string& label)
+{
+  myLabel->setText(label.c_str());
+}
+
+
+void FuiQtFileSelector::browse()
+{
+  QString dir = QFileDialog::getSaveFileName(this, "Choose location",
+                                             myLabel->text(), myFilter);
   if (!dir.isNull()) this->setLabel(dir.toStdString());
-}
-
-std::string FileSelectorWidget::getLabel() const
-{
-  return label->text().toStdString();
-}
-
-void FileSelectorWidget::setLabel(const std::string& lab)
-{
-  label->setText(lab.c_str());
 }
 
 
@@ -66,149 +71,128 @@ FuiQtModelExport::FuiQtModelExport(int xpos, int ypos,
                                    const char* title, const char* name)
   : FFuQtTopLevelShell(NULL, xpos, ypos, width, height, title, name)
 {
-	// ** Create Widgets **
-	apExportButton = new QPushButton("Export");
-	apApplyButton = new QPushButton("Apply");
-	apCancelButton = new QPushButton("Cancel");
-	apHelpButton = new QPushButton("Help");
+  apStreamBox = new QGroupBox("Stream app");
+  apStreamBox->setCheckable(true);
+  apStreamBox->setChecked(false);
 
-	// Stream
-	apStreamFileDialog = new FileSelectorWidget(this, "App(*.zip)");
-	apStreamFileLabel = new QLabel("File Name:");
-	apStreamInpIndLabel = new QLabel("Input Indicator Group:");
-	apStreamInpIndEdit = new QLineEdit();
-	apStreamOutIndLabel = new QLabel("Output Indicator Group:");
-	apStreamOutIndEdit = new QLineEdit();
-	apStreamWindowLabel = new QLabel("Window Size [sec]:");
-	apStreamWindowEdit = new QLineEdit();
-	apStreamStateCheckbox = new QCheckBox("Transfer solver state between windows");
+  apStreamFileDialog  = new FuiQtFileSelector("App(*.zip)");
+  apStreamInpIndEdit  = new QLineEdit();
+  apStreamOutIndEdit  = new QLineEdit();
+  apStreamWindowEdit  = new QLineEdit();
+  apStreamStateToggle = new QCheckBox("Transfer solver state between windows");
 
-	apStreamGrid = new QGridLayout();
-	apStreamGrid->addWidget(apStreamFileLabel, 0, 0);
-	apStreamGrid->addWidget(apStreamFileDialog, 0, 1);
-	apStreamGrid->addWidget(apStreamInpIndLabel, 1, 0);
-	apStreamGrid->addWidget(apStreamInpIndEdit, 1, 1);
-	apStreamGrid->addWidget(apStreamOutIndLabel, 2, 0);
-	apStreamGrid->addWidget(apStreamOutIndEdit, 2, 1);
-	apStreamGrid->addWidget(apStreamWindowLabel, 3, 0);
-	apStreamGrid->addWidget(apStreamWindowEdit, 3, 1);
-	apStreamGrid->addWidget(apStreamStateCheckbox, 4, 1);
+  QGridLayout* apGrid = new QGridLayout(apStreamBox);
+  apGrid->addWidget(new QLabel("File Name:"),              0, 0);
+  apGrid->addWidget(new QLabel("Input Indicator Group:"),  1, 0);
+  apGrid->addWidget(new QLabel("Output Indicator Group:"), 2, 0);
+  apGrid->addWidget(new QLabel("Window Size [sec]:"),      3, 0);
+  apGrid->addWidget(apStreamFileDialog,  0, 1);
+  apGrid->addWidget(apStreamInpIndEdit,  1, 1);
+  apGrid->addWidget(apStreamOutIndEdit,  2, 1);
+  apGrid->addWidget(apStreamWindowEdit,  3, 1);
+  apGrid->addWidget(apStreamStateToggle, 4, 1);
 
-	apStreamBox = new QGroupBox("Stream app");
-	apStreamBox->setCheckable(true);
-	apStreamBox->setChecked(false);
-	apStreamBox->setLayout(apStreamGrid);
+  apBatchBox = new QGroupBox("Batch app");
+  apBatchBox->setCheckable(true);
+  apBatchBox->setChecked(false);
 
-	// Batch
-	apBatchFileDialog = new FileSelectorWidget(this, "App(*.zip)");
-	apBatchFileLabel = new QLabel("File Name:");
-	apBatchInpIndLabel = new QLabel("Input Indicator Group:");
-	apBatchInpIndEdit = new QLineEdit();
-	apBatchSurfCheckbox = new QCheckBox("Surface Only");
-	apBatchStressCheckbox = new QCheckBox("Stress Recovery");
-	apBatchFECheckbox = new QCheckBox("All FE-Parts");
+  apBatchFileDialog   = new FuiQtFileSelector("App(*.zip)");
+  apBatchInpIndEdit   = new QLineEdit();
+  apBatchSurfToggle   = new QCheckBox("Surface Only");
+  apBatchStressToggle = new QCheckBox("Stress Recovery");
+  apBatchFEToggle     = new QCheckBox("All FE-Parts");
 
-	apBatchGrid = new QGridLayout();
-	apBatchGrid->addWidget(apBatchFileLabel, 0, 0);
-	apBatchGrid->addWidget(apBatchFileDialog, 0, 1);
-	apBatchGrid->addWidget(apBatchInpIndLabel, 1, 0);
-	apBatchGrid->addWidget(apBatchInpIndEdit, 1, 1);
-	apBatchGrid->addWidget(apBatchSurfCheckbox, 2, 1);
-	apBatchGrid->addWidget(apBatchStressCheckbox, 3, 1);
-	apBatchGrid->addWidget(apBatchFECheckbox, 4, 1);
+  apGrid = new QGridLayout(apBatchBox);
+  apGrid->addWidget(new QLabel("File Name:"),             0, 0);
+  apGrid->addWidget(new QLabel("Input Indicator Group:"), 1, 0);
+  apGrid->addWidget(apBatchFileDialog,   0, 1);
+  apGrid->addWidget(apBatchInpIndEdit,   1, 1);
+  apGrid->addWidget(apBatchSurfToggle,   2, 1);
+  apGrid->addWidget(apBatchStressToggle, 3, 1);
+  apGrid->addWidget(apBatchFEToggle,     4, 1);
 
-	apBatchBox = new QGroupBox("Batch app");
-	apBatchBox->setCheckable(true);
-	apBatchBox->setChecked(false);
-	apBatchBox->setLayout(apBatchGrid);
+  apFMUBox = new QGroupBox("FMU");
+  apFMUBox->setCheckable(true);
+  apFMUBox->setChecked(false);
 
-	// FMU
-	apFMUFileDialog = new FileSelectorWidget(this, "FMU(*.fmu)");
-	apFMUFileLabel = new QLabel("File Name:");
+  apFMUFileDialog = new FuiQtFileSelector("FMU(*.fmu)");
+  apFMUFileToggle = new QCheckBox("Include the external functions file");
 
-	apFMUGrid = new QGridLayout();
-	apFMUGrid->addWidget(apFMUFileLabel, 0, 0);
-	apFMUGrid->addWidget(apFMUFileDialog, 0, 1);
+  apGrid = new QGridLayout(apFMUBox);
+  apGrid->addWidget(new QLabel("File Name:"), 0, 0);
+  apGrid->addWidget(apFMUFileDialog, 0, 1);
+  apGrid->addWidget(apFMUFileToggle, 1, 1);
 
-	apFMUBox = new QGroupBox("FMU");
-	apFMUBox->setCheckable(true);
-	apFMUBox->setChecked(false);
-	apFMUBox->setLayout(apFMUGrid);
+  inputTable = new QTableWidget(0, 2);
+  inputTable->setHorizontalHeaderLabels({ "Name", "Description" });
+  inputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 
-	// ** Create layouts **
-	apMainLayout = new QVBoxLayout();
-	apDialogButtonLayout = new QHBoxLayout();
+  outputTable = new QTableWidget(0, 3);
+  outputTable->setHorizontalHeaderLabels({ "Name", "Description", "Threshold" });
+  outputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 
-	// ** Initialize layouts **
-	apDialogButtonLayout->addWidget(apExportButton);
-	apDialogButtonLayout->addWidget(apApplyButton);
-	apDialogButtonLayout->addWidget(apCancelButton);
-	apDialogButtonLayout->addWidget(apHelpButton);
-	apDialogButtonLayout->insertStretch(-1);
+  QLayout* apFunctionLayout = new QVBoxLayout();
+  apFunctionLayout->addWidget(new QLabel("Input Indicators:"));
+  apFunctionLayout->addWidget(inputTable);
+  apFunctionLayout->addWidget(new QLabel("Output Indicators:"));
+  apFunctionLayout->addWidget(outputTable);
 
-	inputTable = new QTableWidget(0, 2, this);
-	outputTable = new QTableWidget(0, 3, this);
+  apExportButton = new QPushButton("Export");
+  apApplyButton  = new QPushButton("Apply");
+  apCancelButton = new QPushButton("Cancel");
+  apHelpButton   = new QPushButton("Help");
 
-	apWidgetLayout = new QHBoxLayout();
+  QBoxLayout* apButtonLayout = new QHBoxLayout();
+  apButtonLayout->addWidget(apExportButton);
+  apButtonLayout->addWidget(apApplyButton);
+  apButtonLayout->addWidget(apCancelButton);
+  apButtonLayout->addWidget(apHelpButton);
+  apButtonLayout->addStretch(1);
 
-	apAppLayout = new QVBoxLayout();
-	apAppLayout->addWidget(apStreamBox);
-	apAppLayout->addWidget(apBatchBox);
-	apAppLayout->addWidget(apFMUBox);
+  QBoxLayout* apLayout = new QVBoxLayout();
+  apLayout->addWidget(apStreamBox);
+  apLayout->addWidget(apBatchBox);
+  apLayout->addWidget(apFMUBox);
 
-	apFunctionLayout = new QVBoxLayout();
-	apInputsLabel = new QLabel("Input Indicators:");
-	apOutputsLabel = new QLabel("Output Indicators:");
-	apFunctionLayout->addWidget(apInputsLabel);
-	apFunctionLayout->addWidget(inputTable);
-	apFunctionLayout->addWidget(apOutputsLabel);
-	apFunctionLayout->addWidget(outputTable);
+  QBoxLayout* apMainLayout = new QHBoxLayout();
+  apMainLayout->addLayout(apLayout);
+  apMainLayout->addLayout(apFunctionLayout);
 
-	apWidgetLayout->addLayout(apAppLayout);
-	apWidgetLayout->addLayout(apFunctionLayout);
-	
-	apMainLayout->addLayout(apWidgetLayout);
-	
-	apMainLayout->addStretch();
-	apMainLayout->addLayout(apDialogButtonLayout);
-	apMainLayout->setContentsMargins(5, 5, 5, 5);
+  apLayout = new QVBoxLayout(this);
+  apLayout->addLayout(apMainLayout);
+  apLayout->addStretch(1);
+  apLayout->addLayout(apButtonLayout);
 
-	this->setLayout(apMainLayout);
+  this->connect(apExportButton, SIGNAL(clicked()), this, SLOT(xport()));
+  this->connect(apApplyButton,  SIGNAL(clicked()), this, SLOT(apply()));
+  this->connect(apCancelButton, SIGNAL(clicked()), this, SLOT(close()));
+  this->connect(apHelpButton,   SIGNAL(clicked()), this, SLOT(help()));
 
-	// Buttons
-	QObject::connect(apExportButton, SIGNAL(clicked()), this, SLOT(xport()));
-	QObject::connect(apApplyButton, SIGNAL(clicked()), this, SLOT(apply()));
-	QObject::connect(apCancelButton, SIGNAL(clicked()), this, SLOT(close()));
-	QObject::connect(apHelpButton, SIGNAL(clicked()), this, SLOT(help()));
-
-	FFuUAExistenceHandler::invokeCreateUACB(this);
+  FFuUAExistenceHandler::invokeCreateUACB(this);
 }
 
 
 void FuiQtModelExport::setUIValues(const FFuaUIValues* values)
 {
-	FuaModelExportValues* expValues = (FuaModelExportValues*)values;
-	//UPDATE VALUES
+  FuaModelExportValues* expValues = (FuaModelExportValues*)values;
 
-	//STREAM
-	apStreamFileDialog->setLabel(expValues->streamFilename);
-	apStreamInpIndEdit->setText(expValues->streamInputIndGroup.c_str());
-	apStreamOutIndEdit->setText(expValues->streamOutputIndGroup.c_str());
-	apStreamWindowEdit->setText(QString::number(expValues->streamWindowSize));
-	apStreamStateCheckbox->setChecked(expValues->streamTransferState);
-	apStreamBox->setChecked(expValues->streamAppExport);
+  apStreamFileDialog->setLabel(expValues->streamFilename);
+  apStreamInpIndEdit->setText(expValues->streamInputIndGroup.c_str());
+  apStreamOutIndEdit->setText(expValues->streamOutputIndGroup.c_str());
+  apStreamWindowEdit->setText(QString::number(expValues->streamWindowSize));
+  apStreamStateToggle->setChecked(expValues->streamTransferState);
+  apStreamBox->setChecked(expValues->streamAppExport);
 
-	//BATCH
-	apBatchFileDialog->setLabel(expValues->batchFilename);
-	apBatchInpIndEdit->setText(expValues->batchInputIndGroup.c_str());
-	apBatchStressCheckbox->setChecked(expValues->batchStressRecovery);
-	apBatchFECheckbox->setChecked(expValues->batchAllFEParts);
-	apBatchSurfCheckbox->setChecked(expValues->batchSurfaceOnly);
-	apBatchBox->setChecked(expValues->batchAppExport);
+  apBatchFileDialog->setLabel(expValues->batchFilename);
+  apBatchInpIndEdit->setText(expValues->batchInputIndGroup.c_str());
+  apBatchStressToggle->setChecked(expValues->batchStressRecovery);
+  apBatchFEToggle->setChecked(expValues->batchAllFEParts);
+  apBatchSurfToggle->setChecked(expValues->batchSurfaceOnly);
+  apBatchBox->setChecked(expValues->batchAppExport);
 
-	//FMU
-	apFMUFileDialog->setLabel(expValues->fmuFilename);
-	apFMUBox->setChecked(expValues->fmuAppExport);
+  apFMUFileDialog->setLabel(expValues->fmuFilename);
+  apFMUFileToggle->setChecked(expValues->includeExtFuncFile);
+  apFMUBox->setChecked(expValues->fmuAppExport);
 
   int iRow = 0;
   inputTable->setRowCount(expValues->inputs.size());
@@ -233,49 +217,29 @@ void FuiQtModelExport::setUIValues(const FFuaUIValues* values)
     ++iRow;
   }
 }
-//-----------------------------------------------------------------------------
+
 
 void FuiQtModelExport::getUIValues(FFuaUIValues* values)
 {
-	FuaModelExportValues* expValues = (FuaModelExportValues*)values;
-	
-	//STREAM
-	expValues->streamFilename = apStreamFileDialog->getLabel();
-	expValues->streamInputIndGroup = apStreamInpIndEdit->text().toStdString();
-	expValues->streamOutputIndGroup = apStreamOutIndEdit->text().toStdString();
-	expValues->streamWindowSize = apStreamWindowEdit->text().toDouble();
-	expValues->streamTransferState = apStreamStateCheckbox->isChecked();
-	expValues->streamAppExport = apStreamBox->isChecked();
+  FuaModelExportValues* expValues = (FuaModelExportValues*)values;
 
-	//BATCH
-	expValues->batchFilename = apBatchFileDialog->getLabel();
-	expValues->batchInputIndGroup = apBatchInpIndEdit->text().toStdString();
-	expValues->batchStressRecovery = apBatchStressCheckbox->isChecked();
-	expValues->batchAllFEParts = apBatchFECheckbox->isChecked();
-	expValues->batchSurfaceOnly = apBatchSurfCheckbox->isChecked();
-	expValues->batchAppExport = apBatchBox->isChecked();
+  expValues->streamFilename = apStreamFileDialog->getLabel();
+  expValues->streamInputIndGroup = apStreamInpIndEdit->text().toStdString();
+  expValues->streamOutputIndGroup = apStreamOutIndEdit->text().toStdString();
+  expValues->streamWindowSize = apStreamWindowEdit->text().toDouble();
+  expValues->streamTransferState = apStreamStateToggle->isChecked();
+  expValues->streamAppExport = apStreamBox->isChecked();
 
-	//FMU
-	expValues->fmuFilename = apFMUFileDialog->getLabel();
-	expValues->fmuAppExport = apFMUBox->isChecked();
-}
+  expValues->batchFilename = apBatchFileDialog->getLabel();
+  expValues->batchInputIndGroup = apBatchInpIndEdit->text().toStdString();
+  expValues->batchStressRecovery = apBatchStressToggle->isChecked();
+  expValues->batchAllFEParts = apBatchFEToggle->isChecked();
+  expValues->batchSurfaceOnly = apBatchSurfToggle->isChecked();
+  expValues->batchAppExport = apBatchBox->isChecked();
 
-// ************SLOTS**********
-
-void FuiQtModelExport::showEvent(QShowEvent*)
-{
-  inputTable->clear();
-  inputTable->setHorizontalHeaderLabels({ "Name", "Description" });
-  inputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
-
-  outputTable->clear();
-  outputTable->setHorizontalHeaderLabels({ "Name", "Description", "Threshold" });
-  outputTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
-}
-
-
-void FuiQtModelExport::closeEvent(QCloseEvent*)
-{
+  expValues->fmuFilename = apFMUFileDialog->getLabel();
+  expValues->includeExtFuncFile = apFMUFileToggle->isChecked();
+  expValues->fmuAppExport = apFMUBox->isChecked();
 }
 
 
