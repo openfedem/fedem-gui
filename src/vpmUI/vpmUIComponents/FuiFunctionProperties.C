@@ -183,6 +183,16 @@ void FuiFunctionProperties::initWidgets()
   myZeroAdjustToggle->setToggleCB(FFaDynCB1M(FuiFunctionProperties,this,
 					     onToggleChanged,bool));
 
+  // External function
+
+  myExtFuncFields.front()->setSensitivity(false);
+  for (int i = 1; i < 3; i++)
+  {
+    myExtFuncFields[i]->setInputCheckMode(FFuIOField::DOUBLECHECK);
+    myExtFuncFields[i]->setAcceptedCB(FFaDynCB1M(FuiFunctionProperties,this,
+                                                 onParameterValueChanged,double));
+  }
+
   // File reference
 
   myFileBrowseButton->setLabel("...");
@@ -371,9 +381,9 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
 
   else if (fv->myExtFunc > 0)
   {
-    myChannelNameField->setValue(fv->myExtFunc);
-    myScaleFactorField->setValue(fv->myScaleFactor);
-    myVerticalShiftField->setValue(fv->myVerticalShift);
+    myExtFuncFields[0]->setValue(fv->myExtFunc);
+    myExtFuncFields[1]->setValue(fv->myScaleFactor);
+    myExtFuncFields[2]->setValue(fv->myVerticalShift);
   }
 
   if (fv->showParameterList)
@@ -470,6 +480,7 @@ void FuiFunctionProperties::buildDynamicWidgets(const FFuaUIValues* values)
       IAmShowingPrmView[FILE] = fv->isMultiChannel ? 2 : 1; // Other file views
   }
   IAmShowingPrmView[MATH] = fv->showMathExpr;
+  IAmShowingPrmView[EXTF] = fv->myExtFunc > 0;
   IAmShowingCurvePreview = fv->showCurvePreview;
   unsigned char nArg = fv->myArgumentValues.size();
   IAmShowingArgument = fv->showArgument ? nArg : -nArg;
@@ -674,6 +685,11 @@ void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
   else if (IAmShowingPrmView[MATH])
     myExprMemo->getText(values.myExpression);
 
+  else if (IAmShowingPrmView[EXTF]) {
+    values.myExtFunc = myExtFuncFields[0]->getInt();
+    values.myScaleFactor = myExtFuncFields[1]->getDouble();
+    values.myVerticalShift = myExtFuncFields[2]->getDouble();
+  }
   else {
     values.myScaleFactor = myScaleFactorField->getDouble();
     values.myVerticalShift = myVerticalShiftField->getValue();
@@ -892,6 +908,8 @@ void FuiFunctionProperties::setParameterSensitivity(bool isSensitive)
   myExprMemo->setSensitivity(isSensitive);
   myExprApplyButton->setSensitivity(isSensitive);
   myExtrapolationSwitch->setSensitivity(isSensitive);
+  myExtFuncFields[1]->setSensitivity(isSensitive);
+  myExtFuncFields[2]->setSensitivity(isSensitive);
 
   myJonswapA->mySpectralPeakednessToggle->setSensitivity(isSensitive);
   myJonswapA->myWaveComponentsField->setSensitivity(isSensitive);

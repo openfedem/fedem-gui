@@ -97,6 +97,9 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   myVerticalShiftField = new FFuQtLabelField();
   myZeroAdjustToggle   = new FFuQtToggleButton();
 
+  for (FFuIOField*& fld : myExtFuncFields)
+    fld = new FFuQtIOField();
+
   myJonswapA = new FuiQtJonswapAdvanced(NULL);
   myJonswapB = new FuiQtJonswapBasic(NULL);
   myWaveSpec = new FuiQtWaveSpectrum(NULL);
@@ -199,6 +202,15 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   gl->addWidget(new QLabel("Scale"), 2,0);
   gl->addWidget(myScaleFactorField->getQtWidget(), 2,1);
   gl->addWidget(qVerticalShiftFrame, 3,0,1,3);
+
+  gl = new QGridLayout(myParameterFrames[EXTF]->getQtWidget());
+  gl->setContentsMargins(5,0,5,5);
+  gl->setColumnStretch(1,1);
+  gl->addWidget(new QLabel("Channel"),          0,0);
+  gl->addWidget(new QLabel("Scale"),            1,0);
+  gl->addWidget(new QLabel("Additional shift"), 2,0);
+  for (int row = 0; row < 3; row++)
+    gl->addWidget(myExtFuncFields[row]->getQtWidget(), row,1);
 
   QWidget* qExprBtn = new QWidget();
   layout = new QHBoxLayout(qExprBtn);
