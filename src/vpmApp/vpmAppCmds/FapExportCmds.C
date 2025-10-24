@@ -1927,12 +1927,15 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
   time_t currentTime = time(NULL);
   strftime(generateTime,64,"%FT%T",localtime(&currentTime));
   std::string id = FpPM::createUuid();
+  std::string descr = mech->getUserDescription(64);
+  for (char& c : descr)
+    if (c == '<' || c == '>') c = '_'; // not allowed in xml attribute values
 
   os <<"<?xml version=\"1.0\"?>\n"
      <<"<fmiModelDescription fmiVersion=\"2.0\" generationDateAndTime=\""<< generateTime
      <<"\" generationTool=\"FEDEM FMU Exporter\" guid=\""<< id
      <<"\" modelName=\""<< modelIdentifier
-     <<"\" description=\""<< mech->getUserDescription(64) <<"\">\n";
+     <<"\" description=\""<< descr <<"\">\n";
 
   os <<"\t<CoSimulation canGetAndSetFMUstate=\"false\" canHandleVariableCommunicationStepSize=\"false\""
      <<" canInterpolateInputs=\"false\" modelIdentifier=\""<< modelIdentifier <<"\"/>\n";
