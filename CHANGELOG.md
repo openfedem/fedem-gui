@@ -21,6 +21,8 @@
 
 - Issue https://github.com/openfedem/fedem-gui/issues/89:
   Repeat curve for all objects does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/94:
+  When deleting a "Time history input file" object a hidden Function appears.
 
 ## [fedem-8.1.0.8] (2025-09-16)
 
