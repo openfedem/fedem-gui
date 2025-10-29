@@ -151,23 +151,21 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   layout->addWidget(myTypeSwitch->getQtWidget(),0,Qt::AlignTop);
   layout->addWidget(myEngineFunction->getQtWidget());
 
-  QWidget* qNumArgs = new QWidget();
-  layout = new QHBoxLayout(qNumArgs);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(myNumArgLabel->getQtWidget());
-  layout->addWidget(myNumArgBox->getQtWidget());
+  QLayout* qNumArgs = new QHBoxLayout();
+  qNumArgs->setContentsMargins(0,0,0,0);
+  qNumArgs->addWidget(myNumArgLabel->getQtWidget());
+  qNumArgs->addWidget(myNumArgBox->getQtWidget());
 
   layout = new QVBoxLayout(qLeft);
   layout->setContentsMargins(0,0,0,0);
   layout->setSpacing(1);
   layout->addWidget(myTypeFrame->getQtWidget());
-  layout->addWidget(myInputSelector->getQtWidget(),1);
-  layout->addWidget(qNumArgs);
+  layout->addWidget(myInputSelector->getQtWidget(),3);
+  layout->addLayout(qNumArgs,1);
   layout->addWidget(myJonswapA->getQtWidget());
-  layout->addWidget(myOutputToggle->getQtWidget());
+  layout->addWidget(myOutputToggle->getQtWidget(),1);
 
-  QWidget* qXYfields = new QWidget();
-  QGridLayout* gl = new QGridLayout(qXYfields);
+  QGridLayout* gl = new QGridLayout();
   gl->setContentsMargins(0,0,0,0);
   gl->setVerticalSpacing(0);
   gl->addWidget(new QLabel("X"), 0,0);
@@ -182,7 +180,7 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   layout = new QVBoxLayout(myParameterFrames[LIST]->getQtWidget());
   layout->setContentsMargins(3,0,3,3);
   layout->addWidget(myParameterList->getQtWidget());
-  layout->addWidget(qXYfields);
+  layout->addLayout(gl);
 
   QGroupBox* qVerticalShiftFrame = new QGroupBox("Vertical shift after scale");
   layout = new QVBoxLayout(qVerticalShiftFrame);
@@ -212,16 +210,15 @@ FuiQtFunctionProperties::FuiQtFunctionProperties(QWidget* parent)
   for (int row = 0; row < 3; row++)
     gl->addWidget(myExtFuncFields[row]->getQtWidget(), row,1);
 
-  QWidget* qExprBtn = new QWidget();
-  layout = new QHBoxLayout(qExprBtn);
-  layout->setContentsMargins(2,0,2,0);
-  layout->addWidget(myExprLabel->getQtWidget(),1);
-  layout->addWidget(myExprApplyButton->getQtWidget());
+  QBoxLayout* qExprBtn = new QHBoxLayout();
+  qExprBtn->setContentsMargins(2,0,2,0);
+  qExprBtn->addWidget(myExprLabel->getQtWidget(),1);
+  qExprBtn->addWidget(myExprApplyButton->getQtWidget());
 
   layout = new QVBoxLayout(myParameterFrames[MATH]->getQtWidget());
   layout->setContentsMargins(3,0,3,3);
   layout->addWidget(myExprMemo->getQtWidget(),1);
-  layout->addWidget(qExprBtn);
+  layout->addLayout(qExprBtn);
 
   layout = new QVBoxLayout(myThresholdFrame->getQtWidget());
   layout->setContentsMargins(0,0,0,0);
@@ -250,19 +247,18 @@ FuiQtFunctionProperties::FuiQtJonswapAdvanced::FuiQtJonswapAdvanced(QWidget* par
   mySpreadExpField = new FFuQtLabelField();
   myRandomSeedField = new FFuQtLabelField();
 
-  QWidget* qAdvanced = new QWidget();
-  QLayout* layout = new QHBoxLayout(qAdvanced);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(mySpreadExpField->getQtWidget());
-  layout->addWidget(myRandomSeedField->getQtWidget());
+  QLayout* qAdvanced = new QHBoxLayout();
+  qAdvanced->setContentsMargins(0,0,0,0);
+  qAdvanced->addWidget(mySpreadExpField->getQtWidget());
+  qAdvanced->addWidget(myRandomSeedField->getQtWidget());
 
-  layout = new QVBoxLayout(this);
+  QBoxLayout* layout = new QVBoxLayout(this);
   layout->setContentsMargins(5,0,5,5);
   layout->addWidget(mySpectralPeakednessField->getQtWidget());
   layout->addWidget(mySpectralPeakednessToggle->getQtWidget());
   layout->addWidget(myWaveComponentsField->getQtWidget());
   layout->addWidget(myWaveDirsField->getQtWidget());
-  layout->addWidget(qAdvanced);
+  layout->addLayout(qAdvanced);
 }
 
 
@@ -277,22 +273,21 @@ FuiQtFunctionProperties::FuiQtJonswapBasic::FuiQtJonswapBasic(QWidget* parent)
   myTHighField = new FFuQtLabelField();
 
   QGroupBox* qBasicFrame = new QGroupBox("Basic");
-  QLayout* layout = new QVBoxLayout(qBasicFrame);
+  QBoxLayout* layout = new QVBoxLayout(qBasicFrame);
   layout->setContentsMargins(5,0,5,5);
   layout->addWidget(myHsField->getQtWidget());
   layout->addWidget(myTpField->getQtWidget());
 
-  QWidget* qCutOff = new QWidget();
-  layout = new QHBoxLayout(qCutOff);
-  layout->setContentsMargins(0,0,0,0);
-  layout->addWidget(myTLowField->getQtWidget());
-  layout->addWidget(myTHighField->getQtWidget());
+  QLayout* qCutOff = new QHBoxLayout();
+  qCutOff->setContentsMargins(0,0,0,0);
+  qCutOff->addWidget(myTLowField->getQtWidget());
+  qCutOff->addWidget(myTHighField->getQtWidget());
 
   QGroupBox* qCutOffFrame = new QGroupBox("Period cut-off values");
   layout = new QVBoxLayout(qCutOffFrame);
   layout->setContentsMargins(5,0,5,5);
   layout->addWidget(myCutOffToggle->getQtWidget());
-  layout->addWidget(qCutOff);
+  layout->addLayout(qCutOff);
 
   layout = new QVBoxLayout(this);
   layout->setContentsMargins(0,0,0,0);
