@@ -8,7 +8,7 @@ REM This file is part of FEDEM - https://openfedem.org
 REM This script creates an installer as a ZIP file
 REM for the complete FEDEM installation on the Win64 platform.
 REM Edit the following line according to the version to create installer for:
-SET VERSION=8.1.1
+SET VERSION=8.1.2
 REM All binaries are assumed to have been built and placed in folder %INST_DIR%.
 SET INST_DIR=%USERPROFILE%\Fedem-install\4.1.4\bin
 REM ============================================================================

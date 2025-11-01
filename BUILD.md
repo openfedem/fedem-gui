@@ -14,7 +14,7 @@ and with Intel&reg; Fortran Compilers for the Fortran modules.
 The build system is based on the [CMake](https://cmake.org/) tool,
 which is embedded in the Visual Studio 2022 installation.
 
-The GUI application can now also be built on Linux, using the description
+The GUI application can also be built on Linux, using the description
 shown [below](#build-fedem-gui-application-on-linux).
 
 ## Build of external 3rd-party modules
@@ -340,7 +340,6 @@ don't need this feature, you can skip the following installation procedure:
       set(ZIP_PUBLIC_HDRS
           contrib/minizip/zip.h
           contrib/minizip/ioapi.h
-          contrib/minizip/iowin32.h
       )
       set(ZIP_PRIVATE_HDRS
           contrib/minizip/crypt.h
@@ -348,8 +347,11 @@ don't need this feature, you can skip the following installation procedure:
       set(ZIP_SRCS
           contrib/minizip/zip.c
           contrib/minizip/ioapi.c
-          contrib/minizip/iowin32.c
       )
+      if(WIN32)
+        list(APPEND ZIP_PUBLIC_HDRS contrib/minizip/iowin32.h)
+        list(APPEND ZIP_SRC contrib/minizip/iowin32.c)
+      endif()
       message(STATUS "Adding zip library")
       add_library(zip STATIC ${ZIP_SRCS} ${ZIP_PUBLIC_HDRS} ${ZIP_PRIVATE_HDRS})
       if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
@@ -521,9 +523,19 @@ The following configuration steps have been used so far:
   before running the `qmake6` command.
   In that case, remember to also modify [FindQwt.cmake](cmake/Modules/FindQwt.cmake) before proceeding.
 
-- Configure and build FEDEM GUI from the qt6-port branch:
+- Zlib (optional): Obtain the sources of this module following the first three steps
+  described [above](#qwt) for the Windows build.
+  Then configure, build and install the Zlib package through the commands:
 
-      git clone -b qt6-port git@github.com:openfedem/fedem-gui.git
+      mkdir ~/zlib-1.2.13/Release
+      cd ~/zlib-1.2.13/Release
+      cmake ..-DCMAKE_BUILD_TYPE=Release -DZLIB_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_PREFIX=/usr/local
+      make
+      sudo make install
+
+- Configure and build the FEDEM GUI:
+
+      git clone --recurse-submodules git@github.com:openfedem/fedem-gui.git
       mkdir fedem-gui/Release fedem-gui/Debug
       cd fedem-gui/Release
       COIN_ROOT=/usr/local/Coin3D cmake .. -DCMAKE_BUILD_TYPE=Release -DUSE_QWTLIB=External

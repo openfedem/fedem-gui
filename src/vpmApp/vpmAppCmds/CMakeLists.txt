@@ -94,6 +94,10 @@ endif ( INCLUDE_ASSEMBLIES )
 
 if ( ZLIB_LIBRARY )
   list ( APPEND DEPENDENCY_LIST ${MINIZIP_LIBRARY} ${ZLIB_LIBRARY} )
+  if ( LINUX )
+    # On Linux, we need to install the symbolic links also
+    file ( GLOB ZLIB_DLL ${ZLIB_LIBRARY}* )
+  endif ( LINUX )
 endif ( ZLIB_LIBRARY )
 
 

@@ -8,6 +8,18 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.2] (2025-11-01)
+
+### :rocket: Added
+
+- FMU export for the Linux version.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/97:
+  Generic part Center of Gravity coordinates are reset to zero after save.
+- Exported FMUs with the default model description "<default_m.fmm>" does not work.
+
 ## [fedem-8.1.1] (2025-10-15)
 
 ### :rocket: Added
@@ -315,3 +327,5 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.0.9.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9.2...fedem-8.0.9.7
 [fedem-8.1.0]: https://github.com/openfedem/fedem-gui/compare/fedem-8.0.9...fedem-8.1.0
 [fedem-8.1.0.8]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.0...fedem-8.1.0.8
+[fedem-8.1.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.0.8...fedem-8.1.1
+[fedem-8.1.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.1...fedem-8.1.2
