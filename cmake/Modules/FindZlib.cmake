@@ -17,7 +17,7 @@ if ( ZLIB_INCLUDE )
   include_directories ( ${ZLIB_INCLUDE} )
 
   find_library ( ZLIB_LIBRARY
-                 NAMES zlib
+                 NAMES z zlib
                  PATHS C:/Zlib/lib
                )
   find_library ( MINIZIP_LIBRARY
