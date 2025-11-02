@@ -51,7 +51,7 @@ FdAnimateModel::FdAnimateModel(float starttime, float endtime)
   this->skipFrames      = true;
 
   this->animationType   = FdAnimateModel::ONESHOT;
-  this->stepDirection   = FdAnimateModel::FORWARD;
+  this->reversed        = false;
   this->continousPlay   = false;
   this->pauseModus      = false;
   this->resetFlag       = false;
@@ -170,7 +170,7 @@ bool FdAnimateModel::moveToTime(float time, bool isProgressMove)
   this->playRunner = node;
   this->initAnimation();
   this->setFrame(this->playRunner);
-  return true;	
+  return true;
 }
 
 bool FdAnimateModel::moveToTimeStep(int stepNo)
@@ -294,30 +294,38 @@ float FdAnimateModel::getProgressValue(void)
     return 0.0f;
 }
 
-void FdAnimateModel::resetTime(void)
+
+float FdAnimateModel::readTime(bool reset)
 {
-  FdAnimateModel::wallTime(this->nrOfSeconds, nrOfMilliSeconds);
-  this->accumTime = this->lastTime = 0.0f;
+#ifdef win32
+  struct _timeb timebuffer;
+  _ftime(&timebuffer);
+  long int seconds  = timebuffer.time;
+  long int millisec = timebuffer.millitm;
+#else
+  struct timeval currenttime;
+  gettimeofday(&currenttime,NULL);
+  long int seconds  = currenttime.tv_sec;
+  long int millisec = currenttime.tv_usec/1000;
+#endif
+
+  // If this is the first call of this method,
+  // remember the number of seconds for subtraction
+
+  if (nrOfSeconds < 0 || reset)
+  {
+    nrOfSeconds = seconds;
+    nrOfMilliSeconds = millisec;
+    return accumTime = lastTime = 0.0f;
+  }
+
+  float currentTime = ((float)(seconds  - nrOfSeconds) +
+                       (float)(millisec - nrOfMilliSeconds) / 1000.0f);
+  accumTime += (currentTime - lastTime) * scaleFrequency;
+  lastTime = currentTime;
+  return accumTime;
 }
 
-float FdAnimateModel::readTime(void)
-{
-  long sec, millisec;
-  FdAnimateModel::wallTime(sec, millisec);
-  
-  // If this is the first run of this function, remember the 
-  // number of seconds for subtractions.
-
-  if(this->nrOfSeconds==-1) this->resetTime();
-   
-  float currentTime = (((float)(sec - this->nrOfSeconds)) +
-		       ((float)(millisec - this->nrOfMilliSeconds)) / 
-		       1000.0f);
-  float delta = currentTime - this->lastTime;
-  this->lastTime = currentTime;
-  this->accumTime += delta * this->scaleFrequency;
-  return this->accumTime;
-}
 
 void FdAnimateModel::runAnimation(void)
 {
@@ -347,15 +355,10 @@ void FdAnimateModel::runAnimation(void)
   // Loop to find a frame that fits the time 
 
   do {
-    
     // Set play runner to the correct "next frame"
-    
-    if (this->stepDirection == FdAnimateModel::FORWARD)
-      this->playRunner = this->playRunner->next;
-    else
-      this->playRunner = this->playRunner->prev;
+    playRunner = reversed ? playRunner->prev : playRunner->next;
 
-   // If we came to an end, decide how to wrap the animation:
+    // If we came to an end, decide how to wrap the animation:
       
     if (!this->playRunner) 
       {
@@ -365,11 +368,12 @@ void FdAnimateModel::runAnimation(void)
           {  
             // Then select the last frame
 
-            if(this->stepDirection == FdAnimateModel::FORWARD){
-              this->playRunner = this->ts_tail;
-              this->showProgressAnimation(true);}
-            else
+            if (reversed)
               this->playRunner = this->ts_head;
+            else {
+              this->playRunner = this->ts_tail;
+              this->showProgressAnimation(true);
+            }
             
             // And stop it all if we already show it:
             // (if not we'll stop next time)
@@ -385,20 +389,12 @@ void FdAnimateModel::runAnimation(void)
 
             break;
           }
-	else
+        else
           {
-            if (this->animationType == FdAnimateModel::PINGPONG) 
-              {
-                if(this->stepDirection == FdAnimateModel::FORWARD)
-                  this->stepDirection = FdAnimateModel::REVERSE;
-                else
-                  this->stepDirection = FdAnimateModel::FORWARD;
-              }
-            
-            if (this->stepDirection == FdAnimateModel::FORWARD)
-              this->playRunner = this->ts_head;
-            else
-              this->playRunner = this->ts_tail;
+            if (animationType == FdAnimateModel::PINGPONG)
+              reversed = !reversed;
+
+            playRunner = reversed ? ts_tail : ts_head;
             
             // Update time control by resetting time and time to next frame swap:
             
@@ -412,8 +408,8 @@ void FdAnimateModel::runAnimation(void)
       }
     else 
       {
-	this->nextFrameSwapTime += this->playRunner->activeTime;
-	currentFrameSwapTime += this->playRunner->activeTime;
+        this->nextFrameSwapTime += this->playRunner->activeTime;
+        currentFrameSwapTime += this->playRunner->activeTime;
       }
   }
   while (currentTime + 0.025f*this->scaleFrequency >= currentFrameSwapTime);
@@ -498,7 +494,7 @@ void FdAnimateModel::playForward(void)
   this->initAnimation();
   this->showProgressAnimation(false);
 
-  this->stepDirection = FdAnimateModel::FORWARD;
+  this->reversed = false;
   this->pauseModus = false;
   
   if (!this->playRunner || (this->playRunner == this->ts_tail))
@@ -518,7 +514,7 @@ void FdAnimateModel::playReverse(void)
   this->initAnimation();
   this->showProgressAnimation(false);
 
-  this->stepDirection = FdAnimateModel::REVERSE;
+  this->reversed = true;
   this->pauseModus = false;
    
   if (!this->playRunner || (this->playRunner == this->ts_head))
@@ -807,18 +803,14 @@ void FdAnimateModel::showFringes(bool doShow)
   IAmShowingFringes = doShow;
 }
 
-void FdAnimateModel::setFringeLegendMapping(const FFaLegendMapper& mapping,
-                                            bool doUpdate)
+void FdAnimateModel::setFringeLegendMapping(const FFaLegendMapper& lmap,
+                                            bool update)
 {
-  if (myLegendMapping == mapping) return;
+  if (myLegendMapping == lmap) return;
 
-  myLegendMapping = mapping;
-  if (doUpdate)
-    this->updateFringeLegendMapping();
-}
+  myLegendMapping = lmap;
+  if (!update) return;
 
-void FdAnimateModel::updateFringeLegendMapping()
-{
 #ifdef USE_SMALLCHANGE
   std::vector<FFaLegendMapper::Tick> ticks;
   myLegendMapping.getTicks(ticks);
@@ -909,14 +901,14 @@ void FdAnimateModel::findMaxMinTimeStep()
 
   if (!node) return;
 
-  maxTimeStep =  minTimeStep = node->activeTime;
-	
+  maxTimeStep = minTimeStep = node->activeTime;
+
   while (node->next)
     {
       if (node->activeTime > maxTimeStep) maxTimeStep = node->activeTime;
       if (node->activeTime < minTimeStep) minTimeStep = node->activeTime;
       node = node->next; 
-    }	   
+    }
 }
 
 void FdAnimateModel::renumberStepNodes()
@@ -951,7 +943,7 @@ FdAnimateModel::amTimestepNode * FdAnimateModel::insertFrameInList(float time)
       // to front of list if we have that.
       if (runner && (runner->accumTime > time))
 	runner = this->ts_head;
-	
+
       // move forward until we pass the previous timestep. Usually only one step...
       while (runner  && (runner->accumTime < time))
 	  runner = runner->next;
@@ -1005,25 +997,6 @@ FdAnimateModel::amTimestepNode * FdAnimateModel::insertFrameInList(float time)
   // remember the last position
   this->ts_nextCandidate = newnode;
   return newnode;
-}
-
-/*!
-  Getting secs and millisecs of the system time
-*/
-
-void FdAnimateModel::wallTime(long &sec, long &millisec)
-{
-#ifdef win32
-  struct _timeb timebuffer;
-  _ftime(&timebuffer);
-  sec = timebuffer.time;
-  millisec = timebuffer.millitm;
-#else
-  struct timeval currenttime;
-  gettimeofday(&currenttime,NULL);
-  sec = currenttime.tv_sec;
-  millisec = currenttime.tv_usec/1000;
-#endif
 }
 
 

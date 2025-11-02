@@ -18,7 +18,7 @@ class FdAnimatedBase;
 
 /*!
   This class was made by Morten Eriksen, Norsk Simulator Senter, 13.Dec.1996
-  Rededsigned by Jacob Storen, 26.Dec.2000
+  Redesigned by Jacob Storen, 26.Dec.2000
 */
 
 class FdAnimateModel
@@ -69,9 +69,7 @@ public:
   void setDeformationScale(double scale);
 
   void showFringes(bool doShow);
-  void setFringeLegendMapping(const FFaLegendMapper& mapping,
-			      bool doUpdate = true);
-  void updateFringeLegendMapping();
+  void setFringeLegendMapping(const FFaLegendMapper& lmap, bool update = true);
   const FFaLegendMapper& getLegendMapping() const { return myLegendMapping; }
   void showLegendBar(bool doShow);
   void showLegend(bool doShow);
@@ -91,31 +89,24 @@ public:
                   int nthFrameToOmit, int nThFrameToInclude,
                   const std::string& fileName, int fileFormat);
 
-protected:
-  static inline void wallTime(long& sec, long& millisec);
-
 private:
-  enum {
-    FORWARD, REVERSE
-  };
-
   struct amTimestepNode
-    {
-      amTimestepNode *next;
-      amTimestepNode *prev;
-      float activeTime;
-      float accumTime;
-      unsigned long stepNr;
-      unsigned long frameIdx;
-    };
+  {
+    amTimestepNode *next;
+    amTimestepNode *prev;
+    float activeTime;
+    float accumTime;
+    unsigned long stepNr;
+    unsigned long frameIdx;
+  };
 
   void  resetAnimation(void);
   void  initAnimation(void);
   void  setFrame(amTimestepNode *node);
   void  runAnimation(void);
 
-  void  resetTime(void);
-  float readTime(void);
+  void  resetTime() { this->readTime(true); }
+  float readTime(bool reset = false);
 
   void  findMaxMinTimeStep();
   void  renumberStepNodes();
@@ -151,7 +142,7 @@ private:
   // Animation mode and state variables
 
   FdAnimType animationType;
-  int  stepDirection;
+  bool reversed;
   bool continousPlay;
   bool pauseModus;
   bool resetFlag;
