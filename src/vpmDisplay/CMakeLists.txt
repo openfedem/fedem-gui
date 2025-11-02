@@ -122,6 +122,9 @@ endforeach ( FILE ${SOURCE_FILE_LIST} )
 set ( DEPENDENCY_LIST vpmUI vpmApp FFdCadModel vpmDB
                       FFlVisualization FFaAlgebra FFaDefinitions FFaGeometry
                       ${EXTERNAL_LIBRARIES} )
+if ( LINUX )
+  list ( APPEND DEPENDENCY_LIST -lX11 )
+endif ( LINUX )
 
 message ( STATUS "Building library ${LIB_ID}" )
 add_library ( ${LIB_ID} ${CPP_SOURCE_FILES} ${HPP_HEADER_FILES} )
