@@ -163,16 +163,21 @@ void FuiPositionData::updateUI()
   FFa3DLocation loc;
   FmIsPositionedBase* posRef = NULL;
   FmIsPositionedBase* rotRef = NULL;
+  FapUAQuery*         refQue = NULL;
 
-  if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
+  if (IAmEditingLinkCG)
+  {
+    FmPart* part = static_cast<FmPart*>(myEditedObj);
+    loc    = part->getLocationCG();
+    posRef = part->getCGPosRef();
+    rotRef = part->getCGRotRef();
+  }
+  else if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
   {
     FmIsPositionedBase* obj = static_cast<FmIsPositionedBase*>(myEditedObj);
+    loc    = obj->getLocation();
     posRef = obj->getPosRef();
     rotRef = obj->getRotRef();
-    if (IAmEditingLinkCG)
-      loc = static_cast<FmPart*>(myEditedObj)->getLocationCG();
-    else
-      loc = obj->getLocation();
   }
   else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
     loc = static_cast<FmAssemblyBase*>(myEditedObj)->getLocation();
@@ -180,8 +185,9 @@ void FuiPositionData::updateUI()
     return;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::updateUI: Location for "
-            << myEditedObj->getIdString() << loc << std::endl;
+  std::cout <<"FuiPositionData::updateUI: ";
+  if (IAmEditingLinkCG) std::cout <<"CoG ";
+  std::cout <<"Location for "<< myEditedObj->getIdString() << loc << std::endl;
 #endif
 
   PosType posType = loc.getPosType();
@@ -192,13 +198,16 @@ void FuiPositionData::updateUI()
     for (j = 0; j < 3; j++)
       myFields[3*i+j]->setValue(loc[i][j]);
 
-  static FapUAQuery query1;
   if (myEditedObj->isOfType(FmIsPositionedBase::getClassTypeID()))
+  {
+    static FapUAQuery query1;
     query1.typesToFind.emplace(FmIsPositionedBase::getClassTypeID(),true);
-  myPosRefCSField->setQuery(&query1);
-  myRotRefCSField->setQuery(&query1);
+    refQue = &query1;
+  }
 
+  myPosRefCSField->setQuery(refQue);
   myPosRefCSField->setSelectedRef(posRef);
+  myRotRefCSField->setQuery(refQue);
   myRotRefCSField->setSelectedRef(rotRef);
 
   for (i = 0; i < PosTypeMapping::map().size(); i++)
@@ -348,8 +357,9 @@ void FuiPositionData::onPosTypeChanged(int option)
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"FuiPositionData::onPosTypeChanged: Location for "
-              << obj->getIdString() << loc << std::endl;
+    std::cout <<"FuiPositionData::onPosTypeChanged: ";
+    if (IAmEditingLinkCG) std::cout <<"CoG ";
+    std::cout <<"Location for "<< obj->getIdString() << loc << std::endl;
 #endif
 
     if (!loc.changePosType(PosTypeMapping::map()[option].first))
@@ -394,8 +404,9 @@ void FuiPositionData::onRotTypeChanged(int option)
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"FuiPositionData::onRotTypeChanged: Location for "
-              << obj->getIdString() << loc << std::endl;
+    std::cout <<"FuiPositionData::onRotTypeChanged: ";
+    if (IAmEditingLinkCG) std::cout <<"CoG ";
+    std::cout <<"Location for "<< obj->getIdString() << loc << std::endl;
 #endif
 
     if (!loc.changeRotType(RotTypeMapping::map()[option].first))
@@ -442,8 +453,9 @@ void FuiPositionData::FieldChangedCB::onFieldAccepted(double value)
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"FuiPositionData::onFieldAccepted: Location for "
-              << obj->getIdString() << loc << std::endl;
+    std::cout <<"FuiPositionData::onFieldAccepted: ";
+    if (owner->IAmEditingLinkCG) std::cout <<"CoG ";
+    std::cout <<"Location for "<< obj->getIdString() << loc << std::endl;
 #endif
 
     if (loc[i][j] == value)
@@ -624,8 +636,9 @@ void FuiPositionData::onPoppedUp()
     return;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::onPoppedUp: Location for "
-            << myEditedObj->getIdString() << loc << std::endl;
+  std::cout <<"FuiPositionData::onPoppedUp: ";
+  if (IAmEditingLinkCG) std::cout <<"CoG ";
+  std::cout <<"Location for "<< myEditedObj->getIdString() << loc << std::endl;
 #endif
   FaMat34 posCS = posRef ? posRef->getGlobalCS() : FaMat34();
   FaMat34 rotCS = rotRef ? rotRef->getGlobalCS() : FaMat34();
