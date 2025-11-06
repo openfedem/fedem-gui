@@ -24,6 +24,7 @@
 #include <windows.h>
 #else
 #include <GL/glx.h>
+#include <X11/Xlib.h>
 #endif
 
 #include "vpmDisplay/FdAnimationInfo.H"
@@ -81,8 +82,8 @@ void FdAnimationInfo::GLRender(SoGLRenderAction* action)
   char stepStr[40] = "Step:      1";
 
   // Generating display list from the windows system font.
-  int context = SoGLCacheContextElement::get(action->getState());
-  if (!fontlist || context != fontlistcontext)
+  if (int context = SoGLCacheContextElement::get(action->getState());
+      context != fontlistcontext || !fontlist)
   {
     if (fontlist)
       fontlist->unref();
@@ -95,15 +96,22 @@ void FdAnimationInfo::GLRender(SoGLRenderAction* action)
 
 #ifdef win32
     wglUseFontBitmaps(GetDC(0), 32, 96, fontlist->getFirstIndex());
-#else
-    // For the time being I disable this, QFont::handle() does not exist in Qt6
-    // glXUseXFont(qApp->font().handle(), 32, 96, fontlist->getFirstIndex());
-#endif
 
     // Find text field dimensions.
     QFontMetrics fm(qApp->font());
     fieldHeight = fm.height();
     fieldWidth  = fm.horizontalAdvance(timeStr);
+#else
+    if (Display* display = XOpenDisplay(NULL); display)
+      if (XFontStruct* font = XLoadQueryFont(display,"fixed"); font)
+      {
+        // Find text field dimensions.
+        glXUseXFont(font->fid, 32, 96, fontlist->getFirstIndex());
+        fieldHeight = font->max_bounds.ascent + font->max_bounds.descent;
+        int charWdt = font->max_bounds.rbearing - font->max_bounds.lbearing;
+        fieldWidth  = charWdt*strlen(timeStr);
+      }
+#endif
   }
 
   // Store GL state information for the variables that we might modify.
