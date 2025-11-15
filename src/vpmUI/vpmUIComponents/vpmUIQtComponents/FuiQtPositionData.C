@@ -124,3 +124,17 @@ FuiQtPositionData::FuiQtPositionData(QWidget* parent, const char* name)
   gLayout->addWidget(rotationFrame, 0, 1, Qt::AlignTop);
   gLayout->addWidget(followFrame, 1, 1, Qt::AlignTop);
 }
+
+
+void FuiQtPositionData::showEvent(QShowEvent* e)
+{
+  this->QWidget::showEvent(e);
+  this->onPoppedUp();
+}
+
+
+void FuiQtPositionData::hideEvent(QHideEvent* e)
+{
+  this->QWidget::hideEvent(e);
+  this->onPoppedDown();
+}
