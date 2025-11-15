@@ -21,6 +21,10 @@ public:
   {
     this->FuiPositionData::setSensitivity(onOff);
   }
+
+protected:
+  virtual void showEvent(QShowEvent* e);
+  virtual void hideEvent(QHideEvent* e);
 };
 
 #endif
