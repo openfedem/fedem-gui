@@ -524,7 +524,7 @@ The following configuration steps have been used so far:
   In that case, remember to also modify [FindQwt.cmake](cmake/Modules/FindQwt.cmake) before proceeding.
 
 - Zlib (optional): Obtain the sources of this module following the first three steps
-  described [above](#qwt) for the Windows build.
+  described [above](#zlib) for the Windows build.
   Then configure, build and install the Zlib package through the commands:
 
       mkdir ~/zlib-1.2.13/Release
