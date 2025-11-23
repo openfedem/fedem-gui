@@ -13,13 +13,13 @@
 #include <string>
 
 #include "FFaLib/FFaAlgebra/FFaMat34.H"
-#include "FFaLib/FFaContainers/FFaByteArray.H"
 #include "FFdCadModel/FFdUtils/FFdLook.H"
 
 class FmTriad;
 class FdCadSolid;
 class FdCadSolidWire;
-typedef std::pair<FdCadSolid*,FdCadSolidWire*> FdSolidWirePair;
+
+using FdSolidWirePair = std::pair<FdCadSolid*,FdCadSolidWire*>;
 
 
 class FdCadComponent
@@ -36,6 +36,7 @@ public:
   FaMat34 myPartCS;
 };
 
+
 class FdCadAssembly : public FdCadComponent
 {
 public:
@@ -47,6 +48,7 @@ public:
 
   std::vector<FdCadComponent*> myComponents;
 };
+
 
 class FdCadPart : public FdCadComponent
 {
@@ -62,7 +64,6 @@ public:
   size_t size() const { return mySolids.size(); }
 
 private:
-  FFaByteArray myCadId;
   std::vector<FdSolidWirePair> mySolids;
 };
 

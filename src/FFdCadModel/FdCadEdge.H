@@ -5,14 +5,14 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FDCADEDGE_H
-#define FDCADEDGE_H
+#ifndef FD_CAD_EDGE_H
+#define FD_CAD_EDGE_H
 
 #include <Inventor/nodes/SoIndexedLineSet.h>
 #include <Inventor/fields/SoMFNode.h>
 
-#include "FFaLib/FFaContainers/FFaByteArray.H"
 class FdCadEntityInfo;
+
 
 class FdCadEdge : public SoIndexedLineSet
 {
@@ -20,17 +20,18 @@ class FdCadEdge : public SoIndexedLineSet
 
 public:
   FdCadEdge();
+
   static void initClass();
 
   void setGeometryInfo(FdCadEntityInfo* info);
-  FdCadEntityInfo * getGeometryInfo();
+  FdCadEntityInfo* getGeometryInfo();
 
   SoMFNode faces;
-  FFaByteArray myCadId;
-private :
+
+private:
   virtual ~FdCadEdge();
 
-  FdCadEntityInfo * myGeometryInfo;
+  FdCadEntityInfo* myGeometryInfo;
 };
 
 #endif

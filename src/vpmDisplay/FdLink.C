@@ -17,6 +17,7 @@
 #include "FFdCadModel/FdCadSolid.H"
 #include "FFdCadModel/FdCadSolidWire.H"
 #include "FFdCadModel/FdCadFace.H"
+#include "FFdCadModel/FdCadEdge.H"
 
 #include "vpmDB/FmLink.H"
 #include "vpmDB/FmMechanism.H"

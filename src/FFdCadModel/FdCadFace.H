@@ -5,16 +5,16 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FDCADFACE_H
-#define FDCADFACE_H
+#ifndef FD_CAD_FACE_H
+#define FD_CAD_FACE_H
+
+#include <vector>
 
 #include <Inventor/nodes/SoIndexedFaceSet.h>
-#include <Inventor/fields/SoMFNode.h>
 
-#include "FFdCadModel/FdCadEdge.H"
-#include "FFaLib/FFaContainers/FFaByteArray.H"
-
+class FdCadEdge;
 class FdCadEntityInfo;
+
 
 class FdCadFace : public SoIndexedFaceSet
 {
@@ -22,15 +22,15 @@ class FdCadFace : public SoIndexedFaceSet
 
 public:
   FdCadFace();
+
   static void initClass();
 
   void setGeometryInfo(FdCadEntityInfo* info);
   FdCadEntityInfo* getGeometryInfo();
 
   std::vector<FdCadEdge*> myEdges;
-  FFaByteArray myCadId;
 
-private :
+private:
   virtual ~FdCadFace();
 
   FdCadEntityInfo* myGeometryInfo;

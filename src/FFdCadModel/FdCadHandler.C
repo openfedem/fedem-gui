@@ -22,7 +22,7 @@
 
 #include "vpmDB/FmBladeProperty.H"
 
-typedef std::array<float,3> FdColor;
+using FdColor = std::array<float,3>;
 
 
 void FdCadHandler::initFdCad()
@@ -335,7 +335,6 @@ void writeFace(std::ostream& out, const std::string& indent, FdCadFace* face)
     return;
 
   out << indent << "Face {\n";
-  out << indent << "  CadID { " <<  face->myCadId << " }\n";
   if (face->getGeometryInfo())
     writeCadEntityInfo(out, indent + "  ", face->getGeometryInfo());
 
@@ -366,10 +365,7 @@ void readFace(std::istream& in, FdCadFace* face)
         break;
       skipToData(in);
 
-      if (identifier == "CadID"){
-        in >> face->myCadId;
-        skipToDataEnd(in);
-      }else if (identifier == "GeometryInfo"){
+      if (identifier == "GeometryInfo"){
         FdCadEntityInfo * cadInf = new FdCadEntityInfo();
         readCadEntityInfo(in, cadInf);
         face->setGeometryInfo(cadInf);
@@ -407,7 +403,6 @@ void writeEdge(std::ostream& out, const std::string& indent, FdCadEdge* edge)
     return;
 
   out << indent << "Edge {\n";
-  out << indent << "  CadID { " << edge->myCadId << " }\n";
   if (edge->getGeometryInfo())
     writeCadEntityInfo(out, indent + "  ", edge->getGeometryInfo());
 
@@ -438,10 +433,7 @@ void readEdge(std::istream& in, FdCadEdge * edge)
         break;
       skipToData(in);
 
-      if (identifier == "CadID"){
-        in >> edge->myCadId;
-        skipToDataEnd(in);
-      }else if (identifier == "GeometryInfo"){
+      if (identifier == "GeometryInfo"){
         FdCadEntityInfo * cadInf = new FdCadEntityInfo();
         readCadEntityInfo(in, cadInf);
         edge->setGeometryInfo(cadInf);
@@ -550,7 +542,6 @@ void readBody(std::istream& in, FdCadSolid* body, FdCadSolidWire* wire)
 void FdCadPart::write(std::ostream& out, const std::string& indent)
 {
   out << indent << "Part {\n";
-  out << indent << "  CadID { " << myCadId << " }\n";
   out << indent << "  CS {" << myPartCS << "\n";
   out << indent << "  }\n";
 
@@ -572,10 +563,7 @@ void FdCadPart::read(std::istream& in)
       if (identifier == "")
         break;
       skipToData(in);
-      if (identifier == "CadID"){
-        in >> myCadId;
-        skipToDataEnd(in);
-      } else if (identifier == "CS"){
+      if (identifier == "CS"){
         in >> myPartCS;
         skipToDataEnd(in);
       } else if (identifier == "VisualProperties"){
