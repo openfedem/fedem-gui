@@ -104,8 +104,10 @@ void FapUAAnimationDefine::setDBValues(FFuaUIValues* values)
   // MODES
   this->dbanimation->eigenmodeType = (FmAnimation::EigenModeType)animValues->modeTyp;
   this->dbanimation->eigenmodePart = static_cast<FmPart*>(animValues->selLink);
-  this->dbanimation->eigenmodeTime = animValues->selTime;
-  this->dbanimation->eigenmodeNr = animValues->selMode;
+  if (animValues->selTime > -999.99) // Similar as for issue #108 below
+    dbanimation->eigenmodeTime = animValues->selTime;
+  if (animValues->selMode > -999) // Issue #108: Don't update if no modes available
+    dbanimation->eigenmodeNr = animValues->selMode;
   this->dbanimation->eigenmodeAmplitude = animValues->modeScale;
   this->dbanimation->eigenmodeFramesPrCycle = animValues->framesPrCycle;
   this->dbanimation->eigenmodeDurationUseTime = animValues->timeLength;
