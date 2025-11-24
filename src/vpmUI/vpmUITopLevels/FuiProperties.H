@@ -49,6 +49,7 @@ class FFuMemo;
 class FuaQueryBase;
 class FmAssemblyBase;
 class FmModelMemberBase;
+class FuaPropertiesValues;
 
 
 class FuiStartGuide : virtual public FFuComponentBase
@@ -86,6 +87,7 @@ public:
   virtual void getUIValues(FFuaUIValues* values);
   virtual void buildDynamicWidgets(const FFuaUIValues* values);
 
+  void getLoadRefSettings(FuaPropertiesValues* pv);
   void setCBs(const FFuaUIValues* values);
 
   virtual void setSensitivity(bool makeSensitive);

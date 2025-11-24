@@ -197,16 +197,10 @@ FFuaUIValues* FapUAProperties::createValuesObject()
 {
   FuaPropertiesValues* vals = new FuaPropertiesValues();
 
-  if (myPropertiesUI && mySelectedFmItem)
-    if (mySelectedFmItem->isOfType(FmLoad::getClassTypeID()))
-    {
-      FuaPropertiesValues* lval = new FuaPropertiesValues();
-      myPropertiesUI->getUIValues(lval);
-      vals->myAttackPointIsGlobal = lval->myAttackPointIsGlobal;
-      vals->myFromPointIsGlobal = lval->myFromPointIsGlobal;
-      vals->myToPointIsGlobal = lval->myToPointIsGlobal;
-      delete lval;
-    }
+  // Preserve the Global/Local Reference settings when changing the selection,
+  // but only if the current model has load objects
+  if (myPropertiesUI && FmDB::hasObjectsOfType(FmLoad::getClassTypeID()))
+    myPropertiesUI->getLoadRefSettings(vals);
 
   return vals;
 }
@@ -494,8 +488,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	tv.myLoadVals.selectedEngine = NULL;
 	if (tv.myMotionType == FmHasDOFsBase::FREE ||
 	    tv.myMotionType == FmHasDOFsBase::FREE_DYNAMICS) {
-	  FmDofLoad* load = item->getLoadAtDOF(dof);
-	  if (load) {
+	  if (FmDofLoad* load = item->getLoadAtDOF(dof); load) {
 	    tv.myLoadVals.constValue     = load->getInitLoad();
 	    tv.myLoadVals.selectedEngine = load->getEngine();
 	    tv.freqDomain = load->freqDomain.getValue();
@@ -504,8 +497,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	  tv.myLoadVals.engineQuery = FapUAEngineQuery::instance();
 	}
 	else if (tv.myMotionType == FmHasDOFsBase::PRESCRIBED) {
-	  FmDofMotion* pm = item->getMotionAtDOF(dof);
-	  if (pm) {
+	  if (FmDofMotion* pm = item->getMotionAtDOF(dof); pm) {
 	    tv.myLoadVals.constValue     = pm->getInitMotion();
 	    tv.myLoadVals.selectedEngine = pm->getEngine();
 	    tv.freqDomain   = pm->freqDomain.getValue();
@@ -1171,11 +1163,10 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
     pv->mySeaStateWidthPos = item->getX();
     pv->mySeaStateHeightPos = item->getY();
 
-    pv->mySeaStateNumPoints = item->getQuantization();
-    //pv->mySeaStateScaleValue = item->getGridScale();
-
     pv->mySeaStateShowGrid = item->getShowGrid();
     pv->mySeaStateShowSolid = item->getShowSolid();
+
+    pv->mySeaStateNumPoints = item->getQuantization();
   }
 
   // Beam properties
@@ -1352,8 +1343,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
       // Topology view:
 
-      FmEngine* engine = item->getEngine();
-      if (engine)
+      if (FmEngine* engine = item->getEngine(); engine)
 	this->addEngineArgumentTopology(pv->myTopology,engine,"Input:");
 
       std::vector<FmCtrlLine*> outputLines;
@@ -1607,8 +1597,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
                                         pJoint->getStatusOfDOF(5) >= FmHasDOFsBase::FREE_DYNAMICS);
 
         // Get torque control values
-	FmDofLoad* load = pJoint->getLoadAtDOF(5);
-	if (load) {
+	if (FmDofLoad* load = pJoint->getLoadAtDOF(5); load) {
 	  pv->myGeneratorTorqueControlConstValue = load->getInitLoad();
 	  pv->myGeneratorTorqueControlSelectedEngine = load->getEngine();
 	}
@@ -1620,8 +1609,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 	pv->myGeneratorTorqueControlEngineQuery = FapUAEngineQuery::instance();
 
         // Get velocity control values
-	FmDofMotion* pm = pJoint->getMotionAtDOF(5);
-	if (pm) {
+	if (FmDofMotion* pm = pJoint->getMotionAtDOF(5); pm) {
 	  pv->myGeneratorVelocityControlConstValue  = pm->getInitMotion();
 	  pv->myGeneratorVelocityControlSelectedEngine = pm->getEngine();
 	}
@@ -1678,15 +1666,13 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       pv->myVisualize3Dts = item->visualize3Dts.getValue();
 
       // Get pitch joint
-      FmJointBase* pJoint = item->getPitchJoint();
-      if (pJoint) {
+      if (FmJointBase* pJoint = item->getPitchJoint(); pJoint) {
 
         // Get Rz DOF status
         pv->myBladePitchIsFixed = pJoint->getStatusOfDOF(5) == FmHasDOFsBase::FIXED;
 
         // Get deflection control values
-	FmDofMotion* pm = pJoint->getMotionAtDOF(5);
-	if (pm) {
+	if (FmDofMotion* pm = pJoint->getMotionAtDOF(5); pm) {
 	  pv->myBladePitchControlConstValue = pm->getInitMotion();
 	  pv->myBladePitchControlSelectedEngine = pm->getEngine();
 	}
@@ -1961,8 +1947,8 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       case FmCurveSet::PREVIEW_FUNC:
 	{
 	  std::vector<FmEngine*> engines;
-	  FmMathFuncBase* f = item->getFunctionRef();
-	  if (f) switch (f->getFunctionUse())
+	  if (FmMathFuncBase* f = item->getFunctionRef(); f)
+	    switch (f->getFunctionUse())
 	    {
 	    case FmMathFuncBase::GENERAL:
 	      f->getEngines(engines);
@@ -1991,8 +1977,7 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
 
     if (item->isOfType(FmcOutput::getClassTypeID()))
     {
-      FmEngine* engine = static_cast<FmcOutput*>(item)->getEngine();
-      if (engine)
+      if (FmEngine* engine = static_cast<FmcOutput*>(item)->getEngine(); engine)
       {
         this->addTopologyItem(pv->myTopology,NULL,0,"Used by:");
         this->addEngineUsedByTopology(pv->myTopology,engine,1);
@@ -2032,15 +2017,14 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
   //
 
   if (mySelectedFmItem->isOfType(FmIsPlottedBase::getClassTypeID()))
+    if (FmIsPlottedBase* item = (FmIsPlottedBase*)mySelectedFmItem;
+        item->hasCurveSets())
     {
-      FmIsPlottedBase* item = (FmIsPlottedBase*)mySelectedFmItem;
-      if (item->hasCurveSets()) {
-	std::vector<FmCurveSet*> curves;
-	item->getCurveSets(curves);
-	this->addTopologyItem(pv->myTopology,NULL,0,"Plotted by:");
-	for (FmCurveSet* curve : curves)
-	  this->addTopologyItem(pv->myTopology,curve,1);
-      }
+      std::vector<FmCurveSet*> curves;
+      item->getCurveSets(curves);
+      this->addTopologyItem(pv->myTopology,NULL,0,"Plotted by:");
+      for (FmCurveSet* curve : curves)
+        this->addTopologyItem(pv->myTopology,curve,1);
     }
 }
 
@@ -2271,7 +2255,6 @@ void FapUAProperties::getDBJointVariables(FmJointBase* item,
 
   for (int dof : dofs)
   {
-    FmDofLoad*    load = item->getLoadAtDOF(dof);
     FmJointMotion*  pm = dynamic_cast<FmJointMotion*>(item->getMotionAtDOF(dof));
     FmJointSpring* spr = item->getSpringAtDOF(dof);
     FmJointDamper* dmp = item->getDamperAtDOF(dof);
@@ -2282,7 +2265,7 @@ void FapUAProperties::getDBJointVariables(FmJointBase* item,
     jv.myMotionType = item->getStatusOfDOF(dof);
     jv.myInitVel = item->getInitVel(dof,true);
 
-    if (load) {
+    if (FmDofLoad* load = item->getLoadAtDOF(dof); load) {
       jv.myLoadVals.selectedEngine = load->getEngine();
       jv.myLoadVals.constValue     = load->getInitLoad();
       jv.freqDomain                = load->freqDomain.getValue();
@@ -2513,20 +2496,19 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 			       tv.myLoadVals.constValue != 0.0) ||
 			      tv.myLoadVals.selectedEngine);
 
-	  FmDofMotion* motion = item->getMotionAtDOF(dof,forceCreate);
-	  if (motion)
+	  if (FmDofMotion* pm = item->getMotionAtDOF(dof,forceCreate); pm)
 	  {
 	    if (tv.myMotionType > FuiTriadDOF::PRESCRIBED_DISP)
-	      motion->setMotionType(tv.myMotionType-FuiTriadDOF::PRESCRIBED_DISP);
+	      pm->setMotionType(tv.myMotionType-FuiTriadDOF::PRESCRIBED_DISP);
 	    else
-	      motion->setMotionType(FmDofMotion::DEFLECTION);
+	      pm->setMotionType(FmDofMotion::DEFLECTION);
 
 	    if (tv.myLoadVals.isConstant)
-	      motion->setInitMotion(tv.myLoadVals.constValue);
+	      pm->setInitMotion(tv.myLoadVals.constValue);
 	    else
-	      motion->freqDomain.setValue(tv.freqDomain);
+	      pm->freqDomain.setValue(tv.freqDomain);
 
-	    motion->setEngine(static_cast<FmEngine*>(tv.myLoadVals.selectedEngine));
+	    pm->setEngine(static_cast<FmEngine*>(tv.myLoadVals.selectedEngine));
 	  }
 	}
 	else if (motionType != FmHasDOFsBase::FIXED)
@@ -2537,8 +2519,7 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 			       tv.myLoadVals.constValue != 0.0) ||
 			      tv.myLoadVals.selectedEngine);
 
-	  FmDofLoad* load = item->getLoadAtDOF(dof,forceCreate);
-	  if (load)
+	  if (FmDofLoad* load = item->getLoadAtDOF(dof,forceCreate); load)
 	  {
 	    if (tv.myLoadVals.isConstant)
 	      load->setInitLoad(tv.myLoadVals.constValue);
@@ -2993,12 +2974,9 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
       item->setY(pv->mySeaStateHeightPos);
 
       item->setShowGrid(pv->mySeaStateShowGrid);
-      //item->setGridScale(pv->mySeaStateScaleValue);
-
       item->setShowSolid(pv->mySeaStateShowSolid);
 
       item->setQuantization(pv->mySeaStateNumPoints);
-
     }
 
   // Beam property
@@ -3205,8 +3183,7 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 			     pv->myGeneratorTorqueControlConstValue != 0.0) ||
 			    pv->myGeneratorTorqueControlSelectedEngine);
 
-	FmDofLoad* load = pJoint->getLoadAtDOF(5,forceCreate);
-	if (load) {
+	if (FmDofLoad* load = pJoint->getLoadAtDOF(5,forceCreate); load) {
 	  if (pv->myGeneratorTorqueControlIsConstant)
 	    load->setInitLoad(pv->myGeneratorTorqueControlConstValue);
 	  load->setEngine(static_cast<FmEngine*>(pv->myGeneratorTorqueControlSelectedEngine));
@@ -3217,12 +3194,11 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 			pv->myGeneratorVelocityControlConstValue != 0.0) ||
 		       pv->myGeneratorVelocityControlSelectedEngine);
 
-	FmDofMotion* motion = pJoint->getMotionAtDOF(5,forceCreate);
-	if (motion) {
-	  motion->setMotionType(FmDofMotion::VELOCITY);
+	if (FmDofMotion* pm = pJoint->getMotionAtDOF(5,forceCreate); pm) {
+	  pm->setMotionType(FmDofMotion::VELOCITY);
 	  if (pv->myGeneratorVelocityControlIsConstant)
-	    motion->setInitMotion(pv->myGeneratorVelocityControlConstValue);
-	  motion->setEngine(static_cast<FmEngine*>(pv->myGeneratorVelocityControlSelectedEngine));
+	   pm->setInitMotion(pv->myGeneratorVelocityControlConstValue);
+	  pm->setEngine(static_cast<FmEngine*>(pv->myGeneratorVelocityControlSelectedEngine));
 	}
       }
     }
@@ -3259,8 +3235,7 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
       item->IceThickness.setValue(pv->myBladeIceThickness);
 
       // Get pitch joint
-      FmJointBase* pJoint = item->getPitchJoint();
-      if (pJoint) {
+      if (FmJointBase* pJoint = item->getPitchJoint(); pJoint) {
 
         // Update the Rz DOF status
         bool fixed = pv->myBladePitchIsFixed;
@@ -3276,12 +3251,11 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
 			     pv->myBladePitchControlConstValue != 0.0) ||
 			    pv->myBladePitchControlSelectedEngine);
 
-	FmDofMotion* motion = pJoint->getMotionAtDOF(5,forceCreate);
-	if (motion) {
-	  motion->setMotionType(FmDofMotion::DEFLECTION);
+	if (FmDofMotion* pm = pJoint->getMotionAtDOF(5,forceCreate); pm) {
+	  pm->setMotionType(FmDofMotion::DEFLECTION);
 	  if (pv->myBladePitchControlIsConstant)
-	    motion->setInitMotion(pv->myBladePitchControlConstValue);
-	  motion->setEngine(static_cast<FmEngine*>(pv->myBladePitchControlSelectedEngine));
+	    pm->setInitMotion(pv->myBladePitchControlConstValue);
+	  pm->setEngine(static_cast<FmEngine*>(pv->myBladePitchControlSelectedEngine));
 	}
       }
 
@@ -3584,13 +3558,12 @@ void FapUAProperties::onPermSelectionChanged(const std::vector<FFaViewItem*>& to
   // and then all other selected objects of same type
   mySelectedFmItem = NULL;
   mySelectedFmItems.clear();
-  FmModelMemberBase* mmb = NULL;
   for (FFaViewItem* item : totalSelection)
     if (!mySelectedFmItem)
       mySelectedFmItem = dynamic_cast<FmModelMemberBase*>(item);
-    else if ((mmb = dynamic_cast<FmModelMemberBase*>(item)))
-      if (mmb->getTypeID() == mySelectedFmItem->getTypeID())
-        mySelectedFmItems.push_back(mmb);
+    else if (FmModelMemberBase* mmb = dynamic_cast<FmModelMemberBase*>(item);
+             mmb && mmb->getTypeID() == mySelectedFmItem->getTypeID())
+      mySelectedFmItems.push_back(mmb);
 
   // If multi-selection, show the last selected object
   // which is of same type as the first selected object
@@ -3649,44 +3622,43 @@ void FapUAProperties::onTopViewRightClick(int i, std::vector<FFuaCmdItem*>& cmds
 }
 
 
-static void selectObject(FmModelMemberBase* item)
+namespace
 {
-  FmPart* link = dynamic_cast<FmPart*>(item);
+  bool selectObject(FmModelMemberBase* item)
+  {
+    if (!item) return false;
 
-  // Don't select the earth link
-  if (link && link->isEarthLink())
-    return;
+    if (FmPart* link = dynamic_cast<FmPart*>(item); link && link->isEarthLink())
+      return false; // Don't select the earth link
 
-  switch (FuiModes::getMode())
-    {
+    switch (FuiModes::getMode()) {
     case FuiModes::EXAM_MODE:
     case FuiModes::ERASE_MODE:
       FapEventManager::permTotalSelect(item);
     default:
       break;
     }
+
+    return true;
+  }
 }
 
 
 void FapUAProperties::topologyActivatedCB(int i)
 {
-  if (i < 0 || (size_t)i >= myTopologyViewList.size()) return;
-
-  selectObject(myTopologyViewList[i]);
+  if (i >= 0 && i > static_cast<int>(myTopologyViewList.size()))
+    selectObject(myTopologyViewList[i]);
 }
 
 
 void FapUAProperties::onQIFieldButtonCBS(FuiQueryInputFieldValues& v)
 {
-  if (!v.selectedRef) return;
+  if (FmEngine* item = dynamic_cast<FmEngine*>(v.selectedRef);
+      item && item->isControlOutEngine() &&
+      selectObject(dynamic_cast<FmcOutput*>(item->getSensor()->getMeasured())))
+    return;
 
-  FmEngine* item = dynamic_cast<FmEngine*>(v.selectedRef);
-  if (item && item->isControlOutEngine()) {
-    FmcOutput* co = dynamic_cast<FmcOutput*>(item->getSensor()->getMeasured());
-    selectObject(co ? co : v.selectedRef);
-  }
-  else
-    selectObject(v.selectedRef);
+  selectObject(v.selectedRef);
 }
 
 
@@ -3823,53 +3795,60 @@ void FapUAProperties::linkChangeCB()
 }
 
 
-using FileFilter = std::map<std::string,Strings>;
-
-static bool browseDataFile(std::string& fName, const std::string& type,
-			   const FileFilter& filter, bool allFilesFilter = false)
+namespace
 {
-  std::string absModelFilePath = FmDB::getMechanismObject()->getAbsModelFilePath();
-  FFuFileDialog* aDialog = FFuFileDialog::create(absModelFilePath,"FileDialog",
-						 FFuFileDialog::FFU_OPEN_FILE);
+  using FileFilter = std::map<std::string,Strings>;
 
-  aDialog->setTitle(("Select "+type+" file").c_str());
-  aDialog->addAllFilesFilter(allFilesFilter);
-  for (FileFilter::const_iterator fit = filter.begin(); fit != filter.end(); ++fit)
-    if (fit->second.size() == 1)
-      aDialog->addFilter(fit->first, fit->second.front(), fit == filter.begin());
-    else if (fit->second.size() > 1)
-      aDialog->addFilter(fit->first, fit->second, fit == filter.begin());
-
-  bool isRelativeNameWanted = FFaFilePath::isRelativePath(fName);
-
-  if (!fName.empty())
+  bool browseDataFile(std::string& fName, const std::string& type,
+                      const FileFilter& filter, bool allFilesFilter = false)
   {
-    // Set the default file name to the original file, if the directory of
-    // that file does not exist, assume current model file directory instead
-    FFaFilePath::checkName(fName);
-    FFaFilePath::makeItAbsolute(fName,absModelFilePath);
-    if (!FpFileSys::verifyDirectory(FFaFilePath::getPath(fName),false))
-      FFaFilePath::setPath(fName,absModelFilePath);
-    aDialog->setDefaultName(fName);
+    const std::string& path = FmDB::getMechanismObject()->getAbsModelFilePath();
+    FFuFileDialog* dialog = FFuFileDialog::create(path,"FileDialog",
+                                                  FFuFileDialog::FFU_OPEN_FILE);
+
+    dialog->setTitle(("Select " + type + " file").c_str());
+    dialog->addAllFilesFilter(allFilesFilter);
+    bool lFirst = true;
+    for (const std::pair<const std::string,Strings>& ff : filter)
+    {
+      if (ff.second.size() == 1)
+        dialog->addFilter(ff.first,ff.second.front(),lFirst);
+      else if (ff.second.size() > 1)
+        dialog->addFilter(ff.first,ff.second,lFirst);
+      lFirst = false;
+    }
+
+    bool isRelativeNameWanted = FFaFilePath::isRelativePath(fName);
+
+    if (!fName.empty())
+    {
+      // Set the default file name to the original file, if the directory of
+      // that file does not exist, assume current model file directory instead
+      FFaFilePath::checkName(fName);
+      FFaFilePath::makeItAbsolute(fName,path);
+      if (!FpFileSys::verifyDirectory(FFaFilePath::getPath(fName),false))
+        FFaFilePath::setPath(fName,path);
+      dialog->setDefaultName(fName);
+    }
+
+    dialog->addUserToggle("relToggle",
+                          "Use path relative to model-file location",
+                          isRelativeNameWanted);
+    dialog->remember((type + "BrowseField").c_str());
+
+    Strings files = dialog->execute();
+    bool useRelativePath = dialog->getUserToggleSet("relToggle");
+    delete dialog;
+
+    if (files.empty()) return false;
+
+    if (useRelativePath)
+      fName = FFaFilePath::getRelativeFilename(path,files.front());
+    else
+      fName = files.front();
+
+    return true;
   }
-
-  aDialog->addUserToggle("relToggle",
-			 "Use path relative to model-file location",
-			 isRelativeNameWanted);
-  aDialog->remember((type+"BrowseField").c_str());
-
-  Strings files = aDialog->execute();
-  bool useRelativePath = aDialog->getUserToggleSet("relToggle");
-  delete aDialog;
-
-  if (files.empty()) return false;
-
-  if (useRelativePath)
-    fName = FFaFilePath::getRelativeFilename(absModelFilePath,files.front());
-  else
-    fName = files.front();
-
-  return true;
 }
 
 
@@ -4103,9 +4082,7 @@ void FapUAProperties::loadViewFromPointCB(bool doHighlight)
 void FapUAProperties::loadViewFromWhatCB(bool doHighlight)
 {
   FmLoad* item = dynamic_cast<FmLoad*>(mySelectedFmItem);
-  if (!item) return;
-
-  if (item->getFromRef())
+  if (item && item->getFromRef())
     item->getFromRef()->highlight(doHighlight);
 }
 
@@ -4128,7 +4105,7 @@ void FapUAProperties::loadViewToPointCB(bool doHighlight)
 #ifdef USE_INVENTOR
   static long highlightID = -1;
   if (doHighlight)
-    highlightID = FdPickedPoints::add2DPoint(((FmLoad*)mySelectedFmItem)->getGlobalToPoint());
+    highlightID = FdPickedPoints::add2DPoint(item->getGlobalToPoint());
   else
     FdPickedPoints::remove2DPoint(highlightID);
 #else
@@ -4141,9 +4118,7 @@ void FapUAProperties::loadViewToPointCB(bool doHighlight)
 void FapUAProperties::loadViewToWhatCB(bool doHighlight)
 {
   FmLoad* item = dynamic_cast<FmLoad*>(mySelectedFmItem);
-  if (!item) return;
-
-  if (item->getToRef())
+  if (item && item->getToRef())
     item->getToRef()->highlight(doHighlight);
 }
 
@@ -4162,12 +4137,11 @@ void FapUAProperties::loadPickToPointCB()
 
 void FapUAProperties::verifyTransDamperFunction(bool& isOK, FmModelMemberBase* item)
 {
-  FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item);
-  if (func && func->isLegalSprDmpFunc())
-    isOK = (func->getFunctionUse() == FmMathFuncBase::DA_TRA_COEFF ||
-            func->getFunctionUse() == FmMathFuncBase::DA_TRA_FORCE);
-  else
-    isOK = false;
+  isOK = false;
+  if (FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item); func)
+    if (func->isLegalSprDmpFunc())
+      isOK = (func->getFunctionUse() == FmMathFuncBase::DA_TRA_COEFF ||
+              func->getFunctionUse() == FmMathFuncBase::DA_TRA_FORCE);
 }
 
 
@@ -4175,12 +4149,11 @@ void FapUAProperties::verifyTransDamperFunction(bool& isOK, FmModelMemberBase* i
 
 void FapUAProperties::verifyRotDamperFunction(bool& isOK, FmModelMemberBase* item)
 {
-  FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item);
-  if (func && func->isLegalSprDmpFunc())
-    isOK = (func->getFunctionUse() == FmMathFuncBase::DA_ROT_COEFF ||
-            func->getFunctionUse() == FmMathFuncBase::DA_ROT_TORQUE);
-  else
-    isOK = false;
+  isOK = false;
+  if (FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item); func)
+    if (func->isLegalSprDmpFunc())
+      isOK = (func->getFunctionUse() == FmMathFuncBase::DA_ROT_COEFF ||
+              func->getFunctionUse() == FmMathFuncBase::DA_ROT_TORQUE);
 }
 
 
@@ -4189,21 +4162,16 @@ void FapUAProperties::verifyRotDamperFunction(bool& isOK, FmModelMemberBase* ite
 void FapUAProperties::verifyTransSpringFunction(bool& isOK, FmModelMemberBase* item)
 {
   isOK = false;
-  FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item);
-  if (func)
+  if (FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item); func)
   {
     if (func->isLegalSprDmpFunc())
       if (func->getFunctionUse() == FmMathFuncBase::SPR_TRA_STIFF ||
 	  func->getFunctionUse() == FmMathFuncBase::SPR_TRA_FORCE)
 	isOK = true;
   }
-  else
-  {
-    FmSpringChar* sprc = dynamic_cast<FmSpringChar*>(item);
-    if (sprc)
-      if (sprc->getSpringCharUse() == FmSpringChar::TRANSLATION)
-	isOK = true;
-  }
+  else if (FmSpringChar* sprc = dynamic_cast<FmSpringChar*>(item); sprc)
+    if (sprc->getSpringCharUse() == FmSpringChar::TRANSLATION)
+      isOK = true;
 }
 
 
@@ -4212,19 +4180,14 @@ void FapUAProperties::verifyTransSpringFunction(bool& isOK, FmModelMemberBase* i
 void FapUAProperties::verifyRotSpringFunction(bool& isOK, FmModelMemberBase* item)
 {
   isOK = false;
-  FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item);
-  if (func)
+  if (FmMathFuncBase* func = dynamic_cast<FmMathFuncBase*>(item); func)
   {
     if (func->isLegalSprDmpFunc())
       if (func->getFunctionUse() == FmMathFuncBase::SPR_ROT_STIFF ||
 	  func->getFunctionUse() == FmMathFuncBase::SPR_ROT_TORQUE)
 	isOK = true;
   }
-  else
-  {
-    FmSpringChar* sprc = dynamic_cast<FmSpringChar*>(item);
-    if (sprc)
-      if (sprc->getSpringCharUse() == FmSpringChar::ROTATION)
-	isOK = true;
-  }
+  else if (FmSpringChar* sprc = dynamic_cast<FmSpringChar*>(item); sprc)
+    if (sprc->getSpringCharUse() == FmSpringChar::ROTATION)
+      isOK = true;
 }

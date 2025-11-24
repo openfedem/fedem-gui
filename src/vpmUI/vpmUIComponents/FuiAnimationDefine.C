@@ -428,8 +428,8 @@ void FuiModesSheet::getUIValues(FFuaUIValues* values)
 
   animValues->modeTyp = this->typeMenu->getSelectedOption();
   animValues->selLink = this->linkMenu->getSelectedRef();
-  animValues->selTime = this->timeMenu->getSelectedDouble();
-  animValues->selMode = this->modeMenu->getSelectedInt();
+  animValues->selTime = timeMenu->getOptionCount() > 0 ? timeMenu->getSelectedDouble() : -999.999;
+  animValues->selMode = modeMenu->getOptionCount() > 0 ? modeMenu->getSelectedInt() : -999;
 
   animValues->modeScale = this->scaleField->getDouble();
 

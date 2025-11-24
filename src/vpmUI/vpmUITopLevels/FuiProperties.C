@@ -1871,15 +1871,12 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myLoadMagnitude->setQuery(pv->myLoadEngineQuery);
     myLoadMagnitude->setSelectedRef(pv->mySelectedLoadMagnitudeEngine);
     myAttackPointEditor->setValue(pv->myAttackPoint);
-    myAttackPointEditor->setGlobal(pv->myAttackPointIsGlobal);
     myAttackPointEditor->setOnWhatText(pv->myAttackObjectText);
 
     myFromPointEditor->setValue(pv->myFromPoint);
-    myFromPointEditor->setGlobal(pv->myFromPointIsGlobal);
     myFromPointEditor->setOnWhatText(pv->myFromPointObjectText);
 
     myToPointEditor->setValue(pv->myToPoint);
-    myToPointEditor->setGlobal(pv->myToPointIsGlobal);
     myToPointEditor->setOnWhatText(pv->myToPointObjectText);
   }
 
@@ -2332,13 +2329,8 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
     pv->mySelectedLoadMagnitudeEngine = myLoadMagnitude->getSelectedRef();
 
     pv->myAttackPoint = myAttackPointEditor->getValue();
-    pv->myAttackPointIsGlobal = myAttackPointEditor->isGlobal();
-
     pv->myFromPoint = myFromPointEditor->getValue();
-    pv->myFromPointIsGlobal = myFromPointEditor->isGlobal();
-
     pv->myToPoint = myToPointEditor->getValue();
-    pv->myToPointIsGlobal = myToPointEditor->isGlobal();
   }
 
   // Generic DB Object
@@ -2476,6 +2468,14 @@ void FuiProperties::getUIValues(FFuaUIValues* values)
   if (IAmShowingSubAssData || IAmShowingRiserData ||
       IAmShowingJacketData || IAmShowingSoilPileData)
     pv->mySubAssemblyFile = mySubassFileField->getFileName();
+}
+
+
+void FuiProperties::getLoadRefSettings(FuaPropertiesValues* pv)
+{
+  pv->myAttackPointIsGlobal = myAttackPointEditor->isGlobal();
+  pv->myFromPointIsGlobal   = myFromPointEditor->isGlobal();
+  pv->myToPointIsGlobal     = myToPointEditor->isGlobal();
 }
 
 
