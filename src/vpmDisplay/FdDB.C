@@ -80,7 +80,6 @@
 #include "vpmDB/FmMechanism.H"
 #include "vpmDB/FmGlobalViewSettings.H"
 #include "vpmDB/FmSubAssembly.H"
-#include "vpmDB/FmSeaState.H"
 #include "vpmDB/FmRefPlane.H"
 #include "vpmDB/FmRevJoint.H"
 #include "vpmDB/FmCamJoint.H"
@@ -425,7 +424,6 @@ void FdDB::start()
   FdDB::showStickers(true);
   FdDB::showRefPlanes(true);
   FdDB::showSeaStates(false);
-  FdDB::showWaves(false);
   FdDB::showTires(true);
   FdDB::showStrainRosettes(true);
 
@@ -3330,16 +3328,6 @@ void FdDB::showSeaStates(bool YesOrNo)
   FdDB::showParts("seaStateListSw",YesOrNo);
 }
 
-void FdDB::showWaves(bool YesOrNo)
-{
-  FmSeaState* seaState = FmDB::getSeaStateObject(false);
-  if (seaState)
-  {
-    static_cast<FdSeaState*>(seaState->getFdPointer())->showWaves(YesOrNo);
-    seaState->getFdPointer()->updateFdDetails();
-  }
-}
-
 void FdDB::showTires(bool YesOrNo)
 {
   FdDB::showParts("tireListSw",YesOrNo);
@@ -3473,20 +3461,9 @@ bool FdDB::exportEPS(const char* filename)
 }
 
 
-bool FdDB::isVRMLFile(const std::string& fileName)
+FdDB::FileTypes FdDB::getCadFileType(const std::string& fileName)
 {
-  SoInput vrmlReader;
-  std::string aFile(fileName);
-  FFaFilePath::makeItAbsolute(aFile,FmDB::getMechanismObject()->getAbsModelFilePath());
-  vrmlReader.openFile(aFile.c_str());
-
-  return vrmlReader.isFileVRML2() || vrmlReader.isFileVRML1();
-}
-
-
-int FdDB::getCadFileType(const std::string& fileName)
-{
-  static std::map<std::string,int> extToTypeMap;
+  static std::map<std::string,FileTypes> extToTypeMap;
   if (extToTypeMap.empty()) {
     extToTypeMap["vrml"] = FD_VRML_FILE;
     extToTypeMap["wrl"]  = FD_VRML_FILE;
@@ -3503,13 +3480,18 @@ int FdDB::getCadFileType(const std::string& fileName)
   }
 
   FFaLowerCaseString ext(FFaFilePath::getExtension(fileName));
-  std::map<std::string,int>::const_iterator it = extToTypeMap.find(ext);
+  std::map<std::string,FileTypes>::const_iterator it = extToTypeMap.find(ext);
   if (it == extToTypeMap.end())
     return FD_UNKNOWN_FILE;
-  else if (it->second == FD_VRML_FILE && !FdDB::isVRMLFile(fileName))
-    return FD_UNKNOWN_FILE;
+  else if (it->second != FD_VRML_FILE)
+    return it->second;
 
-  return it->second;
+  // Open the file and check if it really is a VRML file
+  SoInput vrmlReader;
+  std::string aFile(fileName);
+  FFaFilePath::makeItAbsolute(aFile,FmDB::getMechanismObject()->getAbsModelFilePath());
+  vrmlReader.openFile(aFile.c_str());
+  return vrmlReader.isFileVRML2() || vrmlReader.isFileVRML1() ? FD_VRML_FILE : FD_UNKNOWN_FILE;
 }
 
 
