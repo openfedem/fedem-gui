@@ -2966,17 +2966,20 @@ bool FapUAProperties::setDBValues(FmModelMemberBase* fmItem,
   else if (fmItem->isOfType(FmSeaState::getClassTypeID()))
     {
       FmSeaState* item = (FmSeaState*)fmItem;
+      bool redraw = false;
 
-      item->setLengthX(pv->mySeaStateWidth);
-      item->setLengthY(pv->mySeaStateHeight);
+      redraw |= item->setLengthX(pv->mySeaStateWidth,false);
+      redraw |= item->setLengthY(pv->mySeaStateHeight,false);
 
-      item->setX(pv->mySeaStateWidthPos);
-      item->setY(pv->mySeaStateHeightPos);
+      redraw |= item->setX(pv->mySeaStateWidthPos,false);
+      redraw |= item->setY(pv->mySeaStateHeightPos,false);
 
-      item->setShowGrid(pv->mySeaStateShowGrid);
-      item->setShowSolid(pv->mySeaStateShowSolid);
+      redraw |= item->setShowGrid(pv->mySeaStateShowGrid,false);
+      redraw |= item->setShowSolid(pv->mySeaStateShowSolid,false);
 
-      item->setQuantization(pv->mySeaStateNumPoints);
+      redraw |= item->setQuantization(pv->mySeaStateNumPoints,false);
+
+      if (redraw) item->draw();
     }
 
   // Beam property
