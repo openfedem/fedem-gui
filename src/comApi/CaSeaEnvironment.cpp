@@ -65,116 +65,86 @@ CaSeaEnvironment::~CaSeaEnvironment(void)
 
 double CaSeaEnvironment::get_WaterDensity()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->waterDensity.getValue();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->waterDensity.getValue() : 0.0;
 }
 
 void CaSeaEnvironment::put_WaterDensity(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->setWaterDensity(Val);
+  if (sea) sea->waterDensity.setValue(Val);
 }
 
 double CaSeaEnvironment::get_MeanSeaLevel()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->meanSeaLevel.getValue();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->meanSeaLevel.getValue() : 0.0;
 }
 
 void CaSeaEnvironment::put_MeanSeaLevel(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->setMeanSeaLevel(Val);
+  if (sea) sea->setMeanSeaLevel(Val);
 }
 
 double CaSeaEnvironment::get_WaterDepth()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->seaDepth.getValue();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->seaDepth.getValue() : 0.0;
 }
 
 void CaSeaEnvironment::put_WaterDepth(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->setSeaDepth(Val);
+  if (sea) sea->setSeaDepth(Val);
 }
 
 double CaSeaEnvironment::get_MarineGrowthDensity()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->growthDensity.getValue();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->growthDensity.getValue() : 0.0;
 }
 
 void CaSeaEnvironment::put_MarineGrowthDensity(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->growthDensity = Val;
+  if (sea) sea->growthDensity.setValue(Val);
 }
 
 double CaSeaEnvironment::get_MarineGrowthThickness()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->growthThickness.getValue();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->growthThickness.getValue() : 0.0;
 }
 
 void CaSeaEnvironment::put_MarineGrowthThickness(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->growthThickness = Val;
+  if (sea) sea->growthThickness.setValue(Val);
 }
 
 double CaSeaEnvironment::get_MarineGrowthUpperLimit()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->growthLimit.getValue().first;
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->growthLimit.getValue().first : 0.0;
 }
 
 void CaSeaEnvironment::put_MarineGrowthUpperLimit(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->growthLimit = std::make_pair(Val,
-				    sea->growthLimit.getValue().second);
+  if (sea) sea->growthLimit = { Val, sea->growthLimit.getValue().second };
 }
 
 double CaSeaEnvironment::get_MarineGrowthLowerLimit()
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return 0;
-  return sea->growthLimit.getValue().second;
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  return sea ? sea->growthLimit.getValue().second : 0.0;
 }
 
 void CaSeaEnvironment::put_MarineGrowthLowerLimit(double Val)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  sea->growthLimit = std::make_pair(sea->growthLimit.getValue().second,
-				    Val);
+  if (sea) sea->growthLimit = { sea->growthLimit.getValue().first, Val };
 }
 
 void CaSeaEnvironment::GetGravitation(double* x, double* y, double* z)
@@ -193,10 +163,10 @@ void CaSeaEnvironment::SetGravitation(double x, double y, double z)
 
 void CaSeaEnvironment::GetWaveDirection(double* x, double* y, double* z)
 {
-  FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  FaVec3 v = sea->waveDir.getValue();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
+  if (!sea) return;
+
+  const FaVec3& v = sea->waveDir.getValue();
   *x = v.x();
   *y = v.y();
   *z = v.z();
@@ -205,16 +175,13 @@ void CaSeaEnvironment::GetWaveDirection(double* x, double* y, double* z)
 void CaSeaEnvironment::SetWaveDirection(double x, double y, double z)
 {
   FmSeaState* sea = FmDB::getSeaStateObject();
-  if (sea == NULL)
-    return;
-  FaVec3 v(x,y,z);
-  sea->setWaveDir(v);
+  if (sea) sea->setWaveDir(FaVec3(x,y,z));
 }
 
 IFunction* CaSeaEnvironment::GetWaveFunction()
 {
   // Get FmFunction
-  FmSeaState* sea = FmDB::getSeaStateObject();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
   if (sea == NULL)
     return NULL;
   FmModelMemberBase* pFmFunction = sea->waveFunction.getPointer();
@@ -264,13 +231,13 @@ void CaSeaEnvironment::SetWaveFunction(IFunction* Function)
     return;
 
   // Set
-  sea->waveFunction = static_cast<FmMathFuncBase*>(pCaFunction->m_ptr);
+  sea->waveFunction.setRef(pCaFunction->m_ptr);
 }
 
 IFunction* CaSeaEnvironment::GetCurrentFunction()
 {
   // Get FmFunction
-  FmSeaState* sea = FmDB::getSeaStateObject();
+  FmSeaState* sea = FmDB::getSeaStateObject(false);
   if (sea == NULL)
     return NULL;
   FmModelMemberBase* pFmFunction = sea->currFunction.getPointer();
@@ -320,7 +287,7 @@ void CaSeaEnvironment::SetCurrentFunction(IFunction* Function)
     return;
 
   // Set
-  sea->currFunction = static_cast<FmMathFuncBase*>(pCaFunction->m_ptr);
+  sea->currFunction.setRef(pCaFunction->m_ptr);
 }
 
 

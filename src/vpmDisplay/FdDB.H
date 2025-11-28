@@ -12,7 +12,7 @@
 
 #include <array>
 
-typedef std::array<float,3> FdColor;
+using FdColor = std::array<float,3>;
 
 class FmIsRenderedBase;
 class FmCamJoint;
@@ -130,7 +130,6 @@ public:
   static void showStickers(bool show);
   static void showRefPlanes(bool show);
   static void showSeaStates(bool show);
-  static void showWaves(bool show);
   static void showTires(bool show);
   static void showStrainRosettes(bool show);
   static void showContactSurfaces(bool show);
@@ -141,18 +140,16 @@ public:
   // Export Graphics methods:
 
   static bool exportEPS(const char* filename);  // Export function for EPS picture
-  static bool exportIV(const char* filename);  // Export function for Inventor file
+  static bool exportIV(const char* filename);   // Export function for Inventor file
   static bool exportRGB(const char* filename);  // Export function for RGB image file
   static bool exportJPEG(const char* filename); // Export function for JPEG image file
   static bool exportBMP(const char* filename);
   static bool exportPNG(const char* filename);
   static bool exportGIF(const char* filename);
   static bool exportTIFF(const char* filename);
-  static bool exportAsPicture(const char* filename,   // Exportfunction for arbitrary
-			      const char* extension); // image format, based on extension
+  static bool exportAsPicture(const char* filename, // Export function for any format,
+			      const char* extension); // based on extension
 
-  static bool isVRMLFile(const std::string& fileName);
-  static int  getCadFileType(const std::string& fileName);
   enum FileTypes {
     FD_UNKNOWN_FILE,
     FD_VRML_FILE,
@@ -162,6 +159,7 @@ public:
     FD_FCAD_FILE,
     FD_OBJ_FILE
   };
+  static FileTypes getCadFileType(const std::string& fileName);
 
   static void showPointSelectionUI(bool isEdge, int type,
                                    const FaVec3& pickedPoint,

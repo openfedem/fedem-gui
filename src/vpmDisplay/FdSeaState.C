@@ -16,6 +16,8 @@
 #include "vpmDisplay/FdAnimateModel.H"
 
 #include "vpmDB/FmSeaState.H"
+#include "vpmDB/FmDB.H"
+#include "vpmDB/FmGlobalViewSettings.H"
 #include "vpmApp/vpmAppCmds/FapAnimationCmds.H"
 
 #include <Inventor/nodes/SoCoordinate3.h>
@@ -44,8 +46,6 @@ FdSeaState::FdSeaState(FmSeaState* pt)
   bp_pointer->setPointer(this);
 
   this->highlightBoxId = NULL;
-
-  bShowWaves = false;
 }
 
 
@@ -142,12 +142,8 @@ bool FdSeaState::updateFdDetails()
   sep->removeAllChildren();
 
   FmSeaState* seaState = static_cast<FmSeaState*>(itsFmOwner);
-  FmMathFuncBase* waveFunction = bShowWaves ? seaState->waveFunction.getPointer() : NULL;
   bool finiteDepth = seaState->seaDepth.getValue() > 0.0;
-
-  if (!this->evaluateWave(seaState,waveFunction,FapAnimationCmds::getFdAnimator()))
-    waveFunction = NULL; // wave evaluation failed
-
+  FmMathFuncBase* waveFunction = this->evaluateWave(seaState);
   if (waveFunction)
   {
     int i, j, num = seaState->getQuantization() > 2 ? seaState->getQuantization() : 2;
@@ -421,17 +417,18 @@ void FdSeaState::hideHighlight()
 
 void FdSeaState::selectAnimationFrame(size_t frameNr)
 {
-  FmSeaState* seaState = static_cast<FmSeaState*>(itsFmOwner);
-
-  this->evaluateWave(seaState,
-		     bShowWaves ? seaState->waveFunction.getPointer() : NULL,
-		     frameNr > 0 ? FapAnimationCmds::getFdAnimator() : NULL);
+  this->evaluateWave(static_cast<FmSeaState*>(itsFmOwner), frameNr > 0);
 }
 
 
-bool FdSeaState::evaluateWave(FmSeaState* seaState, FmMathFuncBase* waveFunc,
-                              FdAnimateModel* animator) const
+FmMathFuncBase* FdSeaState::evaluateWave(FmSeaState* seaState, bool animate) const
 {
+  FmMathFuncBase* waveFunc = NULL;
+  if (FmDB::getActiveViewSettings()->visibleWaves())
+    if ((waveFunc = seaState->waveFunction.getPointer()))
+      if (!waveFunc->initGetValue())
+        waveFunc = NULL; // Wave initialization failed
+
   SoCoordinate3* coords = SO_GET_PART(itsKit,"planeCoords",SoCoordinate3);
 
   // Dimensions of the sea surface plane/box
@@ -440,7 +437,7 @@ bool FdSeaState::evaluateWave(FmSeaState* seaState, FmMathFuncBase* waveFunc,
   double depth = seaState->seaDepth.getValue();
   float bottom = -(float)depth;
 
-  if (!waveFunc || !waveFunc->initGetValue())
+  if (!waveFunc)
   {
     // Create simple a rectangle when no wave visualization
     float dxDiv2 = 0.5f*(float)seaState->xLength.getValue();
@@ -456,11 +453,12 @@ bool FdSeaState::evaluateWave(FmSeaState* seaState, FmMathFuncBase* waveFunc,
       coords->point.set1Value(6, dxDiv2, dyDiv2, bottom);
       coords->point.set1Value(7, dxDiv2,-dyDiv2, bottom);
     }
-    return waveFunc ? false : true;
+    return waveFunc;
   }
 
-  double g = seaState->getGrav().length();
+  FdAnimateModel* animator = animate ? FapAnimationCmds::getFdAnimator() : NULL;
   double time = animator ? animator->getCurrentTime() : 0.0;
+  double g = seaState->getGrav().length();
 
   // Position of the sea surface plane
   float x = (float)seaState->getX();
@@ -513,5 +511,5 @@ bool FdSeaState::evaluateWave(FmSeaState* seaState, FmMathFuncBase* waveFunc,
     coords->point.set1Value(num++, dxDiv2, dyDiv2, bottom);
   }
 
-  return true;
+  return waveFunc;
 }

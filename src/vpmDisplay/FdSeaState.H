@@ -13,7 +13,6 @@
 
 class FmSeaState;
 class FmMathFuncBase;
-class FdAnimateModel;
 
 
 class FdSeaState : public FdObject, public FdAnimatedBase
@@ -33,8 +32,6 @@ public:
   virtual void resetAnimation()	{ this->selectAnimationFrame(0); }
   virtual void deleteAnimationData() {}
 
-  void showWaves(bool doShow) { bShowWaves = doShow; }
-
 protected:
   virtual ~FdSeaState();
 
@@ -43,12 +40,10 @@ protected:
   virtual void showHighlight();
   virtual void hideHighlight();
 
-  bool evaluateWave(FmSeaState* seaState, FmMathFuncBase* waveFunc,
-                    FdAnimateModel* animator = NULL) const;
+  FmMathFuncBase* evaluateWave(FmSeaState* seaState, bool animate = true) const;
 
 private:
   void* highlightBoxId;
-  bool  bShowWaves;
 };
 
 #endif
