@@ -22,28 +22,6 @@
 #include <algorithm>
 
 
-static bool getXaxisModelPosition(FFpCurve& curve, const std::string& xOper)
-{
-  curve[FmCurveSet::XAXIS].resize(curve[FmCurveSet::YAXIS].size(),0.0);
-
-  size_t ix = xOper.find("Position");
-  if (ix == std::string::npos || ix+9 >= xOper.size()) return false;
-  char cPos = xOper[ix+9];
-  if (cPos < 'X' || cPos > 'Z') return false;
-  ix = cPos - 'X';
-
-  size_t i = 0;
-  for (double& x : curve[FmCurveSet::XAXIS])
-  {
-    int baseId = curve.getSpatialXaxisObject(i++);
-    FmIsPositionedBase* obj = dynamic_cast<FmIsPositionedBase*>(FmDB::findObject(baseId));
-    if (obj) x = obj->getGlobalCS().translation()[ix];
-  }
-
-  return true;
-}
-
-
 /*!
   Builds the \a dataMap with operations and then reads data from the RDB,
   external curve data files, and/or internal functions for a set of \a curves.
@@ -70,14 +48,14 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
   std::string& message = (errMsg ? *errMsg : msg1); // Dialog box messages
   std::string& listMsg = (errMsg ? *errMsg : msg2); // Output list messages
 
-  FmGraph* graph = NULL;
   FFpGraph rdbCurves;
 
   // Set the load time interval from the owner graph of the first RDB curve
   for (FmCurveSet* curve : curves)
     if (curve->usingInputMode() == FmCurveSet::TEMPORAL_RESULT ||
         curve->usingInputMode() == FmCurveSet::COMB_CURVES)
-      if ((graph = curve->getOwnerGraph()) && graph->getUseTimeRange())
+      if (FmGraph* graph = curve->getOwnerGraph();
+          graph && graph->getUseTimeRange())
       {
 	double tmin, tmax;
 	graph->getTimeRange(tmin,tmax);
@@ -93,17 +71,15 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
     {
       std::vector<FmIsPlottedBase*> spatialObjs;
       curve->getSpatialObjs(spatialObjs);
-      size_t nPoints = spatialObjs.size();
-      if (nPoints > 0)
+      if (size_t nPoints = spatialObjs.size(); nPoints > 0)
       {
         // Create result description for each spatial point
         std::vector<FFaResultDescription> spatialDescr, xDescr;
         spatialDescr.reserve(nPoints);
         for (FmIsPlottedBase* obj : spatialObjs)
         {
-          spatialDescr.push_back(FFaResultDescription(obj->getUITypeName(),
-                                                      obj->getBaseID(),
-                                                      obj->getID()));
+          spatialDescr.emplace_back(obj->getUITypeName(),
+                                    obj->getBaseID(),obj->getID());
           spatialDescr.back().copyResult(curve->getResult(FmCurveSet::YAXIS));
         }
 
@@ -122,7 +98,8 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
 	      end1 = 1;
 	    else
 	      std::cerr <<" *** FapGraphDataMap::findPlottingData:"
-			<<" Could not detect direction of traversal."<< std::endl;
+			<<" Could not detect direction of traversal."
+			<< std::endl;
 	  }
 	  xDescr.reserve(nPoints*2);
 	  FmTriad* triads[2];
@@ -132,9 +109,8 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
 	    triads[1] = static_cast<FmBeam*>(obj)->getSecondTriad();
 	    if (end1 == 1) std::swap(triads[0],triads[1]);
 	    for (int k = 0; k < 2; k++)
-	      xDescr.push_back(FFaResultDescription(triads[k]->getUITypeName(),
-                                                    triads[k]->getBaseID(),
-                                                    triads[k]->getID()));
+              xDescr.emplace_back(triads[k]->getUITypeName(),
+                                  triads[k]->getBaseID(),triads[k]->getID());
 	  }
 	  nPoints *= 2; // two spatial result points per element
 	}
@@ -151,23 +127,19 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
       }
     }
 
-    cit = dataMap.find(curve);
-    if (cit != dataMap.end())
+    if ((cit = dataMap.find(curve)) == dataMap.end())
+      cit = dataMap.emplace(curve,FFpCurve()).first; // new RDB-curve
+    else if (cit->first->usingInputMode() == FmCurveSet::TEMPORAL_RESULT)
     {
       // Clear the temporal RDB-curve data when ...
-      if (cit->first->usingInputMode() == FmCurveSet::TEMPORAL_RESULT)
-      {
-	if (isAppending && cit->first->doAnalysis())
-	  cit->second.clear(); /* we are appending and doing curve analysis */
-	else if (!isAppending && cit->first->hasXYDataChanged()) // Bugfix #510
-	  cit->second.clear(); /* there is new data while not appending, or */
-	else if (cit->first->hasDFTOptionsChanged(1))
-	  cit->second.clear(); /* DFT-options have changed while DFT is on, or
-				  we are appending and DFT was switched off */
-      }
+      if (isAppending && cit->first->doAnalysis())
+        cit->second.clear(); // we are appending and doing curve analysis,
+      else if (!isAppending && cit->first->hasXYDataChanged()) // Bugfix #510
+        cit->second.clear(); // there is new data while not appending, or
+      else if (cit->first->hasDFTOptionsChanged(1))
+        // DFT-options have changed while DFT is on, or we are appending
+        cit->second.clear(); // while the DFT was switched off
     }
-    else
-      cit = dataMap.insert(std::make_pair(curve,FFpCurve())).first;
 
     if (cit->first->usingInputMode() <= FmCurveSet::RDB_RESULT)
     {
@@ -189,7 +161,7 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
 
     case FmCurveSet::SPATIAL_RESULT:
       // Beta feature: Check if model configuration should be used for X-axis
-      if ((graph = cit->first->getOwnerGraph()))
+      if (FmGraph* graph = cit->first->getOwnerGraph(); graph)
         if (graph->getUserDescription().find("#Model") != std::string::npos)
           rdbCurves.setNoXaxisValues();
       break;
@@ -218,6 +190,24 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
     }
   }
 
+  // Lambda function defining the X-axis values for a spatial curve.
+  auto&& setXvalue = [](FFpCurve& crv, const std::string& xOper)
+  {
+    crv[FmCurveSet::XAXIS].resize(crv[FmCurveSet::YAXIS].size(),0.0);
+
+    size_t ix = xOper.find("Position");
+    if (ix == std::string::npos || ix+9 >= xOper.size()) return;
+    char cPos = xOper[ix+9];
+    if (cPos < 'X' || cPos > 'Z') return;
+    ix = cPos - 'X';
+
+    size_t i = 0;
+    for (double& xValue : crv[FmCurveSet::XAXIS])
+      if (FmBase* obj = FmDB::findObject(crv.getSpatialXaxisObject(i++)); obj)
+        if (FmIsPositionedBase* p = dynamic_cast<FmIsPositionedBase*>(obj); p)
+          xValue = p->getGlobalCS().translation()[ix];
+  };
+
   if (!rdbCurves.empty())
   {
     // Actually read the RDB curves from file
@@ -235,8 +225,7 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
       if (rdbCurves.getNoXaxisValues())
         for (cit = dataMap.begin(); cit != dataMap.end(); ++cit)
           if (cit->first->usingInputMode() == FmCurveSet::SPATIAL_RESULT)
-            getXaxisModelPosition(cit->second,
-                                  cit->first->getResultOper(FmCurveSet::XAXIS));
+            setXvalue(cit->second,cit->first->getResultOper(FmCurveSet::XAXIS));
     }
     if (!isAppending) FFaMsg::popStatus();
     if (readOK && !msg1.empty())
@@ -393,7 +382,8 @@ void FapGraphDataMap::replaceCombinedCurves(std::vector<FmCurveSet*>& curves)
 */
 
 bool FapGraphDataMap::findDataFromFunc(const FmCurveSet* curve,
-				       FFpCurve& curveData, std::string& message)
+                                       FFpCurve& curveData,
+                                       std::string& message)
 {
   if (!curve) return false;
   if (!curve->areAxesComplete()) return false;
@@ -447,7 +437,8 @@ bool FapGraphDataMap::findDataFromFunc(const FmCurveSet* curve,
 */
 
 bool FapGraphDataMap::findDataFromFile(const FmCurveSet* curve,
-				       FFpCurve& curveData, std::string& message)
+                                       FFpCurve& curveData,
+                                       std::string& message)
 {
   if (!curve) return false;
 
@@ -501,13 +492,13 @@ bool FapGraphDataMap::findCombinedCurveData(const FmCurveSet* ccrv,
     if (active[i])
     {
       if (i >= curves.size() || !curves[i])
-	message += "Component " + std::string(FmCurveSet::getCompNames()[i])
+        message += "Component " + std::string(FmCurveSet::getCompNames()[i])
           + " is undefined.\n";
       else if (std::find(cStack.begin(),cStack.end(),curves[i]) != cStack.end())
-	message += "Looping component curve definition detected.\n";
+        message += "Looping component curve definition detected.\n";
       else if (curves[i]->doDft() || curves[i]->doRainflow())
-	message += "Component " + std::string(FmCurveSet::getCompNames()[i]) + ": "
-	  + curves[i]->getIdString(true) + " is transformed.\n";
+        message += "Component " + std::string(FmCurveSet::getCompNames()[i])
+          + ": " + curves[i]->getIdString(true) + " is transformed.\n";
       else if (findCombinedCurveData(curves[i],message))
       {
         if (curves[i]->derivate() || curves[i]->integrate() ||
@@ -708,9 +699,7 @@ size_t Fap::readCurveData(const std::vector<FmCurveSet*>& curves,
   size_t nCX = 0;
   values.reserve(curves.size());
   for (FmCurveSet* curve : curves)
-  {
-    FFpCurve* myCurve = graphDataMap.getFFpCurve(curve);
-    if (myCurve)
+    if (FFpCurve* myCurve = graphDataMap.getFFpCurve(curve); myCurve)
     {
       myCurve->clipX(startT,stopT);
       if (!myCurve->empty())
@@ -721,7 +710,6 @@ size_t Fap::readCurveData(const std::vector<FmCurveSet*>& curves,
           nCX = values.back().size();
       }
     }
-  }
 
   return nCX;
 }
