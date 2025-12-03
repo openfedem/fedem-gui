@@ -31,8 +31,8 @@ FFuaUIValues* FapUAViewSettings::createValuesObject()
 
 void FapUAViewSettings::setDBValues(FFuaUIValues* values)
 {
-  FuaViewSettingsValues* viewValues = (FuaViewSettingsValues*) values;
-  FmGlobalViewSettings * viewSett = FmDB::getActiveViewSettings();
+  FuaViewSettingsValues* viewValues = (FuaViewSettingsValues*)values;
+  FmGlobalViewSettings* viewSett = FmDB::getActiveViewSettings();
 
   viewSett->showRevoluteJoints(viewValues->isRevoluteJointsOn);
   viewSett->showBallJoints(viewValues->isBallJointsOn);
@@ -57,6 +57,8 @@ void FapUAViewSettings::setDBValues(FFuaUIValues* values)
   viewSett->showRefPlanes(viewValues->isRefPlaneOn);
   viewSett->showSeaStates(viewValues->isSeaStateOn);
   viewSett->showWaves(viewValues->isWavesOn);
+
+  // symbols
   viewSett->showStrainRosettes(viewValues->isSymbolOn[FuiViewSettings::STRAIN_ROSETTE]);
   viewSett->showFeedbacks(viewValues->isSymbolOn[FuiViewSettings::SENSOR]);
 
@@ -93,8 +95,8 @@ void FapUAViewSettings::setDBValues(FFuaUIValues* values)
 
 void FapUAViewSettings::getDBValues(FFuaUIValues* values)
 {
-  FuaViewSettingsValues* viewValues = (FuaViewSettingsValues*) values;
-  FmGlobalViewSettings * viewSett = FmDB::getActiveViewSettings();
+  FuaViewSettingsValues* viewValues = (FuaViewSettingsValues*)values;
+  FmGlobalViewSettings* viewSett = FmDB::getActiveViewSettings();
 
   viewValues->isRevoluteJointsOn = viewSett->visibleRevoluteJoints();
   viewValues->isBallJointsOn = viewSett->visibleBallJoints();
@@ -109,30 +111,30 @@ void FapUAViewSettings::getDBValues(FFuaUIValues* values)
   viewValues->isSimpleTransparencyOn = !viewSett->getNiceTransparency();
   viewValues->myFogVisibility        = viewSett->getFogVisibility();
   viewValues->isBeamTriadsOn         = viewSett->visibleBeamTriads();
-  viewValues->isBeamsOn         	 = viewSett->visibleBeams();
-  viewValues->isBeamCSOn         	 = viewSett->visibleBeamCS();
+  viewValues->isBeamsOn              = viewSett->visibleBeams();
+  viewValues->isBeamCSOn             = viewSett->visibleBeamCS();
   viewValues->isPartsOn              = viewSett->visibleParts();
   viewValues->isInternalPartCSsOn    = viewSett->visibleInternalPartCSs();
   viewValues->isPartCSOn             = viewSett->visiblePartCS();
   viewValues->isPartCoGCSOn          = viewSett->visiblePartCoGCSs();
   viewValues->isRefPlaneOn           = viewSett->visibleRefPlanes();
-  viewValues->isSeaStateOn	     = viewSett->visibleSeaStates();
-  viewValues->isWavesOn		    = viewSett->visibleWaves();
+  viewValues->isSeaStateOn           = viewSett->visibleSeaStates();
+  viewValues->isWavesOn              = viewSett->visibleWaves();
 
-  // symbols:
-  viewValues->isSymbolOn[FuiViewSettings::SENSOR]  =  viewSett->visibleFeedbacks();
-  viewValues->isSymbolOn[FuiViewSettings::GEAR]    =  viewSett->visibleHPs();
-  viewValues->isSymbolOn[FuiViewSettings::JOINT]   =  viewSett->visibleJoints();
-  viewValues->isSymbolOn[FuiViewSettings::LOAD]    =  viewSett->visibleLoads();
-  viewValues->isSymbolOn[FuiViewSettings::SPR_DA]  =  viewSett->visibleSprDas();
-  viewValues->isSymbolOn[FuiViewSettings::STICKER] =  viewSett->visibleStickers();
-  viewValues->isSymbolOn[FuiViewSettings::TRIADS]  =  viewSett->visibleTriads();
-  viewValues->isSymbolOn[FuiViewSettings::TIRES]   =  viewSett->visibleTires();
+  // symbols
+  viewValues->isSymbolOn[FuiViewSettings::SENSOR]  = viewSett->visibleFeedbacks();
+  viewValues->isSymbolOn[FuiViewSettings::GEAR]    = viewSett->visibleHPs();
+  viewValues->isSymbolOn[FuiViewSettings::JOINT]   = viewSett->visibleJoints();
+  viewValues->isSymbolOn[FuiViewSettings::LOAD]    = viewSett->visibleLoads();
+  viewValues->isSymbolOn[FuiViewSettings::SPR_DA]  = viewSett->visibleSprDas();
+  viewValues->isSymbolOn[FuiViewSettings::STICKER] = viewSett->visibleStickers();
+  viewValues->isSymbolOn[FuiViewSettings::TRIADS]  = viewSett->visibleTriads();
+  viewValues->isSymbolOn[FuiViewSettings::TIRES]   = viewSett->visibleTires();
   viewValues->isSymbolOn[FuiViewSettings::STRAIN_ROSETTE] = viewSett->visibleStrainRosettes();
 
-  viewValues->myLineWidth           = viewSett->getSymbolLineWidth();
-  viewValues->mySymbolSize          = viewSett->getSymbolScale();
-  viewValues->myFogVisibility       = viewSett->getFogVisibility();
+  viewValues->myLineWidth     = viewSett->getSymbolLineWidth();
+  viewValues->mySymbolSize    = viewSett->getSymbolScale();
+  viewValues->myFogVisibility = viewSett->getFogVisibility();
 
   // colors
   viewValues->mySymbolColor[FuiViewSettings::SENSOR]  = viewSett->getFeedbackColor();
