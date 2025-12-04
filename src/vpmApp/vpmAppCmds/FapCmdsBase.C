@@ -104,7 +104,7 @@ bool FapCmdsBase::getCurrentSelection(std::vector<FmModelMemberBase*>& data,
 
 bool FapCmdsBase::hasResultsCheck()
 {
-  return FpPM::getResultFlag();
+  return FpPM::hasResults();
 }
 
 

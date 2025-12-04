@@ -46,7 +46,7 @@ void FuiCtrlModes::setMode(int newMode)
   // Sets mode to NEUTRAL
   FuiCtrlModes::cancel();
 
-  if (FpPM::getResultFlag())
+  if (FpPM::hasResults())
     return;
 
   mode = newMode;
@@ -85,7 +85,7 @@ int FuiCtrlModes::getState()
 
 void FuiCtrlModes::setNeutralType(int newType)
 {
-  if (FpPM::getResultFlag() || mode != NEUTRAL_MODE)
+  if (FpPM::hasResults() || mode != NEUTRAL_MODE)
     return;
 
 #ifdef USE_INVENTOR
@@ -249,7 +249,7 @@ void FuiCtrlModes::cancel()
 
 void FuiCtrlModes::setTip()
 {
-  if (FpPM::getResultFlag())
+  if (FpPM::hasResults())
     return;
 
   switch (mode)
