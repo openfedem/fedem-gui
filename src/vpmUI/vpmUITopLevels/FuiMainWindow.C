@@ -120,6 +120,12 @@ void FuiMainWindow::showToolBar(int toolBar, bool show)
 }
 //----------------------------------------------------------------------------
 
+void FuiMainWindow::updateToolBarSensitivity(int toolBar)
+{
+  this->toolBars[toolBar]->updateSensitivityOnAll();
+}
+//----------------------------------------------------------------------------
+
 bool FuiMainWindow::isToolBarShown(int toolBar)
 {
   return this->toolBars[toolBar]->isPoppedUp();

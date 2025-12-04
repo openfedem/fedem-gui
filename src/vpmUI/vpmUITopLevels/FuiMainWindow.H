@@ -101,6 +101,7 @@ public:
   bool isPropertiesShown();
 
   void showToolBar(int toolBar, bool show);
+  void updateToolBarSensitivity(int toolBar);
   bool isToolBarShown(int toolBar);
 
   virtual void removeToolBar(int toolBar) = 0;
