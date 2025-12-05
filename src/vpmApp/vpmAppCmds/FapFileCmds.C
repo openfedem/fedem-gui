@@ -273,9 +273,7 @@ void FapFileCmds::open(size_t recentFileIdx)
 
 void FapFileCmds::save(bool pruneEmptyDirs)
 {
-  if (FpPM::isUsingDefaultName())
-    FapFileCmds::saveAs();
-  else if (FmDB::getMechanismObject()->getModelFileName().empty())
+  if (FmDB::getMechanismObject()->isUntitled())
     FapFileCmds::saveAs();
   else
     FpPM::vpmModelSave(pruneEmptyDirs);
