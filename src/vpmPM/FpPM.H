@@ -60,8 +60,7 @@ public:
   static bool vpmModelSaveAs(const std::string& name, bool saveReducedParts = true,
                              bool saveRes = true, double atTime = -1.0);
 
-  static bool vpmModelExport(const std::string& name,
-                             FmAnalysis* analysis = NULL, const char* model = NULL);
+  static bool vpmModelExport(const std::string& newPath, bool solverInput = false);
 
   static void openCmdLineFile();
   static void vpmModelNew();

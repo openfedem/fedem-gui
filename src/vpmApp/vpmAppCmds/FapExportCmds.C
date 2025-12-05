@@ -1692,7 +1692,7 @@ void FapExportCmds::exportDTSApp(FmModelExpOptions* options)
   remove_all_frs_output(addOpts,saveVars);
 
   // Save model file with dependencies to app folder
-  bool ok = FpPM::vpmModelExport(FFaFilePath::appendFileNameToPath(libPath, mech->getModelName(true)));
+  bool ok = FpPM::vpmModelExport(libPath);
 
   // Restore solver options
   analysis->stopTimeEnable.setValue(stopChanged);
@@ -1830,7 +1830,7 @@ void FapExportCmds::exportDTSBatchApp(FmModelExpOptions* options)
   }
 
   // Save model file with dependencies to app folder
-  bool ok = FpPM::vpmModelExport(FFaFilePath::appendFileNameToPath(libPath, mech->getModelName(true)));
+  bool ok = FpPM::vpmModelExport(libPath);
 
   // Restore solver options
   analysis->stopTimeEnable.setValue(stopChanged);
@@ -2004,8 +2004,7 @@ void FapExportCmds::exportFMUApp(FmModelExpOptions* options)
 
   // Save model file with dependencies to model folder
   // and create solver input files for batch execution
-  std::string newModel = FFaFilePath::appendFileNameToPath(modelPath, mech->getModelName(true));
-  bool ok = FpPM::vpmModelExport(newModel, analysis, "model");
+  bool ok = FpPM::vpmModelExport(modelPath,true);
 
   // Restore solver options
   analysis->solveEigenvalues.setValue(freqChanged);

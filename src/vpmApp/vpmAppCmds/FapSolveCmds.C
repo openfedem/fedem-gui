@@ -1007,10 +1007,7 @@ static bool exportSimulationApp(const char* appname)
   ok &= FpFileSys::copyFile("driver.py", templPath, libPath);
 
   // Save model file with dependencies to app folder
-  std::string currPath = mech->getModelFileName();
-  std::string newFMMPath = libPath;
-  FFaFilePath::appendToPath(newFMMPath, FFaFilePath::getFileName(currPath));
-  ok &= FpPM::vpmModelExport(newFMMPath);
+  ok &= FpPM::vpmModelExport(libPath);
   FFaMsg::popStatus();
   return ok;
 }

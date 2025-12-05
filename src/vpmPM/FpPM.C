@@ -1869,12 +1869,13 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
 }
 
 
-bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const char* model)
+bool FpPM::vpmModelExport(const std::string& newPath, bool solverInput)
 {
   FmMechanism* mech = FmDB::getMechanismObject();
+  std::string fName = FFaFilePath::appendFileNameToPath(newPath,
+                                                        mech->getModelName(true));
   std::string oldRDBPath = mech->getAbsModelRDBPath();
-  std::string newRDBPath = FFaFilePath::getBaseName(name) +"_RDB";
-  bool exportSolverInput = analysis != NULL;
+  std::string newRDBPath = FFaFilePath::getBaseName(fName) +"_RDB";
 
   // Check if we export to ourselves (not allowed)
   if (newRDBPath == oldRDBPath) return false;
@@ -1896,7 +1897,7 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
     ListUI <<"===> Switching to master Simulation event.\n";
 
   Fui::noUserInputPlease();
-  ListUI <<"===> Exporting Fedem model to "<< name <<"\n";
+  ListUI <<"===> Exporting Fedem model to "<< fName <<"\n";
 
   if (removeRDBdir)
   {
@@ -1926,13 +1927,13 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
   std::string oldBladeDirectory = mech->getAbsBladeFolderPath();
 
   // Update the mechanism to reflect path name changes
-  mech->syncPath(name,exportSolverInput);
+  mech->syncPath(fName,solverInput);
   mech->modelLinkRepository.setValue("");
 
   // Exported model file location
   const std::string& newModelP = mech->getAbsModelFilePath();
   std::string newRootP(newModelP);
-  if (exportSolverInput)
+  if (solverInput)
     newRootP = FFaFilePath::getPath(FFaFilePath::getPath(newModelP),false);
 
   // Find all path names in the model and store a pointer to each in a vector
@@ -1979,7 +1980,7 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
     for (FmPart* part : allParts)
     {
       int red = saveReducedPart.find(part) != saveReducedPart.end();
-      if (red && exportSolverInput)
+      if (red && solverInput)
         // Only include those reduction files needed by the solvers
         red = part->recoveryDuringSolve.getValue() > 0 ? 3 : 2;
       const std::string& oldDir = oldPartDB[iPart++];
@@ -1989,42 +1990,46 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
   }
 
   // Copy the blade design of the model, if any such exist
-  if (!exportSolverInput && FpFileSys::isDirectory(oldBladeDirectory))
+  if (!solverInput && FpFileSys::isDirectory(oldBladeDirectory))
     copyBladeDir(oldBladeDirectory,mech->getAbsBladeFolderPath());
 
   bool isModelSaved = false;
-  if (exportSolverInput)
+  if (solverInput)
   {
-    // Create solver input files for batch execution
-    Strings rdbPath;
-    std::string msg = Fedem::createSolverInput(analysis,mech,NULL,"fedem_solver",{},rdbPath);
+    Strings rdbPath; // Create solver input files for batch execution
+    std::string msg = Fedem::createSolverInput(FmDB::getActiveAnalysis(),
+                                               mech,NULL,"fedem_solver",{},
+                                               rdbPath);
     if (msg.find("fedem_solver") > 0) // Failure
       FFaMsg::list(msg + "\n",true);
-    else if (model && !rdbPath.empty())
+    else
     {
-      // The solver input files were created in mech->getAbsModelRDBPath()/response_0001
+      // The solver input files were created in the directory
+      // mech->getAbsModelRDBPath()/response_0001
       // Now move them two levels up to where we want them to be
       std::string modelDir = FFaFilePath::getPath(newModelP);
-      isModelSaved = FpFileSys::renameFile(rdbPath.front(), modelDir + model);
+      isModelSaved = FpFileSys::renameFile(rdbPath.front(), modelDir + "model");
       if (isModelSaved)
-        ListUI <<"  -> Solver input files exported to "<< modelDir << model <<"\n";
+        ListUI <<"  -> Solver input files exported to "<< modelDir <<"model\n";
       else
         std::cerr <<" *** Failed to move directory "<< rdbPath.front() << std::endl;
-      if (!newPartDB.empty() && FpFileSys::renameFile(newPartDB, modelDir + "link_DB"))
-        ListUI <<"  -> Internal link repository exported to "<< modelDir <<"link_DB\n";
-      else if (!newPartDB.empty())
-        std::cerr <<" *** Failed to move directory "<< newPartDB << std::endl;
+      if (!newPartDB.empty())
+      {
+        if (FpFileSys::renameFile(newPartDB, modelDir + "link_DB"))
+          ListUI <<"  -> Internal link repository exported to "
+                 << modelDir <<"link_DB\n";
+        else
+          std::cerr <<" *** Failed to move directory "<< newPartDB << std::endl;
+      }
       if (FpFileSys::removeDir(FFaFilePath::getPath(newRDBPath)) < 0)
         std::cerr <<" *** Failed to delete directory "<< FFaFilePath::getPath(newRDBPath) << std::endl;
     }
-    else
-      ListUI <<" ==> Solver input files exported to "<< mech->getAbsModelRDBPath() <<"\n";
   }
   else
   {
     // Finally, save the model file
     FFaMsg::list("  -> Writing Model File ");
-    std::ofstream s(name,std::ios::out);
+    std::ofstream s(fName,std::ios::out);
     if (s)
     {
       FmDB::updateModelVersionOnSave(false);
@@ -2043,7 +2048,7 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
   FFaMsg::list("===> Done exporting: " + std::string(ctime(&currentTime)));
 
   // Reset file path names in the model
-  mech->syncPath(oldModelN,exportSolverInput);
+  mech->syncPath(oldModelN,solverInput);
   mech->modelLinkRepository.setValue(oldPartRepository);
   for (size_t i = 0; i < allParts.size(); i++)
     allParts[i]->myRSD.getValue().setPath(oldPartDB[i]);
