@@ -94,9 +94,9 @@ public:
   static int  getResultFlag() { return resultsFlag; }
   static bool hasResults(RDBType mask = ANY);
 
-  static int  dontTouchModel();
-  static void resetTouchedFlag(int flag) { FpPM::touchedFlag = flag; }
-  static void touchModel(bool resultsOnly = false);
+  static void dontTouchModel();
+  static void resetTouchedFlag();
+  static void touchModel(bool resultsOnly = false, bool forced = false);
   static void unTouchModel(bool setReadOnly = false);
   static bool isModelTouched(bool ignoreResults = false);
   static bool isModelTouchable();
@@ -138,6 +138,7 @@ private:
 
   // Whether a "Save" is needed
   static int touchedFlag;
+  static int oldTouched;
 
   // Application process id
   static int vpmPID;

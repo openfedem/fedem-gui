@@ -89,6 +89,7 @@ FpPM::PluginMap FpPM::ourPlugins;
 enum TouchMode { READ_ONLY = -2, DONT_TOUCH = -1, UNTOUCHED = 0,
 		 TOUCHED_RESULTS = 1, TOUCHED_MODEL = 2 };
 int FpPM::touchedFlag = DONT_TOUCH;
+int FpPM::oldTouched  = DONT_TOUCH;
 
 std::vector<std::string> FpPM::recentFiles;
 
@@ -573,21 +574,27 @@ static void completeModelFileName(std::string& completeName)
 }
 
 
-int FpPM::dontTouchModel()
+void FpPM::dontTouchModel()
 {
-  int oldMode = FpPM::touchedFlag;
-  if (oldMode >= UNTOUCHED)
-    FpPM::touchedFlag = DONT_TOUCH;
-  return oldMode;
+  oldTouched = touchedFlag;
+  if (oldTouched >= UNTOUCHED)
+    touchedFlag = DONT_TOUCH;
 }
 
 
-void FpPM::touchModel(bool resultsOnly)
+void FpPM::resetTouchedFlag()
+{
+  touchedFlag = oldTouched;
+  oldTouched = DONT_TOUCH;
+}
+
+
+void FpPM::touchModel(bool resultsOnly, bool forced)
 {
   TouchMode newMode = resultsOnly ? TOUCHED_RESULTS : TOUCHED_MODEL;
 
   if (FpPM::touchedFlag < UNTOUCHED || FpPM::touchedFlag >= newMode)
-    return;
+    if (!forced) return;
 
   FpPM::touchedFlag = newMode;
   FpPM::updateGuiTitle();
@@ -783,7 +790,7 @@ bool FpPM::closeModel(bool saveOnBatchExit, bool pruneEmptyDirs, bool isExiting)
   // Clean up memory
   FapEventManager::permUnselectAll();
   FapAnimationCmds::hide();
-  FpPM::touchedFlag = DONT_TOUCH; // suppress touching while erasing this model
+  FpPM::dontTouchModel(); // suppress touching while erasing this model
   FFaMsg::pushStatus("Clearing mechanism");
   FmDB::eraseAll(true);
   FpPM::setResultFlag(); // Reset result flag for command sensitivity update
@@ -893,11 +900,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
       }
     }
     if (mech->modelLinkRepository.getValue() != mlr)
-    {
-      // Force model touching (overriding DONT_TOUCH)
-      FpPM::touchedFlag = UNTOUCHED;
-      FpPM::touchModel();
-    }
+      FpPM::touchModel(false,true); // force touching (overriding DONT_TOUCH)
   }
 
   // Control skipping FE data loading. Error messages and stuff
@@ -1386,7 +1389,7 @@ void FpPM::vpmSetUndoPoint(const char* /*title*/)
 {
   /* This does way too much.... Disabled by KMO
   // Get file names
-  int touchedFlagBak = FpPM::touchedFlag;
+  FpPM::dontTouchModel();
   bool isUsingDefaultModelName = FpPM::isUsingDefaultModelName;
   std::string absModFileName = FmDB::getMechanismObject()->getModelFileName();
   std::string absLogFileName = FFaFilePath::getBaseName(absModFileName) + ".log";
@@ -1432,8 +1435,7 @@ void FpPM::vpmSetUndoPoint(const char* /*title*/)
   if (isUsingDefaultModelName)
     FpPM::isUsingDefaultModelName = true;
 
-  // Touch flag
-  FpPM::touchedFlag = touchedFlagBak;
+  FpPM::resetTouchedFlag();
   FpPM::updateGuiTitle();
 
   // Update sensitivity of the undo command
@@ -1453,7 +1455,7 @@ void FpPM::vpmUndo()
 
   /* Temporarily disabled (KMO)
   // Get file names
-  int touchedFlagBak = FpPM::touchedFlag;
+  FpPM::dontTouchModel();
   bool isUsingDefaultModelName = FpPM::isUsingDefaultModelName;
   std::string absModFileName = FmDB::getMechanismObject()->getModelFileName();
   std::string absLogFileName = FFaFilePath::getBaseName(absModFileName) + ".log";
@@ -1474,7 +1476,6 @@ void FpPM::vpmUndo()
   FpFileSys::renameFile(absLogFileName+".undoPoint", absLogFileName);
 
   // Close current model
-  FpPM::touchedFlag = UNTOUCHED;
   if (!FpPM::closeModel())
     return;
 
@@ -1498,8 +1499,7 @@ void FpPM::vpmUndo()
   if (isUsingDefaultModelName)
     FpPM::isUsingDefaultModelName = true;
 
-  // Touch flag
-  FpPM::touchedFlag = touchedFlagBak;
+  FpPM::resetTouchedFlag();
   FpPM::updateGuiTitle();
 
   // Update sensitivity of the undo command
@@ -1716,7 +1716,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   // OK, we are saving to a new model
 
   Fui::resultFileBrowserUI(false);
-  FpPM::touchedFlag = DONT_TOUCH; // suppress touching while saving to new model
+  FpPM::dontTouchModel(); // suppress touching while saving to new model
 
   // Reset simulation event changes, if any
   if (FapSimEventHandler::activate(NULL,true,false))
@@ -1853,6 +1853,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
     FFuFileDialog::resetMemoryMap(newModelP,oldModelP);
 
   Fui::okToGetUserInput();
+  FpPM::unTouchModel();
 
   if (!isModelSaved)
     ListUI <<"===> WARNING: The model was not completely saved to the new location.\n"
@@ -1889,8 +1890,7 @@ bool FpPM::vpmModelExport(const std::string& newPath, bool solverInput)
       return false;
 
   Fui::resultFileBrowserUI(false);
-  int touchedStatus = FpPM::touchedFlag;
-  FpPM::touchedFlag = DONT_TOUCH; // suppress touching while exporting the model
+  FpPM::dontTouchModel(); // suppress touching while exporting the model
 
   // Reset simulation event changes, if any
   if (FapSimEventHandler::activate(NULL,true,false))
@@ -2055,7 +2055,7 @@ bool FpPM::vpmModelExport(const std::string& newPath, bool solverInput)
   for (size_t i = 0; i < oldPathNames.size(); i++)
     filePaths[i]->setValue(oldPathNames[i]);
   FmSubAssembly::mainFilePath = oldModelP;
-  FpPM::touchedFlag = touchedStatus;
+  FpPM::resetTouchedFlag();
   Fui::okToGetUserInput();
 
   return isModelSaved;

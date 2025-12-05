@@ -229,17 +229,18 @@ void FuiQtBladeDefinition::initializeBlades()
     {
       bool readOnly = true;
       apBladeSelector->getModel()->itemIsReadOnly(readOnly,path.c_str());
-      int touchFlag = FpPM::dontTouchModel();
+      FpPM::dontTouchModel();
       FmBladeDesign* pDesign = FmBladeDesign::readFromFMM(path,readOnly);
-      FpPM::resetTouchedFlag(touchFlag);
+      FpPM::resetTouchedFlag();
       if (pDesign)
       {
         if (!apBladeSelector->itemExist(pDesign->myModelFile.getValue().c_str()))
         {
           std::cerr <<" *** "<< pDesign->myModelFile.getValue()
                     <<" does not exist in the Blade selector dialog."<< std::endl;
+          FpPM::dontTouchModel();
           pDesign->erase();
-          FpPM::resetTouchedFlag(touchFlag);
+          FpPM::resetTouchedFlag();
           continue;
         }
 
@@ -685,9 +686,9 @@ void FuiQtBladeDefinition::showEvent(QShowEvent*)
   for (FmBladeDesign* design : pBladeDesigns)
     if (design != usedBladeDesign)
     {
-      int touchFlag = FpPM::dontTouchModel();
+      FpPM::dontTouchModel();
       design->erase();
-      FpPM::resetTouchedFlag(touchFlag);
+      FpPM::resetTouchedFlag();
     }
 
   // If a blade is associated with the current model, add its directory
