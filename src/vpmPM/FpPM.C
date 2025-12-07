@@ -34,9 +34,11 @@
 #include "vpmDB/FmUserDefinedElement.H"
 #include "vpmDB/FmModelLoader.H"
 #include "vpmDB/FmSolverInput.H"
+#include "vpmDB/FmModesOptions.H"
 
 #include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
+#include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
 #include "FFuLib/FFuProgressDialog.H"
 #include "FFuLib/FFuFileDialog.H"
 #ifdef FT_HAS_WND
@@ -77,20 +79,541 @@
 #endif
 
 
-/////////////////////////////////////
-// Initialization of static variables
-/////////////////////////////////////
+namespace
+{
+  int vpmPID = 0; //!< Application process id
 
-int  FpPM::vpmPID = 0;
-int  FpPM::resultsFlag = 0;
-bool FpPM::isUsingDefaultModelName = false;
-FpPM::PluginMap FpPM::ourPlugins;
+  int resultsFlag = 0; //!< Do we have results or not, and what kind
 
-enum TouchMode { READ_ONLY = -2, DONT_TOUCH = -1, UNTOUCHED = 0,
-		 TOUCHED_RESULTS = 1, TOUCHED_MODEL = 2 };
-int FpPM::touchedFlag = DONT_TOUCH;
+  //! Earlier models opened in current session
+  std::vector<std::string> recentFiles;
 
-std::vector<std::string> FpPM::recentFiles;
+  enum TouchMode
+  {
+    READ_ONLY = -2,
+    DONT_TOUCH = -1,
+    UNTOUCHED = 0,
+    TOUCHED_RESULTS = 1,
+    TOUCHED_MODEL = 2
+  };
+
+  TouchMode touchedFlag = DONT_TOUCH; //!< Whether a "Save" is needed or not
+  TouchMode oldTouched  = DONT_TOUCH; //!< For temporarily disabling touch mode
+
+  enum PluginType
+  {
+    NONE,
+    UDEF_FUNC,
+    UDEF_CTRL,
+    UDEF_ELM,
+    UDEF_TYPES
+  };
+
+  struct PluginId
+  {
+    PluginType type = NONE;
+    std::string sign;
+    bool loaded = false;
+  };
+
+  using PluginMap  = std::map<std::string,PluginId>;
+  using PluginIter = PluginMap::iterator;
+
+  //! Plugin libraries, and whether they are currently loaded or not
+  PluginMap ourPlugins;
+
+
+  //! Recursive function for activating/deactivating a plugin library.
+  bool togglePlugin(FmMechanism* mech, PluginIter it, char toggle = 0)
+  {
+    // Avoid toggling on more than one plugin of each type
+    if (toggle)
+      for (PluginIter pi = ourPlugins.begin(); pi != ourPlugins.end(); ++pi)
+        if (pi != it && pi->second.loaded && pi->second.type == it->second.type)
+        {
+          if (toggle == 'f') // Untoggle the currently active plugin first
+            togglePlugin(mech,pi);
+          else
+            return false;
+        }
+
+    it->second.loaded = toggle;
+    bool changedPlugin = false;
+    std::vector<FmModelMemberBase*> allUDobj;
+
+    switch (it->second.type) {
+    case UDEF_FUNC:
+      if (!toggle)
+      {
+        changedPlugin = FFaUserFuncPlugin::instance()->unload(it->first);
+        mech->activeFunctionPlugin.setValue("");
+      }
+      else if (FFaUserFuncPlugin::instance()->load(it->first))
+      {
+        changedPlugin = true;
+        char signature[128];
+        if (FFaUserFuncPlugin::instance()->getSign(127,signature))
+          ListUI <<"          "<< signature <<"\n";
+        mech->activeFunctionPlugin.setValue(it->first);
+      }
+      if (changedPlugin)
+        FmDB::getAllOfType(allUDobj,FmfUserDefined::getClassTypeID());
+      break;
+
+    case UDEF_ELM:
+      if (!toggle)
+      {
+        changedPlugin = FiUserElmPlugin::instance()->unload(it->first);
+        mech->activeElementPlugin.setValue("");
+      }
+      else if (FiUserElmPlugin::instance()->load(it->first))
+      {
+        changedPlugin = true;
+        char signature[128];
+        if (FiUserElmPlugin::instance()->getSign(127,signature))
+          ListUI <<"          "<< signature <<"\n";
+        mech->activeElementPlugin.setValue(it->first);
+      }
+      if (changedPlugin)
+        FmDB::getAllOfType(allUDobj,FmUserDefinedElement::getClassTypeID());
+      break;
+
+    default:
+      break;
+    }
+
+    // Remove all existing user-defined function/element instances, if any
+    FmModelMemberBase::inInteractiveErase = true;
+    for (FmModelMemberBase* obj : allUDobj)
+      obj->interactiveErase();
+    FmModelMemberBase::inInteractiveErase = false;
+
+    return changedPlugin;
+  }
+
+
+  //! Stores the currently activated plugin names in the FmMechanism object.
+  void saveActivePlugins(FmMechanism* mech)
+  {
+    for (const PluginMap::value_type& pl : ourPlugins)
+      if (pl.second.loaded)
+        switch (pl.second.type) {
+        case UDEF_FUNC:
+          mech->activeFunctionPlugin.setValue(pl.first);
+          break;
+        case UDEF_ELM:
+          mech->activeElementPlugin.setValue(pl.first);
+          break;
+        default:
+          break;
+        }
+  }
+
+
+  //! Helper returning the start directory of the current session.
+  std::string getDefaultStartDir()
+  {
+    if (FFaAppInfo::isInCwd())
+      return FpFileSys::getHomeDir();
+    else
+      return FFaAppInfo::getCWD();
+  }
+
+
+  //! Helper returning the full path of the given model file name
+  void completeModelFileName(std::string& completeName)
+  {
+    // Add the default extension, if no extension yet
+    if (FFaFilePath::getExtension(completeName).empty())
+      completeName += ".fmm";
+
+    FFaFilePath::makeItAbsolute(completeName,getDefaultStartDir());
+    FFaFilePath::checkName(completeName);
+  }
+
+
+  //! Function for loading the FE/CAD models into core.
+  bool loadParts(const std::vector<FmPart*>& allParts)
+  {
+    FFuProgressDialog* progDlg = NULL;
+    if (!FFaAppInfo::isConsole())
+      progDlg = FFuProgressDialog::create("Please wait...", "Cancel",
+                                          "Loading FE models", allParts.size());
+
+    int  partNr = 0;
+    bool doLoadParts = true;
+    bool allowFEparts = true;
+    Strings erroneousParts, deniedParts;
+
+    FFaMsg::list("===> Reading FE parts\n");
+    FFaMsg::pushStatus("Loading FE/Cad data");
+    FFaMsg::enableSubSteps(allParts.size());
+    for (FmPart* part : allParts)
+    {
+      FFaMsg::setSubStep(++partNr);
+      if (progDlg)
+        progDlg->setCurrentProgress(partNr-1);
+
+      // If user has cancelled loading, just switch ram usage level such that
+      // the FE data may be re-enabled later through the FE-Data settings
+      if (progDlg && progDlg->userCancelled()) doLoadParts = false;
+      if (!doLoadParts) part->ramUsageLevel = FmPart::NOTHING;
+
+      // Load FE data if it is an FE part. If it is a generic part, use
+      // the visualization file if it exists. If not, use the CAD visualization.
+      // If that is not present either, use the FE data.
+
+      bool loadFEdata = false;
+      bool loadCadData = false;
+      if (!part->useGenericProperties.getValue())
+        loadFEdata = true;
+      else if (part->visDataFile.getValue().empty())
+      {
+        if (!part->baseCadFileName.getValue().empty())
+          loadCadData = doLoadParts;
+        else if (!part->baseFTLFile.getValue().empty())
+          loadFEdata = true;
+      }
+
+      if (loadFEdata)
+      {
+        if (allowFEparts)
+        {
+          if (!part->openFEData())
+          {
+            if (part->lockLevel.getValue() == FmPart::FM_DENY_LINK_USAGE)
+              deniedParts.push_back(part->getLinkIDString());
+            else
+              erroneousParts.push_back(part->getLinkIDString());
+          }
+        }
+        else if (!part->useGenericProperties.getValue())
+        {
+          part->lockLevel.setValue(FmPart::FM_DENY_LINK_USAGE);
+          deniedParts.push_back(part->getLinkIDString());
+        }
+      }
+      else if (loadCadData)
+        if (!part->openCadData())
+          erroneousParts.push_back(part->getLinkIDString());
+
+      part->updateTriadTopologyRefs(true,1);
+    }
+
+    if (progDlg)
+      progDlg->setCurrentProgress(allParts.size());
+
+    FFaMsg::disableSubSteps();
+    FFaMsg::setSubTask("");
+    FFaMsg::popStatus();
+
+    delete progDlg;
+
+    if (erroneousParts.empty() && deniedParts.empty())
+      return true;
+
+    std::string msg;
+    size_t nMax = 30; // To limit the size of the message box
+    if (!erroneousParts.empty())
+    {
+      msg = "The following parts could not be loaded due to errors in their\n"
+        "respective FE data files (see output list for details):";
+      for (size_t i = 0; i < erroneousParts.size() && i < nMax; i++)
+        msg += "\n\t" + erroneousParts[i];
+      if (erroneousParts.size() > nMax) msg += "\n\t...";
+      if (!deniedParts.empty()) msg += "\n\n";
+      if (erroneousParts.size() >= nMax)
+        nMax = 1;
+      else
+        nMax -= erroneousParts.size();
+    }
+
+    if (!deniedParts.empty())
+    {
+      msg += "The following parts could not be loaded ";
+      if (allowFEparts && FapLicenseManager::isDemoEdition())
+        msg += "due to violation of the\nsize limits in this edition "
+          "(see output list for details):";
+      else if (FapLicenseManager::isLimEdition())
+        msg += "because you are using the Limited edition of Fedem:\n";
+      else
+        msg += "due to demo license failure:";
+      for (size_t i = 0; i < deniedParts.size() && i < nMax; i++)
+        msg += "\n\t" + deniedParts[i];
+      if (deniedParts.size() > nMax) msg += "\n\t...";
+      if (FapLicenseManager::isLimEdition())
+        msg += "\n\nTo use flexible parts, "
+          "you need to have the FullFlex edition of Fedem.\n"
+          "You can also try out the Demo edition.";
+      FpPM::unTouchModel(true); // set model view-only
+    }
+
+    FFaMsg::list("===> FE model loading failed.\n\n",true);
+    Fui::dismissDialog(msg.c_str(),FFuDialog::ERROR);
+    return false;
+  }
+
+
+  //! Helper function that copies an FE part to a new location.
+  bool copyFEPart(FmPart* workPart, int reducedData,
+                  const std::string& oldDir, const std::string& newDir,
+                  const std::string& oldPath, const std::string& newPath)
+  {
+    bool didSaveSomething = false;
+    workPart->myRSD.getValue().setPath(newDir);
+    if (workPart->ramUsageLevel.getValue() == FmPart::FULL_FE)
+    {
+      // This FE part resides in core, export a fresh copy of it
+      // (in case it contains some unsaved modifications)
+      bool hadOP2Files = workPart->hasOP2files();
+      didSaveSomething = workPart->saveFEData(true);
+      if (!hadOP2Files && workPart->externalSource.getValue())
+        workPart->copyExternalFiles(oldPath,newPath);
+    }
+    else if (!workPart->baseFTLFile.getValue().empty())
+    {
+      // This FE part is currently not loaded, copy the last saved version
+      FmMechanism* workMech = FmDB::getMechanismObject();
+      const std::string& ftlName = workPart->baseFTLFile.getValue();
+      ListUI <<"     ["<< workPart->getID() <<"] "<< ftlName;
+      if (FpFileSys::verifyDirectory(workMech->getAbsModelRDBPath()))
+        if (FpFileSys::verifyDirectory(newDir))
+          if ((didSaveSomething = FpFileSys::copyFile(ftlName,oldDir,newDir)))
+            if (workPart->externalSource.getValue())
+              workPart->copyExternalFiles(oldPath,newPath);
+
+      if (didSaveSomething)
+        ListUI <<" (copied)";
+      else
+        ListUI <<" (failed)\n";
+    }
+
+    if (!reducedData)
+      return didSaveSomething;
+
+    // Get files from the part RSD
+    StringSet filesToCopy;
+    if (reducedData == 1) // get everything
+      workPart->myRSD.getValue().getAllFileNames(filesToCopy);
+    else // only get files needed by the solver processes
+    {
+      workPart->myRSD.getValue().getAllFileNames(filesToCopy,"fmx");
+      if (reducedData > 2) // include sam-file needed for recovery
+        workPart->myRSD.getValue().getAllFileNames(filesToCopy,"fsm");
+      else // exclude displacement recovery matrices (B- and E)
+        for (StringSet::iterator it = filesToCopy.begin();
+             it != filesToCopy.end();)
+        {
+          if (it->at(it->size()-5) == 'B' || it->at(it->size()-5) == 'E')
+            it = filesToCopy.erase(it);
+          else
+            ++it;
+        }
+    }
+
+    if (filesToCopy.empty())
+    {
+      if (didSaveSomething)
+        ListUI <<" (no reduced data)";
+      return didSaveSomething;
+    }
+
+    // Copy all result files from the FE part reduction
+    int nFilesCopied = 0;
+    std::string taskName = workPart->myRSD.getValue().getCurrentTaskDirName();
+    std::string taskDir = FFaFilePath::appendFileNameToPath(newDir,taskName);
+    if (FpFileSys::verifyDirectory(taskDir))
+      for (const std::string& fn : filesToCopy)
+      {
+        std::string oName = FFaFilePath::getRelativeFilename(newDir,fn);
+        if (!FpFileSys::copyFile(FFaFilePath::makeItAbsolute(oName,oldDir),fn))
+        {
+          std::cerr <<" *** Failed to copy "<< oName
+                    <<"\n                 to "<< fn << std::endl;
+          perror("                  ");
+        }
+        else if (++nFilesCopied == 1 && !didSaveSomething)
+          ListUI <<"     ["<< workPart->getID() <<"]";
+      }
+
+    if (nFilesCopied > 0)
+    {
+      ListUI <<" ("<< nFilesCopied <<" result files copied)";
+      didSaveSomething = true;
+    }
+
+    return didSaveSomething;
+  }
+
+
+  //! Helper function that copies the blade design directory to new location.
+  bool copyBladeDir(const std::string& oldDir, const std::string& newDir)
+  {
+    if (!FpFileSys::verifyDirectory(newDir))
+    {
+      ListUI <<"  -> Problems creating "<< newDir <<"\n";
+      return false;
+    }
+
+    Strings bladeFiles;
+    if (!FpFileSys::getFiles(bladeFiles,oldDir,"*.fmm"))
+      return true; // Empty old directory, silently ignore
+
+    FmBladeDesign* pDesign = NULL;
+    if (FmTurbine* pTurbin = FmDB::getTurbineObject(); pTurbin)
+      pDesign = dynamic_cast<FmBladeDesign*>(pTurbin->bladeDef.getPointer());
+
+    // Copy all blades from old directory to new one
+    bool copySuccessful = true;
+    for (const std::string& fn : bladeFiles)
+    {
+      std::string oldPath = FFaFilePath::appendFileNameToPath(oldDir,fn);
+      std::string newPath = FFaFilePath::appendFileNameToPath(newDir,fn);
+      if (!FpFileSys::copyFile(oldPath,newPath))
+      {
+        ListUI <<"  -> Problems copying "<< oldPath <<" to "<< newPath <<"\n";
+        copySuccessful = false;
+      }
+
+      if (pDesign != NULL && pDesign->myModelFile.getValue() == oldPath)
+        pDesign->myModelFile.setValue(newPath);
+
+      // Copy the airfoil files
+      Strings airfoilFiles;
+      std::string src = FFaFilePath::getBaseName(oldPath).append("_airfoils");
+      std::string dst = FFaFilePath::getBaseName(newPath).append("_airfoils");
+      if (FpFileSys::isDirectory(src))
+      {
+        if (!FpFileSys::verifyDirectory(dst))
+        {
+          ListUI <<"  -> Problems creating "<< dst <<"\n";
+          copySuccessful = false;
+        }
+        else if (FpFileSys::getFiles(airfoilFiles,src,"*.dat"))
+          for (const std::string& fn : airfoilFiles)
+          {
+            std::string oldAirfoil = FFaFilePath::appendFileNameToPath(src,fn);
+            std::string newAirfoil = FFaFilePath::appendFileNameToPath(dst,fn);
+            if (!FpFileSys::copyFile(oldAirfoil,newAirfoil))
+            {
+              ListUI <<"  -> Problems copying "<< oldAirfoil
+                     <<" to "<< newAirfoil <<"\n";
+              copySuccessful = false;
+            }
+          }
+      }
+    }
+
+    return copySuccessful;
+  }
+
+
+  /*!
+    \brief Signal handling interface.
+
+    \details We are **not** going to do X-things inside the signal handler,
+    therefore the X-event loop is not considered here.
+    We also use unreliable signals in sake of simplicity -
+    should be easy to upgrade to reliable signals later if neccessary.
+    We do **not** handle signals in debug mode (sometimes a coredump is needed).
+  */
+
+  void signalHandler(int sig)
+  {
+    std::string strsig;
+    enum { SAVE_AND_EXIT, EXIT, CLEAN_UP_CHILDREN } action;
+
+    switch (sig) {
+    case SIGINT: // User presses ctrl-C.
+      strsig = "SIGINT Interrupt";
+      action = EXIT;
+      break;
+
+#if !defined(win32) && !defined(win64)
+    case SIGQUIT: // User presses ctrl-\.
+      strsig = "SIGQUIT Quit";
+      action = EXIT;
+      break;
+
+    case SIGILL: // Illegal hardware instruction.
+      strsig = "SIGILL Illegal instruction";
+      action = SAVE_AND_EXIT;
+      break;
+
+    case SIGABRT: // Generated by abort function.
+      strsig = "SIGABRT Abort";
+      action = SAVE_AND_EXIT;
+      break;
+
+    case SIGFPE: // Division by 0, overflow, etc.
+      strsig = "SIGFPE Arithmetic exception";
+      action = SAVE_AND_EXIT;
+      break;
+
+    case SIGBUS: // Bus error.
+      strsig = "SIGBUS Bus error";
+      action = SAVE_AND_EXIT;
+      break;
+
+    case SIGSEGV: // Segmentation violation.
+      strsig = "SIGSEGV Segmentation violation";
+      action = SAVE_AND_EXIT;
+      break;
+
+#ifndef linux
+    case SIGSYS: // Bad system call.
+      strsig = "SIGSYS Bad system call";
+      action = EXIT;
+      break;
+#endif
+
+    case SIGPIPE: // Broken pipe.
+      strsig = "SIGPIPE Broken pipe";
+      action = CLEAN_UP_CHILDREN;
+      break;
+
+    case SIGTERM: // Software termination sent by kill and system shutdown.
+      strsig = "SIGTERM Software termination";
+      action = EXIT;
+      break;
+
+    case SIGXCPU: // CPU time limit exceeded.
+      strsig = "SIGXCPU CPU time limit exceeded";
+      action = SAVE_AND_EXIT;
+      break;
+
+    case SIGXFSZ: // File size limit exceeded.
+      strsig = "SIGXFSZ File size limit exceeded";
+      action = SAVE_AND_EXIT;
+      break;
+#endif
+
+    default: // Unknown signal - do nothing
+      return;
+    }
+
+    std::cout <<"\n *** Fedem recieved signal "<< strsig << std::endl;
+
+    switch (action) {
+    case SAVE_AND_EXIT:
+      std::cout <<" *** Fedem trying emergency save and exit"<< std::endl;
+      FmDB::emergencyExitSave();
+      FpPM::quitVPM(-1);
+      break;
+
+    case EXIT:
+      std::cout <<" *** Fedem exiting"<< std::endl;
+      FpPM::quitVPM(-1);
+      break;
+
+    case CLEAN_UP_CHILDREN:
+      std::cout <<" *** Fedem cleaning up child processes"<< std::endl;
+      FpProcessManager::instance()->killAll();
+      signal(sig,&signalHandler); // Resetting signal handler
+    }
+  }
+
+} // end anonymous namespace
 
 
 /////////////////////////////////////////////
@@ -101,9 +624,9 @@ void FpPM::init(const char* program)
 {
   // Setting process id
 #if defined(win32) || defined(win64)
-  FpPM::vpmPID = _getpid();
+  vpmPID = _getpid();
 #else
-  FpPM::vpmPID = getpid();
+  vpmPID = getpid();
 
   // Initializing signal interface (Linux only)
   sigset_t set;
@@ -141,16 +664,63 @@ void FpPM::init(const char* program)
   // Initialize the program path (without the trailing slash)
   FFaAppInfo::init(program);
 
+  // Lambda function defining the slot for the MODEL_MEMBER_CONNECTED signal.
+  auto&& onMMBConnected = [](FmModelMemberBase* item)
+  {
+    if (item->isOfType(FmModesOptions::getClassTypeID()) ||
+        item->isOfType(FmSimulationEvent::getClassTypeID()))
+      Fui::getMainWindow()->updateToolBarSensitivity(FuiMainWindow::SOLVE);
+
+    FpPM::touchModel();
+  };
+
+  // Lambda function defining the slot for the MODEL_MEMBER_DISCONNECTED signal.
+  auto&& onMMBDisConnected = [](FmModelMemberBase*)
+  {
+    FpPM::touchModel();
+  };
+
+  // Lambda function defining the slot for the MODEL_MEMBER_CHANGED signal.
+  auto&& onMMBChanged = [](FmModelMemberBase* item)
+  {
+    if (item->isOfType(FmMechanism::getClassTypeID()))
+    {
+      FmMechanism* mech = static_cast<FmMechanism*>(item);
+      auto toggleActive = [mech](const std::string& lib) -> int
+      {
+        if (lib.empty()) return 0;
+
+        PluginIter it = ourPlugins.find(lib);
+        if (it == ourPlugins.end())
+          ListUI <<"===> ERROR: Plugin library "<< lib <<" does not exist.\n";
+        else if (it->second.loaded)
+          return 1;
+        else if (togglePlugin(mech,it,'f'))
+          return 1;
+
+        return 0;
+      };
+
+      if (toggleActive(mech->activeFunctionPlugin.getValue()) +
+          toggleActive(mech->activeElementPlugin.getValue()) < 2)
+        saveActivePlugins(mech);
+    }
+
+    FpPM::touchModel();
+  };
+
+#define FmModelMemberSlot1(func) new FFaStaticSlot1<FmModelMemberBase*>(func)
+
   // Initialize model member signal connector
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
                           FmModelMemberBase::MODEL_MEMBER_CONNECTED,
-                          FFaSlot1S(FpPM,onModelMemberConnected,FmModelMemberBase*));
+                          FmModelMemberSlot1(onMMBConnected));
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
                           FmModelMemberBase::MODEL_MEMBER_DISCONNECTED,
-                          FFaSlot1S(FpPM,onModelMemberConnected,FmModelMemberBase*));
+                          FmModelMemberSlot1(onMMBDisConnected));
   FFaSwitchBoard::connect(FmModelMemberBase::getSignalConnector(),
                           FmModelMemberBase::MODEL_MEMBER_CHANGED,
-                          FFaSlot1S(FpPM,onModelMemberChanged,FmModelMemberBase*));
+                          FmModelMemberSlot1(onMMBChanged));
 
   // Initiating debug mode
   bool debugMode = false;
@@ -158,22 +728,22 @@ void FpPM::init(const char* program)
   if (debugMode) return; // We do **not** handle signals in debug mode
 
   // Set up signal handling
-  signal(SIGINT , &FpPM::signalHandler); // User presses ctrl-C.
-  signal(SIGILL , &FpPM::signalHandler); // Illegal hardware instruction.
-  signal(SIGABRT, &FpPM::signalHandler); // Generated by abort function.
-  signal(SIGFPE , &FpPM::signalHandler); // Division by 0, overflow, etc ...
-  signal(SIGSEGV, &FpPM::signalHandler); // Segmentation violation.
-  signal(SIGTERM, &FpPM::signalHandler); // Software termination sent by
-  //                                     // kill and system shutdown.
+  signal(SIGINT , &signalHandler); // User presses ctrl-C.
+  signal(SIGILL , &signalHandler); // Illegal hardware instruction.
+  signal(SIGABRT, &signalHandler); // Generated by abort function.
+  signal(SIGFPE , &signalHandler); // Division by 0, overflow, etc ...
+  signal(SIGSEGV, &signalHandler); // Segmentation violation.
+  signal(SIGTERM, &signalHandler); // Software termination sent by
+  //                               // kill and system shutdown.
 
 #if !defined(win32) && !defined(win64)
   // Signals not supported on Windows platform:
-  signal(SIGQUIT, &FpPM::signalHandler); // User presses ctrl-\.
-  signal(SIGBUS , &FpPM::signalHandler); // Bus error.
-  signal(SIGSEGV, &FpPM::signalHandler); // Segmentation violation.
-  signal(SIGPIPE, &FpPM::signalHandler); // Broken pipe.
-  signal(SIGXCPU, &FpPM::signalHandler); // CPU time limit exceeded.
-  signal(SIGXFSZ, &FpPM::signalHandler); // File size limit exceeded.
+  signal(SIGQUIT, &signalHandler); // User presses ctrl-\.
+  signal(SIGBUS , &signalHandler); // Bus error.
+  signal(SIGSEGV, &signalHandler); // Segmentation violation.
+  signal(SIGPIPE, &signalHandler); // Broken pipe.
+  signal(SIGXCPU, &signalHandler); // CPU time limit exceeded.
+  signal(SIGXFSZ, &signalHandler); // File size limit exceeded.
 #endif
 }
 
@@ -220,7 +790,8 @@ void FpPM::loadUnitConvertionFile()
     return;
 
   if (!FFaAppInfo::isConsole())
-    std::cout <<"Loading unit conversion file:\n[ "<< unitFile <<" ]\n"<< std::endl;
+    std::cout <<"Loading unit conversion file:\n[ "<< unitFile
+              <<" ]\n"<< std::endl;
 
   FFaUnitCalculatorProvider::instance()->readCalculatorDefs(unitFile);
 }
@@ -253,7 +824,8 @@ void FpPM::loadSNCurveFile()
     return;
 
   if (!FFaAppInfo::isConsole())
-    std::cout <<"Loading S-N curves file:\n[ "<< curveFile <<" ]\n"<< std::endl;
+    std::cout <<"Loading S-N curves file:\n[ "<< curveFile
+              <<" ]\n"<< std::endl;
 
   FFpSNCurveLib::instance()->readSNCurves(curveFile);
 #endif
@@ -264,13 +836,16 @@ void FpPM::loadPropertyLibraries()
 {
 #ifdef FT_HAS_WND
   std::string instPath = FpPM::getFullFedemPath("Properties");
+  std::string bladePath = FmDB::getMechanismObject()->getAbsBladeFolderPath();
 
-  // Add library-directories to global BladeSelectionModel, which will also load them
+  // Add library-directories to global BladeSelectionModel,
+  // which will also load them
   BladeSelectionModel::instance()->clearModel();
   BladeSelectionModel::instance()->addDirectory(0, instPath.c_str(), true);
-  BladeSelectionModel::instance()->addDirectory(0, FmDB::getMechanismObject()->getAbsBladeFolderPath().c_str(), false);
+  BladeSelectionModel::instance()->addDirectory(0, bladePath.c_str(), false);
 
-  // Add library-directories to global AirfoilSelectionModel, which will also load them
+  // Add library-directories to global AirfoilSelectionModel,
+  // which will also load them
   AirfoilSelectionModel::instance()->clearModel();
   FFaFilePath::appendToPath(instPath,"AeroData");
   AirfoilSelectionModel::instance()->addDirectory(0, instPath.c_str(), true);
@@ -281,7 +856,7 @@ void FpPM::loadPropertyLibraries()
 void FpPM::loadAllPlugins()
 {
   Strings libs; // Search for plugin libraries
-  if (!FpFileSys::getFiles(libs,FpPM::getFullFedemPath("plugins"),"*.dll *.so *.sl"))
+  if (!FpFileSys::getFiles(libs,FpPM::getFullFedemPath("plugins"),"*.dll *.so"))
     return;
 
   // Try to load all found files and check if they contain user-defined items.
@@ -291,11 +866,12 @@ void FpPM::loadAllPlugins()
     char sign[128];
     std::string lname = FFaFilePath::appendFileNameToPath("plugins",fName);
     if (FFaUserFuncPlugin::instance()->validate(lname,128,sign))
-      ourPlugins[lname] = PluginId(UDEF_FUNC,sign);
+      ourPlugins[lname] = { UDEF_FUNC, sign, false };
     else if (FiUserElmPlugin::instance()->validate(lname,128,sign))
-      ourPlugins[lname] = PluginId(UDEF_ELM,sign);
+      ourPlugins[lname] = { UDEF_ELM, sign, false };
     else
-      ListUI <<"Error :   The file "<< lname  <<" is not a valid plugin library.\n";
+      ListUI <<"Error :   The file "<< lname
+             <<" is not a valid plugin library.\n";
   }
 
   // Load the first detected valid plugin of each kind
@@ -352,129 +928,13 @@ void FpPM::getActivePlugins(std::vector<std::string>& plugins)
 
 bool FpPM::togglePlugin(const std::string& plugin, bool toggleOn)
 {
-  PluginMap::iterator it = ourPlugins.find(plugin);
+  PluginIter it = ourPlugins.find(plugin);
   if (it == ourPlugins.end())
     it = ourPlugins.find(FFaFilePath::appendFileNameToPath("plugins",plugin));
   if (it == ourPlugins.end() || it->second.loaded == toggleOn)
     return false;
 
-  return FpPM::togglePlugin(FmDB::getMechanismObject(),it,toggleOn);
-}
-
-
-bool FpPM::togglePlugin(FmMechanism* mech, PluginMap::iterator it, char toggle)
-{
-  // Avoid toggling on more than one plugin of each type
-  if (toggle)
-    for (PluginMap::iterator p = ourPlugins.begin(); p != ourPlugins.end(); ++p)
-      if (p != it && p->second.loaded && p->second.type == it->second.type)
-      {
-        if (toggle == 'f') // Untoggle the currently active plugin first
-          FpPM::togglePlugin(p,false,mech);
-        else
-          return false;
-      }
-
-  return FpPM::togglePlugin(it,toggle,mech);
-}
-
-
-bool FpPM::togglePlugin(PluginMap::iterator it, bool toggleOn,
-                        FmMechanism* mech)
-{
-  it->second.loaded = toggleOn;
-  bool changedPlugin = false;
-  std::vector<FmModelMemberBase*> allUDobj;
-
-  switch (it->second.type) {
-  case UDEF_FUNC:
-    if (!toggleOn)
-    {
-      changedPlugin = FFaUserFuncPlugin::instance()->unload(it->first);
-      mech->activeFunctionPlugin.setValue("");
-    }
-    else if (FFaUserFuncPlugin::instance()->load(it->first))
-    {
-      changedPlugin = true;
-      char signature[128];
-      if (FFaUserFuncPlugin::instance()->getSign(127,signature))
-        ListUI <<"          "<< signature <<"\n";
-      mech->activeFunctionPlugin.setValue(it->first);
-    }
-    if (changedPlugin)
-      FmDB::getAllOfType(allUDobj,FmfUserDefined::getClassTypeID());
-    break;
-
-  case UDEF_ELM:
-    if (!toggleOn)
-    {
-      changedPlugin = FiUserElmPlugin::instance()->unload(it->first);
-      mech->activeElementPlugin.setValue("");
-    }
-    else if (FiUserElmPlugin::instance()->load(it->first))
-    {
-      changedPlugin = true;
-      char signature[128];
-      if (FiUserElmPlugin::instance()->getSign(127,signature))
-        ListUI <<"          "<< signature <<"\n";
-      mech->activeElementPlugin.setValue(it->first);
-    }
-    if (changedPlugin)
-      FmDB::getAllOfType(allUDobj,FmUserDefinedElement::getClassTypeID());
-    break;
-
-  default:
-    break;
-  }
-
-  // Remove all existing user-defined function/element instances, if any
-  FmModelMemberBase::inInteractiveErase = true;
-  for (FmModelMemberBase* obj : allUDobj)
-    obj->interactiveErase();
-  FmModelMemberBase::inInteractiveErase = false;
-
-  return changedPlugin;
-}
-
-
-void FpPM::toggleActivePlugins(FmMechanism* mech)
-{
-  std::vector<FFaField<std::string>*> plugins;
-  if (!mech->activeFunctionPlugin.getValue().empty())
-    plugins.push_back(&mech->activeFunctionPlugin);
-  if (!mech->activeElementPlugin.getValue().empty())
-    plugins.push_back(&mech->activeElementPlugin);
-
-  int nActive = 0;
-  PluginMap::iterator it;
-  for (FFaField<std::string>* field : plugins)
-    if ((it = ourPlugins.find(field->getValue())) == ourPlugins.end())
-      ListUI <<"===> ERROR: Plugin library "<< field->getValue()
-             <<" does not exist.\n";
-    else if (it->second.loaded)
-      nActive++;
-    else if (FpPM::togglePlugin(mech,it,'f'))
-      nActive++;
-
-  if (nActive < 2)
-    FpPM::saveActivePlugins(mech);
-}
-
-
-void FpPM::saveActivePlugins(FmMechanism* mech)
-{
-  for (const PluginMap::value_type& pl : ourPlugins)
-    if (pl.second.loaded)
-      switch (pl.second.type) {
-      case UDEF_FUNC:
-        mech->activeFunctionPlugin.setValue(pl.first);
-        break;
-      case UDEF_ELM:
-        mech->activeElementPlugin.setValue(pl.first);
-        break;
-      default:
-        break;
-      }
+  return togglePlugin(FmDB::getMechanismObject(),it,toggleOn);
 }
 
 
@@ -553,43 +1013,29 @@ void FpPM::quitVPM(int exitCode)
 // Fedem project interface
 ///////////////////////////
 
-static std::string getDefaultStartDir()
+void FpPM::dontTouchModel()
 {
-  if (FFaAppInfo::isInCwd())
-    return FpFileSys::getHomeDir();
-  else
-    return FFaAppInfo::getCWD();
+  oldTouched = touchedFlag;
+  if (oldTouched >= UNTOUCHED)
+    touchedFlag = DONT_TOUCH;
 }
 
 
-static void completeModelFileName(std::string& completeName)
+void FpPM::resetTouchedFlag()
 {
-  // Add the default extension, if no extension yet
-  if (FFaFilePath::getExtension(completeName).empty())
-    completeName += ".fmm";
-
-  FFaFilePath::makeItAbsolute(completeName,getDefaultStartDir());
-  FFaFilePath::checkName(completeName);
+  touchedFlag = oldTouched;
+  oldTouched = DONT_TOUCH;
 }
 
 
-int FpPM::dontTouchModel()
-{
-  int oldMode = FpPM::touchedFlag;
-  if (oldMode >= UNTOUCHED)
-    FpPM::touchedFlag = DONT_TOUCH;
-  return oldMode;
-}
-
-
-void FpPM::touchModel(bool resultsOnly)
+void FpPM::touchModel(bool resultsOnly, bool forced)
 {
   TouchMode newMode = resultsOnly ? TOUCHED_RESULTS : TOUCHED_MODEL;
 
-  if (FpPM::touchedFlag < UNTOUCHED || FpPM::touchedFlag >= newMode)
-    return;
+  if (touchedFlag < UNTOUCHED || touchedFlag >= newMode)
+    if (!forced) return;
 
-  FpPM::touchedFlag = newMode;
+  touchedFlag = newMode;
   FpPM::updateGuiTitle();
 }
 
@@ -597,10 +1043,10 @@ void FpPM::touchModel(bool resultsOnly)
 void FpPM::unTouchModel(bool setReadOnly)
 {
   TouchMode newMode = setReadOnly ? READ_ONLY : UNTOUCHED;
-  if (FpPM::touchedFlag == newMode)
+  if (touchedFlag == newMode)
     return;
 
-  FpPM::touchedFlag = newMode;
+  touchedFlag = newMode;
   FpPM::updateGuiTitle();
 }
 
@@ -610,9 +1056,9 @@ void FpPM::updateGuiTitle()
   std::string newName = FmDB::getMechanismObject()->getModelFileName();
   FmSimulationEvent* simEvent = FapSimEventHandler::getActiveEvent();
   if (simEvent) newName += " (" + simEvent->getIdString(true) + ")";
-  if (FpPM::touchedFlag > UNTOUCHED)
+  if (touchedFlag > UNTOUCHED)
     newName += "*";
-  else if (FpPM::touchedFlag == READ_ONLY)
+  else if (touchedFlag == READ_ONLY)
     newName += " (view only)";
 
   Fui::setTitle(FFaFilePath::getFileName(newName).c_str());
@@ -622,21 +1068,21 @@ void FpPM::updateGuiTitle()
 bool FpPM::isModelTouched(bool ignoreResults)
 {
   if (ignoreResults)
-    return FpPM::touchedFlag >= TOUCHED_MODEL;
+    return touchedFlag >= TOUCHED_MODEL;
   else
-    return FpPM::touchedFlag >= TOUCHED_RESULTS;
+    return touchedFlag >= TOUCHED_RESULTS;
 }
 
 
 bool FpPM::isModelTouchable()
 {
-  return FpPM::touchedFlag != READ_ONLY;
+  return touchedFlag != READ_ONLY;
 }
 
 
 bool FpPM::isModelRunable()
 {
-  if (FpPM::resultsFlag > 0 || FpPM::touchedFlag == READ_ONLY)
+  if (resultsFlag > 0 || touchedFlag == READ_ONLY)
     return false;
 
   return FapSolutionProcessManager::instance()->empty();
@@ -645,7 +1091,7 @@ bool FpPM::isModelRunable()
 
 bool FpPM::isModelEditable()
 {
-  if (FpPM::resultsFlag > 0 || FpPM::touchedFlag == READ_ONLY)
+  if (resultsFlag > 0 || touchedFlag == READ_ONLY)
     return false;
   else if (FapSolutionProcessManager::instance()->empty())
     return !FapSimEventHandler::hasResults();
@@ -656,7 +1102,7 @@ bool FpPM::isModelEditable()
 
 bool FpPM::isModelRestartable()
 {
-  if (FpPM::hasResults(SECONDARY) && FpPM::touchedFlag != READ_ONLY)
+  if (FpPM::hasResults(SECONDARY) && touchedFlag != READ_ONLY)
     return FapSolutionProcessManager::instance()->empty();
   else
     return false;
@@ -697,10 +1143,10 @@ void FpPM::openCmdLineFile()
 
 bool FpPM::closeModel(bool saveOnBatchExit, bool pruneEmptyDirs, bool isExiting)
 {
-  bool wasUsingDefaultModelName = FpPM::isUsingDefaultModelName;
   FmMechanism* mech = FmDB::getMechanismObject();
   std::string oldRDBPath = mech->getAbsModelRDBPath();
   std::string oldBladePath = mech->getAbsBladeFolderPath();
+  const bool wasUsingDefaultModelName = mech->isUntitled();
 
   // Delete old ".undoPoint" files
   /* Temporarily disabled (KMO)
@@ -783,7 +1229,7 @@ bool FpPM::closeModel(bool saveOnBatchExit, bool pruneEmptyDirs, bool isExiting)
   // Clean up memory
   FapEventManager::permUnselectAll();
   FapAnimationCmds::hide();
-  FpPM::touchedFlag = DONT_TOUCH; // suppress touching while erasing this model
+  FpPM::dontTouchModel(); // suppress touching while erasing this model
   FFaMsg::pushStatus("Clearing mechanism");
   FmDB::eraseAll(true);
   FpPM::setResultFlag(); // Reset result flag for command sensitivity update
@@ -798,11 +1244,10 @@ bool FpPM::closeModel(bool saveOnBatchExit, bool pruneEmptyDirs, bool isExiting)
 
 /*!
   Opens the model file \a givenName, and loads the part data if \a doLoadParts
-  is true. A log file is also opened, if specified on the command line.
+  is \e true. A log file is also opened, if specified on the command line.
   The name on this file is either set by using the model file name, swapping the
   ending with .log for .fmm, or using \a newFileNameForLogFile which is
   supposed to be the new model file name this model is supposed to become.
-  \sa FapCadConnectionCmds::newFedemModelFromCad()
 */
 
 bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
@@ -819,9 +1264,6 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
     Fui::okToGetUserInput(); // This block is started in FpPM::closeModel
     return false;
   }
-
-  // When getting here the model file name is not "default"
-  FpPM::isUsingDefaultModelName = false;
 
   // Open a log-file for a copy of the Output List messages
   std::string logFileName;
@@ -840,7 +1282,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   if (existingFile < 0) return false;
 
   FmMechanism* mech = FmDB::getMechanismObject();
-  FpPM::saveActivePlugins(mech);
+  saveActivePlugins(mech);
   FpPM::loadPropertyLibraries();
 
 #ifdef FT_USE_PROFILER
@@ -860,7 +1302,8 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   std::string mlr;
   FFaCmdLineArg::instance()->getValue("feRepository", mlr);
   if (mlr.empty()) mlr = mech->modelLinkRepository.getValue();
-  if (!mlr.empty() && !FpFileSys::isDirectory(FFaFilePath::makeItAbsolute(mlr,path)))
+  if (!mlr.empty() &&
+      !FpFileSys::isDirectory(FFaFilePath::makeItAbsolute(mlr,path)))
   {
     // The model part repository specified in the model file
     // does not exist, check if provided via environment variable
@@ -874,8 +1317,8 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
     }
     else
     {
-      std::string errMsg = "Could not locate FE model repository\n"+ mlr +"\n\n";
-      errMsg += "Do you want to change to internal repository,\n"
+      std::string errMsg = "Could not locate FE model repository\n"+ mlr;
+      errMsg += "\n\nDo you want to change to internal repository,\n"
         "search for the original repository, or create a new one?\n\n"
         "Note: Fedem will anyway look for the FE models using\n"
         "the default search path (see Output List for details).";
@@ -893,17 +1336,13 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
       }
     }
     if (mech->modelLinkRepository.getValue() != mlr)
-    {
-      // Force model touching (overriding DONT_TOUCH)
-      FpPM::touchedFlag = UNTOUCHED;
-      FpPM::touchModel();
-    }
+      FpPM::touchModel(false,true); // force touching (overriding DONT_TOUCH)
   }
 
   // Control skipping FE data loading. Error messages and stuff
   std::vector<FmPart*> allParts;
   if (FapLicenseManager::isFreeEdition() || FapLicenseManager::isLimEdition())
-    doLoadParts = existingFile; // always try to load FE parts in the Free/Limited edition
+    doLoadParts = existingFile; // always try to load FE parts in this edition
   else if (!doLoadParts && existingFile)
   {
     if (FmDB::getModelFileVer() < FFaVersionNumber(3,1,0,3))
@@ -959,7 +1398,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
     if (!allParts.empty())
     {
       Fui::okToGetUserInput();
-      FpPM::loadParts(allParts);
+      loadParts(allParts);
       Fui::noUserInputPlease();
     }
   }
@@ -988,7 +1427,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   }
 #endif
 
-  if (FpPM::touchedFlag == DONT_TOUCH)
+  if (touchedFlag == DONT_TOUCH)
     FpPM::unTouchModel();
 
   // Syncronize the FE part RSD with actual contents on disk
@@ -1055,6 +1494,12 @@ void FpPM::removeRecent(size_t idx)
 }
 
 
+const std::vector<std::string>& FpPM::recentModels()
+{
+  return recentFiles;
+}
+
+
 bool FpPM::vpmAssemblyOpen(const std::string& givenName, bool doLoadParts)
 {
   // Check the given assembly file name and complete it, if needed
@@ -1084,7 +1529,7 @@ bool FpPM::vpmAssemblyOpen(const std::string& givenName, bool doLoadParts)
     // Actually load the FE data
     FmDB::getAllParts(allParts,newAss);
     if (!allParts.empty())
-      FpPM::loadParts(allParts);
+      loadParts(allParts);
   }
 
   // Now that all FE data is loaded we can syncronize the strain rosettes
@@ -1102,138 +1547,12 @@ bool FpPM::vpmAssemblyOpen(const std::string& givenName, bool doLoadParts)
 }
 
 
-bool FpPM::loadParts(const std::vector<FmPart*>& allParts)
-{
-  FFuProgressDialog* progDlg = NULL;
-  if (!FFaAppInfo::isConsole())
-    progDlg = FFuProgressDialog::create("Please wait...", "Cancel",
-                                        "Loading FE models", allParts.size());
-
-  int  partNr = 0;
-  bool doLoadParts = true;
-  bool allowFEparts = true;
-  Strings erroneousParts, deniedParts;
-
-  FFaMsg::list("===> Reading FE parts\n");
-  FFaMsg::pushStatus("Loading FE/Cad data");
-  FFaMsg::enableSubSteps(allParts.size());
-  for (FmPart* part : allParts)
-  {
-    FFaMsg::setSubStep(++partNr);
-    if (progDlg)
-      progDlg->setCurrentProgress(partNr-1);
-
-    // If user has cancelled loading, just switch ram usage level such that
-    // the FE data may be re-enabled later through the FE-Data settings
-    if (progDlg && progDlg->userCancelled()) doLoadParts = false;
-    if (!doLoadParts) part->ramUsageLevel = FmPart::NOTHING;
-
-    // Load FE data if it is an FE part. If it is a generic part, use
-    // the visualization file if it exists. If not, use the CAD visualization.
-    // If that is not present either, use the FE data.
-
-    bool loadFEdata = false;
-    bool loadCadData = false;
-    if (!part->useGenericProperties.getValue())
-      loadFEdata = true;
-    else if (part->visDataFile.getValue().empty())
-    {
-      if (!part->baseCadFileName.getValue().empty())
-        loadCadData = doLoadParts;
-      else if (!part->baseFTLFile.getValue().empty())
-        loadFEdata = true;
-    }
-
-    if (loadFEdata)
-    {
-      if (allowFEparts)
-      {
-        if (!part->openFEData())
-        {
-          if (part->lockLevel.getValue() == FmPart::FM_DENY_LINK_USAGE)
-            deniedParts.push_back(part->getLinkIDString());
-          else
-            erroneousParts.push_back(part->getLinkIDString());
-        }
-      }
-      else if (!part->useGenericProperties.getValue())
-      {
-        part->lockLevel.setValue(FmPart::FM_DENY_LINK_USAGE);
-        deniedParts.push_back(part->getLinkIDString());
-      }
-    }
-    else if (loadCadData)
-      if (!part->openCadData())
-        erroneousParts.push_back(part->getLinkIDString());
-
-    part->updateTriadTopologyRefs(true,1);
-  }
-
-  if (progDlg)
-    progDlg->setCurrentProgress(allParts.size());
-
-  FFaMsg::disableSubSteps();
-  FFaMsg::setSubTask("");
-  FFaMsg::popStatus();
-
-  delete progDlg;
-
-  if (erroneousParts.empty() && deniedParts.empty())
-    return true;
-
-  std::string msg;
-  size_t nMax = 30; // To limit the size of the message box
-  if (!erroneousParts.empty())
-  {
-    msg = "The following parts could not be loaded due to errors in their\n"
-      "respective FE data files (see output list for details):";
-    for (size_t i = 0; i < erroneousParts.size() && i < nMax; i++)
-      msg += "\n\t" + erroneousParts[i];
-    if (erroneousParts.size() > nMax) msg += "\n\t...";
-    if (!deniedParts.empty()) msg += "\n\n";
-    if (erroneousParts.size() >= nMax)
-      nMax = 1;
-    else
-      nMax -= erroneousParts.size();
-  }
-
-  if (!deniedParts.empty())
-  {
-    msg += "The following parts could not be loaded ";
-    if (allowFEparts && FapLicenseManager::isDemoEdition())
-      msg += "due to violation of the\nsize limits in this edition "
-        "(see output list for details):";
-    else if (FapLicenseManager::isLimEdition())
-      msg += "because you are using the Limited edition of Fedem:\n";
-    else
-      msg += "due to demo license failure:";
-    for (size_t i = 0; i < deniedParts.size() && i < nMax; i++)
-      msg += "\n\t" + deniedParts[i];
-    if (deniedParts.size() > nMax) msg += "\n\t...";
-    msg += "\n\nFurther manipulation of the current model is disabled due to this.\n"
-      "To continue with this model, you have to save it into a new model first.";
-    if (FapLicenseManager::isLimEdition())
-      msg += "\n\nTo use flexible parts, "
-        "you need to have the FullFlex edition of Fedem.\n"
-        "You can also try out the Demo edition.";
-    FpPM::unTouchModel(true); // set model view-only
-  }
-
-  FFaMsg::list("===> FE model loading failed.\n\n",true);
-  Fui::dismissDialog(msg.c_str(),FFuDialog::ERROR);
-  return false;
-}
-
-
 bool FpPM::openTemplateFile(const std::string& modelPath)
 {
   // Create default non-existing file name in the specified model file path
   int nextInc = FpFileSys::getNextIncrement(modelPath,"fmm",1,"untitled_*");
   std::string untitled = FFaNumStr("untitled_%d.fmm",nextInc);
   std::string fileName = FFaFilePath::appendFileNameToPath(modelPath,untitled);
-
-  // Flag that the default model file name is being used
-  FpPM::isUsingDefaultModelName = true;
 
   // Parse the template model file
   std::string defaultFile = FpPM::getFullFedemPath("Templates/default.fmm");
@@ -1252,7 +1571,7 @@ bool FpPM::openTemplateFile(const std::string& modelPath)
     mech->syncPath(fileName,true);
   }
 
-  FpPM::saveActivePlugins(mech);
+  saveActivePlugins(mech);
   FpPM::loadPropertyLibraries();
 
   FFaMsg::pushStatus("Creating visualization");
@@ -1386,8 +1705,8 @@ void FpPM::vpmSetUndoPoint(const char* /*title*/)
 {
   /* This does way too much.... Disabled by KMO
   // Get file names
-  int touchedFlagBak = FpPM::touchedFlag;
-  bool isUsingDefaultModelName = FpPM::isUsingDefaultModelName;
+  FpPM::dontTouchModel();
+  bool isUsingDefaultModelName = FmDB::getMechanismObject()->isUntitled();
   std::string absModFileName = FmDB::getMechanismObject()->getModelFileName();
   std::string absLogFileName = FFaFilePath::getBaseName(absModFileName) + ".log";
 
@@ -1428,12 +1747,7 @@ void FpPM::vpmSetUndoPoint(const char* /*title*/)
     FFaMsg::getMessager().openListFile(absLogFileName.c_str());
   }
 
-  // New file?
-  if (isUsingDefaultModelName)
-    FpPM::isUsingDefaultModelName = true;
-
-  // Touch flag
-  FpPM::touchedFlag = touchedFlagBak;
+  FpPM::resetTouchedFlag();
   FpPM::updateGuiTitle();
 
   // Update sensitivity of the undo command
@@ -1453,8 +1767,8 @@ void FpPM::vpmUndo()
 
   /* Temporarily disabled (KMO)
   // Get file names
-  int touchedFlagBak = FpPM::touchedFlag;
-  bool isUsingDefaultModelName = FpPM::isUsingDefaultModelName;
+  FpPM::dontTouchModel();
+  bool isUsingDefaultModelName = FmDB::getMechanismObject()->isUntitled();
   std::string absModFileName = FmDB::getMechanismObject()->getModelFileName();
   std::string absLogFileName = FFaFilePath::getBaseName(absModFileName) + ".log";
 
@@ -1474,7 +1788,6 @@ void FpPM::vpmUndo()
   FpFileSys::renameFile(absLogFileName+".undoPoint", absLogFileName);
 
   // Close current model
-  FpPM::touchedFlag = UNTOUCHED;
   if (!FpPM::closeModel())
     return;
 
@@ -1494,12 +1807,7 @@ void FpPM::vpmUndo()
     FFaMsg::getMessager().openListFile(absLogFileName.c_str());
   }
 
-  // New file?
-  if (isUsingDefaultModelName)
-    FpPM::isUsingDefaultModelName = true;
-
-  // Touch flag
-  FpPM::touchedFlag = touchedFlagBak;
+  FpPM::resetTouchedFlag();
   FpPM::updateGuiTitle();
 
   // Update sensitivity of the undo command
@@ -1514,170 +1822,13 @@ void FpPM::vpmGetUndoSensitivity(bool& isSensitive)
 }
 
 
-/*!
-  \brief Static helper that copies an FE part to a new location.
-*/
-
-static bool copyFEPart(FmPart* workPart, int reducedData,
-                       const std::string& oldDir, const std::string& newDir,
-                       const std::string& oldPath, const std::string& newPath)
-{
-  bool didSaveSomething = false;
-  workPart->myRSD.getValue().setPath(newDir);
-  if (workPart->ramUsageLevel.getValue() == FmPart::FULL_FE)
-  {
-    // This FE part resides in core, export a fresh copy of it
-    // (in case it contains some unsaved modifications)
-    bool hadOP2Files = workPart->hasOP2files();
-    didSaveSomething = workPart->saveFEData(true);
-    if (!hadOP2Files && workPart->externalSource.getValue())
-      workPart->copyExternalFiles(oldPath,newPath);
-  }
-  else if (!workPart->baseFTLFile.getValue().empty())
-  {
-    // This FE part is currently not loaded, copy the last saved version
-    FmMechanism* workMech = FmDB::getMechanismObject();
-    const std::string& ftlName = workPart->baseFTLFile.getValue();
-    ListUI <<"     ["<< workPart->getID() <<"] "<< ftlName;
-    if (FpFileSys::verifyDirectory(workMech->getAbsModelRDBPath()))
-      if (FpFileSys::verifyDirectory(newDir))
-        if ((didSaveSomething = FpFileSys::copyFile(ftlName,oldDir,newDir)))
-          if (workPart->externalSource.getValue())
-            workPart->copyExternalFiles(oldPath,newPath);
-
-    if (didSaveSomething)
-      ListUI <<" (copied)";
-    else
-      ListUI <<" (failed)\n";
-  }
-
-  if (!reducedData)
-    return didSaveSomething;
-
-  // Get files from the part RSD
-  StringSet filesToCopy;
-  if (reducedData == 1) // get everything
-    workPart->myRSD.getValue().getAllFileNames(filesToCopy);
-  else // only get files needed by the solver processes
-  {
-    workPart->myRSD.getValue().getAllFileNames(filesToCopy,"fmx");
-    if (reducedData > 2) // include sam-file needed for recovery
-      workPart->myRSD.getValue().getAllFileNames(filesToCopy,"fsm");
-    else // exclude displacement recovery matrices (B- and E)
-      for (StringSet::iterator it = filesToCopy.begin(); it != filesToCopy.end();)
-      {
-        if (it->at(it->size()-5) == 'B' || it->at(it->size()-5) == 'E')
-          it = filesToCopy.erase(it);
-        else
-          ++it;
-      }
-  }
-
-  if (filesToCopy.empty())
-  {
-    if (didSaveSomething)
-      ListUI <<" (no reduced data)";
-    return didSaveSomething;
-  }
-
-  // Copy all result files from the FE part reduction
-  int nFilesCopied = 0;
-  std::string taskName = workPart->myRSD.getValue().getCurrentTaskDirName();
-  std::string taskDir = FFaFilePath::appendFileNameToPath(newDir,taskName);
-  if (FpFileSys::verifyDirectory(taskDir))
-    for (const std::string& fName : filesToCopy)
-    {
-      std::string oName = FFaFilePath::getRelativeFilename(newDir,fName);
-      if (!FpFileSys::copyFile(FFaFilePath::makeItAbsolute(oName,oldDir),fName))
-      {
-        std::cerr <<" *** Failed to copy "<< oName
-                  <<"\n                 to "<< fName << std::endl;
-        perror("                  ");
-      }
-      else if (++nFilesCopied == 1 && !didSaveSomething)
-        ListUI <<"     ["<< workPart->getID() <<"]";
-    }
-
-  if (nFilesCopied > 0)
-  {
-    ListUI <<" ("<< nFilesCopied <<" result files copied)";
-    didSaveSomething = true;
-  }
-
-  return didSaveSomething;
-}
-
-
-/*!
-  \brief Static helper that copies the blade design directory to new location.
-*/
-
-static bool copyBladeDir(const std::string& oldDir, const std::string& newDir)
-{
-  if (!FpFileSys::verifyDirectory(newDir))
-  {
-    ListUI <<"  -> Problems creating "<< newDir <<"\n";
-    return false;
-  }
-
-  Strings bladeFiles;
-  if (!FpFileSys::getFiles(bladeFiles,oldDir,"*.fmm"))
-    return true; // Empty old directory, silently ignore
-
-  FmBladeDesign* pDesign = NULL;
-  if (FmDB::getTurbineObject() != NULL)
-    pDesign = dynamic_cast<FmBladeDesign*>(FmDB::getTurbineObject()->bladeDef.getPointer());
-
-  // Copy all blades from old directory to new one
-  bool copySuccesful = true;
-  for (const std::string& fName : bladeFiles)
-  {
-    std::string oldPath = FFaFilePath::appendFileNameToPath(oldDir,fName);
-    std::string newPath = FFaFilePath::appendFileNameToPath(newDir,fName);
-    if (!FpFileSys::copyFile(oldPath,newPath))
-    {
-      ListUI <<"  -> Problems copying "<< oldPath <<" to "<< newPath <<"\n";
-      copySuccesful = false;
-    }
-
-    if (pDesign != NULL && pDesign->myModelFile.getValue() == oldPath)
-      pDesign->myModelFile.setValue(newPath);
-
-    // Copy the airfoil files
-    Strings airfoilFiles;
-    std::string srcAirfoilFolder = FFaFilePath::getBaseName(oldPath).append("_airfoils");
-    std::string dstAirfoilFolder = FFaFilePath::getBaseName(newPath).append("_airfoils");
-    if (FpFileSys::isDirectory(srcAirfoilFolder))
-    {
-      if (!FpFileSys::verifyDirectory(dstAirfoilFolder))
-      {
-        ListUI <<"  -> Problems creating "<< dstAirfoilFolder <<"\n";
-        copySuccesful = false;
-      }
-      else if (FpFileSys::getFiles(airfoilFiles,srcAirfoilFolder,"*.dat"))
-        for (const std::string& fName : airfoilFiles)
-        {
-          std::string oldAirfoil = FFaFilePath::appendFileNameToPath(srcAirfoilFolder,fName);
-          std::string newAirfoil = FFaFilePath::appendFileNameToPath(dstAirfoilFolder,fName);
-          if (!FpFileSys::copyFile(oldAirfoil,newAirfoil))
-          {
-            ListUI <<"  -> Problems copying "<< oldAirfoil <<" to "<< newAirfoil <<"\n";
-            copySuccesful = false;
-          }
-        }
-    }
-  }
-
-  return copySuccesful;
-}
-
-
 bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
                           bool saveResults, double atTime)
 {
   FmMechanism* mech = FmDB::getMechanismObject();
   std::string oldRDBPath = mech->getAbsModelRDBPath();
   std::string newRDBPath = FFaFilePath::getBaseName(name) +"_RDB";
+  const bool wasUsingDefaultModelName = mech->isUntitled();
 
   // Check if a name without extension was given
   std::string fmmName(name);
@@ -1693,9 +1844,6 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
                         "All the files in this directory will be deleted.\n"
                         "Continue ?", FFaMsg::OK_CANCEL))
       return false;
-
-  bool wasUsingDefaultModelName = FpPM::isUsingDefaultModelName;
-  FpPM::isUsingDefaultModelName = false;
 
   // Check if a new log-file needs to be created
   bool writeLogFile = false;
@@ -1716,7 +1864,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   // OK, we are saving to a new model
 
   Fui::resultFileBrowserUI(false);
-  FpPM::touchedFlag = DONT_TOUCH; // suppress touching while saving to new model
+  FpPM::dontTouchModel(); // suppress touching while saving to new model
 
   // Reset simulation event changes, if any
   if (FapSimEventHandler::activate(NULL,true,false))
@@ -1769,11 +1917,12 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
     atTime = FpModelRDBHandler::updateModel(atTime);
     FapSimEventHandler::RDBSaveAs(newRDBPath,true);
     if (atTime < 0.0)
-      ListUI <<"  -> Failed to update model configuration at time = "<< -atTime
-             <<"\n     Existing results are discarded.\n";
+      ListUI <<"  -> Failed to update model configuration at time = "
+             << -atTime <<"\n     Existing results are discarded.\n";
     else
     {
-      ListUI <<"  -> Model successfully updated with the state at time = "<< atTime <<"\n";
+      ListUI <<"  -> Model successfully updated with the state at time = "
+             << atTime <<"\n";
       FFaMsg::pushStatus("Update visualization");
       FmDB::displayAll();
       FFaMsg::popStatus();
@@ -1807,9 +1956,8 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   }
 
   // Delete the old RDB completely if it belonged to an untitled model
-  if (wasUsingDefaultModelName)
-    if (FpFileSys::isDirectory(oldRDBPath))
-      FpFileSys::removeDir(oldRDBPath);
+  if (wasUsingDefaultModelName && FpFileSys::isDirectory(oldRDBPath))
+    FpFileSys::removeDir(oldRDBPath);
 
   // Copy the blade design of the model, if any such exist
   if (FpFileSys::isDirectory(oldBladeDirectory))
@@ -1853,6 +2001,7 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
     FFuFileDialog::resetMemoryMap(newModelP,oldModelP);
 
   Fui::okToGetUserInput();
+  FpPM::unTouchModel();
 
   if (!isModelSaved)
     ListUI <<"===> WARNING: The model was not completely saved to the new location.\n"
@@ -1869,12 +2018,13 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
 }
 
 
-bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const char* model)
+bool FpPM::vpmModelExport(const std::string& newPath, bool solverInput)
 {
   FmMechanism* mech = FmDB::getMechanismObject();
+  std::string fName = FFaFilePath::appendFileNameToPath(newPath,
+                                                        mech->getModelName(true));
   std::string oldRDBPath = mech->getAbsModelRDBPath();
-  std::string newRDBPath = FFaFilePath::getBaseName(name) +"_RDB";
-  bool exportSolverInput = analysis != NULL;
+  std::string newRDBPath = FFaFilePath::getBaseName(fName) +"_RDB";
 
   // Check if we export to ourselves (not allowed)
   if (newRDBPath == oldRDBPath) return false;
@@ -1888,15 +2038,14 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
       return false;
 
   Fui::resultFileBrowserUI(false);
-  int touchedStatus = FpPM::touchedFlag;
-  FpPM::touchedFlag = DONT_TOUCH; // suppress touching while exporting the model
+  FpPM::dontTouchModel(); // suppress touching while exporting the model
 
   // Reset simulation event changes, if any
   if (FapSimEventHandler::activate(NULL,true,false))
     ListUI <<"===> Switching to master Simulation event.\n";
 
   Fui::noUserInputPlease();
-  ListUI <<"===> Exporting Fedem model to "<< name <<"\n";
+  ListUI <<"===> Exporting Fedem model to "<< fName <<"\n";
 
   if (removeRDBdir)
   {
@@ -1926,13 +2075,13 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
   std::string oldBladeDirectory = mech->getAbsBladeFolderPath();
 
   // Update the mechanism to reflect path name changes
-  mech->syncPath(name,exportSolverInput);
+  mech->syncPath(fName,solverInput);
   mech->modelLinkRepository.setValue("");
 
   // Exported model file location
   const std::string& newModelP = mech->getAbsModelFilePath();
   std::string newRootP(newModelP);
-  if (exportSolverInput)
+  if (solverInput)
     newRootP = FFaFilePath::getPath(FFaFilePath::getPath(newModelP),false);
 
   // Find all path names in the model and store a pointer to each in a vector
@@ -1979,7 +2128,7 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
     for (FmPart* part : allParts)
     {
       int red = saveReducedPart.find(part) != saveReducedPart.end();
-      if (red && exportSolverInput)
+      if (red && solverInput)
         // Only include those reduction files needed by the solvers
         red = part->recoveryDuringSolve.getValue() > 0 ? 3 : 2;
       const std::string& oldDir = oldPartDB[iPart++];
@@ -1989,42 +2138,48 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
   }
 
   // Copy the blade design of the model, if any such exist
-  if (!exportSolverInput && FpFileSys::isDirectory(oldBladeDirectory))
+  if (!solverInput && FpFileSys::isDirectory(oldBladeDirectory))
     copyBladeDir(oldBladeDirectory,mech->getAbsBladeFolderPath());
 
   bool isModelSaved = false;
-  if (exportSolverInput)
+  if (solverInput)
   {
-    // Create solver input files for batch execution
-    Strings rdbPath;
-    std::string msg = Fedem::createSolverInput(analysis,mech,NULL,"fedem_solver",{},rdbPath);
-    if (msg.find("fedem_solver") > 0) // Failure
+    Strings rdbPath; // Create solver input files for batch execution
+    std::string msg = Fedem::createSolverInput(FmDB::getActiveAnalysis(),
+                                               mech,NULL,"fedem_solver",{},
+                                               rdbPath);
+    if (msg.find("fedem_solver") > 0) // failure
       FFaMsg::list(msg + "\n",true);
-    else if (model && !rdbPath.empty())
+    else
     {
-      // The solver input files were created in mech->getAbsModelRDBPath()/response_0001
+      // The solver input files were created in the directory
+      // mech->getAbsModelRDBPath()/response_0001
       // Now move them two levels up to where we want them to be
       std::string modelDir = FFaFilePath::getPath(newModelP);
-      isModelSaved = FpFileSys::renameFile(rdbPath.front(), modelDir + model);
+      isModelSaved = FpFileSys::renameFile(rdbPath.front(), modelDir + "model");
       if (isModelSaved)
-        ListUI <<"  -> Solver input files exported to "<< modelDir << model <<"\n";
+        ListUI <<"  -> Solver input files exported to "<< modelDir <<"model\n";
       else
-        std::cerr <<" *** Failed to move directory "<< rdbPath.front() << std::endl;
-      if (!newPartDB.empty() && FpFileSys::renameFile(newPartDB, modelDir + "link_DB"))
-        ListUI <<"  -> Internal link repository exported to "<< modelDir <<"link_DB\n";
-      else if (!newPartDB.empty())
-        std::cerr <<" *** Failed to move directory "<< newPartDB << std::endl;
+        std::cerr <<" *** Failed to move directory "
+                  << rdbPath.front() << std::endl;
+      if (!newPartDB.empty())
+      {
+        if (FpFileSys::renameFile(newPartDB, modelDir + "link_DB"))
+          ListUI <<"  -> Internal link repository exported to "
+                 << modelDir <<"link_DB\n";
+        else
+          std::cerr <<" *** Failed to move directory "<< newPartDB << std::endl;
+      }
       if (FpFileSys::removeDir(FFaFilePath::getPath(newRDBPath)) < 0)
-        std::cerr <<" *** Failed to delete directory "<< FFaFilePath::getPath(newRDBPath) << std::endl;
+        std::cerr <<" *** Failed to delete directory "
+                  << FFaFilePath::getPath(newRDBPath) << std::endl;
     }
-    else
-      ListUI <<" ==> Solver input files exported to "<< mech->getAbsModelRDBPath() <<"\n";
   }
   else
   {
     // Finally, save the model file
     FFaMsg::list("  -> Writing Model File ");
-    std::ofstream s(name,std::ios::out);
+    std::ofstream s(fName,std::ios::out);
     if (s)
     {
       FmDB::updateModelVersionOnSave(false);
@@ -2043,14 +2198,14 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
   FFaMsg::list("===> Done exporting: " + std::string(ctime(&currentTime)));
 
   // Reset file path names in the model
-  mech->syncPath(oldModelN,exportSolverInput);
+  mech->syncPath(oldModelN,solverInput);
   mech->modelLinkRepository.setValue(oldPartRepository);
   for (size_t i = 0; i < allParts.size(); i++)
     allParts[i]->myRSD.getValue().setPath(oldPartDB[i]);
   for (size_t i = 0; i < oldPathNames.size(); i++)
     filePaths[i]->setValue(oldPathNames[i]);
   FmSubAssembly::mainFilePath = oldModelP;
-  FpPM::touchedFlag = touchedStatus;
+  FpPM::resetTouchedFlag();
   Fui::okToGetUserInput();
 
   return isModelSaved;
@@ -2060,30 +2215,29 @@ bool FpPM::vpmModelExport(const std::string& name, FmAnalysis* analysis, const c
 void FpPM::setResultFlag()
 {
   // Check the result status for the active event
-  FpPM::resultsFlag = 0;
-  FmResultStatusData* rsd = FapSimEventHandler::getActiveRSD();
-  if (rsd)
+  resultsFlag = 0;
+  if (FmResultStatusData* rsd = FapSimEventHandler::getActiveRSD(); rsd)
   {
     if (FpModelRDBHandler::hasResults(rsd, "timehist_prim"))
-      FpPM::resultsFlag += PRIMARY;
+      resultsFlag += PRIMARY;
     if (FpModelRDBHandler::hasResults(rsd, "timehist_sec"))
-      FpPM::resultsFlag += SECONDARY;
+      resultsFlag += SECONDARY;
     if (FpModelRDBHandler::hasResults(rsd, "eigval"))
-      FpPM::resultsFlag += EIGVAL;
+      resultsFlag += EIGVAL;
     if (FpModelRDBHandler::hasResults(rsd, "timehist_rcy"))
-      FpPM::resultsFlag += STRESS_RCY;
+      resultsFlag += STRESS_RCY;
     if (FpModelRDBHandler::hasResults(rsd, "eigval_rcy"))
-      FpPM::resultsFlag += EIGVAL_RCY;
+      resultsFlag += EIGVAL_RCY;
     if (FpModelRDBHandler::hasResults(rsd, "timehist_gage_rcy"))
-      FpPM::resultsFlag += GAGE_RCY;
+      resultsFlag += GAGE_RCY;
     if (FpModelRDBHandler::hasResults(rsd, "summary_rcy"))
-      FpPM::resultsFlag += SUMMARY_RCY;
+      resultsFlag += SUMMARY_RCY;
     if (rsd->hasFileNames("res"))
-      FpPM::resultsFlag += RES_FILE;
+      resultsFlag += RES_FILE;
   }
 
   // Notify UI about possibly change in result state
-  Fui::lockModel(FpPM::resultsFlag > 0 || FpPM::touchedFlag == READ_ONLY ||
+  Fui::lockModel(resultsFlag > 0 || touchedFlag == READ_ONLY ||
                  FapSimEventHandler::hasResults());
 }
 
@@ -2091,135 +2245,13 @@ void FpPM::setResultFlag()
 bool FpPM::hasResults(RDBType mask)
 {
   if (mask == ANY)
-    return FpPM::resultsFlag > 0;
+    return resultsFlag > 0;
   else
-    return FpPM::resultsFlag & mask ? true : false;
+    return resultsFlag & mask ? true : false;
 }
 
 
 std::string FpPM::createUuid()
 {
   return QUuid::createUuid().toString().toStdString();
-}
-
-
-/*!
-  Signal handler interface.
-
-  We are **not** going to do X-things inside the signal handler,
-  therefore the X-event loop is not considered here.
-  We also use unreliable signals in sake of simplicity -
-  should be easy to upgrade to reliable signals later if neccessary.
-  We do **not** handle signals in debug mode (sometimes a coredump is needed)
-*/
-
-void FpPM::signalHandler(int sig)
-{
-  std::string strsig;
-  enum { SAVE_AND_EXIT, EXIT, CLEAN_UP_CHILDREN } action;
-
-  switch (sig)
-    {
-    case SIGINT: // User presses ctrl-C.
-      strsig = "SIGINT Interrupt";
-      action = EXIT;
-      break;
-
-#if !defined(win32) && !defined(win64)
-    case SIGQUIT: // User presses ctrl-\.
-      strsig = "SIGQUIT Quit";
-      action = EXIT;
-      break;
-
-    case SIGILL: // Illegal hardware instruction.
-      strsig = "SIGILL Illegal instruction";
-      action = SAVE_AND_EXIT;
-      break;
-
-    case SIGABRT: // Generated by abort function.
-      strsig = "SIGABRT Abort";
-      action = SAVE_AND_EXIT;
-      break;
-
-    case SIGFPE: // Division by 0, overflow, etc.
-      strsig = "SIGFPE Arithmetic exception";
-      action = SAVE_AND_EXIT;
-      break;
-
-    case SIGBUS: // Bus error.
-      strsig = "SIGBUS Bus error";
-      action = SAVE_AND_EXIT;
-      break;
-
-    case SIGSEGV: // Segmentation violation.
-      strsig = "SIGSEGV Segmentation violation";
-      action = SAVE_AND_EXIT;
-      break;
-
-#ifndef linux
-    case SIGSYS: // Bad system call.
-      strsig = "SIGSYS Bad system call";
-      action = EXIT;
-      break;
-#endif
-
-    case SIGPIPE: // Broken pipe.
-      strsig = "SIGPIPE Broken pipe";
-      action = CLEAN_UP_CHILDREN;
-      break;
-
-    case SIGTERM: // Software termination sent by kill and system shutdown.
-      strsig = "SIGTERM Software termination";
-      action = EXIT;
-      break;
-
-    case SIGXCPU: // CPU time limit exceeded.
-      strsig = "SIGXCPU CPU time limit exceeded";
-      action = SAVE_AND_EXIT;
-      break;
-
-    case SIGXFSZ: // File size limit exceeded.
-      strsig = "SIGXFSZ File size limit exceeded";
-      action = SAVE_AND_EXIT;
-      break;
-#endif
-
-    default: // Unknown signal - do nothing
-      return;
-    }
-
-  std::cout <<"\n *** Fedem recieved signal "<< strsig << std::endl;
-
-  switch (action) {
-  case SAVE_AND_EXIT:
-    std::cout <<" *** Fedem trying emergency save and exit"<< std::endl;
-    FmDB::emergencyExitSave();
-    FpPM::quitVPM(-1);
-    break;
-
-  case EXIT:
-    std::cout <<" *** Fedem exiting"<< std::endl;
-    FpPM::quitVPM(-1);
-    break;
-
-  case CLEAN_UP_CHILDREN:
-    std::cout <<" *** Fedem cleaning up child processes"<< std::endl;
-    FpProcessManager::instance()->killAll();
-    signal(sig,&FpPM::signalHandler); // Resetting signal handler
-  }
-}
-
-
-void FpPM::onModelMemberConnected(FmModelMemberBase*)
-{
-  FpPM::touchModel();
-}
-
-
-void FpPM::onModelMemberChanged(FmModelMemberBase* item)
-{
-  if (item == FmDB::getMechanismObject())
-    FpPM::toggleActivePlugins(FmDB::getMechanismObject());
-
-  FpPM::touchModel();
 }

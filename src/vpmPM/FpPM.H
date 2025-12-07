@@ -8,78 +8,75 @@
 #ifndef FP_PM_H
 #define FP_PM_H
 
-#include <map>
 #include <vector>
 #include <string>
 
-class FmModelMemberBase;
-class FmAnalysis;
-class FmMechanism;
-class FmPart;
 
-
-class FpPM
+namespace FpPM
 {
-public:
-
   //////////////////
   // Initialisation
   //////////////////
 
-  static void init(const char* program);
-  static void start();
+  void init(const char* program);
+  void start();
 
-  static void CopyrightNotice();
-  static void loadUnitConvertionFile();
-  static void loadResultPosFiles();
-  static void loadSNCurveFile();
-  static void loadPropertyLibraries();
-  static void loadAllPlugins();
+  void CopyrightNotice();
+  void loadUnitConvertionFile();
+  void loadResultPosFiles();
+  void loadSNCurveFile();
+  void loadPropertyLibraries();
+  void loadAllPlugins();
 
-  struct PluginLib { std::string name; std::string sign; bool loaded = false; };
-  static void getPluginList(std::vector<PluginLib>& plugins);
-  static void getActivePlugins(std::vector<std::string>& plugins);
-  static bool togglePlugin(const std::string& plugin, bool toggleOn);
+  struct PluginLib
+  {
+    std::string name;
+    std::string sign;
+    bool loaded = false;
+  };
 
-  static const char* getVpmVersion();
+  void getPluginList(std::vector<PluginLib>& plugins);
+  void getActivePlugins(std::vector<std::string>& plugins);
+  bool togglePlugin(const std::string& plugin, bool toggleOn);
 
-  static std::string getFullFedemPath(const std::string& fName, char check = 0);
+  const char* getVpmVersion();
+
+  std::string getFullFedemPath(const std::string& fName, char check = 0);
 
   /////////////////////
   // File And Quitting
   /////////////////////
 
-  static void quitVPM(int exitCode = 0); // Nicely quit the application
+  void quitVPM(int exitCode = 0); // Nicely quit the application
 
-  static bool vpmModelOpen(const std::string& name, bool doLoadLinks = true,
-			   const std::string& newModelFileNameForLogFile = "");
-  static bool vpmAssemblyOpen(const std::string& name, bool doLoadLinks = true);
+  bool vpmModelOpen(const std::string& name, bool doLoadLinks = true,
+                    const std::string& newModelFileNameForLogFile = "");
+  bool vpmAssemblyOpen(const std::string& name, bool doLoadLinks = true);
 
-  static bool openTemplateFile(const std::string& modelPath);
+  bool openTemplateFile(const std::string& modelPath);
 
-  static bool vpmModelSaveAs(const std::string& name, bool saveReducedParts = true,
-                             bool saveRes = true, double atTime = -1.0);
+  bool vpmModelSaveAs(const std::string& name, bool saveReducedParts = true,
+                      bool saveRes = true, double atTime = -1.0);
 
-  static bool vpmModelExport(const std::string& name,
-                             FmAnalysis* analysis = NULL, const char* model = NULL);
+  bool vpmModelExport(const std::string& newPath, bool solverInput = false);
 
-  static void openCmdLineFile();
-  static void vpmModelNew();
-  static bool vpmModelSave(bool pruneEmptyDirs = true);
-  static bool closeModel(bool saveOnBatchExit = true,
-			 bool pruneEmptyDirs = true,
-			 bool isExiting = false);
+  void openCmdLineFile();
+  void vpmModelNew();
+  bool vpmModelSave(bool pruneEmptyDirs = true);
+  bool closeModel(bool saveOnBatchExit = true,
+                  bool pruneEmptyDirs = true, bool isExiting = false);
 
   // Undo
-  static void vpmSetUndoPoint(const char* title);
-  static void vpmUndo();
-  static void vpmGetUndoSensitivity(bool& isSensitive);
+  void vpmSetUndoPoint(const char* title);
+  void vpmUndo();
+  void vpmGetUndoSensitivity(bool& isSensitive);
 
   // Result and model accessibility interface
 
   //! \note These enum values are octal numbers (base 8).
   //! They must start with leading 0-digit.
-  enum RDBType {
+  enum RDBType
+  {
     ANY         = 0000,
     PRIMARY     = 0001,
     SECONDARY   = 0002,
@@ -91,68 +88,26 @@ public:
     RES_FILE    = 0400
   };
 
-  static void setResultFlag();
-  static int  getResultFlag() { return resultsFlag; }
-  static bool hasResults(RDBType mask = ANY);
+  void setResultFlag();
+  bool hasResults(RDBType mask = ANY);
 
-  static int  dontTouchModel();
-  static void resetTouchedFlag(int flag) { FpPM::touchedFlag = flag; }
-  static void touchModel(bool resultsOnly = false);
-  static void unTouchModel(bool setReadOnly = false);
-  static bool isModelTouched(bool ignoreResults = false);
-  static bool isModelTouchable();
-  static bool isModelRunable();
-  static bool isModelEditable();
-  static bool isModelRestartable();
-  static bool isUsingDefaultName() { return isUsingDefaultModelName; }
+  void dontTouchModel();
+  void resetTouchedFlag();
+  void touchModel(bool resultsOnly = false, bool forced = false);
+  void unTouchModel(bool setReadOnly = false);
+  bool isModelTouched(bool ignoreResults = false);
+  bool isModelTouchable();
+  bool isModelRunable();
+  bool isModelEditable();
+  bool isModelRestartable();
 
-  static void updateGuiTitle();
+  void updateGuiTitle();
 
-  static std::string createUuid();
+  std::string createUuid();
 
-  static const std::vector<std::string>& recentModels() { return recentFiles; }
-  static void addRecent(const std::string& name);
-  static void removeRecent(size_t idx);
-
-private:
-  static bool loadParts(const std::vector<FmPart*>& allParts);
-
-  // Plugin libraries, and whether they are currently loaded or not
-  enum PluginType { NONE, UDEF_FUNC, UDEF_CTRL, UDEF_ELM, UDEF_TYPES };
-  struct PluginId {
-    PluginType type;
-    std::string sign;
-    bool loaded;
-    PluginId() : type(NONE), loaded(false) {}
-    PluginId(PluginType t, const char* s) : type(t), sign(s), loaded(false) {}
-  };
-  typedef std::map<std::string,PluginId> PluginMap;
-  static PluginMap ourPlugins;
-
-  static bool togglePlugin(FmMechanism*, PluginMap::iterator it, char toggle);
-  static bool togglePlugin(PluginMap::iterator it, bool toggleOn, FmMechanism*);
-  static void toggleActivePlugins(FmMechanism* mech);
-  static void saveActivePlugins(FmMechanism* mech);
-
-  // Whether a default name is used, makes "Save" go "Save As..."
-  static bool isUsingDefaultModelName;
-
-  // Whether a "Save" is needed
-  static int touchedFlag;
-
-  // Application process id
-  static int vpmPID;
-
-  // Do we have results or not, and what kind
-  static int resultsFlag;
-
-  static std::vector<std::string> recentFiles;
-
-  // Signal handling interface
-  static void signalHandler(int sig);
-
-  static void onModelMemberConnected(FmModelMemberBase*);
-  static void onModelMemberChanged(FmModelMemberBase*);
+  void addRecent(const std::string& name);
+  void removeRecent(size_t idx);
+  const std::vector<std::string>& recentModels();
 };
 
 #endif

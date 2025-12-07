@@ -41,22 +41,24 @@ void FapUASeaEnvironment::setDBValues(FFuaUIValues* values)
   FuaSeaEnvironmentValues* seaValues = (FuaSeaEnvironmentValues*) values;
 
   FmSeaState* sea = FmDB::getSeaStateObject();
-  sea->setWaterDensity(seaValues->waterDensity);
-  sea->setSeaDepth(seaValues->seaDepth);
-  sea->setMeanSeaLevel(seaValues->seaLevelValue);
-  sea->setWaveDir(seaValues->waveDirection);
+  bool newDepth = sea->setSeaDepth(seaValues->seaDepth,false);
+  bool newLevel = sea->setMeanSeaLevel(seaValues->seaLevelValue,false);
+  bool newWaveD = sea->setWaveDir(seaValues->waveDirection,false);
 
-  sea->growthDensity = seaValues->marineGrowthDensity;
-  sea->growthThickness = seaValues->marineGrowthThickness;
-  sea->growthLimit = std::make_pair(seaValues->marineGrowthUpperLimit,
-				    seaValues->marineGrowthLowerLimit);
+  sea->waterDensity.setValue(seaValues->waterDensity);
+  sea->growthDensity.setValue(seaValues->marineGrowthDensity);
+  sea->growthThickness.setValue(seaValues->marineGrowthThickness);
+  sea->growthLimit.setValue({ seaValues->marineGrowthUpperLimit, seaValues->marineGrowthLowerLimit });
+
   FmDB::getMechanismObject()->setGravity(seaValues->gravitation);
 
-  sea->waveFunction = static_cast<FmMathFuncBase*>(seaValues->waveFunction);
-  sea->currFunction = static_cast<FmMathFuncBase*>(seaValues->currFunction);
-  sea->currentDir   = static_cast<FmMathFuncBase*>(seaValues->currDirFunction);
-  sea->currScale    = static_cast<FmEngine*>(seaValues->currScaleEngine);
-  sea->hdfScale     = static_cast<FmEngine*>(seaValues->hdfScaleEngine);
+  if (sea->waveFunction.setRef(seaValues->waveFunction) ||
+      newDepth || newLevel || newWaveD) sea->draw();
+
+  sea->currFunction.setRef(seaValues->currFunction);
+  sea->currentDir.setRef(seaValues->currDirFunction);
+  sea->currScale.setRef(seaValues->currScaleEngine);
+  sea->hdfScale.setRef(seaValues->hdfScaleEngine);
 
   FpPM::touchModel(); // Indicate that the model needs save
 }
@@ -73,11 +75,11 @@ void FapUASeaEnvironment::getDBValues(FFuaUIValues* values)
 
   seaValues->waterDensity  = sea->waterDensity.getValue();
   seaValues->seaLevelValue = sea->meanSeaLevel.getValue();
-  seaValues->seaDepth = sea->seaDepth.getValue();
+  seaValues->seaDepth      = sea->seaDepth.getValue();
   seaValues->waveDirection = sea->waveDir.getValue();
 
-  seaValues->marineGrowthDensity = sea->growthDensity.getValue();
-  seaValues->marineGrowthThickness = sea->growthThickness.getValue();
+  seaValues->marineGrowthDensity    = sea->growthDensity.getValue();
+  seaValues->marineGrowthThickness  = sea->growthThickness.getValue();
   seaValues->marineGrowthUpperLimit = sea->growthLimit.getValue().first;
   seaValues->marineGrowthLowerLimit = sea->growthLimit.getValue().second;
 
@@ -99,10 +101,9 @@ void FapUASeaEnvironment::getDBValues(FFuaUIValues* values)
 
   // The wave direction vector is not used if we have vessel motions.
   // In that case, the vessel triad is used to define the wave direction.
-  FmVesselMotion* vsm = 0;
   if (seaValues->waveFunction)
-    if (seaValues->waveFunction->hasReferringObjs(vsm,"waveFunction"))
-      if (vsm->getVesselTriad()) seaValues->waveDirSens = false;
+    if (FmVesselMotion* vm; seaValues->waveFunction->hasReferringObjs(vm,"waveFunction"))
+      if (vm->getVesselTriad()) seaValues->waveDirSens = false;
 
   seaValues->isSensitive = FpPM::isModelEditable();
 }

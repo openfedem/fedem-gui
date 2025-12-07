@@ -14,7 +14,6 @@
 #include "FFuLib/FFuIOField.H"
 #include "FFuLib/FFuLabelFrame.H"
 #include "FFuLib/FFuDialogButtons.H"
-#include "vpmDB/FmDB.H"
 
 
 enum {
@@ -131,7 +130,6 @@ void FuiSeaEnvironment::onDialogButtonClicked(int button)
     case APPLY:
       FpPM::vpmSetUndoPoint("Sea environment");
       this->updateDBValues();
-      FmDB::drawSea();
       break;
 
     case CANCEL:
