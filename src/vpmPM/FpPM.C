@@ -8,7 +8,6 @@
 #include "vpmPM/FpPM.H"
 #include "vpmPM/FpFileSys.H"
 #include "vpmPM/FpRDBExtractorManager.H"
-#include "vpmPM/FpRDBHandler.H"
 #include "vpmPM/FpModelRDBHandler.H"
 #include "vpmPM/FpProcessManager.H"
 #include "vpmApp/vpmAppProcess/FapSolutionProcessMgr.H"
@@ -935,20 +934,6 @@ bool FpPM::togglePlugin(const std::string& plugin, bool toggleOn)
     return false;
 
   return togglePlugin(FmDB::getMechanismObject(),it,toggleOn);
-}
-
-
-void FpPM::start()
-{
-  FFaSwitchBoard::connect(FpProcessManager::instance(),
-			  FpProcessManager::FINISHED,
-			  FFaSlot0S(FpRDBHandler,stopRDBChecking));
-  FFaSwitchBoard::connect(FpProcessManager::instance(),
-			  FpProcessManager::GROUP_STARTED,
-			  FFaSlot1S(FpRDBHandler,onProcessGroupStarted,int));
-  FFaSwitchBoard::connect(FpProcessManager::instance(),
-			  FpProcessManager::FINISHED,
-			  FFaSlot0S(FapAnimationCmds,onSimulationFinished));
 }
 
 
