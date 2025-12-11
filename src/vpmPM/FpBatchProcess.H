@@ -9,14 +9,12 @@
 #define FP_BATCH_PROCESS_H
 
 
-class FpBatchProcess
+namespace FpBatchProcess
 {
-public:
-  // returns true if the user wants to run batch
-  static bool userWantsBatch();
-
-  // runs the batch stuff
-  static bool setupBatch();
-};
+  //! \brief Returns true if the user wants to run batch.
+  bool userWantsBatch();
+  //! \brief Runs the batch-preparation stuff.
+  bool setupBatch();
+}
 
 #endif
