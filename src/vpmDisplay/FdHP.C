@@ -115,9 +115,9 @@ bool FdHP::updateFdApperance()
   if (!outputJoint) return false;
 
   if (inputJoint->isAttachedToLink() && outputJoint->isAttachedToLink())
-    itsKit->setPart("appearance.material",FdSymbolDefs::getHPMaterial());
+    itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::HP));
   else
-    itsKit->setPart("appearance.material",FdSymbolDefs::getDefaultMaterial());
+    itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial());
 
   return true;
 }

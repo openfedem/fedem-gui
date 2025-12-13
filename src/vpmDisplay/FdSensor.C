@@ -62,7 +62,7 @@ bool FdSensor::updateFdApperance()
   if (((FmSensorBase*)itsFmOwner)->isDrawable())
     if (this->highlightRefCount < 1) // This test makes sure we do not
       // un-highlight something when it is supposed to be highlighted
-      itsKit->setPart("appearance.material",FdSymbolDefs::getSensorMaterial());
+      itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::SENSOR_MAT));
 
   return true;
 }

@@ -119,9 +119,9 @@ bool FdAxialSprDa::updateFdApperance()
 
   // Setting color according to attachment
   if (triad1->isAttached() && triad2->isAttached())
-    itsKit->setPart("appearance.material",FdSymbolDefs::getSprDaMaterial());
+    itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::SPR_DMP));
   else
-    itsKit->setPart("appearance.material",FdSymbolDefs::getDefaultMaterial());
+    itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial());
 
   return true;
 }

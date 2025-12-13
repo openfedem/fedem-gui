@@ -209,22 +209,24 @@ bool FdSimpleJoint::updateFdApperance()
 
   bool attachedMaster = ((FmJointBase*)itsFmOwner)->isMasterAttachedToLink(true);
   bool attachedSlave  = ((FmJointBase*)itsFmOwner)->isSlaveAttachedToLink(true);
+  SoMaterial* jointMat = FdSymbolDefs::getMaterial(FdSymbolDefs::JOINT);
+  SoMaterial* defltMat = FdSymbolDefs::getMaterial();
   if (!attachedMaster)
-    itsKit->setPart("joint.appearance.material",FdSymbolDefs::getDefaultMaterial());
+    itsKit->setPart("joint.appearance.material",defltMat);
   else if (attachedSlave || itsFmOwner->isOfType(FmFreeJoint::getClassTypeID()))
-    itsKit->setPart("joint.appearance.material",FdSymbolDefs::getJointMaterial());
+    itsKit->setPart("joint.appearance.material",jointMat);
   else
-    itsKit->setPart("joint.appearance.material",FdSymbolDefs::getDefaultMaterial());
+    itsKit->setPart("joint.appearance.material",defltMat);
 
   if (attachedSlave && attachedMaster)
   {
-    itsKit->setPart("lineM.appearance.material",FdSymbolDefs::getJointMaterial());
-    itsKit->setPart("lineS.appearance.material",FdSymbolDefs::getJointMaterial());
+    itsKit->setPart("lineM.appearance.material",jointMat);
+    itsKit->setPart("lineS.appearance.material",jointMat);
   }
   else
   {
-    itsKit->setPart("lineM.appearance.material",FdSymbolDefs::getDefaultMaterial());
-    itsKit->setPart("lineS.appearance.material",FdSymbolDefs::getDefaultMaterial());
+    itsKit->setPart("lineM.appearance.material",defltMat);
+    itsKit->setPart("lineS.appearance.material",defltMat);
   }
 
   return true;

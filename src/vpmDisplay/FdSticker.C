@@ -77,7 +77,7 @@ bool FdSticker::updateFdApperance()
   // when it is supposed to be highlighted
   if (this->highlightRefCount > 0) return true;
 
-  itsKit->setPart("appearance.material", FdSymbolDefs::getStickerMaterial());
+  itsKit->setPart("appearance.material", FdSymbolDefs::getMaterial(FdSymbolDefs::STICK));
   return true;
 }
 

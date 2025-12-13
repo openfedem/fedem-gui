@@ -64,9 +64,9 @@ bool FdLoad::updateFdApperance()
     // un-highlight something when it is supposed to be highlighted
     if (((FmLoad*)itsFmOwner)->getOwnerTriad()) {
       if (((FmLoad*)itsFmOwner)->getOwnerTriad()->isAttached())
-	itsKit->setPart("appearance.material",FdSymbolDefs::getLoadMaterial());
+        itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::LOAD));
       else
-	itsKit->setPart("appearance.material",FdSymbolDefs::getDefaultMaterial());
+        itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial());
     }
 
   return true;
