@@ -21,35 +21,38 @@ class SoVRMLCoordinate;
 class SoMFVec3f;
 
 
-class FdPickFilter
+namespace FdPickFilter
 {
-public:
-  static FdObject* getInterestingPObj(const SoPickedPointList* ppl,
-				      // This is to select objects behind the already selected one:
-				      const std::vector<FdObject*>& selectedObjects,
-				      // Filter variables:
-				      const std::vector<int>& types,
-				      bool typesIsInteresting,
-				      // Variables returning values:
-				      long& indexToInterestingPP,
-				      bool& wasASelectedObjInPPList);
+  FdObject* getInterestingPObj(const SoPickedPointList* ppl,
+                               // To select objects behind the selected one:
+                               const std::vector<FdObject*>& selectedObjects,
+                               // Filter variables:
+                               const std::vector<int>& types,
+                               bool typesIsInteresting,
+                               // Variables returning values:
+                               long int& indexToInterestingPP,
+                               bool& wasASelectedObjInPPList);
 
-  static FdObject* getCyceledInterestingPObj(const SoPickedPointList* ppl,
-					     // Filter variables:
-					     const std::vector<int>& types,
-					     bool typesIsInteresting,
-					     // Variables returning values:
-					     long& indexToInterestingPP);
+  FdObject* getCyceledInterestingPObj(const SoPickedPointList* ppl,
+                                      // Filter variables:
+                                      const std::vector<int>& types,
+                                      bool typesIsInteresting,
+                                      // Variables returning values:
+                                      long int& indexToInterestingPP);
 
-  static FdObject* findFdObject(SoPath* path);
+  FdObject* findFdObject(SoPath* path);
 
-  static FdPart* findFirstPartHit(int& pplistIndex, const SoPickedPointList& ppl, FdObject* partToFind = NULL);
-  static FdPart* findNodeHit(int& nodeID, FaVec3& nodePos, const SoPickedPointList& ppl, FdObject* partToFind);
+  FdPart* findFirstPartHit(int& pplistIndex,
+                           const SoPickedPointList& ppl,
+                           FdObject* partToFind = NULL);
+  FdPart* findNodeHit(int& nodeID, FaVec3& nodePos,
+                      const SoPickedPointList& ppl,
+                      FdObject* partToFind);
 
-  static SoCoordinate3*    findLastCoordNode (SoPath* path);
-  static SoVertexProperty* findLastVxPropNode(SoPath* path);
-  static SoVRMLCoordinate* findLastVRMLCoordNode(SoPath* path);
-  static SoMFVec3f*        findLastVertexes(SoPath* path);
-};
+  SoCoordinate3*    findLastCoordNode(SoPath* path);
+  SoVertexProperty* findLastVxPropNode(SoPath* path);
+  SoVRMLCoordinate* findLastVRMLCoordNode(SoPath* path);
+  SoMFVec3f*        findLastVertexes(SoPath* path);
+}
 
 #endif
