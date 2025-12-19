@@ -42,8 +42,6 @@
 #include <Inventor/VRMLnodes/SoVRMLCoordinate.h>
 #include <Inventor/VRMLnodes/SoVRMLVertexShape.h>
 
-#include "FFdCadModel/FdCadFace.H"
-
 #ifdef USE_OPENCASCADE
 #include "SoBrepShape.h"
 #endif
@@ -663,6 +661,7 @@ bool FdLink::loadVrmlViz()
 }
 
 
+namespace {
 bool createCadPartViz(SoSeparator * linesParent, SoSeparator * facesParent, FdCadPart * part, bool isLinkPart)
 {
   if (!part)
@@ -714,6 +713,7 @@ bool createCadAssemblyViz(SoSeparator * linesParent, SoSeparator * facesParent, 
   }
 
   return true;
+}
 }
 
 
@@ -895,7 +895,7 @@ void FdLink::showHighlight()
   this->highlightBoxId = FdExtraGraphics::showBBox(min,max,link->getGlobalCS());
 
   // Highligth CG and CS too, if in a generic part
-  if (FdDB::isUsingLineHighlight())
+  if (FdDB::usesLineHighlight)
     itsKit->setPart("symbolMaterial",FdSymbolDefs::getHighlightMaterial());
 }
 

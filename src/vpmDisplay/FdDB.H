@@ -173,8 +173,6 @@ public:
 
   static FaVec3 getLineDir(SoPath* path, SoDetail* pickDetail, FdObject* pickedObject, const SbMatrix& SbObjToWorld);
 
-  static bool isUsingLineHighlight() { return usesLineHighlight; }
-
 private:
 
   //
@@ -194,10 +192,6 @@ private:
   static SoShapeHints    * ourShapeHint;
   static Fd2dPictureNode * demoWarning;
 
-  // Box or line highligt:
-
-  static bool usesLineHighlight;
-
   // Create mode vars:
   static FdObject * firstObjectToCreateNear;
   static bool       firstCreateDirDefined;
@@ -215,6 +209,10 @@ public:
   static FaVec3     firstCreateDirection;
   static FaVec3     secondCreateDirection;
   static FaVec3     thirdCreateDirection;
+
+  // Box or line highligt:
+
+  static bool usesLineHighlight;
 
 private:
   static FmCamJoint* tempCam;

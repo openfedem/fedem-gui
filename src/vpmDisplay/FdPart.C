@@ -760,7 +760,7 @@ int FdPart::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
 
 void FdPart::showHighlight()
 {
-  if (!FdDB::isUsingLineHighlight())
+  if (!FdDB::usesLineHighlight)
     this->FdLink::showHighlight();
   else if (IAmUsingGenPartVis && !this->myCadHandler->getCadComponent())
     this->FdLink::showHighlight();

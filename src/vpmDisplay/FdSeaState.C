@@ -369,7 +369,7 @@ bool FdSeaState::updateFdDetails()
 
 void FdSeaState::showHighlight()
 {
-  if (!FdDB::isUsingLineHighlight())
+  if (!FdDB::usesLineHighlight)
   {
     if (this->highlightBoxId)
       FdExtraGraphics::removeBBox(this->highlightBoxId);

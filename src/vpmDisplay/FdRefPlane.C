@@ -149,7 +149,7 @@ bool FdRefPlane::updateFdDetails()
 
 void FdRefPlane::showHighlight()
 {
-  if (!FdDB::isUsingLineHighlight())
+  if (!FdDB::usesLineHighlight)
   {
     if (this->highlightBoxId)
       FdExtraGraphics::removeBBox(this->highlightBoxId);

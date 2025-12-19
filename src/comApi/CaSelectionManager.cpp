@@ -13,6 +13,7 @@
 #include "vpmDisplay/FdPickedPoints.H"
 #include "vpmDisplay/FdDB.H"
 #include "vpmUI/FuiModes.H"
+#include "FFaLib/FFaAlgebra/FFaVec3.H"
 
 
 //////////////////////////////////////////////////////////////////////
