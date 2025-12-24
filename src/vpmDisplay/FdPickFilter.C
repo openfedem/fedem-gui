@@ -23,14 +23,17 @@
 #include "vpmDisplay/FdPart.H"
 
 
-static bool isFdObjInteresting(FdObject* obj,
-                               const std::vector<int>& types, bool isInteresting)
+namespace
 {
-  for (int itype : types)
-    if (obj->isOfType(itype))
-      return isInteresting;
+  bool isFdObjInteresting(FdObject* obj,
+                         const std::vector<int>& types, bool isInteresting)
+  {
+    for (int itype : types)
+      if (obj->isOfType(itype))
+        return isInteresting;
 
-  return !isInteresting;
+    return !isInteresting;
+  }
 }
 
 
@@ -184,35 +187,33 @@ FdObject* FdPickFilter::getInterestingPObj(const SoPickedPointList* ppl,
 
 
 /*
-  The following sheme visualize the different possibilitys,
+  The following scheme visualizes the different possibilities
   and the actions to be done for each.
-  the if- test under the for-loop IN the while-loop is built 
-  using this sheme
-     
-     I  short for isInteresting  \  Temp Vars 
+  The if-test under the for-loop IN the while-loop is built
+  using this scheme
+
+     I  short for isInteresting  \  Temp Vars
      S  short for isSelected     /
-     
-     FS short for isAnSelectedObjInPPList \ Vars acumulating 
+
+     FS short for isAnSelectedObjInPPList \ Vars acumulating
      FI short for isAnInterestingObjInPPL / the final result
-     
+
      I &&  S                I && !S                 !I && S
-     ---------------------------------------------------
-     FI && FS                FI &&  FS                 FI && FS    
-     continue                Upate vars pointing     continue             
-     to interesting point                                          
-     return                                                        
-                                                                   
-     FI && !FS               FI && !FS                FI && !FS          
-     Set FS = true                                   Set FS = true 
-     continue                continue                continue      
-                                                                   
-                                                                   
-                                                                   
-     !FI && FS              !FI &&  FS               !FI &&  FS    
-     Upate vars pointing    Upate vars pointing      continue 
+     -------------------------------------------------------
+     FI && FS               FI &&  FS               FI && FS
+     continue               Upate vars pointing     continue
+     to interesting point
+     return
+
+     FI && !FS              FI && !FS               FI && !FS
+     Set FS = true                                  Set FS = true
+     continue               continue                continue
+
+     !FI && FS              !FI &&  FS              !FI &&  FS
+     Upate vars pointing    Upate vars pointing     continue
      to interesting point   to interesting point
-     Set FI = true          return                                       
-     continue   
+     Set FI = true          return
+     continue
 */
 
 /*!

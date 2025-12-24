@@ -111,7 +111,8 @@ void FdPickedPoints::getAllPickedPointsGlobal(std::vector<FaVec3>& globalPoints)
     globalPoints.push_back(ourEditablePPoints[i].globPoint);
 }
 
-void FdPickedPoints::setPickedPoint(size_t idx, bool global, const FaVec3& point)
+void FdPickedPoints::setPickedPoint(size_t idx, bool global,
+                                    const FaVec3& point)
 {
   if (idx >= ourEditablePPoints.size())
     ourEditablePPoints.resize(idx+1);
@@ -133,7 +134,28 @@ void FdPickedPoints::setPickedPoint(size_t idx, bool global, const FaVec3& point
 }
 
 
-void FdPickedPoints::setPP(size_t idx, const FaVec3& point, const FaMat34& objToWorld)
+void FdPickedPoints::setPP(size_t idx, const FaVec3& point)
+{
+  if (idx >= ourEditablePPoints.size())
+    ourEditablePPoints.resize(idx+1);
+
+  EditablePickedPoint& newPoint = ourEditablePPoints[idx];
+
+  newPoint.globPoint = point;
+  newPoint.objectToWorldMatrix.setIdentity();
+
+  if (ourHighlighter)
+  {
+    if (newPoint.highlightId == -1)
+      newPoint.highlightId = ourHighlighter->addPoint(point);
+    else
+      ourHighlighter->movePoint(newPoint.highlightId,point);
+  }
+}
+
+
+void FdPickedPoints::setPP(size_t idx, const FaVec3& point,
+                           const FaMat34& objToWorld)
 {
   if (idx >= ourEditablePPoints.size())
     ourEditablePPoints.resize(idx+1);
@@ -179,7 +201,8 @@ void FdPickedPoints::resetPPs()
   Highlights and stores the node numbers for the strain gage command.
 */
 
-void FdPickedPoints::selectNode(size_t number, int nodeID, const FaVec3& worldNodePos)
+void FdPickedPoints::selectNode(size_t number, int nodeID,
+                                const FaVec3& worldNodePos)
 {
   if (number < ourSelectedNodes.size())
     remove2DPoint(ourSelectedNodes[number].second);
@@ -230,8 +253,10 @@ std::vector<int> FdPickedPoints::getSelectedNodes()
 
 
 /*!
-  Selects or deselects the provided nodeID, and highligths it at position worldNodePos if needed.
-  If the node is previously selected it will be deselected, if TOGGLE_SELECT or REMOVE_SELECT.
+  Selects or deselects the provided nodeID,
+  and highligths it at position worldNodePos if needed.
+  If the node is previously selected it will be deselected,
+  if TOGGLE_SELECT or REMOVE_SELECT.
   If the node is not selected, it will be selected unless REMOVE_SELECT.
   Returns whether the node now is a part of the selection.
 */

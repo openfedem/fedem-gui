@@ -5,7 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "vpmPM/FpRDBHandler.H"
+#include "vpmPM/FpPM.H"
+#include "vpmPM/FpProcessManager.H"
 #include "vpmPM/FpRDBExtractorManager.H"
 #include "vpmPM/FpModelRDBHandler.H"
 #include "vpmApp/vpmAppCmds/FapAnimationCmds.H"
@@ -18,86 +19,82 @@
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 
 
-FFuaTimer* FpRDBHandler::ourHeaderChangedTimer = NULL;
-FFuaTimer* FpRDBHandler::ourDataChangedTimer = NULL;
-
-
-void FpRDBHandler::onProcessGroupStarted(int groupId)
+namespace
 {
-  if (groupId) startRDBChecking();
-}
+  FFuaTimer* ourHeaderChangedTimer = NULL;
+  FFuaTimer* ourDataChangedTimer = NULL;
 
 
-void FpRDBHandler::startRDBChecking()
-{
-#if FP_DEBUG > 2
-  std::cout <<"FpRDBHandler::startRDBChecking()"<< std::endl;
-#endif
-
-  int deltaT = 500;
-  FFaCmdLineArg::instance()->getValue("checkRDBinterval",deltaT);
-
-  if (!ourDataChangedTimer)
-    ourDataChangedTimer = FFuaTimer::create(FFaDynCB0S(checkForNewData));
-
-  ourDataChangedTimer->start(deltaT);
-
-  if (!ourHeaderChangedTimer)
-    ourHeaderChangedTimer = FFuaTimer::create(FFaDynCB0S(checkForNewHeaders));
-
-  ourHeaderChangedTimer->start(deltaT);
-
-  FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
-			  FpRDBExtractorManager::MODELEXTRACTOR_DATA_CHANGED,
-			  FFaSlot1S(FapAnimationCmds,onModelExtrDataChanged,FFrExtractor*));
-
-  FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
-			  FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,
-			  FFaSlot1S(FapAnimationCmds,onModelExtrHeaderChanged,FFrExtractor*));
-}
+  void checkForNewHeaders()
+  {
+    // Check for new res-files also (for progress polling)
+    FpModelRDBHandler::RDBSync(FapSimEventHandler::getActiveRSD(),
+                               FmDB::getMechanismObject(),true,true);
+    FapSolutionProcessManager::instance()->syncRunningProcesses();
+  }
 
 
-void FpRDBHandler::stopRDBChecking()
-{
-#if FP_DEBUG > 2
-  std::cout <<"FpRDBHandler::stopRDBChecking()"<< std::endl;
-#endif
+  void checkForNewData()
+  {
+    FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
+    if (extr) extr->doResultFilesUpdate();
+  }
 
-  FFaMsg::list("===> No more processes.\n");
 
-  if (ourHeaderChangedTimer) {
+  void startRDBChecking(int groupId)
+  {
+    ListUI <<"Starting process group "<< groupId <<".\n";
+
+    int deltaT = 500;
+    FFaCmdLineArg::instance()->getValue("checkRDBinterval",deltaT);
+    ourHeaderChangedTimer->start(deltaT);
+    ourDataChangedTimer->start(deltaT);
+
+    FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
+                            FpRDBExtractorManager::MODELEXTRACTOR_DATA_CHANGED,
+                            FFaSlot1S(FapAnimationCmds,onModelExtrDataChanged,FFrExtractor*));
+
+    FFaSwitchBoard::connect(FpRDBExtractorManager::instance(),
+                            FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,
+                            FFaSlot1S(FapAnimationCmds,onModelExtrHeaderChanged,FFrExtractor*));
+  }
+
+
+  void stopRDBChecking()
+  {
+    ListUI <<"No more processes.\n";
+
     ourHeaderChangedTimer->stop();
-    checkForNewHeaders();
-  }
-
-  if (ourDataChangedTimer) {
     ourDataChangedTimer->stop();
+
+    checkForNewHeaders();
     checkForNewData();
+
+    FpModelRDBHandler::removeResFiles();
+
+    FFaSwitchBoard::disConnect(FpRDBExtractorManager::instance(),
+                               FpRDBExtractorManager::MODELEXTRACTOR_DATA_CHANGED,
+                               FFaSlot1S(FapAnimationCmds,onModelExtrDataChanged,FFrExtractor*));
+
+    FFaSwitchBoard::disConnect(FpRDBExtractorManager::instance(),
+                               FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,
+                               FFaSlot1S(FapAnimationCmds,onModelExtrHeaderChanged,FFrExtractor*));
   }
-
-  FpModelRDBHandler::removeResFiles();
-
-  FFaSwitchBoard::disConnect(FpRDBExtractorManager::instance(),
-			     FpRDBExtractorManager::MODELEXTRACTOR_DATA_CHANGED,
-			     FFaSlot1S(FapAnimationCmds,onModelExtrDataChanged,FFrExtractor*));
-
-  FFaSwitchBoard::disConnect(FpRDBExtractorManager::instance(),
-			     FpRDBExtractorManager::MODELEXTRACTOR_HEADER_CHANGED,
-			     FFaSlot1S(FapAnimationCmds,onModelExtrHeaderChanged,FFrExtractor*));
 }
 
 
-void FpRDBHandler::checkForNewHeaders()
+void FpPM::start()
 {
-  // Check for new res-files also (for progress polling)
-  FpModelRDBHandler::RDBSync(FapSimEventHandler::getActiveRSD(),
-			     FmDB::getMechanismObject(),true,true);
-  FapSolutionProcessManager::instance()->syncRunningProcesses();
-}
+  ourHeaderChangedTimer = FFuaTimer::create(FFaDynCB0S(checkForNewHeaders));
+  ourDataChangedTimer   = FFuaTimer::create(FFaDynCB0S(checkForNewData));
 
-
-void FpRDBHandler::checkForNewData()
-{
-  FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
-  if (extr) extr->doResultFilesUpdate();
+  FFaSwitchBoard::connect(FpProcessManager::instance(),
+                          FpProcessManager::GROUP_STARTED,
+                          new FFaStaticSlot1<int>(startRDBChecking));
+  FFaSwitchBoard::connect(FpProcessManager::instance(),
+                          FpProcessManager::FINISHED,
+                          new FFaStaticSlot0(stopRDBChecking));
+  FFaSwitchBoard::connect(FpProcessManager::instance(),
+                          FpProcessManager::FINISHED,
+                          FFaSlot0S(FapAnimationCmds,onSimulationFinished));
 }

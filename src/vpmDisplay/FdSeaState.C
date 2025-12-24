@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmDisplay/FdSeaState.H"
-#include "vpmDisplay/FdSymbolDefs.H"
 #include "vpmDisplay/FdBackPointer.H"
 #include "vpmDisplay/FdExtraGraphics.H"
 #include "vpmDisplay/FdSeaStateKit.H"
@@ -42,8 +41,7 @@ FdSeaState::FdSeaState(FmSeaState* pt)
   itsKit = new FdSeaStateKit;
   itsKit->ref();
 
-  FdBackPointer* bp_pointer = SO_GET_PART(itsKit,"backPt",FdBackPointer);
-  bp_pointer->setPointer(this);
+  SO_GET_PART(itsKit,"backPt",FdBackPointer)->setPointer(this);
 
   this->highlightBoxId = NULL;
 }
@@ -64,45 +62,29 @@ SoNodeKitListPart* FdSeaState::getListSw() const
 
 bool FdSeaState::updateFdApperance()
 {
-  FmSeaState* seaState = static_cast<FmSeaState*>(itsFmOwner);
-
   SoShapeHints* shapeHint = SO_GET_PART(itsKit,"shapeHint",SoShapeHints);
   shapeHint->shapeType = SoShapeHints::UNKNOWN_SHAPE_TYPE;
   shapeHint->faceType = SoShapeHints::UNKNOWN_FACE_TYPE;
 
-  // Plane Appearance:
+  FmSeaState* seaState = static_cast<FmSeaState*>(itsFmOwner);
+  SbVec3f seaColor(FdConverter::toSbVec3f(seaState->getRGBColor()));
 
-  SoMaterial* material = SO_GET_PART(itsKit,"planeMaterial",SoMaterial);
-  material->diffuseColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->ambientColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->specularColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->emissiveColor.setValue(SbVec3f(0,0,0));
-  material->transparency.setValue(seaState->getTransparency());
-  material->shininess = 0.9;
+  std::array<SoMaterial*,3> mats = {
+    SO_GET_PART(itsKit, "planeMaterial", SoMaterial),
+    SO_GET_PART(itsKit, "lineMaterial", SoMaterial),
+    SO_GET_PART(itsKit, "csAppearance.material", SoMaterial)
+  };
+  for (SoMaterial* material : mats) {
+    material->diffuseColor.setValue(seaColor);
+    material->ambientColor.setValue(seaColor);
+    material->specularColor.setValue(seaColor);
+    material->emissiveColor.setValue(SbVec3f(0.0f,0.0f,0.0f));
+    material->shininess = 0.9;
+  }
+  mats.front()->transparency.setValue(seaState->getTransparency());
 
-  // Frame Appearance:
-
-  material = SO_GET_PART(itsKit,"lineMaterial",SoMaterial);
-  material->diffuseColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->ambientColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->specularColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->emissiveColor.setValue(SbVec3f(0,0,0));
-  material->shininess = 0.9;
-
-  SoDrawStyle* drawStyle = SO_GET_PART(itsKit,"frameStyle",SoDrawStyle);
-  drawStyle->lineWidth.setValue(0);
-
-  // CsSymbol Appearance :
-
-  material = SO_GET_PART(itsKit,"csAppearance.material",SoMaterial);
-  material->diffuseColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->ambientColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->specularColor.setValue(FdConverter::toSbVec3f(seaState->getRGBColor()));
-  material->emissiveColor.setValue(SbVec3f(0,0,0));
-  material->shininess = 0.9;
-
-  drawStyle = SO_GET_PART(itsKit,"csStyle",SoDrawStyle);
-  drawStyle->lineWidth.setValue(0);
+  SO_GET_PART(itsKit,"frameStyle",SoDrawStyle)->lineWidth.setValue(0);
+  SO_GET_PART(itsKit,"csStyle",SoDrawStyle)->lineWidth.setValue(0);
 
   return true;
 }
@@ -387,7 +369,7 @@ bool FdSeaState::updateFdDetails()
 
 void FdSeaState::showHighlight()
 {
-  if (!FdDB::isUsingLineHighlight())
+  if (!FdDB::usesLineHighlight)
   {
     if (this->highlightBoxId)
       FdExtraGraphics::removeBBox(this->highlightBoxId);
@@ -395,13 +377,17 @@ void FdSeaState::showHighlight()
   }
   else
   {
-    SoMaterial* lineMaterial   = SO_GET_PART(this->itsKit, "lineMaterial", SoMaterial);
-    SoMaterial* planeMaterial  = SO_GET_PART(this->itsKit, "planeMaterial", SoMaterial);
-    SoMaterial* symbolMaterial = SO_GET_PART(this->itsKit, "csAppearance.material", SoMaterial);
-
-    FdSymbolDefs::makeMaterialHighlight(lineMaterial);
-    FdSymbolDefs::makeMaterialHighlight(planeMaterial);
-    FdSymbolDefs::makeMaterialHighlight(symbolMaterial);
+    std::array<SoMaterial*,3> mats = {
+      SO_GET_PART(itsKit, "planeMaterial", SoMaterial),
+      SO_GET_PART(itsKit, "lineMaterial", SoMaterial),
+      SO_GET_PART(itsKit, "csAppearance.material", SoMaterial)
+    };
+    // Set red highlight color
+    for (SoMaterial* mat : mats) {
+      mat->diffuseColor.setValue(1.0f,0.0f,0.0f);
+      mat->ambientColor.setValue(1.0f,0.0f,0.0f);
+      mat->emissiveColor.setValue(1.0f,0.0f,0.0f);
+    }
   }
 }
 

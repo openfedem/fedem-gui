@@ -198,9 +198,9 @@ bool FdLinJoint::updateFdApperance()
 
   else if (((FmJointBase*)itsFmOwner)->isSlaveAttachedToLink(true) &&
            ((FmJointBase*)itsFmOwner)->isMasterAttachedToLink(true))
-    itsKit->setPart("lineSymbol.appearance.material",FdSymbolDefs::getJointMaterial());
+    itsKit->setPart("lineSymbol.appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::JOINT));
   else
-    itsKit->setPart("lineSymbol.appearance.material",FdSymbolDefs::getDefaultMaterial());
+    itsKit->setPart("lineSymbol.appearance.material",FdSymbolDefs::getMaterial());
 
   return true;
 }
@@ -241,8 +241,9 @@ void FdLinJoint::hide()
 
 void FdLinJoint::showHighlight()
 {
-  itsKit->setPart("slave.appearance.material",     FdSymbolDefs::getHighlightMaterial());
-  itsKit->setPart("lineSymbol.appearance.material",FdSymbolDefs::getHighlightMaterial());
+  SoMaterial* mat = FdSymbolDefs::getHighlightMaterial();
+  itsKit->setPart("slave.appearance.material",mat);
+  itsKit->setPart("lineSymbol.appearance.material",mat);
 
 #ifdef USE_SMALLCHANGE
   SmDepthBuffer* dbn = FdSymbolDefs::getHighlightDepthBMod();
@@ -255,7 +256,7 @@ void FdLinJoint::showHighlight()
   for (int i = 0; i < nMasters; i++)
   {
     SoBaseKit* node = (SoBaseKit*)masterList->getChild(i);
-    node->setPart("appearance.material",FdSymbolDefs::getHighlightMaterial());
+    node->setPart("appearance.material",mat);
 #ifdef USE_SMALLCHANGE
     node->setPart("appearance.depth",dbn);
 #endif

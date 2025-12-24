@@ -14,7 +14,6 @@
 #include "vpmDisplay/FdSymbolKit.H"
 #include "vpmDisplay/FdConverter.H"
 #include "vpmDisplay/FdDB.H"
-#include "vpmDisplay/FdStrainRosetteKit.H"
 #include "vpmDB/FmStrainRosette.H"
 #include "vpmDB/FmLink.H"
 
@@ -80,7 +79,7 @@ bool FdStrainRosette::updateFdApperance()
 {
   if (highlightRefCount < 1) // This test makes sure we do not
     // un-highlight something when it is supposed to be highlighted
-    itsKit->setPart("appearance.material",FdSymbolDefs::getStrainRosetteMaterial());
+    itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::STRAIN_ROS));
 
   return true;
 }

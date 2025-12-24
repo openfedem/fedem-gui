@@ -47,9 +47,14 @@ namespace FdPickedPoints
 
   // Used by FdDB:
 
+  void setPP(size_t idx, const FaVec3& point);
   void setPP(size_t idx, const FaVec3& point, const FaMat34& objToWorld);
   void delPP(size_t idx);
   void resetPPs();
+
+  inline void setFirstPP (const FaVec3& p) { setPP(0,p); }
+  inline void setSecondPP(const FaVec3& p) { setPP(1,p); }
+  inline void setThirdPP (const FaVec3& p) { setPP(2,p); }
 
   inline void setFirstPP (const FaVec3& p, const FaMat34& T) { setPP(0,p,T); }
   inline void setSecondPP(const FaVec3& p, const FaMat34& T) { setPP(1,p,T); }

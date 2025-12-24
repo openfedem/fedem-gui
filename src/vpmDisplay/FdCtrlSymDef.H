@@ -19,48 +19,34 @@
 #ifndef FD_CTRL_SYM_DEF_H
 #define FD_CTRL_SYM_DEF_H
 
-class FdCtrlSymbolKit;
 class SoMaterial;
+class FdCtrlSymbolKit;
 
 
-class FdCtrlSymDef
+namespace FdCtrlSymDef
 {
-public:
-  static void init();
+  void init();
 
-  static SoMaterial* getDefaultMaterial()  { return defaultMaterial; }
-  static SoMaterial* getBackMaterial()     { return backMaterial; }
-  static SoMaterial* getHighlightMaterial(){ return highlightMaterial; }
+  SoMaterial* getDefaultMaterial();
+  SoMaterial* getBackMaterial();
+  SoMaterial* getHighlightMaterial();
 
-  static FdCtrlSymbolKit *std3pSym();
-  static FdCtrlSymbolKit *std2pSym();
+  FdCtrlSymbolKit* adderSym();
+  FdCtrlSymbolKit* comparatorSym();
+  FdCtrlSymbolKit* outputSym();
+  FdCtrlSymbolKit* inputSym();
+  FdCtrlSymbolKit* deadZoneSym();
+  FdCtrlSymbolKit* amplifierSym();
+  FdCtrlSymbolKit* sampleHoldSym();
+  FdCtrlSymbolKit* limDerivatorSym();
+  FdCtrlSymbolKit* multiplierSym();
+  FdCtrlSymbolKit* logicalSwitchSym();
+  FdCtrlSymbolKit* hysteresisSym();
+  FdCtrlSymbolKit* limitationSym();
 
-  static FdCtrlSymbolKit *adderSym();
-  static FdCtrlSymbolKit *comparatorSym();
-  static FdCtrlSymbolKit *outputSym();
-  static FdCtrlSymbolKit *inputSym();
-  static FdCtrlSymbolKit *deadZoneSym();
-  static FdCtrlSymbolKit *amplifierSym();
-  static FdCtrlSymbolKit *sampleHoldSym();
-  static FdCtrlSymbolKit *limDerivatorSym();
-  static FdCtrlSymbolKit *multiplierSym();
-  static FdCtrlSymbolKit *logicalSwitchSym();
-  static FdCtrlSymbolKit *hysteresisSym();
-  static FdCtrlSymbolKit *limitationSym();
-
-private:
-  static FdCtrlSymbolKit* createSymbol(const float* coords,int numCoords,
-                                       const int32_t* lineIndex, int numIndex,
-                                       float XWidth, float YWidth,
-                                       int nInPorts = 1, int nOutPorts = 1);
-  static SoSeparator* createPortSymbol(bool inPort);
-
-  static SoMaterial* defaultMaterial;
-  static SoMaterial* backMaterial;
-  static SoMaterial* highlightMaterial;
-
-  static SoSeparator* outPortSymbol;
-  static SoSeparator* inPortSymbol;
+  FdCtrlSymbolKit* stdSym(int nInp, int nOutp = 1);
+  inline FdCtrlSymbolKit* std2pSym() { return stdSym(1); }
+  inline FdCtrlSymbolKit* std3pSym() { return stdSym(2); }
 };
 
 #endif

@@ -252,7 +252,7 @@ bool FdTire::updateFdDetails()
 
 void FdTire::showHighlight()
 {
-  if (FdDB::isUsingLineHighlight())
+  if (FdDB::usesLineHighlight)
   {
     myFEKit->highlight(true);
     itsKit->setPart("symbolMaterial",FdSymbolDefs::getHighlightMaterial());

@@ -8,326 +8,90 @@
 #include "vpmDisplay/FdSymbolDefs.H"
 #include "vpmDisplay/FdSymbolKit.H"
 
-#include <Inventor/nodes/SoCube.h>
 #include <Inventor/nodes/SoCoordinate3.h>
 #include <Inventor/nodes/SoIndexedLineSet.h>
 #include <Inventor/nodes/SoTransform.h>
-#include <Inventor/nodes/SoMaterial.h>
 #include <Inventor/nodes/SoDrawStyle.h>
+#include <Inventor/nodes/SoMaterial.h>
 #ifdef USE_SMALLCHANGE
 #include <SmallChange/nodes/SmDepthBuffer.h>
 #endif
+#include <functional>
 
-/////////////////////////////////////////////////////
-//
-//  Initialising of static Vars:
-//
-///////////////////////////////////////////////////
 
-// Global nodes:
-
-SoTransform *FdSymbolDefs::GlobalSymbolScale      = NULL;
-SoTransform *FdSymbolDefs::GlobalAxialSymbolScale = NULL;
-SoDrawStyle *FdSymbolDefs::GlobalSymbolStyle      = NULL;
-
-// Material nodes:
-
-SoMaterial  *FdSymbolDefs::defaultMaterial   = NULL;
-SoMaterial  *FdSymbolDefs::highlightMaterial = NULL;
-
-SoMaterial  *FdSymbolDefs::triadMaterial   = NULL;
-SoMaterial  *FdSymbolDefs::gndTriadMaterial= NULL;
-SoMaterial  *FdSymbolDefs::jointMaterial   = NULL;
-SoMaterial  *FdSymbolDefs::sprDaMaterial   = NULL;
-SoMaterial  *FdSymbolDefs::stickerMaterial = NULL;
-SoMaterial  *FdSymbolDefs::loadMaterial    = NULL;
-SoMaterial  *FdSymbolDefs::HPMaterial      = NULL;
-SoMaterial  *FdSymbolDefs::linkCoordSysMaterial = NULL;
-SoMaterial  *FdSymbolDefs::refPlaneMaterial = NULL;
-SoMaterial  *FdSymbolDefs::sensorMaterial = NULL;
-SoMaterial  *FdSymbolDefs::strainRosetteMaterial = NULL;
-
-static SoMaterial* new_material(float r, float g, float b)
+namespace
 {
-  SoMaterial* material = new SoMaterial;
-  material->ref();
-  material->diffuseColor.setValue(r,g,b);
-  material->ambientColor.setValue(r,g,b);
-  material->emissiveColor.setValue(r,g,b);
-  return material;
+  // Scale and style
+
+  SoTransform* GlobalSymbolScale      = NULL;
+  SoTransform* GlobalAxialSymbolScale = NULL;
+  SoDrawStyle* GlobalSymbolStyle      = NULL;
+
+  // Materials and symbols
+
+  std::array<SoMaterial*,FdSymbolDefs::MATERIAL_COUNT> Materials;
+  std::array<FdSymbolKit*,FdSymbolDefs::SYMBOL_COUNT> Symbols;
+
+  SoMaterial* new_material(float r, float g, float b)
+  {
+    SoMaterial* material = new SoMaterial;
+
+    material->ref();
+    material->diffuseColor.setValue(r,g,b);
+    material->ambientColor.setValue(r,g,b);
+    material->emissiveColor.setValue(r,g,b);
+
+    return material;
+  }
+
+  FdSymbolKit* make_symbol(const float* XYZ, const int32_t* index,
+                           int nCoord, int nIndex, char scale = 'G')
+  {
+    FdSymbolKit* result = new FdSymbolKit;
+    result->ref();
+
+    if (scale)
+      result->setPart("scale", scale == 'A' ? GlobalAxialSymbolScale : GlobalSymbolScale);
+    result->setPart("style", GlobalSymbolStyle);
+
+    SoCoordinate3* coords = new SoCoordinate3;
+    coords->point.setValuesPointer(3*nCoord,XYZ);
+    result->setPart("coords", coords);
+
+    SoIndexedLineSet* nonAxis = new SoIndexedLineSet;
+    nonAxis->coordIndex.setValues(0,nIndex,index);
+    result->setPart("nonAxis", nonAxis);
+
+    return result;
+  }
+
+  void setMaterialColor(FdSymbolDefs::MaterialType idx,
+                        const FdSymbolDefs::FdColor& color)
+  {
+    if (!Materials[idx]) return;
+
+    float rgb[3];
+    for (int i = 0; i < 3; i++)
+      rgb[i] = color[i] > 1.0f ? 1.0f : (color[i] < 0.0f ? 0.0f : color[i]);
+
+    Materials[idx]->diffuseColor.setValue(rgb);
+    Materials[idx]->ambientColor.setValue(rgb);
+    Materials[idx]->emissiveColor.setValue(rgb);
+  }
 }
 
-// Symbol Array:
 
-FdSymbolKit *FdSymbolDefs::Symbols[SYMBOL_COUNT];
-
-
-////////////////////////////////////////////////
-//
-//   Methods :
-//
-////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 void FdSymbolDefs::init()
 {
-  // Setting up the shared scale and style nodes:
+  ////////////////////////////////////////////////////
+  // Lambda functions for making the different symbols
+  ////////////////////////////////////////////////////
 
-  GlobalSymbolScale      = new SoTransform;
-  GlobalAxialSymbolScale = new SoTransform;
-  GlobalSymbolStyle      = new SoDrawStyle;
+#define LAMBDA_FUNC(NAME) std::function<FdSymbolKit*()> NAME = []()
 
-  GlobalSymbolScale->scaleFactor.setValue(0.1, 0.1, 0.1);
-  GlobalAxialSymbolScale->scaleFactor.setValue(1, 0.05, 0.05);
-
-  GlobalSymbolStyle->lineWidth.setValue(1);
-  GlobalSymbolStyle->pointSize.setValue(4);
-  GlobalSymbolStyle->style.setValue(SoDrawStyle::LINES);
-
-  // Make the shared material nodes initialized with default colors:
-
-  defaultMaterial       = new_material(0.7f, 0.7f, 0.7f);
-  highlightMaterial     = new_material(1.0f, 0.0f, 0.0f);
-  triadMaterial         = new_material(0.0f, 0.5f, 0.0f);
-  gndTriadMaterial      = new_material(0.0f, 0.0f, 0.6f);
-  jointMaterial         = new_material(0.0f, 0.5f, 0.5f);
-  sprDaMaterial         = new_material(0.0f, 0.0f, 1.0f);
-  stickerMaterial       = new_material(0.5f, 0.3f, 0.0f);
-  loadMaterial          = new_material(0.2f, 0.2f, 1.0f);
-  HPMaterial            = new_material(0.0f, 1.0f, 0.0f);
-  linkCoordSysMaterial  = new_material(1.0f, 1.0f, 0.0f);
-  refPlaneMaterial      = new_material(0.0f, 0.0f, 0.8f);
-  sensorMaterial        = new_material(0.7f, 0.0f, 0.7f);
-  strainRosetteMaterial = new_material(0.0f, 0.0f, 1.0f);
-
-  // Initialize the symbol array:
-
-  Symbols[COORD_SYST]    = makeCoordSyst();
-  Symbols[LINK_COORD_SYS] = makeLinkCoordSyst();
-  Symbols[INT_LINK_COORD_SYS] = makeInternalLinkCoordSyst();
-  Symbols[CENTER_OF_GRAVITY] = makeCenterOfGravity();
-  Symbols[FORCE]         = makeForce();
-  Symbols[TORQUE]        = makeTorque();
-  Symbols[AXIAL_DAMPER]  = makeAxialDamper();
-  Symbols[AXIAL_SPRING]  = makeAxialSpring();
-  Symbols[SENSOR]        = makeSensor();
-
-  Symbols[S_SINGLE_GAGE]    = makeSmallSingleGage();
-  Symbols[S_DOUBLE_GAGE_90] = makeSmallDoubleGage90();
-  Symbols[S_TRIPLE_GAGE_60] = makeSmallTripleGage60();
-  Symbols[S_TRIPLE_GAGE_45] = makeSmallTripleGage45();
-
-  Symbols[L_SINGLE_GAGE]    = makeLargeSingleGage();
-  Symbols[L_DOUBLE_GAGE_90] = makeLargeDoubleGage90();
-  Symbols[L_TRIPLE_GAGE_60] = makeLargeTripleGage60();
-  Symbols[L_TRIPLE_GAGE_45] = makeLargeTripleGage45();
-
-  Symbols[HIGHER_PAIR] = makeSimpleLine();
-
-  Symbols[REVJOINT]         = makeRevJoint();
-  Symbols[REVJOINT_MASTER]  = makeRevJointMaster();
-  Symbols[REVJOINT_SLAVE]   = makeRevJointSlave();
-
-  Symbols[BALLJOINT]        = makeBallJoint();
-  Symbols[BALLJOINT_MASTER] = makeBallJointMaster();
-  Symbols[BALLJOINT_SLAVE]  = makeBallJointSlave();
-
-  Symbols[LINJOINT_MASTER]  = makeLinJointMaster();
-  Symbols[LINJOINT_LINE]    = makeLinJointLine();
-  Symbols[LINPRISM_SLAVE]   = makeLinPrismSlave();
-  Symbols[LINCYL_SLAVE]     = makeLinCylSlave();
-
-  Symbols[FREEJOINT]        = makeFreeJoint();
-  Symbols[FREEJOINT_SLAVE]  = makeFreeJointSlave();
-  Symbols[FREEJOINT_LINE]   = makeSimpleLine();
-
-  Symbols[RIGIDJOINT]        = makeRigidJoint();
-  Symbols[RIGIDJOINT_MASTER] = makeRigidJointMaster();
-  Symbols[RIGIDJOINT_SLAVE]  = makeRigidJointSlave();
-
-  Symbols[CAMJOINT_MASTER] = makeCamJointMaster();
-  Symbols[CAMJOINT_SLAVE]  = makeCamJointSlave();
-
-  Symbols[STICKER] = makeSticker();
-  Symbols[POINT] = makePoint();
-  Symbols[REFCS] = makeRefCS();
-}
-
-
-FdSymbolKit* FdSymbolDefs::getSymbol(symbolsType symbolIndex)
-{
-  FdSymbolKit* symbol = new FdSymbolKit;
-
-  symbol->setPart("scale",SO_GET_PART(Symbols[symbolIndex],"scale",SoTransform));
-  symbol->setPart("style",SO_GET_PART(Symbols[symbolIndex],"style",SoDrawStyle));
-  symbol->setPart("coords", SO_GET_PART(Symbols[symbolIndex],"coords",SoCoordinate3));
-  symbol->setPart("nonAxis",SO_GET_PART(Symbols[symbolIndex],"nonAxis",SoIndexedLineSet));
-
-  return symbol;
-}
-
-
-void FdSymbolDefs::setSymbolLineWidth(int width)
-{
-  GlobalSymbolStyle->lineWidth.setValue((float)width);
-}
-
-
-void FdSymbolDefs::setSymbolScale(float scale)
-{
-  GlobalSymbolScale->scaleFactor.setValue(scale,scale,scale);
-  GlobalAxialSymbolScale->scaleFactor.setValue(1,scale,scale);
-}
-
-
-float FdSymbolDefs::getSymbolScale()
-{
-  return GlobalSymbolScale->scaleFactor.getValue()[1];
-}
-
-
-SoDrawStyle* FdSymbolDefs::getGlobalSymbolStyle()
-{
-  return GlobalSymbolStyle;
-}
-
-
-SoDrawStyle* FdSymbolDefs::getHighlightSymbolStyle()
-{
-  SoDrawStyle* ds = (SoDrawStyle*)GlobalSymbolStyle->copy();
-  float lw = ds->lineWidth.getValue() + 2.0f;
-  if (lw < 3.0f) lw ++;
-  ds->lineWidth.setValue(lw);
-  return ds;
-}
-
-#ifdef USE_SMALLCHANGE
-SmDepthBuffer* FdSymbolDefs::getHighlightDepthBMod()
-{
-  SmDepthBuffer* dbn = new SmDepthBuffer;
-  dbn->func.setValue(SmDepthBuffer::ALWAYS);
-  dbn->enable.setValue(true);
-  return dbn;
-}
-#endif
-
-
-void FdSymbolDefs::makeMaterialHighlight(SoMaterial* material)
-{
-  if (!material) return;
-
-  float r = 1.0f;
-  float g = 0.0f;
-  float b = 0.0f;
-  material->diffuseColor.setValue(r,g,b);
-  material->ambientColor.setValue(r,g,b);
-  material->emissiveColor.setValue(r,g,b);
-}
-
-
-void FdSymbolDefs::setSymbolMaterialColor(SoMaterial* material, const FdColor& color)
-{
-  if (!material) return;
-
-  float rgb[3];
-  for (int i = 0; i < 3; i++)
-    rgb[i] = color[i] > 1.0f ? 1.0f : (color[i] < 0.0f ? 0.0f : color[i]);
-
-  material->diffuseColor.setValue(rgb);
-  material->ambientColor.setValue(rgb);
-  material->emissiveColor.setValue(rgb);
-}
-
-
-void FdSymbolDefs::setDefaultColor(const FdColor& color)
-{
-  setSymbolMaterialColor(defaultMaterial, color);
-}
-
-void FdSymbolDefs::setSensorColor(const FdColor& color)
-{
-  setSymbolMaterialColor(sensorMaterial, color);
-}
-
-void FdSymbolDefs::setTriadColor(const FdColor& color)
-{
-  setSymbolMaterialColor(triadMaterial, color);
-}
-
-void FdSymbolDefs::setGndTriadColor(const FdColor& color)
-{
-  setSymbolMaterialColor(gndTriadMaterial, color);
-}
-
-void FdSymbolDefs::setJointColor(const FdColor& color)
-{
-  setSymbolMaterialColor(jointMaterial, color);
-}
-
-void FdSymbolDefs::setSprDaColor(const FdColor& color)
-{
-  setSymbolMaterialColor(sprDaMaterial, color);
-}
-
-void FdSymbolDefs::setStickerColor(const FdColor& color)
-{
-  setSymbolMaterialColor(stickerMaterial, color);
-}
-
-void FdSymbolDefs::setLoadColor(const FdColor& color)
-{
-  setSymbolMaterialColor(loadMaterial, color);
-}
-
-void FdSymbolDefs::setHPColor(const FdColor& color)
-{
-  setSymbolMaterialColor(HPMaterial, color);
-}
-
-void FdSymbolDefs::setLinkCoordSysColor(const FdColor& color)
-{
-  setSymbolMaterialColor(linkCoordSysMaterial, color);
-}
-
-void FdSymbolDefs::setRefPlaneColor(const FdColor& color)
-{
-  setSymbolMaterialColor(refPlaneMaterial, color);
-}
-
-void FdSymbolDefs::setStrainRosetteColor(const FdColor& color)
-{
-  setSymbolMaterialColor(strainRosetteMaterial, color);
-}
-
-
-/////////////////////////////////////////////////////////
-//
-//    Symbol Definitions:
-//
-/////////////////////////////////////////////////////////
-
-FdSymbolKit* FdSymbolDefs::make_symbol(const float* XYZ, const int32_t* index,
-                                       int nCoord, int nIndex, char scale)
-{
-  FdSymbolKit* result = new FdSymbolKit;
-  result->ref();
-
-  if (scale)
-    result->setPart("scale", scale == 'A' ? GlobalAxialSymbolScale : GlobalSymbolScale);
-  result->setPart("style", GlobalSymbolStyle);
-
-  SoCoordinate3* coords = new SoCoordinate3;
-  coords->point.setValuesPointer(3*nCoord,XYZ);
-  result->setPart("coords", coords);
-
-  SoIndexedLineSet* nonAxis = new SoIndexedLineSet;
-  nonAxis->coordIndex.setValues(0,nIndex,index);
-  result->setPart("nonAxis", nonAxis);
-
-  return result;
-}
-
-
-FdSymbolKit* FdSymbolDefs::makeCoordSyst()
+LAMBDA_FUNC(makeCoordSyst)
 {
   static float CSCoordsVal[22*3] = { 0, 0, 0, // 0
 				     1, 0, 0, // 1
@@ -363,10 +127,10 @@ FdSymbolKit* FdSymbolDefs::makeCoordSyst()
 				      0,3,8,9,3,-1,  18,19,20,21,-1 };    // Z
 
   return make_symbol(CSCoordsVal,nonAxisIndex,22,35);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLinkCoordSyst()
+LAMBDA_FUNC(makeLinkCoordSyst)
 {
   static float CSCoordsVal[22*3] = { 0, 0, 0, // 0
 				     1, 0, 0, // 1
@@ -402,10 +166,10 @@ FdSymbolKit* FdSymbolDefs::makeLinkCoordSyst()
 				      0,3,-1,  8,9,4,-1,  18,19,20,21,-1 };    // Z
 
   return make_symbol(CSCoordsVal,nonAxisIndex,22,38);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeInternalLinkCoordSyst()
+LAMBDA_FUNC(makeInternalLinkCoordSyst)
 {
   static float CSCoordsVal[22*3] = { 0, 0, 0, // 0
 				     1, 0, 0, // 1
@@ -441,10 +205,10 @@ FdSymbolKit* FdSymbolDefs::makeInternalLinkCoordSyst()
 				      0,3,-1,  8,4,-1,  18,19,20,21,-1 };    // Z
 
   return make_symbol(CSCoordsVal,nonAxisIndex,22,35);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeForce()
+LAMBDA_FUNC(makeForce)
 {
   static float CoordsVal[7*3] = { 0, 0, 0, // 0
 				  2, 0, 0, // 1
@@ -457,10 +221,10 @@ FdSymbolKit* FdSymbolDefs::makeForce()
   static int32_t nonAxisIndex[19] = { 0,1,-1, 2,3,0,-1, 2,4,0,-1, 2,5,0,-1, 2,6,0,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,7,19);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeTorque()
+LAMBDA_FUNC(makeTorque)
 {
   static float CoordsVal[12*3] = { 0, 0, 0, // 0
 				   2, 0, 0, // 1
@@ -479,10 +243,10 @@ FdSymbolKit* FdSymbolDefs::makeTorque()
 				      7,8,2,-1, 7,9,2,-1, 7,10,2,-1, 7,11,2,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,12,35);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeAxialDamper()
+LAMBDA_FUNC(makeAxialDamper)
 {
   static float coords[16*3] = {  0, 0, 0, // 0
 				.2, 0, 0, // 1
@@ -516,10 +280,10 @@ FdSymbolKit* FdSymbolDefs::makeAxialDamper()
 				      10,11,12,13,10,14,11,-1,12,14,13,-1 }; // Stempel
 
   return make_symbol(coords,nonAxisIndex,16,50,'A');
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeAxialSpring()
+LAMBDA_FUNC(makeAxialSpring)
 {
   const double piOver6 = M_PI/6.0;
   static float sprPts[66*3];
@@ -543,10 +307,10 @@ FdSymbolKit* FdSymbolDefs::makeAxialSpring()
   nonAxisIndex[66] = -1;
 
   return make_symbol(sprPts,nonAxisIndex,66,67,'A');
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSensor()
+LAMBDA_FUNC(makeSensor)
 {
   static float CoordsVal[27*3] = { 0, 0, 0, // 0
 				   1, 0, 0, // 1
@@ -588,10 +352,10 @@ FdSymbolKit* FdSymbolDefs::makeSensor()
 				      7,17,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,27,42,'A');
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSmallSingleGage()
+LAMBDA_FUNC(makeSmallSingleGage)
 {
   static float CoordsVal[3*3] = { -0.5,  0,   0, // 0
 				   0.5,  0,   0, // 1
@@ -600,10 +364,10 @@ FdSymbolKit* FdSymbolDefs::makeSmallSingleGage()
   static int32_t nonAxisIndex[4] = { 0,1,2,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,3,4,false);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSmallDoubleGage90()
+LAMBDA_FUNC(makeSmallDoubleGage90)
 {
   static float CoordsVal[8*3] = { -0.5,  0  , 0, // 0
 				   0.5,  0  , 0, // 1
@@ -617,10 +381,10 @@ FdSymbolKit* FdSymbolDefs::makeSmallDoubleGage90()
   static int32_t nonAxisIndex[11] = { 0,1,2,-1, 3,4,5,-1, 6,7,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,8,11,false);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSmallTripleGage60()
+LAMBDA_FUNC(makeSmallTripleGage60)
 {
   static float CoordsVal[15*3] = { -0.5,  0  , 0, // 0 First leg
 				    0.5,  0  , 0, // 1
@@ -644,10 +408,10 @@ FdSymbolKit* FdSymbolDefs::makeSmallTripleGage60()
 				      10,11,12,-1, 13,14,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,15,21,false);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSmallTripleGage45()
+LAMBDA_FUNC(makeSmallTripleGage45)
 {
   static float CoordsVal[15*3] = { -0.5,  0  , 0, // 0
 				    0.5,  0  , 0, // 1
@@ -671,10 +435,10 @@ FdSymbolKit* FdSymbolDefs::makeSmallTripleGage45()
 				      10,11,12,-1, 13,14,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,15,21,false);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLargeSingleGage()
+LAMBDA_FUNC(makeLargeSingleGage)
 {
   static float CoordsVal[10*3] = { -0.5,  0  , 1, // 0
 				    0.5,  0  , 1, // 1
@@ -691,10 +455,10 @@ FdSymbolKit* FdSymbolDefs::makeLargeSingleGage()
 				      3,4,-1, 5,6,7,8,5,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,10,15);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLargeDoubleGage90()
+LAMBDA_FUNC(makeLargeDoubleGage90)
 {
   static float CoordsVal[14*3] = { -0.5,  0  , 1, // 0
 				    0.5,  0  , 1, // 1
@@ -718,10 +482,10 @@ FdSymbolKit* FdSymbolDefs::makeLargeDoubleGage90()
 				      8,9,-1, 10,11,12,13,10,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,14,20);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLargeTripleGage60()
+LAMBDA_FUNC(makeLargeTripleGage60)
 {
   static float CoordsVal[21*3] = { -0.5,  0  , 1, // 0 First leg
 				    0.5,  0  , 1, // 1
@@ -753,10 +517,10 @@ FdSymbolKit* FdSymbolDefs::makeLargeTripleGage60()
 				      15,16,-1, 17,18,19,20,17,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,21,30);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLargeTripleGage45()
+LAMBDA_FUNC(makeLargeTripleGage45)
 {
   static float CoordsVal[21*3] = { -0.5,  0  , 1, // 0
 				    0.5,  0  , 1, // 1
@@ -788,10 +552,10 @@ FdSymbolKit* FdSymbolDefs::makeLargeTripleGage45()
 				      15,16,-1, 17,18,19,20,17,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,21,30);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRevJoint()
+LAMBDA_FUNC(makeRevJoint)
 {
   static float CoordsVal[23*3] = { 0, 0, 0,   // 0
 				   0, 0, 1.5, // 1
@@ -831,10 +595,10 @@ FdSymbolKit* FdSymbolDefs::makeRevJoint()
 				      19,20,21,22,-1 }; // Z label
 
   return make_symbol(CoordsVal,nonAxisIndex,23,26);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRevJointMaster()
+LAMBDA_FUNC(makeRevJointMaster)
 {
   static float CoordsVal[6*3] = { 0, 0, 0, // 0
 				  1.3, 0, 0, // 1
@@ -847,10 +611,10 @@ FdSymbolKit* FdSymbolDefs::makeRevJointMaster()
 				     2,3,-1, 4,5,-1}; // X
 
   return make_symbol(CoordsVal,nonAxisIndex,6,9);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRevJointSlave()
+LAMBDA_FUNC(makeRevJointSlave)
 {
   static float CoordsVal[10*3] = { 0, 0, 0, // 0
 				   1, 0, 0, // 1
@@ -870,10 +634,10 @@ FdSymbolKit* FdSymbolDefs::makeRevJointSlave()
 				      6,7,-1,  8,9,-1 }; // X
 
   return make_symbol(CoordsVal,nonAxisIndex,10,17);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeBallJoint()
+LAMBDA_FUNC(makeBallJoint)
 {
   static float CoordsVal[49*3] = { 0, 0, 0, // 0
 
@@ -951,10 +715,10 @@ FdSymbolKit* FdSymbolDefs::makeBallJoint()
 				      5,37,38,39,9,40,41,42,7,43,44,45,11,46,47,48,5,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,49,54);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeBallJointMaster()
+LAMBDA_FUNC(makeBallJointMaster)
 {
   static float CoordsVal[25*3] = { 0, 0, 0, // 0
 
@@ -997,10 +761,10 @@ FdSymbolKit* FdSymbolDefs::makeBallJointMaster()
 				      21,22,23,24,-1 };    // Z
 
   return make_symbol(CoordsVal,nonAxisIndex,25,35);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeBallJointSlave()
+LAMBDA_FUNC(makeBallJointSlave)
 {
   static float CoordsVal[43*3] = { 0, 0, 0, // 0
 
@@ -1080,10 +844,10 @@ FdSymbolKit* FdSymbolDefs::makeBallJointSlave()
 				      39,40,41,42,-1 };    // Z
 
   return make_symbol(CoordsVal,nonAxisIndex,43,74);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeCenterOfGravity()
+LAMBDA_FUNC(makeCenterOfGravity)
 {
   static float CoordsVal[61*3] = { 0, 0, 0, // 0
 
@@ -1181,10 +945,10 @@ FdSymbolKit* FdSymbolDefs::makeCenterOfGravity()
     CoordsVal[idx] /= 3.0;
 
   return make_symbol(CoordsVal,nonAxisIndex,61,80);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLinJointMaster()
+LAMBDA_FUNC(makeLinJointMaster)
 {
   static float CoordsVal[7*3] = { 0 ,  0, 0, // 0
 				  .5,  0, 0, // 1
@@ -1197,10 +961,10 @@ FdSymbolKit* FdSymbolDefs::makeLinJointMaster()
   static int32_t nonAxisIndex[9] = { 1,2,-1, 3,4,-1, 5,6,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,7,9);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLinPrismSlave()
+LAMBDA_FUNC(makeLinPrismSlave)
 {
   static float CoordsVal[21*3] = { 0, 0, 0, // 0
 
@@ -1241,10 +1005,10 @@ FdSymbolKit* FdSymbolDefs::makeLinPrismSlave()
 				      17,18,19,20,-1 };    // Z
 
   return make_symbol(CoordsVal,nonAxisIndex,21,37);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLinCylSlave()
+LAMBDA_FUNC(makeLinCylSlave)
 {
   static float CoordsVal[28*3] = { 0, 0, 0, // 0
 
@@ -1296,10 +1060,10 @@ FdSymbolKit* FdSymbolDefs::makeLinCylSlave()
 				      24,25,26,27,-1 };    // Z
 
   return make_symbol(CoordsVal,nonAxisIndex,28,40);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeLinJointLine()
+LAMBDA_FUNC(makeLinJointLine)
 {
   static float coords[10*3] = { 0,  0,  0, // 0
 				1,  0,  0, // 1
@@ -1323,10 +1087,10 @@ FdSymbolKit* FdSymbolDefs::makeLinJointLine()
 				      7,9,-1 };
 
   return make_symbol(coords,nonAxisIndex,10,27,'A');
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeFreeJoint()
+LAMBDA_FUNC(makeFreeJoint)
 {
   static float CoordsVal[25*3] = { 0, 0, 0, // 0
 				   1, 0, 0, // 1
@@ -1368,10 +1132,10 @@ FdSymbolKit* FdSymbolDefs::makeFreeJoint()
 				      2,21,22,2,18,19,20,3,23,24,3,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,25,36);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeFreeJointSlave()
+LAMBDA_FUNC(makeFreeJointSlave)
 {
   static float CSCoordsVal[28*3] = { 0, 0, 0, // 0
 				     1, 0, 0, // 1
@@ -1419,19 +1183,19 @@ FdSymbolKit* FdSymbolDefs::makeFreeJointSlave()
 				     24,25,26, 27,-1 };  // Z
 
   return make_symbol(CSCoordsVal,nonAxisIndex,28,44);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSimpleLine()
+LAMBDA_FUNC(makeSimpleLine)
 {
   static float   CoordsVal[2*3] = { 0,0,0, 1,0,0 };
   static int32_t nonAxisIndex[3] = { 0,1,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,2,3,'A');
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRigidJoint()
+LAMBDA_FUNC(makeRigidJoint)
 {
   static float CoordsVal[9*3] = { 0, 0, 0, // 0
 
@@ -1452,10 +1216,10 @@ FdSymbolKit* FdSymbolDefs::makeRigidJoint()
 				      5, 4, -1,  6, 1,-1,  7, 2,-1,  8, 3,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,9,36);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRigidJointMaster()
+LAMBDA_FUNC(makeRigidJointMaster)
 {
   static float CoordsVal[25*3] = { 0, 0, 0, // 0
 
@@ -1498,10 +1262,10 @@ FdSymbolKit* FdSymbolDefs::makeRigidJointMaster()
 				      21,22,23,24,-1 };    // Z
 
   return make_symbol(CoordsVal,nonAxisIndex,25,35);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRigidJointSlave()
+LAMBDA_FUNC(makeRigidJointSlave)
 {
   static float CoordsVal[19*3] = { 0, 0, 0, // 0
 
@@ -1538,10 +1302,10 @@ FdSymbolKit* FdSymbolDefs::makeRigidJointSlave()
 				      15,16,17,18,-1 };    // Z
 
   return make_symbol(CoordsVal,nonAxisIndex,19,26);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeCamJointMaster()
+LAMBDA_FUNC(makeCamJointMaster)
 {
   static float CoordsVal[17*3] = { 0, 0, 0, // 0
 
@@ -1573,10 +1337,10 @@ FdSymbolKit* FdSymbolDefs::makeCamJointMaster()
 				      9, 10, 11, 12, -1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,17,25);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeCamJointSlave()
+LAMBDA_FUNC(makeCamJointSlave)
 {
   static float CoordsVal[13*3] = { 0, 0, 0, // 0
 
@@ -1600,10 +1364,10 @@ FdSymbolKit* FdSymbolDefs::makeCamJointSlave()
 				      9, 10, 11, 12, 9, -1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,13,18);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeSticker()
+LAMBDA_FUNC(makeSticker)
 {
   static float CoordsVal[5*3] = { 0, 0, 0, // 0
 
@@ -1618,10 +1382,10 @@ FdSymbolKit* FdSymbolDefs::makeSticker()
 				      4,1,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,5,14);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makePoint()
+LAMBDA_FUNC(makePoint)
 {
   static float CoordsVal[7*3] = { 0, 0, 0, // 0
 
@@ -1637,10 +1401,10 @@ FdSymbolKit* FdSymbolDefs::makePoint()
 				      4,5,-1 };
 
   return make_symbol(CoordsVal,nonAxisIndex,7,18);
-}
+};
 
 
-FdSymbolKit* FdSymbolDefs::makeRefCS()
+LAMBDA_FUNC(makeRefCS)
 {
   static float CoordsVal[22*3] = { -0.2, -0.2, 0, // 0
 				    0.2, -0.2, 0, // 1
@@ -1680,4 +1444,217 @@ FdSymbolKit* FdSymbolDefs::makeRefCS()
 				     21, 19, -1, 18, 20, -1 }; // Ylabel
 
   return make_symbol(CoordsVal,nonAxisIndex,22,28);
+};
+////////////////////////////////////////////////////////////////////////////////
+
+  // Setting up the shared scale and style nodes:
+
+  GlobalSymbolScale      = new SoTransform;
+  GlobalAxialSymbolScale = new SoTransform;
+  GlobalSymbolStyle      = new SoDrawStyle;
+
+  GlobalSymbolScale->scaleFactor.setValue(0.1, 0.1, 0.1);
+  GlobalAxialSymbolScale->scaleFactor.setValue(1, 0.05, 0.05);
+
+  GlobalSymbolStyle->lineWidth.setValue(1);
+  GlobalSymbolStyle->pointSize.setValue(4);
+  GlobalSymbolStyle->style.setValue(SoDrawStyle::LINES);
+
+  // Make the shared material nodes initialized with default colors:
+
+  Materials[DEFAULT]    = new_material(0.7f, 0.7f, 0.7f);
+  Materials[HIGHLIGHT]  = new_material(1.0f, 0.0f, 0.0f);
+  Materials[TRIAD]      = new_material(0.0f, 0.5f, 0.0f);
+  Materials[GROUND]     = new_material(0.0f, 0.0f, 0.6f);
+  Materials[JOINT]      = new_material(0.0f, 0.5f, 0.5f);
+  Materials[SPR_DMP]    = new_material(0.0f, 0.0f, 1.0f);
+  Materials[STICK]      = new_material(0.5f, 0.3f, 0.0f);
+  Materials[LOAD]       = new_material(0.2f, 0.2f, 1.0f);
+  Materials[HP]         = new_material(0.0f, 1.0f, 0.0f);
+  Materials[LINK_CS]    = new_material(1.0f, 1.0f, 0.0f);
+  Materials[REF_PLANE]  = new_material(0.0f, 0.0f, 0.8f);
+  Materials[SENSOR_MAT] = new_material(0.7f, 0.0f, 0.7f);
+  Materials[STRAIN_ROS] = new_material(0.0f, 0.0f, 1.0f);
+
+  // Initialize the symbol array:
+
+  Symbols[COORD_SYST]    = makeCoordSyst();
+  Symbols[LINK_COORD_SYS] = makeLinkCoordSyst();
+  Symbols[INT_LINK_COORD_SYS] = makeInternalLinkCoordSyst();
+  Symbols[CENTER_OF_GRAVITY] = makeCenterOfGravity();
+  Symbols[FORCE]         = makeForce();
+  Symbols[TORQUE]        = makeTorque();
+  Symbols[AXIAL_DAMPER]  = makeAxialDamper();
+  Symbols[AXIAL_SPRING]  = makeAxialSpring();
+  Symbols[SENSOR]        = makeSensor();
+
+  Symbols[S_SINGLE_GAGE]    = makeSmallSingleGage();
+  Symbols[S_DOUBLE_GAGE_90] = makeSmallDoubleGage90();
+  Symbols[S_TRIPLE_GAGE_60] = makeSmallTripleGage60();
+  Symbols[S_TRIPLE_GAGE_45] = makeSmallTripleGage45();
+
+  Symbols[L_SINGLE_GAGE]    = makeLargeSingleGage();
+  Symbols[L_DOUBLE_GAGE_90] = makeLargeDoubleGage90();
+  Symbols[L_TRIPLE_GAGE_60] = makeLargeTripleGage60();
+  Symbols[L_TRIPLE_GAGE_45] = makeLargeTripleGage45();
+
+  Symbols[HIGHER_PAIR] = makeSimpleLine();
+
+  Symbols[REVJOINT]         = makeRevJoint();
+  Symbols[REVJOINT_MASTER]  = makeRevJointMaster();
+  Symbols[REVJOINT_SLAVE]   = makeRevJointSlave();
+
+  Symbols[BALLJOINT]        = makeBallJoint();
+  Symbols[BALLJOINT_MASTER] = makeBallJointMaster();
+  Symbols[BALLJOINT_SLAVE]  = makeBallJointSlave();
+
+  Symbols[LINJOINT_MASTER]  = makeLinJointMaster();
+  Symbols[LINJOINT_LINE]    = makeLinJointLine();
+  Symbols[LINPRISM_SLAVE]   = makeLinPrismSlave();
+  Symbols[LINCYL_SLAVE]     = makeLinCylSlave();
+
+  Symbols[FREEJOINT]        = makeFreeJoint();
+  Symbols[FREEJOINT_SLAVE]  = makeFreeJointSlave();
+  Symbols[FREEJOINT_LINE]   = makeSimpleLine();
+
+  Symbols[RIGIDJOINT]        = makeRigidJoint();
+  Symbols[RIGIDJOINT_MASTER] = makeRigidJointMaster();
+  Symbols[RIGIDJOINT_SLAVE]  = makeRigidJointSlave();
+
+  Symbols[CAMJOINT_MASTER] = makeCamJointMaster();
+  Symbols[CAMJOINT_SLAVE]  = makeCamJointSlave();
+
+  Symbols[STICKER] = makeSticker();
+  Symbols[POINT] = makePoint();
+  Symbols[REFCS] = makeRefCS();
+}
+
+
+FdSymbolKit* FdSymbolDefs::getSymbol(SymbolType symbolIndex)
+{
+  FdSymbolKit* symbol = new FdSymbolKit;
+
+  symbol->setPart("scale",SO_GET_PART(Symbols[symbolIndex],"scale",SoTransform));
+  symbol->setPart("style",SO_GET_PART(Symbols[symbolIndex],"style",SoDrawStyle));
+  symbol->setPart("coords", SO_GET_PART(Symbols[symbolIndex],"coords",SoCoordinate3));
+  symbol->setPart("nonAxis",SO_GET_PART(Symbols[symbolIndex],"nonAxis",SoIndexedLineSet));
+
+  return symbol;
+}
+
+
+float FdSymbolDefs::getSymbolScale()
+{
+  return GlobalSymbolScale->scaleFactor.getValue()[1];
+}
+
+void FdSymbolDefs::setSymbolScale(float scale)
+{
+  GlobalSymbolScale->scaleFactor.setValue(scale,scale,scale);
+  GlobalAxialSymbolScale->scaleFactor.setValue(1,scale,scale);
+}
+
+
+void FdSymbolDefs::setSymbolLineWidth(int width)
+{
+  GlobalSymbolStyle->lineWidth.setValue((float)width);
+}
+
+
+SoDrawStyle* FdSymbolDefs::getGlobalSymbolStyle()
+{
+  return GlobalSymbolStyle;
+}
+
+
+SoDrawStyle* FdSymbolDefs::getHighlightSymbolStyle()
+{
+  SoDrawStyle* ds = (SoDrawStyle*)GlobalSymbolStyle->copy();
+  float lw = ds->lineWidth.getValue() + 2.0f;
+  if (lw < 3.0f) lw ++;
+  ds->lineWidth.setValue(lw);
+  return ds;
+}
+
+
+#ifdef USE_SMALLCHANGE
+SmDepthBuffer* FdSymbolDefs::getHighlightDepthBMod()
+{
+  SmDepthBuffer* dbn = new SmDepthBuffer;
+  dbn->func.setValue(SmDepthBuffer::ALWAYS);
+  dbn->enable.setValue(true);
+  return dbn;
+}
+#endif
+
+
+SoMaterial* FdSymbolDefs::getMaterial(MaterialType matIndex)
+{
+  return Materials[matIndex];
+}
+
+SoMaterial* FdSymbolDefs::getHighlightMaterial()
+{
+  return Materials[HIGHLIGHT];
+}
+
+
+void FdSymbolDefs::setDefaultColor(const FdColor& color)
+{
+  setMaterialColor(DEFAULT,color);
+}
+
+void FdSymbolDefs::setSensorColor(const FdColor& color)
+{
+  setMaterialColor(SENSOR_MAT,color);
+}
+
+void FdSymbolDefs::setTriadColor(const FdColor& color)
+{
+  setMaterialColor(TRIAD,color);
+}
+
+void FdSymbolDefs::setGndTriadColor(const FdColor& color)
+{
+  setMaterialColor(GROUND,color);
+}
+
+void FdSymbolDefs::setJointColor(const FdColor& color)
+{
+  setMaterialColor(JOINT,color);
+}
+
+void FdSymbolDefs::setSprDaColor(const FdColor& color)
+{
+  setMaterialColor(SPR_DMP,color);
+}
+
+void FdSymbolDefs::setStickerColor(const FdColor& color)
+{
+  setMaterialColor(STICK,color);
+}
+
+void FdSymbolDefs::setLoadColor(const FdColor& color)
+{
+  setMaterialColor(LOAD,color);
+}
+
+void FdSymbolDefs::setHPColor(const FdColor& color)
+{
+  setMaterialColor(HP,color);
+}
+
+void FdSymbolDefs::setLinkCoordSysColor(const FdColor& color)
+{
+  setMaterialColor(LINK_CS,color);
+}
+
+void FdSymbolDefs::setRefPlaneColor(const FdColor& color)
+{
+  setMaterialColor(REF_PLANE,color);
+}
+
+void FdSymbolDefs::setStrainRosetteColor(const FdColor& color)
+{
+  setMaterialColor(STRAIN_ROS,color);
 }

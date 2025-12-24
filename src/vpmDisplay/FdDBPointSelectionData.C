@@ -9,10 +9,12 @@
 #include "vpmDisplay/FdDB.H"
 #include "vpmDisplay/FdPickedPoints.H"
 #include "vpmDisplay/FdExtraGraphics.H"
+#include "vpmDisplay/FdConverter.H"
 #include "vpmApp/vpmAppUAMap/FapUAModeller.H"
 #include "vpmUI/Fui.H"
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtMainWindow.H"
 #include "FFuLib/FFuQtComponents/FFuQtPushButton.H"
+#include "FFdCadModel/FdCadInfo.H"
 
 #include <QButtonGroup>
 #include <QGroupBox>
@@ -44,8 +46,8 @@ void FdDBPointSelectionData::onButtonToggled(bool)
   bool isFlipDirectionOn = myFlipDirectionButton->getToggle();
   if (isDirOnly)
   {
-    FdDB::firstCreateDirection = isFlipDirectionOn ? -ppNormal : ppNormal;
-    FdExtraGraphics::showDirection(FdPickedPoints::getPickedPoint(pPointIdx,true),FdDB::firstCreateDirection);
+    FdDB::setCreateDirection(isFlipDirectionOn ? -ppNormal : ppNormal);
+    FdExtraGraphics::showDirection(FdPickedPoints::getPickedPoint(pPointIdx,true),FdDB::getCreateDirection());
     FapUAModeller::updatePointUI();
     return;
   }
@@ -122,19 +124,17 @@ void FdDBPointSelectionData::onButtonToggled(bool)
 
   if (pPointIdx == 0)
   {
-    FdDB::firstCreateDirection = isFlipDirectionOn ? -createDir : createDir;
-
+    FdDB::setCreateDirection(isFlipDirectionOn ? -createDir : createDir);
     if (createDirDefined && showDirection)
-      FdExtraGraphics::showDirection(createPos,FdDB::firstCreateDirection);
+      FdExtraGraphics::showDirection(createPos,FdDB::getCreateDirection());
     else
       FdExtraGraphics::hideDirection();
   }
   else
   {
-    FdDB::secondCreateDirection = isFlipDirectionOn ? -createDir : createDir;
-
+    FdDB::setCreateDirection(isFlipDirectionOn ? -createDir : createDir, 2);
     if (createDirDefined && showDirection)
-      FdExtraGraphics::showDirection(createPos,FdDB::secondCreateDirection);
+      FdExtraGraphics::showDirection(createPos,FdDB::getCreateDirection(2));
     else
       FdExtraGraphics::hideDirection();
   }
@@ -149,34 +149,16 @@ void FdDBPointSelectionData::createUI()
   if (myGroupBox)
     return;
 
-  myGroupBox = new QGroupBox("Position options");
-  QVBoxLayout* myLayout = new QVBoxLayout();
-  QHBoxLayout* layout = NULL;
-
   myOnCenterButton = new FFuQtPushButton();
   myOnCenterButton->setToggleAble(true);
   myOnCenterButton->setPixMap(center_xpm);
   myOnCenterButton->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
   myOnCenterButton->setToggleCB(FFaDynCB1M(FdDBPointSelectionData,this,onButtonToggled,bool));
 
-  layout = new QHBoxLayout();
-  layout->addWidget(myOnCenterButton);
-  layout->addWidget(new QLabel("On Center"));
-  centerBox = new QWidget();
-  centerBox->setLayout(layout);
-  myLayout->addWidget(centerBox);
-
   myOnCircumfButton = new FFuQtPushButton();
   myOnCircumfButton->setToggleAble(true);
   myOnCircumfButton->setPixMap(circumference_xpm);
   myOnCircumfButton->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
-
-  layout = new QHBoxLayout();
-  layout->addWidget(myOnCircumfButton);
-  layout->addWidget(new QLabel("On Cicumference"));
-  circumfBox = new QWidget();
-  circumfBox->setLayout(layout);
-  myLayout->addWidget(circumfBox);
 
   mySnapOnButton = new FFuQtPushButton();
   mySnapOnButton->setToggleCB(FFaDynCB1M(FdDBPointSelectionData,this,onButtonToggled,bool));
@@ -184,27 +166,38 @@ void FdDBPointSelectionData::createUI()
   mySnapOnButton->setToggleAble(true);
   mySnapOnButton->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
 
-  layout = new QHBoxLayout();
-  layout->addWidget(mySnapOnButton);
-  layout->addWidget(snapLabel = new QLabel("Snap to edge"));
-  snapOnBox = new QWidget();
-  snapOnBox->setLayout(layout);
-  myLayout->addWidget(snapOnBox);
-
   myFlipDirectionButton = new FFuQtPushButton();
   myFlipDirectionButton->setToggleAble(true);
   myFlipDirectionButton->setPixMap(FlipDirection_xpm);
   myFlipDirectionButton->setToggleCB(FFaDynCB1M(FdDBPointSelectionData,this,onButtonToggled,bool));
   myFlipDirectionButton->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
 
-  layout = new QHBoxLayout();
+  centerBox = new QWidget();
+  QBoxLayout* layout = new QHBoxLayout(centerBox);
+  layout->addWidget(myOnCenterButton);
+  layout->addWidget(new QLabel("On Center"));
+
+  circumfBox = new QWidget();
+  layout = new QHBoxLayout(circumfBox);
+  layout->addWidget(myOnCircumfButton);
+  layout->addWidget(new QLabel("On Cicumference"));
+
+  snapOnBox = new QWidget();
+  layout = new QHBoxLayout(snapOnBox);
+  layout->addWidget(mySnapOnButton);
+  layout->addWidget(snapLabel = new QLabel("Snap to edge"));
+
+  flipDirBox = new QWidget();
+  layout = new QHBoxLayout(flipDirBox);
   layout->addWidget(myFlipDirectionButton);
   layout->addWidget(new QLabel("Flip direction"));
-  flipDirBox = new QWidget();
-  flipDirBox->setLayout(layout);
-  myLayout->addWidget(flipDirBox);
 
-  myGroupBox->setLayout(myLayout);
+  myGroupBox = new QGroupBox("Position options");
+  layout = new QVBoxLayout(myGroupBox);
+  layout->addWidget(centerBox);
+  layout->addWidget(circumfBox);
+  layout->addWidget(snapOnBox);
+  layout->addWidget(flipDirBox);
 
   QButtonGroup* buttonGroup = new QButtonGroup(myGroupBox);
   buttonGroup->setExclusive(true);
@@ -213,7 +206,6 @@ void FdDBPointSelectionData::createUI()
 
   myOnCenterButton->toggleOn(true);
   mySnapOnButton->toggleOn(true);
-
   myFlipDirectionButton->toggleOn(false);
 }
 
@@ -248,6 +240,69 @@ void FdDBPointSelectionData::updateUI()
     else
       flipDirBox->hide();
   }
+}
+
+
+void FdDBPointSelectionData::fillUI(FdCadEntityInfo* info, bool edge,
+                                    const SbVec3f& pickedPt,
+                                    const FaVec3& snappedPt,
+                                    const SbVec3f& pickedPn,
+                                    const FaMat34& objToWorld,
+                                    bool showDir, int ppIdx)
+{
+  isDirOnly = false;
+  pPointIdx = ppIdx;
+  isEdge = edge;
+  pickedPoint = FdConverter::toFaVec3(pickedPt);
+  vxSnappedPPoint = snappedPt;
+  ppNormal = FdConverter::toFaVec3(pickedPn),
+  axis = objToWorld.direction()*info->axis;
+  isAxisDefined = info->myAxisIsValid;
+  origin = objToWorld*info->origin;
+  showDirection = showDir;
+  isUnknownShape = true;
+
+  FaVec3 PP = pickedPoint - origin;
+  FaVec3 Ea = axis;
+  Ea.normalize();
+
+  const double epsTol = 1.0e-7; // Todo set tolerance more intelligently
+
+  if (isEdge)
+  {
+    // Find whether PP is on axis
+    if (info->type == FdCadEntityInfo::CIRCLE) // Circle or ellipsis
+      if ((Ea*(PP*Ea)-PP).sqrLength() > epsTol*epsTol) // PP is not on the axis
+	isUnknownShape = false;
+  }
+  else // Surface
+    switch (info->type) {
+    case FdCadEntityInfo::SPHERE:
+      isUnknownShape = isAxisDefined;
+      break;
+    case FdCadEntityInfo::CYLINDER:
+    case FdCadEntityInfo::CONE:
+    case FdCadEntityInfo::TORUS:
+    case FdCadEntityInfo::SREV:
+      isUnknownShape = false;
+      break;
+    default: // Plane
+      if (!ppNormal.isParallell(axis,0.001) || PP*Ea > epsTol)
+        isUnknownShape = false;
+    }
+
+  this->createAndUpdateUI();
+}
+
+
+void FdDBPointSelectionData::fillUI(const SbVec3f& pickedPt,
+                                    const FaVec3& pickedPn)
+{
+  isDirOnly = true;
+  pickedPoint = FdConverter::toFaVec3(pickedPt);
+  ppNormal = pickedPn;
+
+  this->createAndUpdateUI();
 }
 
 

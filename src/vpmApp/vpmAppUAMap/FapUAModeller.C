@@ -16,6 +16,7 @@
 #ifdef USE_INVENTOR
 #include "vpmDisplay/FdAnimateModel.H"
 #include "vpmDisplay/FdDB.H"
+#include "FFaLib/FFaAlgebra/FFaVec3.H"
 #endif
 
 

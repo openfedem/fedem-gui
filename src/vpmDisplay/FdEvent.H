@@ -13,22 +13,12 @@
 class SoSeparator;
 
 
-class FdEvent
+namespace FdEvent
 {
-public:
-  static void init();
-  static void start(SoSeparator* dbRoot);
-
-  static void addEventCB(SoEventCallbackCB* cb, void* userData = NULL);
-  static void removeEventCB(SoEventCallbackCB* cb, void* userData = NULL);
-
-protected:
-  static void adminCB(void*, SoEventCallback* eventCB);
-  static void examCB(void*, SoEventCallback* eventCB);
-
-private:
-  static SoEventCallback* adminCallbackNode;
-  static SoEventCallback* eventCallbackNode;
-};
+  void init();
+  void start(SoSeparator* dbRoot);
+  void addEventCB(SoEventCallbackCB* cb);
+  void removeEventCB(SoEventCallbackCB* cb);
+}
 
 #endif

@@ -8,7 +8,6 @@
 #include "vpmPM/FpPM.H"
 #include "vpmPM/FpFileSys.H"
 #include "vpmPM/FpRDBExtractorManager.H"
-#include "vpmPM/FpRDBHandler.H"
 #include "vpmPM/FpModelRDBHandler.H"
 #include "vpmPM/FpProcessManager.H"
 #include "vpmApp/vpmAppProcess/FapSolutionProcessMgr.H"
@@ -938,20 +937,6 @@ bool FpPM::togglePlugin(const std::string& plugin, bool toggleOn)
 }
 
 
-void FpPM::start()
-{
-  FFaSwitchBoard::connect(FpProcessManager::instance(),
-			  FpProcessManager::FINISHED,
-			  FFaSlot0S(FpRDBHandler,stopRDBChecking));
-  FFaSwitchBoard::connect(FpProcessManager::instance(),
-			  FpProcessManager::GROUP_STARTED,
-			  FFaSlot1S(FpRDBHandler,onProcessGroupStarted,int));
-  FFaSwitchBoard::connect(FpProcessManager::instance(),
-			  FpProcessManager::FINISHED,
-			  FFaSlot0S(FapAnimationCmds,onSimulationFinished));
-}
-
-
 /////////////////////////////////////
 // FEDEM Copyright notice to console
 /////////////////////////////////////
@@ -1537,7 +1522,7 @@ bool FpPM::vpmAssemblyOpen(const std::string& givenName, bool doLoadParts)
 
   // Create the visualization of the mechanism and show it
   FFaMsg::pushStatus("Creating visualization");
-  FmDB::displayAll(*newAss->getHeadMap());
+  FmDB::displayAll(newAss->getHeadMap());
   FFaMsg::popStatus();
 
   // Update the object browser

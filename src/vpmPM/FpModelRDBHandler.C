@@ -21,160 +21,240 @@
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 #include <algorithm>
 #include <iterator>
+#include <map>
 
 
-std::map<std::string,FmPart*> FpModelRDBHandler::ourPartIdMap;
-FpModelRDBHandler::Strings FpModelRDBHandler::ourReducerFRSs;
-FpModelRDBHandler::Strings FpModelRDBHandler::ourAddedRESs;
-
-
-/*!
-  Returns the ID name of parts as it appears in the Results File browser.
-  and used as key in the \a ourPartIdMap.
-*/
-
-static std::string getIdName(const FmPart* part)
+namespace
 {
-  return FFaNumStr("%d_",part->getID()) +
-    FFaFilePath::getBaseName(part->baseFTLFile.getValue());
-}
+  using StringSet = std::set<std::string>;
+  using StringVec = std::vector<std::string>;
+
+  StringSet ourReducerFRSs;
+  StringSet ourAddedRESs;
+
+  std::map<std::string,FmPart*> ourPartIdMap;
+
+
+  /*!
+    Returns the ID name of parts as it appears in the Results File browser.
+    and used as key in the \a ourPartIdMap.
+  */
+
+  std::string getIdName(const FmPart* part)
+  {
+    return FFaNumStr("%d_",part->getID()) +
+      FFaFilePath::getBaseName(part->baseFTLFile.getValue());
+  }
+
+
+  /*!
+    \brief Finds the part that a result file is related to.
+
+    \details The search is based on the supplied full filename,
+    by analysing the filename and path, using an id-to-pointer map.
+    The map is supposed to contain text keys (partIdName) on the format:
+        <idNr>_<PartFileName>
+
+    This algorithm first looks for the partIdName in the name of the directory
+    that the file reside in. If not found, it tries the filename itself.
+  */
+
+  FmPart* getPartRelatedToResFile(const std::string& resultFileName)
+  {
+    if (ourPartIdMap.empty())
+    {
+      std::vector<FmPart*> parts;
+      FmDB::getAllParts(parts);
+      for (FmPart* part : parts)
+        ourPartIdMap[getIdName(part)] = part;
+    }
+
+    std::string partPath = FFaFilePath::getPath(resultFileName,false);
+    std::string baseName = FFaFilePath::getFileName(partPath);
+
+    for (int i = 0; i < 2; i++)
+    {
+      if (!baseName.empty())
+      {
+        // Find the start of any solvetask id numbers
+        size_t pos = baseName.size() - 1;
+        while (pos > 0 && isdigit(baseName[pos])) pos--;
+
+        // And then the underscore
+        if (baseName[pos] == '_' && pos < baseName.size()-1) pos--;
+
+        // Strip the solvetask number off, and search for partIdName in map
+        std::string partIdName = baseName.substr(0,pos+1);
+        std::map<std::string,FmPart*>::const_iterator it = ourPartIdMap.find(partIdName);
+        if (it != ourPartIdMap.end()) return it->second;
+      }
+
+      // When we could not find it based on the directory it resided in
+      // try the file name itself
+      baseName = FFaFilePath::getBaseName(resultFileName,true);
+    }
+
+    return NULL;
+  }
+
 
 #ifdef FP_DEBUG
-template<class Set> static void reportSet(const std::string& head, const Set& items)
-{
-  if (items.empty()) return;
-  std::cout <<"\n"<< head;
-  for (const std::string& item : items) std::cout <<"\n"<< item;
-  std::cout << std::endl;
-}
+  template<class Set> void reportSet(const std::string& head, const Set& items)
+  {
+    if (items.empty()) return;
+    std::cout <<"\n"<< head;
+    for (const std::string& item : items) std::cout <<"\n"<< item;
+    std::cout << std::endl;
+  }
 #endif
 
 
-static void reportRDBFiles(const std::vector<std::string>& files, const std::string& rdbPath)
-{
-  std::string solver1("timehist_prim");
-  std::string solver2("timehist_sec");
-  std::string solverEig("eigval_");
-  std::string solverFreq("freqdomain_");
-  std::string stress("timehist_rcy");
-  std::string modes("eigval_rcy");
-  std::string gage("timehist_gage_rcy");
-  std::string fpp("summary_rcy");
-  std::string reducerFiles, solver1Files, solver2Files;
-  std::string solverEigFiles, solverFreqFiles;
-  std::string stressFiles, modesFiles, gageFiles, fppFiles;
+  /*!
+    Removes \a files from the extractor, and deletes them from disk.
+  */
 
-  for (const std::string& file : files)
-    if (file.size() > rdbPath.size())
-    {
-      // Remove rdbPath/ from current file name
-      std::string current = FFaFilePath::getRelativeFilename(rdbPath,file);
+  void remove_result_files(const std::set<std::string>& files)
+  {
+#if FP_DEBUG > 3
+    reportSet("Removing these files from the extractor:",files);
+#endif
 
-      if (current.find(stress) != std::string::npos)
-	stressFiles += "\t" + current + "\n";
+    // Remove from extractor
+    FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
+    if (extr && !extr->removeFiles(files))
+      FFaMsg::list("  -> Problems removing files from result extractor.\n");
 
-      else if (current.find(modes) != std::string::npos)
-	modesFiles += "\t" + current + "\n";
+    // Remove from disk
+    for (const std::string& file : files)
+      if (FpFileSys::isFile(file) && !FpFileSys::deleteFile(file))
+        FFaMsg::list("  -> Problems deleting file " + file + "\n");
+  }
 
-      else if (current.find(gage) != std::string::npos)
-	gageFiles += "\t" + current + "\n";
 
-      else if (current.find(fpp) != std::string::npos)
-	fppFiles += "\t" + current + "\n";
+  void reportRDBFiles(const StringVec& files, const std::string& rdbPath)
+  {
+    std::string solver1("timehist_prim");
+    std::string solver2("timehist_sec");
+    std::string solverEig("eigval_");
+    std::string solverFreq("freqdomain_");
+    std::string stress("timehist_rcy");
+    std::string modes("eigval_rcy");
+    std::string gage("timehist_gage_rcy");
+    std::string fpp("summary_rcy");
+    std::string reducerFiles, solver1Files, solver2Files;
+    std::string solverEigFiles, solverFreqFiles;
+    std::string stressFiles, modesFiles, gageFiles, fppFiles;
 
-      else if (current.find(solver1) != std::string::npos)
-	solver1Files += "\t" + current + "\n";
+    for (const std::string& file : files)
+      if (file.size() > rdbPath.size())
+      {
+        // Remove rdbPath/ from current file name
+        std::string current = FFaFilePath::getRelativeFilename(rdbPath,file);
 
-      else if (current.find(solver2) != std::string::npos)
-	solver2Files += "\t" + current + "\n";
+        if (current.find(stress) != std::string::npos)
+          stressFiles += "\t" + current + "\n";
+        else if (current.find(modes) != std::string::npos)
+          modesFiles += "\t" + current + "\n";
+        else if (current.find(gage) != std::string::npos)
+          gageFiles += "\t" + current + "\n";
+        else if (current.find(fpp) != std::string::npos)
+          fppFiles += "\t" + current + "\n";
+        else if (current.find(solver1) != std::string::npos)
+          solver1Files += "\t" + current + "\n";
+        else if (current.find(solver2) != std::string::npos)
+          solver2Files += "\t" + current + "\n";
+        else if (current.find(solverEig) != std::string::npos)
+          solverEigFiles += "\t" + current + "\n";
+        else if (current.find(solverFreq) != std::string::npos)
+          solverFreqFiles += "\t" + current + "\n";
+        else // Nothing else fit, assume it is a reducer file
+          reducerFiles += "\t" + current + "\n";
+      }
 
-      else if (current.find(solverEig) != std::string::npos)
-	solverEigFiles += "\t" + current + "\n";
+    // Report the identified files to output list
 
-      else if (current.find(solverFreq) != std::string::npos)
-	solverFreqFiles += "\t" + current + "\n";
+    if (!reducerFiles.empty())
+      ListUI <<"  -> Found Reducer results:\n"<< reducerFiles;
+    if (!solver1Files.empty())
+      ListUI <<"  -> Found Primary Time History results:\n"<< solver1Files;
+    if (!solver2Files.empty())
+      ListUI <<"  -> Found Secondary Time History results:\n"<< solver2Files;
+    if (!solverEigFiles.empty())
+      ListUI <<"  -> Found System Eigenmode results:\n"<< solverEigFiles;
+    if (!solverFreqFiles.empty())
+      ListUI <<"  -> Found Frequency Domain results:\n"<< solverFreqFiles;
+    if (!stressFiles.empty())
+      ListUI <<"  -> Found Stress Recovery results:\n"<< stressFiles;
+    if (!modesFiles.empty())
+      ListUI <<"  -> Found Eigenmode Recovery results:\n"<< modesFiles;
+    if (!gageFiles.empty())
+      ListUI <<"  -> Found Strain Rosette Recovery results:\n"<< gageFiles;
+    if (!fppFiles.empty())
+      ListUI <<"  -> Found Strain Coat Recovery results:\n"<< fppFiles;
+  }
 
-      else // Nothing else fit, assume it is a reducer file
-	reducerFiles += "\t" + current + "\n";
-    }
 
-  // Report the identified files to output list
+  /*!
+    Helper used to sort the RDB directories w.r.t. their task version.
+  */
 
-  if (!reducerFiles.empty())
-    ListUI <<"  -> Found Reducer results:\n"<< reducerFiles;
-  if (!solver1Files.empty())
-    ListUI <<"  -> Found Primary Time History results:\n"<< solver1Files;
-  if (!solver2Files.empty())
-    ListUI <<"  -> Found Secondary Time History results:\n"<< solver2Files;
-  if (!solverEigFiles.empty())
-    ListUI <<"  -> Found System Eigenmode results:\n"<< solverEigFiles;
-  if (!solverFreqFiles.empty())
-    ListUI <<"  -> Found Frequency Domain results:\n"<< solverFreqFiles;
-  if (!stressFiles.empty())
-    ListUI <<"  -> Found Stress Recovery results:\n"<< stressFiles;
-  if (!modesFiles.empty())
-    ListUI <<"  -> Found Eigenmode Recovery results:\n"<< modesFiles;
-  if (!gageFiles.empty())
-    ListUI <<"  -> Found Strain Rosette Recovery results:\n"<< gageFiles;
-  if (!fppFiles.empty())
-    ListUI <<"  -> Found Strain Coat Recovery results:\n"<< fppFiles;
+  bool TaskDirLess(const std::string& lhs, const std::string& rhs)
+  {
+    size_t lpos = lhs.find_last_of('_');
+    size_t rpos = rhs.find_last_of('_');
+
+    int lver = -1;
+    if (lpos != std::string::npos)
+      if (isdigit(lhs[lpos+1]))
+        lver = atoi(lhs.substr(lpos+1).c_str());
+
+    int rver = -1;
+    if (rpos != std::string::npos)
+      if (isdigit(rhs[rpos+1]))
+        rver = atoi(rhs.substr(rpos+1).c_str());
+
+    return lver >= rver; // we want decreasing task version order
+  }
+
+
+  /*!
+    \brief Helper used to filter out older versions of each frs-file.
+
+    \details Assuming the frs-files have the date/time stamp as part of
+    their names on the form response_xxxx/<path>/<name>_YYYY-MND-DD_hhmmss.frs.
+    Thus, file names which differ only in the last 22 characters are assumed
+    to be different versions of the same result file, and we keep the most
+    recent of those files only.
+  */
+
+  void filterMostRecentOnly(StringVec& frsFiles)
+  {
+    if (frsFiles.empty()) return;
+
+    StringVec::reverse_iterator rit = frsFiles.rbegin();
+    StringVec filtered(1,*rit);
+    filtered.reserve(frsFiles.size());
+    for (++rit; rit != frsFiles.rend(); ++rit)
+      if (rit->find("link_DB") != std::string::npos || rit->length() < 23)
+        filtered.push_back(*rit);
+      else if (rit->find_last_of("\\/") > rit->length()-23)
+        filtered.push_back(*rit);
+      else if (filtered.back().find(rit->substr(0,rit->length()-22)) > 0)
+        filtered.push_back(*rit);
+      else
+        ListUI <<"  -> Not loading "<< *rit <<"\n";
+
+    if (filtered.size() == frsFiles.size()) return;
+
+    std::reverse(filtered.begin(),filtered.end());
+    frsFiles = filtered;
+  }
 }
 
 
-/*!
-  Static function used to sort the RDB directories w.r.t. their task version.
-*/
-
-static bool TaskDirLess(const std::string& lhs, const std::string& rhs)
+void FpModelRDBHandler::clearPartIdMap()
 {
-  size_t lpos = lhs.find_last_of('_');
-  size_t rpos = rhs.find_last_of('_');
-
-  int lver = -1;
-  if (lpos != std::string::npos)
-    if (isdigit(lhs[lpos+1]))
-      lver = atoi(lhs.substr(lpos+1).c_str());
-
-  int rver = -1;
-  if (rpos != std::string::npos)
-    if (isdigit(rhs[rpos+1]))
-      rver = atoi(rhs.substr(rpos+1).c_str());
-
-  return lver >= rver; // we want decreasing task version order
-}
-
-
-/*!
-  Static function used to filter out older versions of each frs-file.
-
-  Assuming the frs-files have the date/time stamp as part of their names
-  on the form response_xxxx/<path>/<name>_YYYY-MND-DD_hhmmss.frs.
-  Thus, file names which differ only in the last 22 characters are assumed
-  to be different versions of the same result file, and we keep the most
-  recent of those files only.
-*/
-
-static void filterMostRecentOnly(std::vector<std::string>& frsFiles)
-{
-  if (frsFiles.empty()) return;
-
-  std::vector<std::string>::reverse_iterator rit = frsFiles.rbegin();
-  std::vector<std::string> filtered(1,*rit);
-  filtered.reserve(frsFiles.size());
-  for (++rit; rit != frsFiles.rend(); ++rit)
-    if (rit->find("link_DB") != std::string::npos || rit->length() < 23)
-      filtered.push_back(*rit);
-    else if (rit->find_last_of("\\/") > rit->length()-23)
-      filtered.push_back(*rit);
-    else if (filtered.back().find(rit->substr(0,rit->length()-22)) > 0)
-      filtered.push_back(*rit);
-    else
-      ListUI <<"  -> Not loading "<< *rit <<"\n";
-
-  if (filtered.size() == frsFiles.size()) return;
-
-  std::reverse(filtered.begin(),filtered.end());
-  frsFiles = filtered;
+  ourPartIdMap.clear();
 }
 
 
@@ -185,7 +265,7 @@ static void filterMostRecentOnly(std::vector<std::string>& frsFiles)
 void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
 				FmMechanism* mechData,
 				bool includeReducerFiles,
-				bool askForMissingInRSD)
+				bool askMissingInRSD)
 {
 #if FP_DEBUG > 3
   std::cout <<"\nFpModelRDBHandler::RDBOpen()"
@@ -203,12 +283,12 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
   std::string rdbPath, listWarning, dialogWarning;
 
   // In batch mode, always ignore found files not present in the RSD
-  if (!Fui::hasGUI()) askForMissingInRSD = false;
+  if (!Fui::hasGUI()) askMissingInRSD = false;
 
   if (rsd->isEmpty())
   {
     // Check for lost data when RSD is empty - the situation after a crash, etc.
-    std::vector<std::string> modelDir;
+    StringVec modelDir;
     if (FpFileSys::getDirs(modelDir,mainRDBPath,"response_*"))
     {
       // We found something, sort the directories on decreasing task version
@@ -225,7 +305,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
 	std::string taskName; int taskVer;
 	FmResultStatusData::splitRDBName(mdir,taskName,taskVer);
 	rdbPath = FFaFilePath::appendFileNameToPath(mainRDBPath,mdir);
-	Strings obsoleteFiles;
+	StringSet obsoleteFiles;
 	if (!rsd->syncFromRDB(rdbPath,taskName,taskVer,&obsoleteFiles))
 	  continue; // this sub-directory is empty
 
@@ -235,7 +315,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
 
 	// Check whether the user wants to update from the abandoned files.
 	// But only when running interactively (always ignore in batch runs).
-	if (askForMissingInRSD && Fui::yesNoDialog(msg.c_str()))
+	if (askMissingInRSD && Fui::yesNoDialog(msg.c_str()))
 	{
 	  ListUI <<"  -> Including results found in "<< mdir <<"\n";
 
@@ -276,14 +356,14 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
   {
     // The RSD is not empty - compare it with the RDB on disk
 
-    Strings obsoleteFiles;
+    StringSet obsoleteFiles;
     rdbPath = rsd->getCurrentTaskDirName(true);
     FmResultStatusData diskRSD;
     diskRSD.setPath(mainRDBPath);
     diskRSD.syncFromRDB(rdbPath, rsd->getTaskName(), rsd->getTaskVer(),
                         &obsoleteFiles);
 
-    Strings rsdfiles, rdbfiles;
+    StringSet rsdfiles, rdbfiles;
     rsd->getAllFileNames(rsdfiles);
     diskRSD.getAllFileNames(rdbfiles);
 #if FP_DEBUG > 3
@@ -306,7 +386,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
 	     <<"     Trying to find results in "<< rdbPath <<"\n";
 
       // Find missing files in RDB
-      std::vector<std::string> missingInRDB;
+      StringVec missingInRDB;
       std::set_difference(rsdfiles.begin(), rsdfiles.end(),
 			  rdbfiles.begin(), rdbfiles.end(),
 			  std::back_inserter(missingInRDB));
@@ -339,7 +419,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
       }
 
       // Find missing files in RSD
-      std::vector<std::string> missingInRSD;
+      StringVec missingInRSD;
       std::set_difference(rdbfiles.begin(), rdbfiles.end(),
 			  rsdfiles.begin(), rsdfiles.end(),
 			  std::back_inserter(missingInRSD));
@@ -363,7 +443,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
 
 	ListUI <<"\n";
 	msg += "\nDo you want to add the additional files to your model?";
-	if (askForMissingInRSD && Fui::yesNoDialog(msg.c_str()))
+	if (askMissingInRSD && Fui::yesNoDialog(msg.c_str()))
 	  rsd->addFiles(missingInRSD);
 	else
 	{
@@ -389,7 +469,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
 
   FpPM::setResultFlag(); // Check for results and update UI-sensitivities
 
-  Strings rsdfiles;
+  StringSet rsdfiles;
   rsd->getAllFileNames(rsdfiles,"frs");
 #if FP_DEBUG > 3
   reportSet("frs-files found in RSD:",rsdfiles);
@@ -400,7 +480,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
   // Create a new vector of file names with the correct path,
   // and only of the files that are to be added to the extractor
 
-  std::vector<std::string> addCandidates;
+  StringVec addCandidates;
 
   // First check for frs-files in the part RSDs (but only for the loaded parts)
   if (includeReducerFiles)
@@ -411,7 +491,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
     for (FmPart* part : parts)
       if (part->isFELoaded())
       {
-	Strings lnkFrsFiles;
+	StringSet lnkFrsFiles;
 	part->myRSD.getValue().getAllFileNames(lnkFrsFiles,"frs");
 	for (const std::string& file : lnkFrsFiles)
 	  if (mechData->isEnabled(file) && FpFileSys::isFile(file))
@@ -499,11 +579,11 @@ void FpModelRDBHandler::RDBClose(FmResultStatusData* currentRSD,
     diskRSD.syncFromRDB(rdbPath, fromRSD->getTaskName(), fromRSD->getTaskVer());
 
     // Find the files that should be removed
-    Strings initrsdfiles, rdbfiles;
+    StringSet initrsdfiles, rdbfiles;
     initialRSD->getAllFileNames(initrsdfiles);
     diskRSD.getAllFileNames(rdbfiles);
 
-    std::vector<std::string> addedFiles;
+    StringVec addedFiles;
     std::set_difference(rdbfiles.begin(), rdbfiles.end(),
 			initrsdfiles.begin(), initrsdfiles.end(),
 			std::back_inserter(addedFiles));
@@ -523,7 +603,7 @@ void FpModelRDBHandler::RDBClose(FmResultStatusData* currentRSD,
 
   // Delete all other RDB dirs:
   size_t nDirs = 0;
-  std::vector<std::string> modelDir;
+  StringVec modelDir;
   std::string nameFilter = currentRSD->getTaskName() + "_*";
   if (FpFileSys::getDirs(modelDir,mainRDBPath,nameFilter.c_str()))
     for (std::string& dir : modelDir)
@@ -548,13 +628,13 @@ void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
 				FmMechanism* mech,
 				bool updateExtrator, bool addResFiles)
 {
-  std::vector<std::string> newFrsFiles;
+  StringVec newFrsFiles;
   RDBSync(currentRSD,mech,newFrsFiles,updateExtrator,addResFiles,false);
 }
 
 
 void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
-				FmMechanism* mech, std::vector<std::string>& newFrsFiles,
+				FmMechanism* mech, StringVec& newFrsFiles,
 				bool updateExtrator, bool addResFiles,
 				bool checkExistingRSD)
 {
@@ -568,7 +648,7 @@ void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
   diskRSD.syncFromRDB(currentRSD->getCurrentTaskDirName(true),
                       currentRSD->getTaskName(), currentRSD->getTaskVer());
 
-  Strings rsdfiles, rdbfiles;
+  StringSet rsdfiles, rdbfiles;
   currentRSD->getAllFileNames(rsdfiles);
   diskRSD.getAllFileNames(rdbfiles);
 
@@ -578,7 +658,7 @@ void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
 #endif
 
   // Find extras, add them to the RSD
-  std::vector<std::string> missingInRSD;
+  StringVec missingInRSD;
   std::set_difference(rdbfiles.begin(), rdbfiles.end(),
 		      rsdfiles.begin(), rsdfiles.end(),
 		      std::back_inserter(missingInRSD));
@@ -610,7 +690,7 @@ void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
     rsdfiles.insert(missingInRSD.begin(),missingInRSD.end());
   if (rsdfiles.empty()) return;
 
-  std::vector<std::string> newResFiles;
+  StringVec newResFiles;
   for (const std::string& file : rsdfiles)
     if (FFaFilePath::isExtension(file,"frs"))
     {
@@ -667,14 +747,14 @@ void FpModelRDBHandler::RDBSave(FmResultStatusData* currentRSD,
   const std::string& mainRDBPath = currentRSD->getPath();
   std::string rdbPath = currentRSD->getCurrentTaskDirName(true);
 
-  Strings obsoleteFiles;
+  StringSet obsoleteFiles;
   FmResultStatusData diskRSD;
   diskRSD.setPath(mainRDBPath);
   diskRSD.syncFromRDB(rdbPath,
                       currentRSD->getTaskName(), currentRSD->getTaskVer(),
                       &obsoleteFiles);
 
-  Strings rsdfiles, rdbfiles;
+  StringSet rsdfiles, rdbfiles;
   currentRSD->getAllFileNames(rsdfiles);
   diskRSD.getAllFileNames(rdbfiles);
 
@@ -706,7 +786,7 @@ void FpModelRDBHandler::RDBSave(FmResultStatusData* currentRSD,
 
   // Delete all other RDB dirs:
   size_t nDirs = 0;
-  std::vector<std::string> modelDir;
+  StringVec modelDir;
   std::string nameFilter = currentRSD->getTaskName() + "_*";
   if (FpFileSys::getDirs(modelDir,mainRDBPath,nameFilter.c_str()))
     for (std::string& dir : modelDir)
@@ -750,7 +830,7 @@ void FpModelRDBHandler::RDBSaveAs(const std::string& RDBPath,
   if (FpFileSys::verifyDirectory(oldRdbPath,false))
   {
     // We have an existing RDB directory, find all files in it
-    Strings filesToCopy, dirsToCreate;
+    StringSet filesToCopy, dirsToCreate;
     diskRSD.syncFromRDB(oldRdbPath,newTaskName,newTaskVer);
     diskRSD.getAllFileNames(filesToCopy);
     if (!filesToCopy.empty())
@@ -802,7 +882,7 @@ void FpModelRDBHandler::RDBIncrement(FmResultStatusData* currentRSD,
   if (!currentRSD->isEmpty())
   {
     // Update the list of disabled result files
-    Strings responseFiles;
+    StringSet responseFiles;
     currentRSD->getAllFileNames(responseFiles);
     removeDisabledFiles(mech,responseFiles);
 
@@ -843,7 +923,7 @@ void FpModelRDBHandler::getKeys(FmResultStatusData* currentRSD,
 				std::set<double>& validRdbTimes,
 				const std::string& rdbResultGroup)
 {
-  Strings resultFiles;
+  StringSet resultFiles;
   if (!currentRSD->getFrsFiles(resultFiles,rdbResultGroup)) return;
 
   FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
@@ -854,7 +934,7 @@ void FpModelRDBHandler::getKeys(FmResultStatusData* currentRSD,
 void FpModelRDBHandler::enableTimeStepPreRead(FmResultStatusData* currentRSD,
 					      const std::string& rdbResultGroup)
 {
-  Strings resultFiles;
+  StringSet resultFiles;
   if (!currentRSD->getFrsFiles(resultFiles,rdbResultGroup)) return;
 
   FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
@@ -883,7 +963,7 @@ void FpModelRDBHandler::clearPreReadTimeStep()
 bool FpModelRDBHandler::hasResults(FmResultStatusData* currentRSD,
 				   const std::string& rdbResultGroup)
 {
-  Strings resultFiles;
+  StringSet resultFiles;
   return currentRSD->getFrsFiles(resultFiles,rdbResultGroup,true);
 }
 
@@ -899,7 +979,7 @@ void FpModelRDBHandler::RDBSyncOnParts(FmResultStatusData* rsd, FmMechanism* mec
   if (!extr) return;
 
   // All frs files in rsd
-  Strings frsFiles;
+  StringSet frsFiles;
   rsd->getAllFileNames(frsFiles,"frs");
   if (frsFiles.empty()) return;
 
@@ -909,7 +989,7 @@ void FpModelRDBHandler::RDBSyncOnParts(FmResultStatusData* rsd, FmMechanism* mec
   if (parts.empty()) return;
 
   // Creates set of disabled files with absolute path
-  std::vector<std::string> absDisabled;
+  StringVec absDisabled;
   mech->getDisabledResultFiles(absDisabled,true);
 
   // Loop over FE parts, remove or add files to/from the extractor.
@@ -924,7 +1004,7 @@ void FpModelRDBHandler::RDBSyncOnParts(FmResultStatusData* rsd, FmMechanism* mec
     // Find frs-files with the string partName in their full name, and
     // the subset among those having timehist_gage_rcy in their full name
     std::string partName = getIdName(part);
-    Strings candidates, gageRecoveryFiles;
+    StringSet candidates, gageRecoveryFiles;
     for (const std::string& file : frsFiles)
       if (file.find(partName) != std::string::npos)
       {
@@ -934,13 +1014,13 @@ void FpModelRDBHandler::RDBSyncOnParts(FmResultStatusData* rsd, FmMechanism* mec
       }
 
     // Remove the gage related files from the part related frs files
-    Strings candidatesWoGage;
+    StringVec candidatesWoGage;
     std::set_difference(candidates.begin(), candidates.end(),
 			gageRecoveryFiles.begin(), gageRecoveryFiles.end(),
 			std::inserter(candidatesWoGage,candidatesWoGage.begin()));
 
     // Then remove those who are disabled already
-    Strings finalCandidates;
+    StringSet finalCandidates;
     std::set_difference(candidatesWoGage.begin(), candidatesWoGage.end(),
 			absDisabled.begin(), absDisabled.end(),
 			std::inserter(finalCandidates,finalCandidates.begin()));
@@ -972,82 +1052,6 @@ void FpModelRDBHandler::RDBSyncOnParts(FmResultStatusData* rsd, FmMechanism* mec
 
 
 /*!
-  \brief Finds the part that a result file is related to.
-
-  The search is based on the supplied full filename, by analysing
-  the filename and path, using an id-to-pointer map.
-
-  The map is supposed to contain text keys (partIdName) on the format:
-    <idNr>_<PartFileName>
-
-  This algorithm first looks for the partIdName in the name of the directory
-  that the file reside in. If not found, it tries the filename itself.
-*/
-
-FmPart* FpModelRDBHandler::getPartRelatedToResFile(const std::string& resultFileName)
-{
-  if (ourPartIdMap.empty())
-  {
-    std::vector<FmPart*> parts;
-    FmDB::getAllParts(parts);
-    for (FmPart* part : parts)
-      ourPartIdMap[getIdName(part)] = part;
-  }
-
-  std::string partPath = FFaFilePath::getPath(resultFileName,false);
-  std::string baseName = FFaFilePath::getFileName(partPath);
-
-  for (int i = 0; i < 2; i++)
-  {
-    if (!baseName.empty())
-    {
-      // Find the start of any solvetask id numbers
-      size_t pos = baseName.size() - 1;
-      while (pos > 0 && isdigit(baseName[pos])) pos--;
-
-      // And then the underscore
-      if (baseName[pos] == '_' && pos < baseName.size()-1) pos--;
-
-      // Strip the solvetask number off, and search for partIdName in map
-      std::string partIdName = baseName.substr(0,pos+1);
-      std::map<std::string,FmPart*>::const_iterator it = ourPartIdMap.find(partIdName);
-      if (it != ourPartIdMap.end()) return it->second;
-    }
-
-    // When we could not find it based on the directory it resided in
-    // try the file name itself
-    baseName = FFaFilePath::getBaseName(resultFileName,true);
-  }
-
-  return NULL;
-}
-
-
-/*!
-  Removes \a files from the extractor, and deletes them from disk.
-*/
-
-static void remove_result_files(const std::set<std::string>& files)
-{
-#if FP_DEBUG > 3
-  reportSet("Removing these files from the extractor:",files);
-#endif
-
-  // Remove from extractor
-  FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
-  if (extr)
-    if (!extr->removeFiles(files))
-      FFaMsg::list("  -> Problems removing files from result extractor.\n");
-
-  // Remove from disk
-  for (const std::string& file : files)
-    if (FpFileSys::isFile(file))
-      if (!FpFileSys::deleteFile(file))
-        FFaMsg::list("  -> Problems deleting file " + file + "\n");
-}
-
-
-/*!
   Removes the specified \a rdbResultGroup from the extractor and deletes all
   files in the directories belonging to it. If \a filterOnPart is non-zero,
   the specified part is used as a filter of which results to remove.
@@ -1071,7 +1075,7 @@ void FpModelRDBHandler::removeResults(const std::string& rdbResultGroup,
   }
 
   // Get file names for this sub-task
-  Strings resultFiles, allFiles;
+  StringSet resultFiles, allFiles;
   currentRSD->getAllFileNames(resultFiles,"frs");
   currentRSD->getAllFileNames(allFiles);
   currentRSD->incrementTaskVer();
@@ -1095,11 +1099,11 @@ void FpModelRDBHandler::purgeTruncatedResultFiles(FmResultStatusData* rsd)
 {
   if (!rsd) return;
 
-  Strings frsFiles;
+  StringSet frsFiles;
   rsd->getAllFileNames(frsFiles,"frs");
   if (frsFiles.empty()) return;
 
-  Strings truncFiles;
+  StringSet truncFiles;
   for (const std::string& file : frsFiles)
     if (FpFileSys::getFileSize(file) == 0)
       truncFiles.insert(file);
@@ -1117,7 +1121,7 @@ bool FpModelRDBHandler::removeAllFiles(FmResultStatusData* rsd)
 {
   if (!rsd) return true;
 
-  Strings allFiles;
+  StringSet allFiles;
   rsd->getAllFileNames(allFiles);
   if (allFiles.empty()) return true;
 
@@ -1136,7 +1140,7 @@ bool FpModelRDBHandler::removeAllFiles(FmResultStatusData* rsd)
   \note The files must have absolute path.
 */
 
-void FpModelRDBHandler::removeResultFiles(const Strings& files, FmPart* part)
+void FpModelRDBHandler::removeResultFiles(const StringSet& files, FmPart* part)
 {
   // Remove from the set of disabled files
   removeDisabledFiles(FmDB::getMechanismObject(),files);
@@ -1154,7 +1158,7 @@ void FpModelRDBHandler::removeResultFiles(const Strings& files, FmPart* part)
   \note The files must have absolute path.
 */
 
-void FpModelRDBHandler::removeResultFiles(const Strings& files,
+void FpModelRDBHandler::removeResultFiles(const StringSet& files,
 					  FmResultStatusData* rsd)
 {
   // Remove from the set of disabled files
@@ -1194,7 +1198,7 @@ void FpModelRDBHandler::removeResFiles()
 */
 
 void FpModelRDBHandler::removeDisabledFiles(FmMechanism* mech,
-					    const Strings& files)
+					    const StringSet& files)
 {
   bool changed = false;
   if (files.empty())
@@ -1225,7 +1229,7 @@ void FpModelRDBHandler::removeDisabledFiles(FmMechanism* mech,
 */
 
 void FpModelRDBHandler::changeResultFilesState(FmMechanism* mech,
-					       const Strings& files,
+					       const StringSet& files,
 					       bool enable)
 {
   FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
@@ -1242,7 +1246,7 @@ void FpModelRDBHandler::changeResultFilesState(FmMechanism* mech,
   if (enable)
   {
     ListUI <<"  -> Enabling results:\n";
-    Strings filteredFiles;
+    StringSet filteredFiles;
 
     for (const std::string& file : files)
     {
@@ -1303,7 +1307,7 @@ void FpModelRDBHandler::RDBSync(FmPart* part, FmMechanism* mech,
   std::cout << std::endl;
 #endif
 
-  Strings oldFiles, oldResFiles;
+  StringSet oldFiles, oldResFiles;
   std::string partPath, taskName; int taskVer = -1;
   FmResultStatusData& partRSD = part->myRSD.getValue();
   if (!partRSD.isEmpty())
@@ -1363,7 +1367,7 @@ void FpModelRDBHandler::RDBSync(FmPart* part, FmMechanism* mech,
   }
 
   // Add the new frs- and/or res-files to the extractor
-  Strings newFiles;
+  StringSet newFiles;
   if (part->isFELoaded())
     partRSD.getAllFileNames(newFiles,"frs");
   if (addResFiles)

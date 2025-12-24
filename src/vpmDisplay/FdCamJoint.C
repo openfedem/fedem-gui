@@ -138,7 +138,7 @@ bool FdCamJoint::updateFdTopology(bool updateChildrenDisplay)
   ///////////////
 
   SoDrawStyle* style = new SoDrawStyle;
-  SoMaterial* material = FdSymbolDefs::getJointMaterial();
+  SoMaterial* material = FdSymbolDefs::getMaterial(FdSymbolDefs::JOINT);
   std::vector<double> knots, weights;
   std::vector<FaVec3> ctrlPoints;
 
@@ -209,9 +209,9 @@ bool FdCamJoint::updateFdApperance()
   {
     SoBaseKit* node = (SoBaseKit*)list->getChild(i);
     if (isAttached)
-      node->setPart("material",FdSymbolDefs::getJointMaterial());
+      node->setPart("material",FdSymbolDefs::getMaterial(FdSymbolDefs::JOINT));
     else
-      node->setPart("material",FdSymbolDefs::getDefaultMaterial());
+      node->setPart("material",FdSymbolDefs::getMaterial());
   }
   return true;
 }

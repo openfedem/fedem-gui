@@ -249,11 +249,11 @@ bool FdTriad::updateFdApperance()
 
   FmLink* owner = ((FmTriad*)itsFmOwner)->getOwnerLink(0);
   if (owner == FmDB::getEarthLink()) // Grounded triad
-    itsTrKit->setPart("appearance.material",FdSymbolDefs::getGndTriadMaterial());
+    itsTrKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::GROUND));
   else if (owner)                    // Attached triad
-    itsTrKit->setPart("appearance.material",FdSymbolDefs::getTriadMaterial());
+    itsTrKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::TRIAD));
   else                               // Detached triad
-    itsTrKit->setPart("appearance.material", FdSymbolDefs::getDefaultMaterial());
+    itsTrKit->setPart("appearance.material", FdSymbolDefs::getMaterial());
 
 #ifdef USE_SMALLCHANGE
   itsTrKit->setPart("appearance.depth",NULL);

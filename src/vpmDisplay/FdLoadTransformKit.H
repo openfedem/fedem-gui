@@ -5,19 +5,21 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FDLOADTRANSFORMKIT_H
-#define FDLOADTRANSFORMKIT_H
+#ifndef FD_LOAD_TRANSFORM_KIT_H
+#define FD_LOAD_TRANSFORM_KIT_H
 
 #include <Inventor/engines/SoCompose.h>
 #include <Inventor/engines/SoConcatenate.h>
 
-#include  "FdLoadDirEngine.H"
+#include "vpmDisplay/FdLoadDirEngine.H"
 #include "vpmDisplay/FdTransformKit.H"
 
 
 #ifdef win32
 #include <SoWinLeaveScope.h>
 #endif
+
+class SoTransform;
 
 
 class FdLoadTransformKit : public FdTransformKit 
@@ -41,6 +43,7 @@ public:
   void disConnectSecondSpace();
 
   SoINTERNAL public:
+
   static void init(); 
 
 protected: 
@@ -79,6 +82,4 @@ protected:
 #include <SoWinEnterScope.h>
 #endif
 
-
 #endif
-

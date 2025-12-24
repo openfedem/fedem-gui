@@ -11,6 +11,7 @@
 #include "vpmDisplay/FdSimpleJoint.H"
 #include "vpmDisplay/FdLinJoint.H"
 #include "vpmDisplay/FdCamJoint.H"
+#include "vpmDisplay/FaDOF.H"
 
 #include "vpmDB/FmSticker.H"
 #include "vpmDB/FmTriad.H"
@@ -21,18 +22,98 @@
 #include "vpmApp/FapEventManager.H"
 
 
-static void selectMasterTriadsInJoint(FmJointBase* joint, bool deSelect = false)
+namespace
 {
-  std::vector<FmTriad*> mtriads;
-  joint->getMasterTriads(mtriads);
-  for (FmTriad* master : mtriads)
-    if (FapEventManager::isPermSelected(master) == deSelect)
+  void selectMasterTriadsInJoint(FmJointBase* joint, bool deSelect = false)
+  {
+    std::vector<FmTriad*> mtriads;
+    joint->getMasterTriads(mtriads);
+    for (FmTriad* master : mtriads)
+      if (FapEventManager::isPermSelected(master) == deSelect)
+      {
+        if (deSelect)
+          FapEventManager::permUnselect(master);
+        else
+          FapEventManager::permSelect(master);
+      }
+  }
+
+
+  void expandSelectLink(FmLink* link)
+  {
+    if (!link) return;
+
+    FapEventManager::permSelect(link);
+
+    std::vector<FmTriad*> triads;
+    link->getTriads(triads);
+
+    for (FmTriad* triad : triads)
     {
-      if (deSelect)
-        FapEventManager::permUnselect(master);
-      else
-        FapEventManager::permSelect(master);
+      if (!FapEventManager::isPermSelected(triad))
+        FapEventManager::permSelect(triad);
+
+      std::vector<FmJointBase*> joints;
+      triad->getJointBinding(joints);
+      for (FmJointBase* joint : joints)
+        if (!joint->isAttachedToLink(link))
+        {
+          FapEventManager::permSelect(joint);
+          if (!FapEventManager::isPermSelected(joint->getSlaveTriad()))
+            FapEventManager::permSelect(joint->getSlaveTriad());
+          selectMasterTriadsInJoint(joint);
+        }
+        else if (!FapEventManager::isPermSelected(joint))
+        {
+          if (triad->isMasterTriad())
+          {
+            if (FapEventManager::isPermSelected(joint->getSlaveTriad()))
+              FapEventManager::permSelect(joint);
+          }
+          else // our triad is a slave
+          {
+            std::vector<FmTriad*> mtriads;
+            joint->getMasterTriads(mtriads);
+            if (!mtriads.empty())
+              if (FapEventManager::isPermSelected(mtriads.front()))
+                FapEventManager::permSelect(joint);
+          }
+        }
     }
+  }
+
+
+  void expandDeselectLink(FmLink* link)
+  {
+    if (!link) return;
+
+    FapEventManager::permUnselect(link);
+
+    std::vector<FmTriad*> triads;
+    link->getTriads(triads);
+
+    for (FmTriad* triad : triads)
+    {
+      if (FapEventManager::isPermSelected(triad))
+        FapEventManager::permUnselect(triad);
+
+      std::vector<FmJointBase*> joints;
+      triad->getJointBinding(joints);
+      for (FmJointBase* joint : joints)
+        if (joint->isAttachedToLink(link))
+        {
+          if (FapEventManager::isPermSelected(joint))
+            FapEventManager::permUnselect(joint);
+        }
+        else
+        {
+          FapEventManager::permUnselect(joint);
+          if (FapEventManager::isPermSelected(joint->getSlaveTriad()))
+            FapEventManager::permUnselect(joint->getSlaveTriad());
+          selectMasterTriadsInJoint(joint,true);
+        }
+    }
+  }
 }
 
 
@@ -43,62 +124,6 @@ void FdSelector::getSelectedObjects(std::vector<FdObject*>& toBeFilled)
   for (FmModelMemberBase* selection : fmSelection)
     if (selection && selection->isOfType(FmIsRenderedBase::getClassTypeID()))
       toBeFilled.push_back(((FmIsRenderedBase*)selection)->getFdPointer());
-}
-
-
-void FdSelector::expandSelectLink(FdLink* link)
-{
-  if (!link) return;
-
-  FmLink* fmlink = (FmLink*)(link->getFmOwner());
-  FapEventManager::permSelect(fmlink);
-
-  std::vector<FmTriad*> triads;
-  fmlink->getTriads(triads);
-
-  for (FmTriad* triad : triads)
-  {
-    if (!FapEventManager::isPermSelected(triad))
-      FapEventManager::permSelect(triad);
-
-    std::vector<FmJointBase*> joints;
-    triad->getJointBinding(joints);
-    for (FmJointBase* joint : joints)
-      if (joint->isAttachedToLink(fmlink))
-      {
-        if (triad->isMasterTriad())
-        {
-          if (FapEventManager::isPermSelected(joint->getSlaveTriad()))
-            if (!FapEventManager::isPermSelected(joint))
-              FapEventManager::permSelect(joint);
-        }
-        else // our triad is a slave
-        {
-          if (joint->isOfType(FmSMJointBase::getClassTypeID()))
-          {
-            if (FapEventManager::isPermSelected(((FmSMJointBase*)joint)->getItsMasterTriad()))
-              if (!FapEventManager::isPermSelected(joint))
-                FapEventManager::permSelect(joint);
-          }
-          else if (joint->isOfType(FmMMJointBase::getClassTypeID()))
-          {
-            std::vector<FmTriad*> mtriads;
-            ((FmMMJointBase*)joint)->getMasterTriads(mtriads);
-            if (!mtriads.empty())
-              if (FapEventManager::isPermSelected(mtriads.front()))
-                if (!FapEventManager::isPermSelected(joint))
-                  FapEventManager::permSelect(joint);
-          }
-        }
-      }
-      else
-      {
-        FapEventManager::permSelect(joint);
-        if (!FapEventManager::isPermSelected(joint->getSlaveTriad()))
-          FapEventManager::permSelect(joint->getSlaveTriad());
-        selectMasterTriadsInJoint(joint);
-      }
-  }
 }
 
 
@@ -114,54 +139,27 @@ void FdSelector::selectExpanded(FdObject* object)
   long selectionIndex = FapEventManager::getNumPermSelected();
 
   if (fmobj->isOfType(FmLink::getClassTypeID()))
-    FdSelector::expandSelectLink((FdLink*)object);
+    expandSelectLink(static_cast<FmLink*>(fmobj));
 
   else if (fmobj->isOfType(FmTriad::getClassTypeID()))
   {
     FapEventManager::permSelect(fmobj);
-    if (((FmTriad*)fmobj)->isAttached())
-      FdSelector::expandSelectLink((FdLink*)(((FmTriad*)fmobj)->getOwnerLink(0)->getFdPointer()));
+    FmTriad* triad = static_cast<FmTriad*>(fmobj);
+    if (triad->isAttached())
+      expandSelectLink(triad->getOwnerLink(0));
     else // Triad is not attached to a link:
     {
       std::vector<FmJointBase*> joints;
-      ((FmTriad*)fmobj)->getJointBinding(joints);
+      triad->getJointBinding(joints);
       for (FmJointBase* joint : joints)
-        if (joint->isOfType(FmFreeJoint::getClassTypeID()) ||
-            joint->isOfType(FmCamJoint::getClassTypeID()))
-        {
-          // Nothing more than the hit triad is selected
-        }
-        else if (joint->isOfType(FmMMJointBase::getClassTypeID()))
-        {
-          /*
-          if (joint->isAttachedToLink()) // If the part of the joint not clicked on is attached
-          {
-            if (((FmTriad*)fmobj)->isMasterTriad())
-              selectMasterTriadsInJoint(joint);
-          }
-          else // the Joint is not attached to any links at all
-          {
-            // Select the whole joint
-            // That means that the triad that vas hit is moved with
-            // the rest of the joint
-            FapEventManager::permSelect(joint);
-            if (!(FapEventManager::isPermSelected(joint->getSlaveTriad())))
-            FapEventManager::permSelect(joint->getSlaveTriad());
-            selectMasterTriadsInJoint(joint);
-          }
-          */
-        }
-        else if (joint->isOfType(FmSMJointBase::getClassTypeID())) // But Not Free Joint
+        if (!joint->isOfType(FmFreeJoint::getClassTypeID()) &&
+            joint->isOfType(FmSMJointBase::getClassTypeID()))
         {
           if (joint->isAttachedToLink()) // If the part of the joint not clicked on is attached
-          {
             // Add that link to the selection
-            // That means that the none attached part of the joint is rigidly moved
-            // with the link the joint is attached to
-            FmLink* otherLink = joint->getOtherLink((FmTriad*)fmobj);
-            if (otherLink)
-              FdSelector::expandSelectLink((FdLink*)(otherLink->getFdPointer()));
-          }
+            // That means that the none attached part of the joint is rigidly
+            // moved with the link the joint is attached to
+            expandSelectLink(joint->getOtherLink(triad));
           else // the Joint is not attached to any links at all
           {
             // Select the whole joint
@@ -175,28 +173,21 @@ void FdSelector::selectExpanded(FdObject* object)
         }
     }
   }
-  else if (fmobj->isOfType(FmCamJoint::getClassTypeID()))
-  {
-    FapEventManager::permSelect(fmobj);
-
-    if (((FmJointBase*)fmobj)->isMasterAttachedToLink())
-      FdSelector::expandSelectLink((FdLink*)(((FmJointBase*)fmobj)->getMasterLink()->getFdPointer()));
-    else
-      selectMasterTriadsInJoint((FmJointBase*)fmobj);
-  }
   else if (fmobj->isOfType(FmJointBase::getClassTypeID()))
   {
     FapEventManager::permSelect(fmobj);
-
-    if (((FmJointBase*)fmobj)->isSlaveAttachedToLink())
-      FdSelector::expandSelectLink((FdLink*)(((FmJointBase*)fmobj)->getSlaveLink()->getFdPointer()));
+    FmJointBase* joint = static_cast<FmJointBase*>(fmobj);
+    if (!fmobj->isOfType(FmCamJoint::getClassTypeID()))
+    {
+      if (joint->isSlaveAttachedToLink())
+        expandSelectLink(joint->getSlaveLink());
+      else
+        FapEventManager::permSelect(joint->getSlaveTriad());
+    }
+    if (joint->isMasterAttachedToLink())
+      expandSelectLink(joint->getMasterLink());
     else
-      FapEventManager::permSelect(((FmJointBase*)fmobj)->getSlaveTriad());
-
-    if (((FmJointBase*)fmobj)->isMasterAttachedToLink())
-      FdSelector::expandSelectLink((FdLink*)(((FmJointBase*)fmobj)->getMasterLink()->getFdPointer()));
-    else
-      selectMasterTriadsInJoint((FmJointBase*)fmobj);
+      selectMasterTriadsInJoint(joint);
   }
 
   FapEventManager::permUnselect(selectionIndex);
@@ -217,51 +208,24 @@ void FdSelector::deselectExpandedLast()
     return;
 
   if (fmobj->isOfType(FmLink::getClassTypeID()))
-    FdSelector::expandDeselectLink((FdLink*)(((FmLink*)fmobj)->getFdPointer()));
+    expandDeselectLink(static_cast<FmLink*>(fmobj));
 
   else if (fmobj->isOfType(FmTriad::getClassTypeID()))
   {
     FapEventManager::permUnselect(fmobj);
-    if (((FmTriad*)fmobj)->isAttached())
-      FdSelector::expandDeselectLink((FdLink*)(((FmTriad*)fmobj)->getOwnerLink(0)->getFdPointer()));
+    FmTriad* triad = static_cast<FmTriad*>(fmobj);
+    if (triad->isAttached())
+      expandDeselectLink(triad->getOwnerLink(0));
     else // Triad is not attached to a link
     {
       std::vector<FmJointBase*> joints;
-      ((FmTriad*)fmobj)->getJointBinding(joints);
+      triad->getJointBinding(joints);
       for (FmJointBase* joint : joints)
-        if (joint->isOfType(FmFreeJoint::getClassTypeID()) ||
-            joint->isOfType(FmCamJoint::getClassTypeID()))
-        {
-          // Nothing more than the hit triad is deselected
-        }
-        else if (joint->isOfType(FmMMJointBase::getClassTypeID()))
-        {
-          /*
-          if (joint->isAttachedToLink()) // If the part of the joint not clicked on is attached
-          {
-            if (((FmTriad*)fmobj)->isMasterTriad())
-              selectMasterTriadsInJoint(joint,true);
-          }
-          else // the Joint is not attached to any links at all
-          {
-            // Select the whole joint
-            // That means that the triad that vas hit is moved with
-            // the rest of the joint
-            FapEventManager::permUnselect(joint);
-            if ((FapEventManager::isPermSelected(joint->getSlaveTriad())))
-              FapEventManager::permUnselect(joint->getSlaveTriad());
-            selectMasterTriadsInJoint(joint,true);
-          }
-          */
-        }
-        else if (joint->isOfType(FmSMJointBase::getClassTypeID())) // But Not Free Joint
+        if (!joint->isOfType(FmFreeJoint::getClassTypeID()) &&
+            joint->isOfType(FmSMJointBase::getClassTypeID()))
         {
           if (joint->isAttachedToLink())
-          {
-            FmLink* otherLink = joint->getOtherLink((FmTriad*)fmobj);
-            if (otherLink)
-              FdSelector::expandDeselectLink((FdLink*)(otherLink->getFdPointer()));
-          }
+            expandDeselectLink(joint->getOtherLink(triad));
           else
           {
             FapEventManager::permUnselect(joint);
@@ -272,59 +236,21 @@ void FdSelector::deselectExpandedLast()
         }
     }
   }
-  else if (fmobj->isOfType(FmCamJoint::getClassTypeID()))
-  {
-    FapEventManager::permUnselect(fmobj);
-    if (((FmJointBase*)fmobj)->isMasterAttachedToLink())
-      FdSelector::expandDeselectLink((FdLink*)(((FmJointBase*)fmobj)->getMasterLink()->getFdPointer()));
-    else
-      selectMasterTriadsInJoint((FmJointBase*)fmobj,true);
-  }
   else if (fmobj->isOfType(FmJointBase::getClassTypeID()))
   {
     FapEventManager::permUnselect(fmobj);
-    if (((FmJointBase*)fmobj)->isSlaveAttachedToLink())
-      FdSelector::expandDeselectLink((FdLink*)(((FmJointBase*)fmobj)->getSlaveLink()->getFdPointer()));
-    else
-      FapEventManager::permUnselect(((FmJointBase*)fmobj)->getSlaveTriad());
-
-    if (((FmJointBase*)fmobj)->isMasterAttachedToLink())
-      FdSelector::expandDeselectLink((FdLink*)(((FmJointBase*)fmobj)->getMasterLink()->getFdPointer()));
-    else
-      selectMasterTriadsInJoint((FmJointBase*)fmobj,true);
-  }
-}
-
-
-void FdSelector::expandDeselectLink(FdLink* link)
-{
-  if (!link) return;
-
-  FmLink* fmlink = (FmLink*)link->getFmOwner();
-  FapEventManager::permUnselect(fmlink);
-
-  std::vector<FmTriad*> triads;
-  ((FmLink*)fmlink)->getTriads(triads);
-  for (FmTriad* triad : triads)
-  {
-    if ((FapEventManager::isPermSelected(triad)))
-      FapEventManager::permUnselect(triad);
-
-    std::vector<FmJointBase*> joints;
-    triad->getJointBinding(joints);
-    for (FmJointBase* joint : joints)
-      if (joint->isAttachedToLink(fmlink))
-      {
-        if ((FapEventManager::isPermSelected(joint)))
-          FapEventManager::permUnselect(joint);
-      }
+    FmJointBase* joint = static_cast<FmJointBase*>(fmobj);
+    if (!fmobj->isOfType(FmCamJoint::getClassTypeID()))
+    {
+      if (joint->isSlaveAttachedToLink())
+        expandDeselectLink(joint->getSlaveLink());
       else
-      {
-        FapEventManager::permUnselect(joint);
-        if ((FapEventManager::isPermSelected(joint->getSlaveTriad())))
-          FapEventManager::permUnselect(joint->getSlaveTriad());
-        selectMasterTriadsInJoint(joint,true);
-      }
+        FapEventManager::permUnselect(joint->getSlaveTriad());
+    }
+    if (joint->isMasterAttachedToLink())
+      expandDeselectLink(joint->getMasterLink());
+    else
+      selectMasterTriadsInJoint(joint,true);
   }
 }
 
@@ -353,7 +279,7 @@ void FdSelector::smartMoveSelection(const FaVec3& firstPoint,
 
     else if (obj->isOfType(FdCamJoint::getClassTypeID()))
     {
-      if (!((FmJointBase*)(obj->getFmOwner()))->isMasterAttachedToLink(true))// ToDo: If LinJoint : move nomatterwhat ?
+      if (!((FmJointBase*)(obj->getFmOwner()))->isMasterAttachedToLink(true))
         obj->smartMove(firstPoint,secondPoint,dof);
     }
 
@@ -364,14 +290,16 @@ void FdSelector::smartMoveSelection(const FaVec3& firstPoint,
         std::vector<FmJointBase*> joints;
         ((FmTriad*)(obj->getFmOwner()))->getJointBinding(joints);
 
+        bool notInNonFreeJoints = true;
         for (FmJointBase* joint : joints)
           if (!joint->isOfType(FmFreeJoint::getClassTypeID()) &&
               !joint->isOfType(FmMMJointBase::getClassTypeID()))
-            continue;
+            notInNonFreeJoints = false;
           else if (FapEventManager::isPermSelected(joint))
-            continue;
+            notInNonFreeJoints = false;
 
-        obj->smartMove(firstPoint,secondPoint,dof);
+        if (notInNonFreeJoints)
+          obj->smartMove(firstPoint,secondPoint,dof);
       }
     }
 }

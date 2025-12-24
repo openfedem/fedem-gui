@@ -14,21 +14,32 @@ class FFuQtPushButton;
 class QWidget;
 class QLabel;
 
+class FdCadEntityInfo;
+class SbVec3f;
+class FaMat34;
+
 
 class FdDBPointSelectionData
 {
 public:
   FdDBPointSelectionData();
 
-  void createAndUpdateUI();
+  void fillUI(FdCadEntityInfo* info, bool edge,
+              const SbVec3f& pickedPt,
+              const FaVec3& snappedPt,
+              const SbVec3f& pickedPn,
+              const FaMat34& objToWorld,
+              bool showDir, int ppIdx = 0);
+  void fillUI(const SbVec3f& pickedPt,
+              const FaVec3& pickedPn);
   void hideUI();
 
 private:
+  void createAndUpdateUI();
   void createUI();
   void updateUI();
   void onButtonToggled(bool);
 
-public:
   bool   isDirOnly;
   int    pPointIdx;
   bool   isEdge;
@@ -41,7 +52,6 @@ public:
   bool   showDirection;
   bool   isUnknownShape;
 
-private:
   FFuQtPushButton* myOnCenterButton;
   FFuQtPushButton* myOnCircumfButton;
   FFuQtPushButton* mySnapOnButton;

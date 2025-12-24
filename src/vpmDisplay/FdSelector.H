@@ -8,31 +8,25 @@
 #ifndef FD_SELECTOR_H
 #define FD_SELECTOR_H
 
-#include "vpmDisplay/FaDOF.H"
 #include <vector>
 
 class FdObject;
-class FdLink;
 class FaVec3;
+class FaDOF;
 
 
-class FdSelector
+namespace FdSelector
 {
-public:
-  static void getSelectedObjects(std::vector<FdObject*>& toBeFilled);
+  void getSelectedObjects(std::vector<FdObject*>& toBeFilled);
 
-  static void smartMoveSelection(const FaVec3& firstPoint,
-				 const FaVec3& secondPoint,
-				 const FaDOF& dof);
+  void smartMoveSelection(const FaVec3& firstPoint,
+                          const FaVec3& secondPoint,
+                          const FaDOF& dof);
 
-  static FaDOF getDegOfFreedom();
+  FaDOF getDegOfFreedom();
 
-  static void selectExpanded(FdObject* object);
-  static void deselectExpandedLast();
-
-private:
-  static void expandSelectLink(FdLink* link);
-  static void expandDeselectLink(FdLink* link);
-};
+  void selectExpanded(FdObject* object);
+  void deselectExpandedLast();
+}
 
 #endif
