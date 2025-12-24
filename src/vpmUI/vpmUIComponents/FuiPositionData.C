@@ -488,7 +488,7 @@ void FuiPositionData::FieldChangedCB::onFieldAccepted(double value)
       static_cast<FmIsRenderedBase*>(obj)->draw();
     else if (obj->isOfType(FmAssemblyBase::getClassTypeID()))
     {
-      FmDB::displayAll(*static_cast<FmAssemblyBase*>(obj)->getHeadMap());
+      FmDB::displayAll(static_cast<FmAssemblyBase*>(obj)->getHeadMap());
       if (obj == owner->myEditedObjs.front())
         Fui::getProperties()->updateSubassCoG();
     }

@@ -1522,7 +1522,7 @@ bool FpPM::vpmAssemblyOpen(const std::string& givenName, bool doLoadParts)
 
   // Create the visualization of the mechanism and show it
   FFaMsg::pushStatus("Creating visualization");
-  FmDB::displayAll(*newAss->getHeadMap());
+  FmDB::displayAll(newAss->getHeadMap());
   FFaMsg::popStatus();
 
   // Update the object browser
