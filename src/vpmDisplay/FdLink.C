@@ -13,6 +13,7 @@
 #include "vpmDisplay/FdConverter.H"
 #include "vpmDisplay/FdPickFilter.H"
 #include "vpmDisplay/FdFEModelKit.H"
+#include "vpmDisplay/FdObjParser.H"
 #include "FFdCadModel/FdCadHandler.H"
 #include "FFdCadModel/FdCadSolid.H"
 #include "FFdCadModel/FdCadSolidWire.H"
@@ -47,250 +48,26 @@
 #endif
 
 #include <fstream>
-#include <cstring>
-#include <cstdio>
-#include <cctype>
 
 
 namespace
 {
   // Wavefront OBJ model parser.
-  SoSeparator* loadObjFile(const char* fName, bool triangles, float scale,
-                           int& groupId, FdCadHandler* cad, FdFEModelKit* feKit)
+  SoSeparator* loadObjFile(const char* fName, float scale, int& groupId,
+                           FdCadHandler* cad, FdFEModelKit* feKit)
   {
-    FILE* file = fopen(fName,"r");
-    if (!file)
-    {
-      perror(fName);
-      return NULL;
-    }
-
-    // Lambda function reading next word from the file.
-    auto&& getWord = [file](char* word, int n)
-    {
-      long int pos = ftell(file);
-      int i, c;
-      for (i = 0; i < n; i++)
-        if ((c = fgetc(file)) < 0)
-          return c; // end-of-file reached
-        else if (isspace(c))
-          break;
-        else
-          word[i] = c;
-
-      word[i == n ? --i : i] = 0;
-
-#ifdef FD_DEBUG
-      std::cout << pos <<" "<< ftell(file) <<" got word \""<< word <<"\""
-                << std::endl;
-#endif
-      return i;
-    };
-
-    //TODO(Runar): Add parsing of material info
-
-    std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-    std::vector<FaVec3> vertices, uvs, normals;
-
-    char lineHeader[256];
-    float x, y, z;
-
-    std::vector< std::pair<std::string,long int> > geometryGroups;
-
-    // read the first word of the line
-    while (getWord(lineHeader,256) != EOF)
-      if (strcmp(lineHeader,"v") == 0)
-      {
-        if (fscanf(file,"%f %f %f\n",&x,&y,&z) >= 0)
-          vertices.emplace_back(x,y,z);
-#ifdef FD_DEBUG
-        std::cout <<"Read vertex "<< vertices.size() <<": "<< vertices.back()
-                  << std::endl;
-#endif
-      }
-      else if (strcmp(lineHeader,"vt") == 0)
-      {
-        if (fscanf(file,"%f %f\n",&x,&y) >= 0)
-          uvs.emplace_back(x,y,0.0);
-      }
-      else if (strcmp(lineHeader,"vn") == 0)
-      {
-        if (fscanf(file,"%f %f %f\n",&x,&y,&z) >= 0)
-          normals.emplace_back(x,y,z);
-#ifdef FD_DEBUG
-        std::cout <<"Read normal "<< normals.size() <<": "<< normals.back()
-                  << std::endl;
-#endif
-      }
-      else if (strcmp(lineHeader,"g") == 0)
-      {
-        long int pos = ftell(file);
-        if (!fgets(lineHeader,256,file))
-          perror("fgets");
-        else
-          lineHeader[strlen(lineHeader)-1] = 0; // Replace newline by 0
-        geometryGroups.emplace_back(lineHeader,pos);
-#ifdef FD_DEBUG
-        std::cout <<"Read group "<< geometryGroups.size() <<": \""
-                  << geometryGroups.back().first <<"\" "
-                  << geometryGroups.back().second << std::endl;
-#endif
-      }
-
-    ListUI <<"("<< vertices.size() <<" vertices";
-    if (!uvs.empty()) ListUI <<", "<< uvs.size() <<" uvs";
-    if (!normals.empty()) ListUI <<", "<< normals.size() <<" normals";
-    int numGroups = geometryGroups.size();
-    int allGroups = groupId == numGroups ? 1 : 0;
-    ListUI <<", "<< numGroups <<" groups";
-
-    if (groupId < 0 || groupId > numGroups)
-    {
-      if (numGroups > 1) {
-        allGroups = FFaMsg::dialog("Multiple geometry groups in obj-file. "
-                                   "Import all?",FFaMsg::FFaDialogType::YES_NO);
-        if (allGroups)
-          groupId = numGroups;
-        else
-        {
-          std::vector<std::string> buttonText = { "Select" };
-          std::vector<std::string> selectionList;
-          selectionList.reserve(numGroups);
-          for (int k = 0; k < numGroups; k++)
-            selectionList.push_back(std::to_string(k));
-          FFaMsg::dialog(groupId,"Multiple geometry groups in obj file. "
-                         "Please select group",FFaMsg::FFaDialogType::GENERIC,
-                         buttonText,selectionList);
-        }
-      }
-      else if (numGroups == 1)
-        groupId = 0;
-    }
-
-    long int pos = 0;
-    if (allGroups)
-      pos = geometryGroups.front().second;
-    else if (numGroups > 0)
-      pos = geometryGroups[groupId].second;
-    std::cout <<"\nReset file position to "<< pos << std::endl;
-    if (fseek(file,pos,SEEK_SET) < 0)
-      perror("fseek");
-
-    int numFaces = 0;
-    while (getWord(lineHeader,256) != EOF)
-      if (strcmp(lineHeader,"f") == 0)
-      {
-        if (!fgets(lineHeader,256,file))
-          perror("fgets");
-        else
-          lineHeader[strlen(lineHeader)-1] = 0; // Replace newline by 0
-
-        std::vector<int> ints;
-        size_t j = 0;
-        for (size_t i = 0; i < strlen(lineHeader); i++)
-        {
-          char c = lineHeader[i];
-          if (c == '#') //comment
-            break;
-          else if (isdigit(c) || c == '-' || c == '+')
-            continue;
-          else if (i > j)
-          {
-            ints.push_back(atoi(lineHeader+j));
-            j = i+1;
-          }
-        }
-        // Add final number
-        if (j < strlen(lineHeader))
-          ints.push_back(atoi(lineHeader+j));
-
-        int matches = ints.size();
-        std::cout <<"Face indices \""<< lineHeader <<"\": #"<< matches;
-        for (int i : ints) std::cout <<" "<< i;
-        std::cout << std::endl;
-
-        // TODO(Runar): Handle both triangles and quads
-        if (triangles)
-        {
-          if (matches == 6)
-          {
-            vertexIndices.push_back(ints[0]);
-            vertexIndices.push_back(ints[2]);
-            vertexIndices.push_back(ints[4]);
-            normalIndices.push_back(ints[1]);
-            normalIndices.push_back(ints[3]);
-            normalIndices.push_back(ints[5]);
-          }
-          else if (matches == 9)
-          {
-            vertexIndices.push_back(ints[0]);
-            vertexIndices.push_back(ints[3]);
-            vertexIndices.push_back(ints[6]);
-            uvIndices.push_back(ints[1]);
-            uvIndices.push_back(ints[4]);
-            uvIndices.push_back(ints[7]);
-            normalIndices.push_back(ints[2]);
-            normalIndices.push_back(ints[5]);
-            normalIndices.push_back(ints[8]);
-          }
-          else
-            matches = 0;
-        }
-        else
-        {
-          if (matches == 8)
-          {
-            vertexIndices.push_back(ints[0]);
-            vertexIndices.push_back(ints[2]);
-            vertexIndices.push_back(ints[4]);
-            vertexIndices.push_back(ints[6]);
-            normalIndices.push_back(ints[1]);
-            normalIndices.push_back(ints[3]);
-            normalIndices.push_back(ints[5]);
-            normalIndices.push_back(ints[7]);
-          }
-          else if (matches == 12)
-          {
-            vertexIndices.push_back(ints[0]);
-            vertexIndices.push_back(ints[3]);
-            vertexIndices.push_back(ints[6]);
-            vertexIndices.push_back(ints[9]);
-            uvIndices.push_back(ints[1]);
-            uvIndices.push_back(ints[4]);
-            uvIndices.push_back(ints[7]);
-            uvIndices.push_back(ints[10]);
-            normalIndices.push_back(ints[2]);
-            normalIndices.push_back(ints[5]);
-            normalIndices.push_back(ints[8]);
-            normalIndices.push_back(ints[11]);
-          }
-          else
-            matches = 0;
-        }
-        if (matches > 0)
-          numFaces++;
-        else
-        {
-          FFaMsg::list("Could not parse obj-file. "
-                       "Try exporting faces as triangles.\n");
-          fclose(file);
-          return NULL;
-        }
-      }
-      else if (!allGroups && strcmp(lineHeader,"g") == 0)
-        break;
+    FdObjParser obj(fName,groupId);
+    if (obj.nFace < 1) return NULL; // parse failure
 
     // Clean up
-    fclose(file);
     if (cad->hasPart() || cad->hasAssembly())
       cad->deleteCadData();
 
-    ListUI <<", "<< numFaces <<" faces) ";
-
     // Get cad part
     FdCadPart* part = cad->getCadPart();
-    if (part == NULL)
-      return NULL; // unexpected
+    if (part == NULL) return NULL; // unexpected
+
+    groupId = obj.groupId;
 
     // Create cad solid and wire representations
     FdCadSolid* body = new FdCadSolid();
@@ -300,108 +77,92 @@ namespace
     SoCoordinate3* coords = new SoCoordinate3();
     body->insertChild(coords,0);
     wire->insertChild(coords,0);
-    coords->point.setNum(vertices.size());
+    coords->point.setNum(obj.vertices.size());
 
     // Add points to coordinate-array
+    size_t i = 0;
     SbVec3f* coord = coords->point.startEditing();
-    for (int i = 0; i < vertices.size(); i++)
-      coord[i].setValue(vertices[i].x(),vertices[i].y(),vertices[i].z());
-
+    for (const FdObjParser::XYZ& vertex : obj.vertices)
+      coord[i++].setValue(vertex[0],vertex[1],vertex[2]);
     coords->point.finishEditing();
 
-    int nface = vertexIndices.size() / (triangles ? 3 : 4);
-    int* idx = new int[vertexIndices.size() * (triangles ? 3 : 4)];
-
-    // Create cad face
+    // Create CAD face
     FdCadFace* face = new FdCadFace();
     face->coordIndex.enableNotify(false);
     face->coordIndex.deleteValues(0);
-    if (triangles)
-      for (int i = 0; i < nface; i++)
-      {
-        idx[i * 4    ] = vertexIndices[i * 3    ] - 1;
-        idx[i * 4 + 1] = vertexIndices[i * 3 + 1] - 1;
-        idx[i * 4 + 2] = vertexIndices[i * 3 + 2] - 1;
-        idx[i * 4 + 3] = -1;
-      }
-    else
-      for (int i = 0; i < nface; i++)
-      {
-        idx[i * 5    ] = vertexIndices[i * 4    ] - 1;
-        idx[i * 5 + 1] = vertexIndices[i * 4 + 1] - 1;
-        idx[i * 5 + 2] = vertexIndices[i * 4 + 2] - 1;
-        idx[i * 5 + 3] = vertexIndices[i * 4 + 3] - 1;
-        idx[i * 5 + 4] = -1;
-      }
-    face->coordIndex.setValues(0,vertexIndices.size()+nface,idx);
+    face->coordIndex.setValues(0,obj.vertexIndices.size(),
+                               obj.vertexIndices.data());
     face->coordIndex.enableNotify(true);
     face->coordIndex.touch();
     body->addChild(face);
 
-    // Create cad edge
+    SoSeparator* facesSep = new SoSeparator();
+    facesSep->addChild(body);
+
+    // Create CAD edge
+    std::vector<int> idx;
+    idx.reserve(obj.nFace*12);
     FdCadEdge* edge = new FdCadEdge();
-    if (triangles)
-      for (int i = 0; i < nface; i++)
+    for (size_t j = i = 0; i < obj.nFace; i++, j++)
+      if (j+3 < obj.vertexIndices.size() && obj.vertexIndices[j+3] == -1)
       {
-        idx[i * 9    ] = vertexIndices[i * 3    ] - 1;
-        idx[i * 9 + 1] = vertexIndices[i * 3 + 1] - 1;
-        idx[i * 9 + 2] = -1;
+        idx.push_back(obj.vertexIndices[j  ]);
+        idx.push_back(obj.vertexIndices[j+1]);
+        idx.push_back(-1);
 
-        idx[i * 9 + 3] = vertexIndices[i * 3 + 1] - 1;
-        idx[i * 9 + 4] = vertexIndices[i * 3 + 2] - 1;
-        idx[i * 9 + 5] = -1;
+        idx.push_back(obj.vertexIndices[j+1]);
+        idx.push_back(obj.vertexIndices[j+2]);
+        idx.push_back(-1);
 
-        idx[i * 9 + 6] = vertexIndices[i * 3 + 2] - 1;
-        idx[i * 9 + 7] = vertexIndices[i * 3    ] - 1;
-        idx[i * 9 + 8] = -1;
+        idx.push_back(obj.vertexIndices[j+2]);
+        idx.push_back(obj.vertexIndices[j  ]);
+        idx.push_back(-1);
+
+        j += 3;
       }
-    else
-      for (int i = 0; i < nface; i++)
+      else if (j+4 < obj.vertexIndices.size() && obj.vertexIndices[j+4] == -1)
       {
-        idx[i * 12    ] = vertexIndices[i * 4    ] - 1;
-        idx[i * 12 + 1] = vertexIndices[i * 4 + 1] - 1;
-        idx[i * 12 + 2] = -1;
+        idx.push_back(obj.vertexIndices[j  ]);
+        idx.push_back(obj.vertexIndices[j+1]);
+        idx.push_back(-1);
 
-        idx[i * 12 + 3] = vertexIndices[i * 4 + 1] - 1;
-        idx[i * 12 + 4] = vertexIndices[i * 4 + 2] - 1;
-        idx[i * 12 + 5] = -1;
+        idx.push_back(obj.vertexIndices[j+1]);
+        idx.push_back(obj.vertexIndices[j+2]);
+        idx.push_back(-1);
 
-        idx[i * 12 + 6] = vertexIndices[i * 4 + 2] - 1;
-        idx[i * 12 + 7] = vertexIndices[i * 4 + 3] - 1;
-        idx[i * 12 + 8] = -1;
+        idx.push_back(obj.vertexIndices[j+2]);
+        idx.push_back(obj.vertexIndices[j+3]);
+        idx.push_back(-1);
 
-        idx[i * 12 +  9] = vertexIndices[i * 4 + 3] - 1;
-        idx[i * 12 + 10] = vertexIndices[i * 4    ] - 1;
-        idx[i * 12 + 11] = -1;
+        idx.push_back(obj.vertexIndices[j+3]);
+        idx.push_back(obj.vertexIndices[j  ]);
+        idx.push_back(-1);
+
+        j += 4;
       }
 
     edge->coordIndex.enableNotify(false);
     edge->coordIndex.deleteValues(0);
-    edge->coordIndex.setValues(0,vertexIndices.size()*(triangles ? 3 : 4),idx);
+    edge->coordIndex.setValues(0,idx.size(),idx.data());
     edge->coordIndex.enableNotify(true);
     edge->coordIndex.touch();
     wire->addChild(edge);
 
-    delete[] idx;
-
     SoSeparator* linesSep = new SoSeparator();
-    SoSeparator* facesSep = new SoSeparator();
-
-    facesSep->addChild(body);
     linesSep->addChild(wire);
 
-    SoSeparator* objRoot = new SoSeparator;
     SoShapeHints* sh = new SoShapeHints;
-    SoScale* unitConv = new SoScale;
-
-    objRoot->addChild(sh);
-    objRoot->addChild(unitConv);
-    objRoot->addChild(facesSep);
-
     sh->shapeType = SoShapeHints::UNKNOWN_SHAPE_TYPE;
     sh->vertexOrdering = SoShapeHints::COUNTERCLOCKWISE;
     sh->creaseAngle = 0.3f;
+
+    SoScale* unitConv = new SoScale;
     unitConv->scaleFactor.setValue(SbVec3f(scale,scale,scale));
+
+    SoSeparator* objRoot = new SoSeparator;
+    objRoot->addChild(sh);
+    objRoot->addChild(unitConv);
+    objRoot->addChild(facesSep);
 
     feKit->addGroupPart(FdFEGroupPartSet::SURFACE_FACES,facesSep);
     //feKit->addGroupPart(FdFEGroupPartSet::RED_SURFACE_FACES,facesSep);
@@ -668,7 +429,7 @@ bool FdLink::loadVrmlViz()
       break;
 
     case FdDB::FD_OBJ_FILE:
-      if ((vrmlSep = loadObjFile(fileName.c_str(), true, scaleF,
+      if ((vrmlSep = loadObjFile(fileName.c_str(), scaleF,
                                  link->objFileGroupIndex.getValue(),
                                  myCadHandler, (FdFEModelKit*)myFEKit)))
       {
@@ -682,7 +443,10 @@ bool FdLink::loadVrmlViz()
         return true;
       }
       break;
-   }
+
+    default:
+      break;
+    }
 
   if (!vrmlSep) {
     FFaMsg::list("Failed !\n     Visualization data could not be read.\n");
