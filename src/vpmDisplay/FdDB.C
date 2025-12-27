@@ -237,7 +237,6 @@ namespace
   void createHPEventCB(void*, SoEventCallback* eventCallbackNode);
   void appearanceEventCB(void*, SoEventCallback* eventCallbackNode);
   void smartMoveEventCB(void*, SoEventCallback* eventCallbackNode);
-  void dragMoveEventCB(void*, SoEventCallback* eventCallbackNode);
   void attachEventCB(void*, SoEventCallback* eventCallbackNode);
   void detachEventCB(void*, SoEventCallback* eventCallbackNode);
   void pickLoadPointEventCB(void*, SoEventCallback* eventCallbackNode);
