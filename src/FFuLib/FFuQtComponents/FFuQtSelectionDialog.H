@@ -16,32 +16,21 @@
 #include "FFuLib/FFuDialogType.H"
 
 class QListWidget;
-class QListWidgetItem;
-class QFrame;
 
 
 class FFuQtSelectionDialog : public QDialog, public FFuQtComponentBase
 {
   Q_OBJECT;
 
-public:
-  FFuQtSelectionDialog(const std::string& msgText, int dialogType,
-                       const std::vector<std::string>& buttonTexts);
-  virtual ~FFuQtSelectionDialog() {}
+  using Strings = std::vector<std::string>;
 
-  void setList(const std::vector<std::string>& selectionList);
+public:
+  FFuQtSelectionDialog(int dialogType, const std::string& msgText,
+                       const Strings& buttonTexts, const Strings& selList = {});
   int getSelection() const;
 
-  virtual int execute();
-
-private slots:
-  void onButtonClicked(int buttonId);
-
 private:
-  int myClickedButtonId;
   QListWidget* myList;
-  QFrame* mySeparator;
-  std::vector<QListWidgetItem*> myItems;
 };
 
 #endif

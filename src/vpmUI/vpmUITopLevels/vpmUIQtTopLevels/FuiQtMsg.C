@@ -7,12 +7,14 @@
 
 #include "vpmUI/FuiMsg.H"
 #include "FFuLib/FFuQtComponents/FFuQtSelectionDialog.H"
+#include "FFuLib/FFuAuxClasses/FFuaApplication.H"
 
 
-static int translateType(FFaMsg::FFaDialogType dType)
+namespace
 {
-  switch (dType)
-    {
+  int translateType(FFaMsg::FFaDialogType dType)
+  {
+    switch (dType) {
     case FFaMsg::DISMISS_WARNING:
     case FFaMsg::WARNING:
       return FFuDialog::WARNING;
@@ -26,15 +28,19 @@ static int translateType(FFaMsg::FFaDialogType dType)
       return FFuDialog::QUESTION;
     }
 
-  return 0;
+    return 0;
+  }
 }
 
 
 int FuiMsg::dialogVt(const std::string& message, const FFaDialogType dType,
                      const std::vector<std::string>& buttonTexts)
 {
-  FFuQtSelectionDialog dialog(message,translateType(dType),buttonTexts);
-  return dialog.execute();
+  FFuQtSelectionDialog dialog(translateType(dType),message,buttonTexts);
+  FFuaApplication::breakUserEventBlock(true);
+  int resultBt = dialog.exec();
+  FFuaApplication::breakUserEventBlock(false);
+  return resultBt;
 }
 
 
@@ -43,9 +49,11 @@ int FuiMsg::dialogVt(int& selectionIdx,
                      const std::vector<std::string>& buttonTexts,
                      const std::vector<std::string>& selectionList)
 {
-  FFuQtSelectionDialog dialog(message,translateType(dType),buttonTexts);
-  dialog.setList(selectionList);
-  int resultBt = dialog.execute();
+  FFuQtSelectionDialog dialog(translateType(dType),message,buttonTexts,
+                              selectionList);
+  FFuaApplication::breakUserEventBlock(true);
+  int resultBt = dialog.exec();
   selectionIdx = dialog.getSelection();
+  FFuaApplication::breakUserEventBlock(false);
   return resultBt;
 }
