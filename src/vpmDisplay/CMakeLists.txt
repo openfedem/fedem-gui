@@ -6,6 +6,8 @@
 
 set ( LIB_ID vpmDisplay )
 
+# Include this to test the obj-file parser
+#add_subdirectory ( vpmDisplayTests )
 
 # Dependencies and system libraries
 
@@ -87,7 +89,7 @@ set ( COMPONENT_FILE_LIST  FaDOF Fd2dPictureNode Fd2DPoints
                            FdFEVisControl FdFreeJoint FdHP FdLabelKit
                            FdLinJoint FdLinJointKit
                            FdLink FdLoad FdLoadDirEngine FdLoadTransformKit
-                           FdMechanismKit FdMultiplyTransforms FdPart
+                           FdMechanismKit FdMultiplyTransforms FdObjParser FdPart
                            FdPickedPoints FdPickFilter FdPipeSurface FdPipeSurfaceKit
                            FdPrismJoint FdPtPMoveAnimator FdRefPlane FdRefPlaneKit
                            FdRevJoint FdSeaState FdSeaStateKit
