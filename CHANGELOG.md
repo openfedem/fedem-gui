@@ -8,6 +8,32 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.2.7] (2025-12-28)
+
+### :rocket: Added
+
+- A Generic part can now be created by importing a Wavefront OBJ-file.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/115:
+  Plotted curves pointing to non-existing results do not update when changing to an existing result item.
+- Issue https://github.com/openfedem/fedem-gui/issues/113:
+  The sea surface visualization does not work properly.
+- Issue https://github.com/openfedem/fedem-gui/issues/111:
+  The Global/Local Reference settings in the Load objects do not preserve their values.
+- Issue https://github.com/openfedem/fedem-gui/issues/108:
+  Component modes can not be animated directly after solving them.
+- Issue https://github.com/openfedem/fedem-gui/issues/105:
+  The Generic Part visualization does not update when detaching a triad from it.
+- Issue https://github.com/openfedem/fedem-gui/issues/104:
+  The local axis visualization for Parts and Triads does not disappear when it should.
+- Issue https://github.com/openfedem/fedem-gui/issues/102:
+  The Center of Gravity fields for Parts do not work properly.
+  (see also issue https://github.com/openfedem/fedem-gui/issues/71).
+- Issue https://github.com/openfedem/fedem-gui/issues/101:
+  The step and time counters do not show up when running animations on Linux.
+
 ## [fedem-8.1.2] (2025-11-01)
 
 ### :rocket: Added
@@ -329,3 +355,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.0.8]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.0...fedem-8.1.0.8
 [fedem-8.1.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.0.8...fedem-8.1.1
 [fedem-8.1.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.1...fedem-8.1.2
+[fedem-8.1.2.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2...fedem-8.1.2.7
