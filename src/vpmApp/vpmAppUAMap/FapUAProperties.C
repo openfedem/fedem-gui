@@ -3733,17 +3733,33 @@ void FapUAProperties::swapJointCB()
 
 void FapUAProperties::setAllDofs(bool fixed)
 {
-  FmHasDOFsBase* node = dynamic_cast<FmHasDOFsBase*>(mySelectedFmItem);
-  if (!node) return;
+  FmHasDOFsBase* item = dynamic_cast<FmHasDOFsBase*>(mySelectedFmItem);
+  if (!item) return;
 
-  if (node->setStatusForAllDOFs(fixed))
-    node->onChanged();
+  std::vector<FmHasDOFsBase*> changed;
+  changed.reserve(1+mySelectedFmItems.size());
+  // Lambda function updating the DOF status for an item.
+  auto&& setDofStatus = [&changed](FmHasDOFsBase* item, bool fixed)
+  {
+    if (!item->setStatusForAllDOFs(fixed))
+      return;
+    else if (item->isOfType(FmTriad::getClassTypeID()))
+      changed.push_back(item);
+    else
+      FpPM::touchModel();
+  };
+
+  setDofStatus(item,fixed);
 
   // Update the multi-selected items, if any
-  for (FmModelMemberBase* item : mySelectedFmItems)
-    if ((node = dynamic_cast<FmHasDOFsBase*>(item)))
-      if (node->setStatusForAllDOFs(fixed))
-        node->onChanged();
+  for (FmModelMemberBase* obj : mySelectedFmItems)
+    if ((item = dynamic_cast<FmHasDOFsBase*>(obj)))
+      setDofStatus(item,fixed);
+
+  // Issue #120: Delay the onChanged() call since it may change
+  // the mySelectedFmItems list before all items are processed
+  for (FmHasDOFsBase* item : changed)
+    item->onChanged(); // to update triad icon
 
   this->updateUIValues();
 }
@@ -3980,29 +3996,36 @@ void FapUAProperties::dofStatusToggledCB(int dof, int stat)
   FmHasDOFsBase* item = dynamic_cast<FmHasDOFsBase*>(mySelectedFmItem);
   if (!item || dof < 0) return;
 
-  size_t idof = static_cast<size_t>(dof);
+  const size_t idof = static_cast<size_t>(dof);
+
+  std::vector<FmHasDOFsBase*> changed;
+  changed.reserve(1+mySelectedFmItems.size());
+  // Lambda function updating the DOF status for an item.
+  auto&& setDofStatus = [&changed](FmHasDOFsBase* item, int dof, int stat)
+  {
+    if (!item->setStatusForDOF(dof,stat))
+      return;
+    else if (item->isOfType(FmTriad::getClassTypeID()))
+      changed.push_back(item);
+    else
+      FpPM::touchModel();
+  };
+
   IntVec dofs;
   item->getDOFs(dofs);
-  if (dofs.size() <= idof) return;
+  if (dofs.size() > idof)
+    setDofStatus(item,dofs[idof],stat);
 
-  item->setStatusForDOF(dofs[idof],stat);
-  if (item->isOfType(FmTriad::getClassTypeID()))
-    item->onChanged(); // to update triad icon
-  else
-    FpPM::touchModel();
-
-  // Update the multi-selected items
+  // Update the multi-selected items, if any
   for (FmModelMemberBase* obj : mySelectedFmItems)
     if ((item = dynamic_cast<FmHasDOFsBase*>(obj)))
-    {
-      item->getDOFs(dofs);
-      if (dofs.size() > idof)
-      {
-        item->setStatusForDOF(dofs[idof],stat);
-        if (item->isOfType(FmTriad::getClassTypeID()))
-          item->onChanged(); // to update triad icon
-      }
-    }
+      if (item->getDOFs(dofs); dofs.size() > idof)
+        setDofStatus(item,dofs[idof],stat);
+
+  // Issue #120: Delay the onChanged() call since it may change the
+  // mySelectedFmItems list before all items are processed
+  for (FmHasDOFsBase* item : changed)
+    item->onChanged(); // to update triad icon
 }
 
 
@@ -4043,12 +4066,11 @@ void FapUAProperties::loadViewAttackWhatCB(bool doHighlight)
 
 void FapUAProperties::loadPickAttackPointCB()
 {
-  FmLoad::editedLoad = dynamic_cast<FmLoad*>(mySelectedFmItem);
-  if (!FmLoad::editedLoad) return;
-
-  IAmIgnoringPickNotify = true;
-  FmLoad::editedLoad = static_cast<FmLoad*>(mySelectedFmItem);
-  FuiModes::setMode(FuiModes::PICKLOADATTACKPOINT_MODE);
+  if ((FmLoad::editedLoad = dynamic_cast<FmLoad*>(mySelectedFmItem)))
+  {
+    IAmIgnoringPickNotify = true;
+    FuiModes::setMode(FuiModes::PICKLOADATTACKPOINT_MODE);
+  }
 }
 
 
@@ -4094,11 +4116,11 @@ void FapUAProperties::loadViewFromWhatCB(bool doHighlight)
 
 void FapUAProperties::loadPickFromPointCB()
 {
-  FmLoad::editedLoad = dynamic_cast<FmLoad*>(mySelectedFmItem);
-  if (!FmLoad::editedLoad) return;
-
-  IAmIgnoringPickNotify = true;
-  FuiModes::setMode(FuiModes::PICKLOADFROMPOINT_MODE);
+  if ((FmLoad::editedLoad = dynamic_cast<FmLoad*>(mySelectedFmItem)))
+  {
+    IAmIgnoringPickNotify = true;
+    FuiModes::setMode(FuiModes::PICKLOADFROMPOINT_MODE);
+  }
 }
 
 
@@ -4130,11 +4152,11 @@ void FapUAProperties::loadViewToWhatCB(bool doHighlight)
 
 void FapUAProperties::loadPickToPointCB()
 {
-  FmLoad::editedLoad = dynamic_cast<FmLoad*>(mySelectedFmItem);
-  if (!FmLoad::editedLoad) return;
-
-  IAmIgnoringPickNotify = true;
-  FuiModes::setMode(FuiModes::PICKLOADTOPOINT_MODE);
+  if ((FmLoad::editedLoad = dynamic_cast<FmLoad*>(mySelectedFmItem)))
+  {
+    IAmIgnoringPickNotify = true;
+    FuiModes::setMode(FuiModes::PICKLOADTOPOINT_MODE);
+  }
 }
 
 
