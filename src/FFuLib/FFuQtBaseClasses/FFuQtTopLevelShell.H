@@ -31,9 +31,10 @@ public:
   // This one will show the TLS in "normal" mode.
   virtual void showTLSNormal();
 
+  virtual void setVisible(bool visible);
+
 protected:
   // Overriding some QWidget methods to handle various events
-  virtual void setVisible(bool visible);
   virtual void showEvent(QShowEvent* e);
   virtual void hideEvent(QHideEvent* e);
   virtual void closeEvent(QCloseEvent* e);
