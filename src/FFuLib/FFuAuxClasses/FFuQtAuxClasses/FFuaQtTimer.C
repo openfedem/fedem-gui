@@ -5,7 +5,6 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QEvent>
 #include <QTimerEvent>
 
 #include "FFuaQtTimer.H"
@@ -44,23 +43,16 @@ void FFuaQtTimer::stop()
 }
 
 
-bool FFuaQtTimer::event(QEvent *e)
+void FFuaQtTimer::timerEvent(QTimerEvent* e)
 {
-  // Ignore non-timer events
-  if (e->type() != QEvent::Timer)
-    return false;
-
   // Ignore other all other timer events
-  if (((QTimerEvent*)e)->timerId() != myTimerID)
-    return false;
+  if (e->timerId() == myTimerID)
+  {
+    // Stop single-shot timer
+    if (amISShot)
+      this->stop();
 
-  // Stop single shot timer
-  if (amISShot)
-    this->stop();
-
-  // Invoke callback
-  myTimerCB.invoke();
-
-  return true;
+    myTimerCB.invoke();
+  }
 }
 
