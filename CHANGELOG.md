@@ -8,6 +8,17 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.3] (2026-01-20)
+
+### :rocket: Added
+
+- The FE Node tab of the Part propety panel now displays a list of connected elements.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/120:
+  Multi-selection does not work when changing the DOF status for joints and triads.
+
 ## [fedem-8.1.2.7] (2025-12-28)
 
 ### :rocket: Added
@@ -356,3 +367,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.0.8...fedem-8.1.1
 [fedem-8.1.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.1...fedem-8.1.2
 [fedem-8.1.2.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2...fedem-8.1.2.7
+[fedem-8.1.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2.7...fedem-8.1.3
