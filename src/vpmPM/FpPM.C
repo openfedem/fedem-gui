@@ -61,10 +61,6 @@
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 #include "Admin/FedemAdmin.H"
 
-#ifdef FT_USE_PROFILER
-#include "FFaLib/FFaProfiler/FFaProfiler.H"
-#endif
-
 #include <fstream>
 #include <quuid.h>
 #include <signal.h>
@@ -75,6 +71,10 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <unistd.h>
+#endif
+
+#ifdef FT_USE_PROFILER
+namespace FapMemoryProfiler { bool usage(const char* task); }
 #endif
 
 
@@ -1271,14 +1271,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   FpPM::loadPropertyLibraries();
 
 #ifdef FT_USE_PROFILER
-  bool doMemPoll;
-  FFaCmdLineArg::instance()->getValue("memPoll", doMemPoll);
-  if (doMemPoll)
-  {
-    // Memory polling for profiling
-    Fui::okDialog("Mech. Model");
-    FFaMemoryProfiler::reportMemoryUsage("Mech. Model");
-  }
+  FapMemoryProfiler::usage("Mechanism model");
 #endif
 
   Fui::setTitle(FFaFilePath::getFileName(name).c_str());
@@ -1389,11 +1382,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   }
 
 #ifdef FT_USE_PROFILER
-  if (doMemPoll)
-  {
-    Fui::okDialog("Parts");
-    FFaMemoryProfiler::reportMemoryUsage("Parts");
-  }
+  FapMemoryProfiler::usage("Parts");
 #endif
 
   // Now that all FE data is loaded we can syncronize the strain rosettes
@@ -1405,11 +1394,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   FFaMsg::popStatus();
 
 #ifdef FT_USE_PROFILER
-  if (doMemPoll)
-  {
-    Fui::okDialog("Part viz");
-    FFaMemoryProfiler::reportMemoryUsage("Part viz");
-  }
+  FapMemoryProfiler::usage("Part visualization");
 #endif
 
   if (touchedFlag == DONT_TOUCH)
@@ -1428,11 +1413,7 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
   FFaMsg::popStatus();
 
 #ifdef FT_USE_PROFILER
-  if (doMemPoll)
-  {
-    Fui::okDialog("RDB Headers");
-    FFaMemoryProfiler::reportMemoryUsage("RDB Headers");
-  }
+  FapMemoryProfiler::usage("RDB headers");
 #endif
 
   // Finishing up
