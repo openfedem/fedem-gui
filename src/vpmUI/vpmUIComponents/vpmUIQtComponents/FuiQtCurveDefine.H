@@ -17,7 +17,6 @@ class FuiQtCurveDefine : public FFuQtWidget, public FuiCurveDefine
 public:
   FuiQtCurveDefine(QWidget* parent, const char* name = "FuiQtCurveDefine");
 
-protected:
   virtual void setVisible(bool visible);
   
 private:
@@ -30,9 +29,10 @@ class FuiQtCurveDefSheet : public FFuQtWidget, public FuiCurveDefSheet
 public:
   FuiQtCurveDefSheet(const char* name = "FuiQtCurveDefSheet");
 
+  virtual void setVisible(bool visible);
+
 protected:
   virtual void setNoComps(unsigned int nc);
-  virtual void setVisible(bool visible);
 
 private:
   virtual void setSensitivity(bool) {}

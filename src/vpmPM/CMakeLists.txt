@@ -18,6 +18,9 @@ endif ( USE_WINDPOW )
 if ( USE_EXT_CTRLSYS )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_HAS_EXTCTRL" )
 endif ( USE_EXT_CTRLSYS )
+if ( USE_PROFILER )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_PROFILER" )
+endif ( USE_PROFILER )
 
 
 ## Files with header and source with same name

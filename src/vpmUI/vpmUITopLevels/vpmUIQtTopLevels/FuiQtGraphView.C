@@ -8,7 +8,6 @@
 #include <QMdiSubWindow>
 #include <QPixmap>
 #include <QIcon>
-#include <QEvent>
 
 #include "vpmUI/vpmUITopLevels/vpmUIQtTopLevels/FuiQtGraphView.H"
 
@@ -76,22 +75,17 @@ void FuiQtGraphView::setVisible(bool visible)
 }
 //----------------------------------------------------------------------------
 
-bool FuiQtGraphView::event(QEvent* e)
+void FuiQtGraphView::showEvent(QShowEvent* e)
 {
-  bool ret = this->FFuQt2DPlotter::event(e);
+  this->FFuQt2DPlotter::showEvent(e);
+  this->onPoppedUp();
+}
+//----------------------------------------------------------------------------
 
-  switch (e->type()) {
-  case QEvent::Show:
-    this->onPoppedUp();
-    return true;
-  case QEvent::Hide:
-    this->onPoppedDown();
-    return true;
-  default:
-    break;
-  }
-
-  return ret;
+void FuiQtGraphView::hideEvent(QHideEvent* e)
+{
+  this->FFuQt2DPlotter::hideEvent(e);
+  this->onPoppedDown();
 }
 //----------------------------------------------------------------------------
 

@@ -12,8 +12,6 @@
 
 #include "FFuLib/FFuAuxClasses/FFuaTimer.H"
 
-class QEvent;
-
 
 class FFuaQtTimer : public QObject, public FFuaTimer
 {
@@ -26,7 +24,7 @@ public:
   virtual void stop();
 
 protected:
-  virtual bool event(QEvent* e);
+  virtual void timerEvent(QTimerEvent* e);
 
 private:
   // disable copy constructor and assignment operator

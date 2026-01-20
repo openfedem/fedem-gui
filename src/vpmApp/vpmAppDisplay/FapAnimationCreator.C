@@ -49,6 +49,7 @@
 
 #ifdef FT_USE_PROFILER
 #include "FFaLib/FFaProfiler/FFaProfiler.H"
+namespace FapMemoryProfiler { bool usage(const char* task); }
 #endif
 
 #include <functional>
@@ -179,7 +180,7 @@ bool FapAnimationCreator::initReading(FmAnimation* animation)
             << animation->getIdString(true) <<")"<< std::endl;
 #endif
 #ifdef FT_USE_PROFILER
-  FFaMemoryProfiler::reportMemoryUsage("Anim Init Start");
+  FapMemoryProfiler::usage("Animation Init start");
   myProfiler->startTimer("Init");
 #endif
 
@@ -874,9 +875,9 @@ void FapAnimationCreator::initDeformationReading(FmPart* part, FFrExtractor* ext
   if (!nrf) return; // No nodal results for this part
 
 #ifdef FT_USE_PROFILER
+  FapMemoryProfiler::usage("Deform Init start");
   myProfiler->startTimer("Init");
   myProfiler->startTimer("Deform Init");
-  FFaMemoryProfiler::reportMemoryUsage("Deform Init start");
 #endif
 
   // Make room for deformation read operations
@@ -956,7 +957,7 @@ void FapAnimationCreator::initDeformationReading(FmPart* part, FFrExtractor* ext
 #ifdef FT_USE_PROFILER
   myProfiler->stopTimer("Deform Init");
   myProfiler->stopTimer("Init");
-  FFaMemoryProfiler::reportMemoryUsage("Deform Init end");
+  FapMemoryProfiler::usage("Deform Init end");
 #endif
 }
 
@@ -1041,15 +1042,15 @@ bool FapAnimationCreator::readDeformations(FaVec3Vec& def, FmPart* part)
 void FapAnimationCreator::finishDeformationReading(FmPart* part)
 {
 #ifdef FT_USE_PROFILER
-  FFaMemoryProfiler::reportMemoryUsage("Deforms Finish start");
+  FapMemoryProfiler::usage("Deform Finish start");
   myProfiler->startTimer("Deform Finish");
 #endif
 
   part->getLinkHandler()->deleteResults();
 
 #ifdef FT_USE_PROFILER
-  FFaMemoryProfiler::reportMemoryUsage("Deforms Finish end ");
   myProfiler->stopTimer("Deform Finish");
+  FapMemoryProfiler::usage("Deform Finish end");
 #endif
 }
 
@@ -1141,11 +1142,9 @@ int FapAnimationCreator::initFringeReading(FmPart* part,
   IHaveOneColorPrFace = fringeSetup.isOneColorPrFace();
 
 #ifdef FT_USE_PROFILER
-  myProfiler->startTimer("Fringe Init");
+  FapMemoryProfiler::usage("Fringe Init start");
   myProfiler->startTimer("Init");
-  FFaMemoryProfiler::reportMemoryUsage("Fringe Init Start");
-  char scanc; scanf("%c",&scanc);
-  FFaMemoryProfiler::reportMemoryUsage("Fringe resolve");
+  myProfiler->startTimer("Fringe Init");
 #endif
 
   // Build Fringe Transformations
@@ -1186,8 +1185,7 @@ int FapAnimationCreator::initFringeReading(FmPart* part,
 
 #ifdef FT_USE_PROFILER
   myProfiler->stopTimer("Fringe Init");
-  FFaMemoryProfiler::reportMemoryUsage("Fringe transform");
-  scanf("%c",&scanc);
+  FapMemoryProfiler::usage("Fringe transform");
 #endif
 
   // Delete temporary data on the elements and nodes
@@ -1200,8 +1198,7 @@ int FapAnimationCreator::initFringeReading(FmPart* part,
 
 #ifdef FT_USE_PROFILER
   myProfiler->stopTimer("Init");
-  FFaMemoryProfiler::reportMemoryUsage("Fringe Init End");
-  scanf("%c",&scanc);
+  FapMemoryProfiler::usage("Fringe Init end");
 #endif
 
   if (!nodeFilter)
@@ -1355,9 +1352,8 @@ bool FapAnimationCreator::readFringeData(std::vector<DoubleVec>& values, FmPart*
 void FapAnimationCreator::finishFringeReading(FmPart* part)
 {
 #ifdef FT_USE_PROFILER
-  FFaMemoryProfiler::reportMemoryUsage("Fringe Finish start");
+  FapMemoryProfiler::usage("Fringe Finish start");
   myProfiler->startTimer("Fringe Finish");
-  char scanc; scanf("%c",&scanc);
 #endif
 
   // Delete temporary data on the parts/elements/nodes
@@ -1382,8 +1378,7 @@ void FapAnimationCreator::finishFringeReading(FmPart* part)
 
 #ifdef FT_USE_PROFILER
   myProfiler->stopTimer("Fringe Finish");
-  FFaMemoryProfiler::reportMemoryUsage("Fringes Finish end");
-  scanf("%c",&scanc);
+  FapMemoryProfiler::usage("Fringes Finish end");
 #endif
 }
 

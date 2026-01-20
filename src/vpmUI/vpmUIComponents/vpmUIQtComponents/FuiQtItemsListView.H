@@ -11,21 +11,18 @@
 #include "FFuLib/FFuQtComponents/FFuQtListView.H"
 #include "vpmUI/vpmUIComponents/FuiItemsListView.H"
 
-class QEvent;
-class QDragEnterEvent;
-class QDropEvent;
-
 
 class FuiQtItemsListView : public FFuQtListView, virtual public FuiItemsListView
 {
 protected:
   FuiQtItemsListView(QWidget* parent, const char* name);
 
-private:
-  virtual bool event(QEvent* e);
+public:
   virtual void setVisible(bool visible);
 
 protected:
+  virtual void showEvent(QShowEvent* e);
+  virtual void hideEvent(QHideEvent* e);
   virtual void dragEnterEvent(QDragEnterEvent* e);
   virtual void dropEvent(QDropEvent* e);
 };

@@ -19,21 +19,20 @@ public:
   FuiQtGraphView(QWidget* parent, const char* name = "FuiQtGraphView");
   virtual ~FuiQtGraphView() { this->onPoppedDownToMem(); /*hack*/ }
 
-private:
-  // Reimplemented to handler show & hide events
-  virtual bool event(QEvent* e);
   virtual void setVisible(bool visible);
+
+protected:
+  virtual void showEvent(QShowEvent* e);
+  virtual void hideEvent(QHideEvent* e);
 };
 
 
 class FuiQtGraphViewTLS : public FFuQtMDIWindow, public FuiGraphViewTLS
 {
 public:
-  FuiQtGraphViewTLS(QWidget* parent=0,
-                    int xpos=100,int ypos=100,
-                    int width=640,int height=250,
-                    const char* title= "Graph View",
-                    const char* name = "FuiQtGraphViewTLS");
+  FuiQtGraphViewTLS(QWidget* parent,
+                    int xpos, int ypos, int width,int height,
+                    const char* title, const char* name);
 
 protected:
   virtual void resizeEvent(QResizeEvent* e);

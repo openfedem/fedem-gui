@@ -6,7 +6,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <QCloseEvent>
-#include <QEvent>
 
 #include "FFuLib/FFuAuxClasses/FFuaApplication.H"
 #include "FFuQtModalDialog.H"
@@ -46,29 +45,24 @@ void FFuQtModalDialog::closeDialog(bool resultCode)
 }
 
 
-void FFuQtModalDialog::closeEvent(QCloseEvent* cEvent)
+void FFuQtModalDialog::showEvent(QShowEvent* e)
 {
-  if (this->onClose())
-    cEvent->accept();
-  else
-    cEvent->ignore();
+  this->QWidget::showEvent(e);
+  this->onPoppedUp();
 }
 
 
-bool FFuQtModalDialog::event(QEvent* anyEvent)
+void FFuQtModalDialog::hideEvent(QHideEvent* e)
 {
-  bool retVal = this->QWidget::event(anyEvent);
-  switch (anyEvent->type())
-    {
-    case QEvent::Show:
-      this->onPoppedUp();
-      return true;
-    case QEvent::Hide:
-      this->onPoppedDown();
-      return true;
-    default:
-      break;
-    }
+  this->QWidget::hideEvent(e);
+  this->onPoppedDown();
+}
 
-  return retVal;
+
+void FFuQtModalDialog::closeEvent(QCloseEvent* e)
+{
+  if (this->onClose())
+    e->accept();
+  else
+    e->ignore();
 }

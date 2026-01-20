@@ -25,6 +25,7 @@
 #include "FFuLib/FFuToggleButton.H"
 #include "FFuLib/FFuOptionMenu.H"
 #include "FFuLib/FFuFileDialog.H"
+#include "FFuLib/FFuScrolledList.H"
 #include "FFaLib/FFaString/FFaStringExt.H"
 
 
@@ -210,6 +211,8 @@ void FuiLinkNodeSheet::initWidgets()
   myNodePosition->setRefChangedCB(FFaDynCB1M(FuiLinkNodeSheet,this,onPosRefChanged,bool));
   myNodePosition->setSensitivity(false);
   myNodePosition->setMaxWidth(150);
+  myElementLabel->setLabel("Connected elements");
+  myElements->setSensitivity(false);
 }
 
 
@@ -217,12 +220,18 @@ void FuiLinkNodeSheet::setValues(const FuiLinkValues& values)
 {
   if (values.feNode > 0) {
     myNodePosition->setValue(values.feNode);
+    myElements->setItems(values.elmList);
     myPos = values.feNodePos;
     this->onPosRefChanged(myNodePosition->isGlobal());
     myNodePosition->popUp();
+    myElementLabel->popUp();
+    myElements->popUp();
   }
-  else
+  else {
     myNodePosition->popDown();
+    myElementLabel->popDown();
+    myElements->popDown();
+  }
 }
 
 

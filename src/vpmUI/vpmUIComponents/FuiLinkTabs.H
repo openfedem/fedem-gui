@@ -27,6 +27,7 @@ class FFuFileBrowseField;
 class FFuIOField;
 class FFuTable;
 class FFuScale;
+class FFuScrolledList;
 class FFuaQueryBase;
 class FuiPositionData;
 class Fui3DPoint;
@@ -115,6 +116,7 @@ struct FuiLinkValues
   // FE node data
   int    feNode = -1;
   FaVec3 feNodePos;
+  std::vector<std::string> elmList;
 
   // callback functions
   FFaDynCB1<FuiQueryInputFieldValues&> editLoadEngineCB;
@@ -205,7 +207,9 @@ public:
 protected:
   void initWidgets();
 
-  Fui3DPoint* myNodePosition;
+  Fui3DPoint*      myNodePosition;
+  FFuLabel*        myElementLabel;
+  FFuScrolledList* myElements;
 
 private:
   void onPosRefChanged(bool toGlobal);

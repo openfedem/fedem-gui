@@ -5,8 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <QEvent>
 #include <QDropEvent>
+#include <QDragEnterEvent>
 #include <QStyleFactory>
 
 #include "vpmUI/vpmUIComponents/vpmUIQtComponents/FuiQtItemsListView.H"
@@ -36,23 +36,17 @@ void FuiQtItemsListView::setVisible(bool visible)
 }
 //----------------------------------------------------------------------------
 
-bool FuiQtItemsListView::event(QEvent* e)
+void FuiQtItemsListView::showEvent(QShowEvent* e)
 {
-  bool ret = this->FFuQtListView::event(e);
+  this->FFuQtListView::showEvent(e);
+  this->onPoppedUp();
+}
+//----------------------------------------------------------------------------
 
-  switch (e->type())
-  {
-  case QEvent::Show:
-    this->onPoppedUp();
-    return true;
-  case QEvent::Hide:
-    this->onPoppedDown();
-    return true;
-  default:
-    break;
-  }
-
-  return ret;
+void FuiQtItemsListView::hideEvent(QHideEvent* e)
+{
+  this->FFuQtListView::hideEvent(e);
+  this->onPoppedDown();
 }
 //----------------------------------------------------------------------------
 

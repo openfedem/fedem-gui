@@ -36,6 +36,11 @@ if ( USE_MEMPOOL )
   string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_MEMPOOL" )
 endif ( USE_MEMPOOL )
 
+if ( USE_PROFILER )
+  string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_PROFILER" )
+  list ( APPEND SOURCE_FILE_LIST FapMemoryProfiler )
+endif ( USE_PROFILER )
+
 string ( APPEND CMAKE_CXX_FLAGS " -DFT_USE_VISUALS" )
 
 

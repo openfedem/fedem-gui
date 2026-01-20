@@ -26,10 +26,11 @@ public:
   virtual bool execute();
   virtual void closeDialog(bool resultCode);
 
-private:
-  // Reimplemented from QWidget to handle various events
-  virtual void closeEvent(QCloseEvent*);
-  virtual bool event(QEvent*);
+protected:
+  // Overriding some QWidget methods to handle various events
+  virtual void showEvent(QShowEvent* e);
+  virtual void hideEvent(QHideEvent* e);
+  virtual void closeEvent(QCloseEvent* e);
 };
 
 #endif
