@@ -18,6 +18,7 @@
 #include "FFrLib/FFrExtractor.H"
 #include "FFaLib/FFaOS/FFaFilePath.H"
 #include "FFaLib/FFaString/FFaStringExt.H"
+#include "FFaLib/FFaCmdLineArg/FFaCmdLineArg.H"
 #include "FFaLib/FFaDefinitions/FFaMsg.H"
 #include <algorithm>
 #include <iterator>
@@ -535,8 +536,10 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
     Fui::dismissDialog(dialogWarning.c_str());
 
   // Add the files to the extractor
+  bool memPoll = false;
+  FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
   FFaMsg::enableSubSteps(addCandidates.size());
-  extr->addFiles(addCandidates,true);
+  extr->addFiles(addCandidates,true,false,memPoll);
   FFaMsg::disableSubSteps();
   FFaMsg::setSubTask("");
 }
@@ -723,7 +726,11 @@ void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
   reportSet("New res-files added to extractor:",newResFiles);
 #endif
   if (!newFrsFiles.empty())
-    extr->addFiles(newFrsFiles);
+  {
+    bool memPoll = false;
+    FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
+    extr->addFiles(newFrsFiles,false,false,memPoll);
+  }
 
   // Add the new res-files found to the extractor also, for progress polling
   if (!newResFiles.empty())
@@ -1032,7 +1039,7 @@ void FpModelRDBHandler::RDBSyncOnParts(FmResultStatusData* rsd, FmMechanism* mec
 
     if (part->isFELoaded()) {
       FFaMsg::pushStatus("Reading result info");
-      extr->addFiles(finalCandidates, true);
+      extr->addFiles(finalCandidates,true);
       FFaMsg::popStatus();
     }
     else {
@@ -1382,7 +1389,12 @@ void FpModelRDBHandler::RDBSync(FmPart* part, FmMechanism* mech,
 #if FP_DEBUG > 3
   reportSet("Reducer files after adding:",ourReducerFRSs);
 #endif
-  if (extr) extr->addFiles(newFiles);
+  if (extr)
+  {
+    bool memPoll = false;
+    FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
+    extr->addFiles(newFiles,false,memPoll);
+  }
 }
 
 

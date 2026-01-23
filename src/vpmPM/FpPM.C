@@ -1272,6 +1272,10 @@ bool FpPM::vpmModelOpen(const std::string& givenName, bool doLoadParts,
 
 #ifdef FT_USE_PROFILER
   FapMemoryProfiler::usage("Mechanism model");
+#else
+  if (FFaCmdLineArg::instance()->isOptionSetOnCmdLine("memPoll"))
+    std::cout <<"\n  ** This version is built without the memory profiler.\n"
+              <<"     The option -memPoll is therefore ignored.\n"<< std::endl;
 #endif
 
   Fui::setTitle(FFaFilePath::getFileName(name).c_str());
