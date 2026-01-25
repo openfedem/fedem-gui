@@ -536,7 +536,7 @@ void FpModelRDBHandler::RDBOpen(FmResultStatusData* rsd,
     Fui::dismissDialog(dialogWarning.c_str());
 
   // Add the files to the extractor
-  bool memPoll = false;
+  int memPoll = 0;
   FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
   FFaMsg::enableSubSteps(addCandidates.size());
   extr->addFiles(addCandidates,true,false,memPoll);
@@ -727,7 +727,7 @@ void FpModelRDBHandler::RDBSync(FmResultStatusData* currentRSD,
 #endif
   if (!newFrsFiles.empty())
   {
-    bool memPoll = false;
+    int memPoll = 0;
     FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
     extr->addFiles(newFrsFiles,false,false,memPoll);
   }
@@ -1391,7 +1391,7 @@ void FpModelRDBHandler::RDBSync(FmPart* part, FmMechanism* mech,
 #endif
   if (extr)
   {
-    bool memPoll = false;
+    int memPoll = 0;
     FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
     extr->addFiles(newFiles,false,memPoll);
   }

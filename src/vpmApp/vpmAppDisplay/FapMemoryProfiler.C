@@ -14,13 +14,12 @@ namespace FapMemoryProfiler
 {
   bool usage(const char* task)
   {
-    bool doMemPoll;
-    FFaCmdLineArg::instance()->getValue("memPoll",doMemPoll);
-    if (doMemPoll)
-    {
-      FFaMsg::dialog(task,FFaMsg::OK);
-      FFaMemoryProfiler::reportMemoryUsage(task);
-    }
-    return doMemPoll;
+    int memPoll = 0;
+    FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
+    if (memPoll < 1) return false;
+
+    FFaMsg::dialog(task,FFaMsg::OK);
+    FFaMemoryProfiler::reportMemoryUsage(task);
+    return true;
   }
 }
