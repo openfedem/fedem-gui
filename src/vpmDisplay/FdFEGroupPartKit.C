@@ -16,8 +16,7 @@
 #include <Inventor/nodes/SoPolygonOffset.h>
 #include <Inventor/nodes/SoIndexedLineSet.h>
 #include <Inventor/nodes/SoIndexedFaceSet.h>
-#include <Inventor/nodes/SoVertexProperty.h>
-#include <Inventor/nodes/SoTransform.h>
+
 #include "FFlLib/FFlVisualization/FFlGroupPartCreator.H"
 #include "vpmDisplay/FdFEGroupPartKit.H"
 #include "vpmDisplay/FdBackPointer.H"
@@ -34,114 +33,109 @@ SoMaterialBinding * FdFEGroupPartKit::ourPrFaceMaterialBinding;
 SoMaterialBinding * FdFEGroupPartKit::ourPrVertexMaterialBinding;
 SoMaterialBinding * FdFEGroupPartKit::ourPrFaceVertexMaterialBinding;
 
-SoPackedColor * FdFEGroupPartKit::ourNoResultsColor = 0;
+SoPackedColor * FdFEGroupPartKit::ourNoResultsColor = NULL;
 
-SO_KIT_SOURCE(FdFEGroupPartKit); 
+SO_KIT_SOURCE(FdFEGroupPartKit);
+
 
 void FdFEGroupPartKit::init()
 {
-   SO_KIT_INIT_CLASS(FdFEGroupPartKit, SoBaseKit, "BaseKit");
-   
-   ourBaseColorLightModel = new SoLightModel;
-   ourBaseColorLightModel->ref();
-   ourBaseColorLightModel->model.setValue(SoLightModel::BASE_COLOR);
+  SO_KIT_INIT_CLASS(FdFEGroupPartKit, SoBaseKit, "BaseKit");
 
-   ourLW2DrawStyle = new SoDrawStyle;
-   ourLW2DrawStyle->ref();
-   ourLW2DrawStyle->lineWidth.setValue(2);
+  ourBaseColorLightModel = new SoLightModel;
+  ourBaseColorLightModel->ref();
+  ourBaseColorLightModel->model.setValue(SoLightModel::BASE_COLOR);
 
-   ourLW3DrawStyle = new SoDrawStyle;
-   ourLW2DrawStyle->ref();
-   ourLW2DrawStyle->lineWidth.setValue(3);
+  ourLW2DrawStyle = new SoDrawStyle;
+  ourLW2DrawStyle->ref();
+  ourLW2DrawStyle->lineWidth.setValue(2);
 
-   ourLinesOffset = new SoPolygonOffset;
-   ourLinesOffset->ref();
-   ourLinesOffset->styles.setValue(SoPolygonOffset::FILLED);
-   ourLinesOffset->factor.setValue(1);
-   ourLinesOffset->units.setValue(1);
+  ourLW3DrawStyle = new SoDrawStyle;
+  ourLW2DrawStyle->ref();
+  ourLW2DrawStyle->lineWidth.setValue(3);
 
-   ourPrPartMaterialBinding = new SoMaterialBinding;
-   ourPrPartMaterialBinding->ref();
-   ourPrPartMaterialBinding->value.setValue(SoMaterialBinding::OVERALL);
+  ourLinesOffset = new SoPolygonOffset;
+  ourLinesOffset->ref();
+  ourLinesOffset->styles.setValue(SoPolygonOffset::FILLED);
+  ourLinesOffset->factor.setValue(1);
+  ourLinesOffset->units.setValue(1);
 
-   ourPrFaceMaterialBinding = new SoMaterialBinding;
-   ourPrFaceMaterialBinding->ref();
-   ourPrFaceMaterialBinding->value.setValue(SoMaterialBinding::PER_FACE);
+  ourPrPartMaterialBinding = new SoMaterialBinding;
+  ourPrPartMaterialBinding->ref();
+  ourPrPartMaterialBinding->value.setValue(SoMaterialBinding::OVERALL);
 
-   ourPrFaceVertexMaterialBinding = new SoMaterialBinding;
-   ourPrFaceVertexMaterialBinding->ref();
-   ourPrFaceVertexMaterialBinding->value.setValue(SoMaterialBinding::PER_VERTEX);
+  ourPrFaceMaterialBinding = new SoMaterialBinding;
+  ourPrFaceMaterialBinding->ref();
+  ourPrFaceMaterialBinding->value.setValue(SoMaterialBinding::PER_FACE);
 
-   ourPrVertexMaterialBinding = new SoMaterialBinding;
-   ourPrVertexMaterialBinding->ref();
-   ourPrVertexMaterialBinding->value.setValue(SoMaterialBinding::PER_VERTEX_INDEXED);
-   
-   ourNoResultsColor = new SoPackedColor;
-   ourNoResultsColor->ref();
-   ourNoResultsColor->orderedRGBA.setNum(1);
-   ourNoResultsColor->orderedRGBA.set1Value(0, 0x888888ff);
-} 
+  ourPrFaceVertexMaterialBinding = new SoMaterialBinding;
+  ourPrFaceVertexMaterialBinding->ref();
+  ourPrFaceVertexMaterialBinding->value.setValue(SoMaterialBinding::PER_VERTEX);
+
+  ourPrVertexMaterialBinding = new SoMaterialBinding;
+  ourPrVertexMaterialBinding->ref();
+  ourPrVertexMaterialBinding->value.setValue(SoMaterialBinding::PER_VERTEX_INDEXED);
+
+  ourNoResultsColor = new SoPackedColor;
+  ourNoResultsColor->ref();
+  ourNoResultsColor->orderedRGBA.setNum(1);
+  ourNoResultsColor->orderedRGBA.set1Value(0, 0x888888ff);
+}
 
 //    Constructor
 
 FdFEGroupPartKit::FdFEGroupPartKit()
 {
-   SO_KIT_CONSTRUCTOR(FdFEGroupPartKit); 
+  SO_KIT_CONSTRUCTOR(FdFEGroupPartKit);
 
-   isBuiltIn = TRUE;
- 
-   SO_KIT_ADD_CATALOG_ENTRY(toggle,   SoSwitch ,              FALSE,
-			    this, \x0 , TRUE );
-   SO_KIT_ADD_CATALOG_ENTRY(backPt,        FdBackPointer,     TRUE,
-                            this, \x0 ,TRUE );
-   SO_KIT_ADD_CATALOG_ENTRY(separator,   SoSeparator ,        FALSE,
-			    toggle, \x0 , TRUE );
+  isBuiltIn = TRUE;
 
-   SO_KIT_ADD_CATALOG_ENTRY(fullMaterial,  SoMaterial,        FALSE,
-                            separator, \x0 ,TRUE );
-   SO_KIT_ADD_CATALOG_ENTRY(lightModel,    SoLightModel,      TRUE,
-                            separator, \x0 ,TRUE );
-   SO_KIT_ADD_CATALOG_ENTRY(drawStyle,     SoDrawStyle,       TRUE,
-                            separator, \x0 ,TRUE );
-   SO_KIT_ADD_CATALOG_ENTRY(polygonOffset, SoPolygonOffset,   TRUE,
-                            separator, \x0 ,TRUE );
+  SO_KIT_ADD_CATALOG_ENTRY(toggle,    SoSwitch,      FALSE, this,   \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ENTRY(backPt,    FdBackPointer, TRUE,  this,   \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ENTRY(separator, SoSeparator,   FALSE, toggle, \x0, TRUE);
 
-   SO_KIT_ADD_CATALOG_ENTRY(binding,       SoMaterialBinding,  TRUE,
-                            separator, \x0 ,TRUE );
-   SO_KIT_ADD_CATALOG_ENTRY(packedMaterial,      SoPackedColor, TRUE,
-                            separator, \x0 ,TRUE );
+  SO_KIT_ADD_CATALOG_ENTRY(fullMaterial,  SoMaterial,      FALSE,
+                           separator, \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ENTRY(lightModel,    SoLightModel,    TRUE,
+                           separator, \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ENTRY(drawStyle,     SoDrawStyle,     TRUE,
+                           separator, \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ENTRY(polygonOffset, SoPolygonOffset, TRUE,
+                           separator, \x0, TRUE);
 
-   SO_KIT_ADD_CATALOG_ENTRY(shapeToggle, SoSwitch,              FALSE,
-			    separator, \x0 , TRUE );
-                            
-   SO_KIT_ADD_CATALOG_ENTRY(shapeSep,   SoSeparator ,        FALSE,
-			    shapeToggle, \x0 , TRUE );
-   SO_KIT_ADD_CATALOG_ABSTRACT_ENTRY(shape,
-				     SoIndexedShape, SoIndexedFaceSet, TRUE, 
-				     shapeSep, \x0 ,TRUE );
-             
-   SO_KIT_ADD_CATALOG_ENTRY(specialGraphics, SoSeparator ,       FALSE,
-                            shapeToggle, \x0 , TRUE );
+  SO_KIT_ADD_CATALOG_ENTRY(binding,        SoMaterialBinding, TRUE,
+                           separator, \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ENTRY(packedMaterial, SoPackedColor,     TRUE,
+                           separator, \x0, TRUE);
 
+  SO_KIT_ADD_CATALOG_ENTRY(shapeToggle, SoSwitch, FALSE, separator, \x0, TRUE);
 
+  SO_KIT_ADD_CATALOG_ENTRY(shapeSep, SoSeparator, FALSE,
+                           shapeToggle, \x0, TRUE);
+  SO_KIT_ADD_CATALOG_ABSTRACT_ENTRY(shape, SoIndexedShape, SoIndexedFaceSet, TRUE,
+                                    shapeSep, \x0, TRUE);
 
-   SO_KIT_INIT_INSTANCE();
-   
-   IAmOn = false;
-   IAmShowingResults = false;
-   IAmShowingResultLooks = false;
-   myVizMode = NORMAL;
-   
-   myCurrentFrame = 0;
+  SO_KIT_ADD_CATALOG_ENTRY(specialGraphics, SoSeparator, FALSE,
+                           shapeToggle, \x0, TRUE);
 
-   myLineWidth = 0;
-   myLinePattern = 0xffff;
-   myTransparency = 0.0f;
+  SO_KIT_INIT_INSTANCE();
 
-   this->initWhenConstructed();
+  IAmOn = false;
+  IAmShowingResults = false;
+  IAmShowingResultLooks = false;
+  IAmUsingPrivateDrawStyle = false;
+  myVizMode = NORMAL;
 
-   SoSeparator * sep = (SoSeparator *)this->separator.getValue();
-   sep->renderCaching.setValue(SoSeparator::OFF);
+  myCurrentFrame = 0;
+
+  myLineWidth = 0;
+  myLinePattern = 0xffff;
+  myTransparency = 0.0f;
+
+  this->initWhenConstructed();
+
+  SoSeparator* sep = (SoSeparator*)this->separator.getValue();
+  sep->renderCaching.setValue(SoSeparator::OFF);
 }
 
 FdFEGroupPartKit::~FdFEGroupPartKit()
@@ -167,8 +161,7 @@ bool FdFEGroupPartKit::hasSpecialGraphics()
 
 void FdFEGroupPartKit::setFdPointer(FdObject* backPnt)
 {
-  FdBackPointer* bp_pointer = SO_GET_PART(this, "backPt", FdBackPointer);
-  bp_pointer->setPointer(backPnt);
+  SO_GET_PART(this,"backPt",FdBackPointer)->setPointer(backPnt);
 }
 
 void FdFEGroupPartKit::setShapeIndexes(bool isFaceShape,
@@ -262,8 +255,8 @@ void FdFEGroupPartKit::toggleOn(bool turnOn)
 void FdFEGroupPartKit::setVizMode(FdGpVizModeEnum mode)
 {
   myVizMode = mode;
-  this->updateContents(); 
-}  
+  this->updateContents();
+}
 
 void FdFEGroupPartKit::setLook(const FFdLook& aLook)
 {
@@ -397,196 +390,162 @@ void FdFEGroupPartKit::setResultLookOn(bool turnOn)
 
 void FdFEGroupPartKit::remapLookResults()
 {
-  for (size_t i = 0; i < myResultFrames.size(); i++)
-    this->remapLookResults(i, myLegendMapper);
+  for (ResultsFrame* frame : myResultFrames)
+    this->remapLookResults(frame, myLegendMapper);
 }
 
-void FdFEGroupPartKit::remapLookResults(unsigned int frameIdx, const FFaLegendMapper& mapping)
+
+void FdFEGroupPartKit::remapLookResults(ResultsFrame* frame, const FFaLegendMapper& mapping)
 {
-  if ( frameIdx < myResultFrames.size() 
-       && myResultFrames[frameIdx] && myResultFrames[frameIdx]->resValues.size())
-    {
-      uint32_t * packedColors;
-      ResultsFrame * frame = myResultFrames[frameIdx];
-      SoPackedColor * pc = frame->getResColors();
-       
-      if (!myGroupPartData || myGroupPartData->isIndexShape)
+  if (frame->resValues.empty()) return;
+
+  SoPackedColor* pc = frame->getResColors();
+
+  if (!myGroupPartData || myGroupPartData->isIndexShape)
+  {
+    pc->orderedRGBA.setNum(frame->resValues.size());
+    uint32_t* packedColors = pc->orderedRGBA.startEditing();
+    for (size_t i = 0; i < frame->resValues.size(); i++)
+      packedColors[i] = mapping.getColor(frame->resValues[i]);
+    pc->orderedRGBA.finishEditing();
+  }
+  else
+  {
+    size_t nColors = 0;
+
+    switch (frame->resLookPolicy)
+      {
+      case PR_FACE:
+        if (myGroupPartData->isLineShape)
+          nColors = myGroupPartData->edgePointers.size();
+        else
+          nColors = myGroupPartData->facePointers.size();
+        break;
+      case PR_FACE_VERTEX:
+        if (myGroupPartData->isLineShape)
+          nColors = myGroupPartData->edgePointers.size()*2;
+        else
+          nColors = myGroupPartData->nVisiblePrimitiveVertexes;
+        break;
+      default:
+        break;
+      }
+
+    pc->orderedRGBA.setNum(nColors);
+    uint32_t* packedColors = pc->orderedRGBA.startEditing();
+    int nValues = frame->resValues.size();
+
+    switch (frame->resLookPolicy)
+      {
+      case PR_FACE:
+        if (myGroupPartData->isLineShape)
         {
-          pc->orderedRGBA.setNum(frame->resValues.size());
-          packedColors = pc->orderedRGBA.startEditing();
-          for (size_t i = 0; i < frame->resValues.size(); i++)
-            packedColors[i] = mapping.getColor(frame->resValues[i]);
-          pc->orderedRGBA.finishEditing();
+          for (size_t i = 0; i < nColors; i++)
+            if (int resIdx = myGroupPartData->edgePointers[i].second; resIdx >= 0 && resIdx < nValues)
+              packedColors[i] = mapping.getColor(frame->resValues[resIdx]);
+            else
+              packedColors[i] = mapping.getColor(HUGE_VAL);
         }
-      else
+        else
         {
-          int nValues = frame->resValues.size();
-          unsigned int nColors = 0; 
-          unsigned int primNr;
-          
-          switch (frame->resLookPolicy)
-            {
-            case PR_FACE:
-              if(myGroupPartData->isLineShape)
-                nColors = myGroupPartData->edgePointers.size();
-              else
-                nColors = myGroupPartData->facePointers.size();
-              break;
-            case PR_FACE_VERTEX:
-              if(myGroupPartData->isLineShape)
-                nColors =  myGroupPartData->edgePointers.size() * 2;
-              else
-                nColors =  myGroupPartData->nVisiblePrimitiveVertexes;
-              break;
-            default:
-              break;
-            }
-          pc->orderedRGBA.setNum(nColors);
-
-          packedColors = pc->orderedRGBA.startEditing();
-         
-          switch (frame->resLookPolicy)
-            {
-            case  PR_FACE:
-              if(myGroupPartData->isLineShape)
-                {
-                  int resIdx;
-                  for ( primNr = 0; (primNr < myGroupPartData->edgePointers.size()) && (primNr < nColors); ++primNr)
-                    {
-                      resIdx = myGroupPartData->edgePointers[primNr].second;
-                      if(resIdx >= 0 && resIdx < nValues)
-                        packedColors[primNr] = mapping.getColor(frame->resValues[resIdx]);
-                      else
-                        packedColors[primNr] = mapping.getColor(HUGE_VAL);
-                    }
-                }
-              else
-                {
-                  int resIdx;
-                  for ( primNr = 0; (primNr < myGroupPartData->facePointers.size()) && (primNr < nColors); ++primNr)
-                    {
-                      resIdx = myGroupPartData->facePointers[primNr].second;
-                      if(resIdx >= 0 && resIdx < nValues)
-                        packedColors[primNr] = mapping.getColor(frame->resValues[resIdx]);
-                      else
-                        packedColors[primNr] = mapping.getColor(HUGE_VAL);
-                    }
-                }
-
-              break;
-            case PR_FACE_VERTEX:
-              if(myGroupPartData->isLineShape)
-                {
-                  int resIdx, vx;
-		  unsigned int i;
-                  for ( primNr = 0, i =  0; (primNr < myGroupPartData->edgePointers.size()) && (i < nColors); ++primNr)
-                    {
-                      resIdx = myGroupPartData->edgePointers[primNr].second;
-                      if(resIdx >= 0 && resIdx < nValues)
-                        for(vx = 0 ; (vx < 2) && (i < nColors); ++vx, ++i )
-                          packedColors[i] = mapping.getColor(frame->resValues[resIdx + vx]);
-                      else
-                        for(vx = 0 ; (vx < 2) && (i < nColors); ++vx, ++i )
-                          packedColors[i] = mapping.getColor(HUGE_VAL);
-
-                    }
-                }
-              else
-                {
-                  int resIdx, vx;
-		  unsigned int i;
-                  for ( primNr = 0, i =  0; (primNr < myGroupPartData->facePointers.size()) && (i < nColors); ++primNr)
-                    {
-                      resIdx = myGroupPartData->facePointers[primNr].second;
-                      if(resIdx >= 0 && resIdx < nValues)
-                        for(vx = 0 ; (vx < myGroupPartData->facePointers[primNr].first->getNumVertices()) && (i < nColors); ++vx, ++i )
-                          packedColors[i] = mapping.getColor(frame->resValues[resIdx + vx]);
-                      else
-                        for(vx = 0 ; (vx < myGroupPartData->facePointers[primNr].first->getNumVertices()) && (i < nColors); ++vx, ++i )
-                          packedColors[i] = mapping.getColor(HUGE_VAL);
-                    }
-                }
-              break;
-            default:
-              break;
-            }
-          pc->orderedRGBA.finishEditing();
+          for (size_t i = 0; i < nColors; i++)
+            if (int resIdx = myGroupPartData->facePointers[i].second; resIdx >= 0 && resIdx < nValues)
+              packedColors[i] = mapping.getColor(frame->resValues[resIdx]);
+            else
+              packedColors[i] = mapping.getColor(HUGE_VAL);
         }
-    }
+        break;
+
+      case PR_FACE_VERTEX:
+        if (myGroupPartData->isLineShape)
+        {
+          size_t i, j;
+          for (i = j = 0; i < myGroupPartData->edgePointers.size() && j < nColors; i++)
+            if (int resIdx = myGroupPartData->edgePointers[i].second; resIdx >= 0 && resIdx < nValues)
+              for (int vx = 0; vx < 2 && j < nColors; vx++, j++)
+                packedColors[j] = mapping.getColor(frame->resValues[resIdx + vx]);
+            else
+              for (int vx = 0; vx < 2 && j < nColors; vx++, j++)
+                packedColors[j] = mapping.getColor(HUGE_VAL);
+        }
+        else
+        {
+          size_t i, j;
+          for (i = j = 0; i < myGroupPartData->facePointers.size() && j < nColors; i++)
+            if (int resIdx = myGroupPartData->facePointers[i].second; resIdx >= 0 && resIdx < nValues)
+              for (int vx = 0; vx < myGroupPartData->facePointers[i].first->getNumVertices() && j < nColors; vx++, j++)
+                packedColors[j] = mapping.getColor(frame->resValues[resIdx + vx]);
+            else
+              for (int vx = 0; vx < myGroupPartData->facePointers[i].first->getNumVertices() && j < nColors; vx++, j++)
+                packedColors[j] = mapping.getColor(HUGE_VAL);
+        }
+        break;
+
+      default:
+        break;
+      }
+
+    pc->orderedRGBA.finishEditing();
+  }
 }
+
 
 float FdFEGroupPartKit::getResultFromMaterialIndex(unsigned int matIdx)
 {
-  float result = float(HUGE_VAL);
+  if (myCurrentFrame >= myResultFrames.size() || !myResultFrames[myCurrentFrame] ||
+      myResultFrames[myCurrentFrame]->resValues.empty())
+    return float(HUGE_VAL); // Non-existing or empy frame
 
-  if ( myCurrentFrame < myResultFrames.size() 
-       && myResultFrames[myCurrentFrame] && myResultFrames[myCurrentFrame]->resValues.size())
-    {
-      ResultsFrame* frame = myResultFrames[myCurrentFrame];
-      if (!myGroupPartData || myGroupPartData->isIndexShape)
+  int resIdx = -1;
+  ResultsFrame* frame = myResultFrames[myCurrentFrame];
+  if (!myGroupPartData || myGroupPartData->isIndexShape)
+    resIdx = matIdx;
+  else
+    switch (frame->resLookPolicy)
+      {
+      case PR_FACE:
+        if (myGroupPartData->isLineShape)
         {
-          if (matIdx < frame->resValues.size())
-            result = frame->resValues[matIdx];
+          if (matIdx < myGroupPartData->edgePointers.size())
+            resIdx = myGroupPartData->edgePointers[matIdx].second;
         }
-      else
+        else
         {
-          unsigned int nColors = 0;
-          switch (frame->resLookPolicy)
-            {
-            case PR_FACE:
-              if(myGroupPartData->isLineShape)
-                nColors = myGroupPartData->edgePointers.size();
-              else
-                nColors = myGroupPartData->facePointers.size();
-              break;
-            case PR_FACE_VERTEX:
-              if(myGroupPartData->isLineShape)
-                nColors = myGroupPartData->edgePointers.size() * 2;
-              else
-                nColors = myGroupPartData->nVisiblePrimitiveVertexes;
-              break;
-            default:
-              break;
-            }
+          if (matIdx < myGroupPartData->facePointers.size())
+            resIdx = myGroupPartData->facePointers[matIdx].second;
+        }
+        break;
 
-          int resIdx = -1;
-          switch (frame->resLookPolicy)
-            {
-            case PR_FACE:
-              if (myGroupPartData->isLineShape)
-                {
-                  if (matIdx < myGroupPartData->edgePointers.size())
-                    resIdx = myGroupPartData->edgePointers[matIdx].second;
-                }
-              else
-                {
-                  if (matIdx < myGroupPartData->facePointers.size() && matIdx < nColors)
-                    resIdx = myGroupPartData->facePointers[matIdx].second;
-                }
-              break;
-            case PR_FACE_VERTEX:
-              if (matIdx < nColors)
-                resIdx = matIdx;
-              break;
-            default:
-              break;
-            }
+      case PR_FACE_VERTEX:
+        if (myGroupPartData->isLineShape)
+        {
+          if (matIdx < myGroupPartData->edgePointers.size()*2)
+            resIdx = matIdx;
+        }
+        else
+        {
+          if ((int)matIdx < myGroupPartData->nVisiblePrimitiveVertexes)
+            resIdx = matIdx;
+        }
+        break;
 
-          if (resIdx >= 0 && resIdx < (int)frame->resValues.size())
-            result = frame->resValues[resIdx];
-         }
-    }
- 
-  return result;
+      default:
+        break;
+      }
+
+  if (resIdx >= 0 && resIdx < (int)frame->resValues.size())
+     return frame->resValues[resIdx];
+
+  return float(HUGE_VAL);
 }
+
 
 bool FdFEGroupPartKit::hasResultLook(unsigned int frameIdx)
 {
-  if ( frameIdx < myResultFrames.size() 
-       && myResultFrames[frameIdx] && myResultFrames[frameIdx]->resValues.size())
-    return true;
-  else
-    return false;
+  if (frameIdx < myResultFrames.size() && myResultFrames[frameIdx])
+    return !myResultFrames[frameIdx]->resValues.empty();
+
+  return false;
 }
 
 void FdFEGroupPartKit::setResultLook(unsigned int frameIdx, lookPolicy lookBinding,
@@ -602,9 +561,9 @@ void FdFEGroupPartKit::setResultLook(unsigned int frameIdx, lookPolicy lookBindi
   myResultFrames[frameIdx]->resValues.reserve(lookValues.size());
   for (double look : lookValues)
     myResultFrames[frameIdx]->resValues.push_back((float)look);
-  
+
   myResultFrames[frameIdx]->resLookPolicy = lookBinding;
-  this->remapLookResults(frameIdx, mapping);
+  this->remapLookResults(myResultFrames[frameIdx], mapping);
 }
 
 void FdFEGroupPartKit::deleteResultLook(int frameIdx) // frame = -1 => all
@@ -620,18 +579,17 @@ void FdFEGroupPartKit::deleteResultLook(int frameIdx) // frame = -1 => all
       }
   }
   else if (frameIdx < (int)myResultFrames.size())
-  {
     if (myResultFrames[frameIdx])
     {
       delete myResultFrames[frameIdx];
       myResultFrames[frameIdx] = NULL;
     }
-  }
 }
+
 
 ///////////////////////////////////////////
 //
-// Conveninence methods :
+// Convenience methods :
 //
 
 void FdFEGroupPartKit::expandFrameArrayIfNeccesary(int frameIdx)
@@ -640,103 +598,87 @@ void FdFEGroupPartKit::expandFrameArrayIfNeccesary(int frameIdx)
     myResultFrames.resize(frameIdx+1,NULL);
 }
 
+
 void FdFEGroupPartKit::updateContents()
 {
-  SoSwitch* sw = (SoSwitch*)(this->toggle.getValue());
-  if (sw)
+  if (SoSwitch* sw = (SoSwitch*)(this->toggle.getValue()); sw)
     sw->whichChild = IAmOn ? SO_SWITCH_ALL : SO_SWITCH_NONE;
 
-  SoSwitch* ssw = (SoSwitch*)(this->shapeToggle.getValue());
-  if (ssw)
+  if (SoSwitch* sw = (SoSwitch*)(this->shapeToggle.getValue()); sw)
     switch (myVizMode)
       {
       case SPECIAL:
-        ssw->whichChild = 1;
+        sw->whichChild = 1;
         break;
       case NORMAL:
-        ssw->whichChild = 0;
-        break;
-      case BOTH:
-        ssw->whichChild = SO_SWITCH_ALL;
+        sw->whichChild = 0;
         break;
       default:
-        ssw->whichChild = SO_SWITCH_ALL;
+        sw->whichChild = SO_SWITCH_ALL;
         break;
       }
 
   if (!IAmOn)
     return;
-  
+
   // If we got results for the new frame, add them to the scene graph
-  
+
   if (IAmShowingResults && IAmShowingResultLooks)
+  {
+    // If we have no results to show, show as gray instead
+    SoMaterialBinding* newBinding = ourPrPartMaterialBinding;
+    SoPackedColor*   newResColors = ourNoResultsColor;
+    if (myCurrentFrame < myResultFrames.size() &&
+        myResultFrames[myCurrentFrame] && myResultFrames[myCurrentFrame]->resColors)
     {
-      if (myCurrentFrame < myResultFrames.size()
-          && myResultFrames[myCurrentFrame] 
-          && myResultFrames[myCurrentFrame]->resColors)
+      switch (myResultFrames[myCurrentFrame]->resLookPolicy)
         {
-          SoMaterialBinding* newBinding = NULL;
-          switch (myResultFrames[myCurrentFrame]->resLookPolicy)
-            {
-            case FdFEGroupPart::PR_FACE:
-              newBinding = ourPrFaceMaterialBinding;
-              break;
-            case FdFEGroupPart::PR_VERTEX:
-              newBinding = ourPrVertexMaterialBinding;
-              break;
-            case FdFEGroupPart::PR_FACE_VERTEX:
-              newBinding = ourPrFaceVertexMaterialBinding;
-              break;
-            default:
-              break;
-            }
-
-          if (newBinding != this->binding.getValue())
-            this->setPart("binding", newBinding);
-
-          if ( myResultFrames[myCurrentFrame]->resColors != this->packedMaterial.getValue()){
-            this->setPart("packedMaterial", myResultFrames[myCurrentFrame]->resColors);
-            if (this->fullMaterial.getValue())
-              ((SoMaterial*)(this->fullMaterial.getValue()))->transparency = 0.0f;
-          }
+        case FdFEGroupPart::PR_FACE:
+          newBinding = ourPrFaceMaterialBinding;
+          break;
+        case FdFEGroupPart::PR_VERTEX:
+          newBinding = ourPrVertexMaterialBinding;
+          break;
+        case FdFEGroupPart::PR_FACE_VERTEX:
+          newBinding = ourPrFaceVertexMaterialBinding;
+          break;
+        default:
+          newBinding = NULL;
+          break;
         }
-      else
-        {
-          // We have no results to show, show as gray 
-
-          SoMaterialBinding * newBinding = ourPrPartMaterialBinding;       
-          if (newBinding != this->binding.getValue())
-            this->setPart("binding", newBinding);
-
-          if (ourNoResultsColor != this->packedMaterial.getValue()){
-            this->setPart("packedMaterial", ourNoResultsColor);
-            if (this->fullMaterial.getValue())
-              ((SoMaterial*)(this->fullMaterial.getValue()))->transparency = 0.0f;
-          }
-        }
+      newResColors = myResultFrames[myCurrentFrame]->resColors;
     }
+
+    if (newBinding != this->binding.getValue())
+      this->setPart("binding", newBinding);
+
+    if (newResColors != this->packedMaterial.getValue())
+    {
+      this->setPart("packedMaterial", newResColors);
+      if (this->fullMaterial.getValue())
+        ((SoMaterial*)this->fullMaterial.getValue())->transparency = 0.0f;
+    }
+  }
   else
-    {
-      // Remove old frame results from the scene graph:
+  {
+    // Remove old frame results from the scene graph:
 
-      if (this->binding.getValue())
-        this->setPart("binding", NULL);
+    if (this->binding.getValue())
+      this->setPart("binding", NULL);
 
-      if (this->packedMaterial.getValue()) {
-        this->setPart("packedMaterial", NULL);
-        if (this->fullMaterial.getValue())
-          ((SoMaterial*)(this->fullMaterial.getValue()))->transparency = myTransparency;
-      }
+    if (this->packedMaterial.getValue()) {
+      this->setPart("packedMaterial", NULL);
+      if (this->fullMaterial.getValue())
+        ((SoMaterial*)(this->fullMaterial.getValue()))->transparency = myTransparency;
     }
+  }
 }
 
-void FdFEGroupPartKit::ResultsFrame::eraseAll()
+
+FdFEGroupPartKit::ResultsFrame::~ResultsFrame()
 {
   if (resColors)
-  {
     resColors->unref();
-    resColors = NULL;
-  }
 }
 
 SoPackedColor* FdFEGroupPartKit::ResultsFrame::getResColors()
