@@ -87,7 +87,9 @@ int main (int argc, char** argv)
 
   // Private options (hidden in -help)
   FFaCmdLineArg::instance()->addOption("logCmds",false,"Print application commands to console",false);
-  FFaCmdLineArg::instance()->addOption("memPoll",false,"Stop execution for memory polling",false);
+  FFaCmdLineArg::instance()->addOption("memPoll",0,"Pause execution for memory polling"
+                                       "\n0: No polling, 1: Poll during model loading only,"
+                                       "\n2: Also poll during dynamics solve",false);
   FFaCmdLineArg::instance()->addOption("allow3DofAttach",true,"Allow triads to be attached to 3-DOF nodes",false);
   FFaCmdLineArg::instance()->addOption("allowDepAttach",false,"Allow triads to be attached to dependent RGD nodes",false);
   FFaCmdLineArg::instance()->addOption("convertToLinear",1,"Convert parabolic shell and beam elements to linears"

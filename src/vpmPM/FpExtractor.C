@@ -18,11 +18,11 @@ FpExtractor::FpExtractor(const char* xName) : FFrExtractor(xName)
 
 
 bool FpExtractor::addFiles(const std::vector<std::string>& fileNames,
-			    bool showProgress, bool mustExist)
+                           bool showProgress, bool mustExist, bool doMemPoll)
 {
   emitHeaderChanged = emitDataChanged = false;
 
-  if (!this->FFrExtractor::addFiles(fileNames,showProgress,mustExist))
+  if (!this->FFrExtractor::addFiles(fileNames,showProgress,mustExist,doMemPoll))
     return false;
 
   if (emitHeaderChanged) myHeaderChangedCB.invoke(this);
@@ -68,7 +68,7 @@ void FpExtractor::getSuperObjectGroups(std::vector<FFaListViewItem*>& sogs,
         std::cout <<"FpExtractor::getSuperObjectGroups(): baseID "
                   << og->getBaseID() <<" not among\n";
         for (int bid : usedBaseId) std::cout <<" "<< bid;
-	std::cout << std::endl;
+        std::cout << std::endl;
 #endif
         sogs.push_back(sog.second);
         break;
@@ -105,23 +105,24 @@ bool FpExtractor::getObjectGroupFields(int baseId, const std::string& name,
 }
 
 
-void FpExtractor::doResultFilesUpdate()
+void FpExtractor::doResultFilesUpdate(bool doMemPoll)
 {
   emitHeaderChanged = false;
   emitDataChanged = false;
 
-  this->FFrExtractor::doResultFilesUpdate();
+  this->FFrExtractor::doResultFilesUpdate(doMemPoll);
 
   if (emitHeaderChanged) myHeaderChangedCB.invoke(this);
   if (emitDataChanged)   myDataChangedCB.invoke(this);
 }
 
 
-int FpExtractor::doSingleResultFileUpdate(FFrResultContainer* container)
+int FpExtractor::doResultFileUpdate(FFrResultContainer* container,
+                                    bool doMemPoll)
 {
 #if FP_DEBUG > 2
-  std::cout <<"FpExtractor::doSingleResultFileUpdate()\n\tfilename: "
-	    << container->getFileName() << std::endl;
+  std::cout <<"FpExtractor::doResultFileUpdate()\n\tfilename: "
+            << container->getFileName() << std::endl;
 #endif
 
   int statusBefore = container->getContainerStatus();
@@ -129,11 +130,11 @@ int FpExtractor::doSingleResultFileUpdate(FFrResultContainer* container)
     return statusBefore;
 
   bool wasComplete = container->isHeaderComplete();
-  int status = container->updateContainerStatus();
+  int status = container->updateStatus(doMemPoll);
 
   if (!wasComplete && container->isHeaderComplete())
   {
-    this->updateExtractorHeader(container);
+    this->updateExtractorHeader(container,doMemPoll);
     emitHeaderChanged = true;
   }
 

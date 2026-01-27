@@ -19,6 +19,8 @@
 
 FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : QListWidget(parent)
 {
+  IAmEnabled = true;
+
   this->setWidget(this);
   this->setAcceptDrops(true);
   this->setFocusPolicy(Qt::StrongFocus);
@@ -33,8 +35,6 @@ FFuQtScrolledList::FFuQtScrolledList(QWidget* parent) : QListWidget(parent)
 
   QShortcut* qDelete = new QShortcut(Qt::CTRL | Qt::Key_X, this);
   QObject::connect(qDelete, SIGNAL(activated()), this, SLOT(deleteAll()));
-
-  IAmEnabled = true;
 }
 
 

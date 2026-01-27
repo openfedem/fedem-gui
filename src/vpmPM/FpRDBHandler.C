@@ -24,6 +24,8 @@ namespace
   FFuaTimer* ourHeaderChangedTimer = NULL;
   FFuaTimer* ourDataChangedTimer = NULL;
 
+  int deltaT = 500;
+  int memPoll = 0;
 
   void checkForNewHeaders()
   {
@@ -37,7 +39,7 @@ namespace
   void checkForNewData()
   {
     FFrExtractor* extr = FpRDBExtractorManager::instance()->getModelExtractor();
-    if (extr) extr->doResultFilesUpdate();
+    if (extr) extr->doResultFilesUpdate(memPoll > 1);
   }
 
 
@@ -45,8 +47,6 @@ namespace
   {
     ListUI <<"Starting process group "<< groupId <<".\n";
 
-    int deltaT = 500;
-    FFaCmdLineArg::instance()->getValue("checkRDBinterval",deltaT);
     ourHeaderChangedTimer->start(deltaT);
     ourDataChangedTimer->start(deltaT);
 
@@ -85,6 +85,9 @@ namespace
 
 void FpPM::start()
 {
+  FFaCmdLineArg::instance()->getValue("checkRDBinterval",deltaT);
+  FFaCmdLineArg::instance()->getValue("memPoll",memPoll);
+
   ourHeaderChangedTimer = FFuaTimer::create(FFaDynCB0S(checkForNewHeaders));
   ourDataChangedTimer   = FFuaTimer::create(FFaDynCB0S(checkForNewData));
 

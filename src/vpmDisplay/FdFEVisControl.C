@@ -20,16 +20,14 @@ FdFEVisControl::FdFEVisControl()
 {
   IAmHidden = true;
 
-  IAmShowingResults = false;
-  IAmShowingColorResults = false;
-  IAmShowingVertexResults = false;
+  IAmShowingResults = IAmShowingColorResults = IAmShowingVertexResults = false;
 
-  myLineDetailLevel = SURFACE;
-  myDetailLevel = SURFACE;
+  myLineDetailLevel = myDetailLevel = SURFACE;
   myDrawStyle = SOLID_LINES;
 
   IAmHighlighted = false;
   myHighlightType = OUTLINE;
+  myHighlightColor = myDiffuseColor = { 0.0f, 0.0f, 0.0f };
 
   IHaveOverrideLook = false;
 }

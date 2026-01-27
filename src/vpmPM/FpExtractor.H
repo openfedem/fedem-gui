@@ -24,8 +24,6 @@ class FpExtractor : public FFrExtractor
 public:
   //! \brief Default constructor.
   FpExtractor(const char* xname = NULL);
-  //! \brief Empty destructor.
-  virtual ~FpExtractor() {}
 
   // Result file opened/closed signals:
   //! \brief Invoked on each addFiles() and removeFiles().
@@ -38,12 +36,13 @@ public:
   using FFrExtractor::addFiles;
   //! \brief Adds a list of files to the RDB.
   virtual bool addFiles(const std::vector<std::string>& fileNames,
-                        bool showProgress = false, bool mustExist = false);
+                        bool showProgress = false, bool mustExist = false,
+                        bool doMemPoll = false);
   //! \brief Removes the specified files from the RDB.
   virtual bool removeFiles(const std::set<std::string>& fileNames);
 
   //! \brief Checks if there is new data on disk.
-  virtual void doResultFilesUpdate();
+  virtual void doResultFilesUpdate(bool doMemPoll = true);
 
   //! \brief Returns a hierarchy of top-level objects sorted by object type.
   void getSuperObjectGroups(std::vector<FFaListViewItem*>& sogs) const;
@@ -58,7 +57,7 @@ public:
 
 protected:
   //! \brief Checks if there is new data on disk for the given \a container.
-  virtual int doSingleResultFileUpdate(FFrResultContainer* container);
+  virtual int doResultFileUpdate(FFrResultContainer* container, bool doMemPoll);
 
 private:
   bool emitHeaderChanged; //!< Temporary variable used in open/close

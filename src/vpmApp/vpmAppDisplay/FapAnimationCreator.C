@@ -1351,8 +1351,9 @@ bool FapAnimationCreator::readFringeData(std::vector<DoubleVec>& values, FmPart*
 
 void FapAnimationCreator::finishFringeReading(FmPart* part)
 {
+  bool memPoll = false;
 #ifdef FT_USE_PROFILER
-  FapMemoryProfiler::usage("Fringe Finish start");
+  memPoll = FapMemoryProfiler::usage("Fringe Finish start");
   myProfiler->startTimer("Fringe Finish");
 #endif
 
@@ -1367,13 +1368,13 @@ void FapAnimationCreator::finishFringeReading(FmPart* part)
   if (IAmLoadingFringeData%2)
     for (const FFlGroupPartItem& it : fdpart->getGroupPartCreator()->getLinkParts())
       if (it.first == FFlGroupPartCreator::SURFACE_FACES)
-        FFlrFringeCreator::deleteColorsXfs(*it.second);
+        FFlrFringeCreator::deleteColorsXfs(*it.second,memPoll);
 
   if (IAmLoadingFringeData/2)
     for (const FFlGroupPartItem& it : fdpart->getGroupPartCreator()->getLinkParts())
       if (it.first == FFlGroupPartCreator::OUTLINE_LINES ||
           it.first == FFlGroupPartCreator::SURFACE_LINES)
-        FFlrFringeCreator::deleteColorsXfs(*it.second);
+        FFlrFringeCreator::deleteColorsXfs(*it.second,memPoll);
 #endif
 
 #ifdef FT_USE_PROFILER
