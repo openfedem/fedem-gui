@@ -12,7 +12,6 @@
 #include <map>
 #include <stack>
 
-#include "vpmApp/vpmAppDisplay/FFaLegendMapper.H"
 #include "FFdCadModel/FFdUtils/FFdLook.H"
 
 class  FdFEModel;
@@ -28,7 +27,7 @@ public:
 
   // Pointer for picking reference
 
-  virtual void setFdPointer(FdObject *backPt) = 0;
+  virtual void setFdPointer(FdObject* backPt) = 0;
 
   // On/Off :
 
@@ -36,13 +35,13 @@ public:
   void removeRenderRef();
 
   enum FdGpVizModeEnum { NORMAL, SPECIAL, BOTH };
-  virtual void setVizMode(FdGpVizModeEnum) {}
-  virtual bool hasSpecialGraphics() { return false; }
+  virtual void setVizMode(FdGpVizModeEnum mode) = 0;
+  virtual bool hasSpecialGraphics() const = 0;
 
   // Shape :
 
-  void setFaceIndexes( bool isFaceShape,
-		       const std::vector < std::vector<int> > & idxs);
+  using IntVec = std::vector<int>;
+  void setFaceIndexes(bool isFace, const std::vector<IntVec>& idxs);
 
   void setGroupPartData(FFlGroupPartData* groupPartData,
                         unsigned short int linePattern = 0xffff);
@@ -52,21 +51,21 @@ public:
 
   void updateOverallLook(void* id, const FFdLook& look);
 
-  void pushOverallOverrideLook( const FFdLook & look );
+  void pushOverallOverrideLook(const FFdLook& look);
   FFdLook popOverallOverrideLook();
 
-  void pushContrastOverrideLook( const FFdLook & look );
+  void pushContrastOverrideLook(const FFdLook& look);
   FFdLook popContrastOverrideLook();
 
-  void pushHighlightOverrideLook( const FFdLook & look );
+  void pushHighlightOverrideLook(const FFdLook& look);
   FFdLook popHighlightOverrideLook();
 
-  void setLineWidth( int nPoints );
-  void setLinePattern( unsigned short pattern );
+  void setLineWidth(int nPoints);
+  void setLinePattern(unsigned short pattern);
 
   // Results :
 
-  void showResults( bool resultIsOn );
+  void showResults(bool resultIsOn);
 
   virtual void selectResultFrame  ( int frameIdx )         = 0;
   virtual void addResultFrame     ( int beforeFrame = -1 ) = 0; // frame = -1 => at end
@@ -75,23 +74,22 @@ public:
 
   void showResultLook( bool resultsIsOn );
 
-  void remapLookResults          (FFaLegendMapper const& mapping);
+  virtual void remapLookResults   (const FFaLegendMapper& mapping) = 0;
   virtual void remapLookResults   ()                       = 0;
 
-  virtual bool hasResultLook      ( unsigned int frameIdx ) = 0;
+  virtual bool hasResultLook      ( unsigned int frameIdx ) const = 0;
 
   enum lookPolicy {OVERALL, PR_FACE, PR_VERTEX , PR_FACE_VERTEX};
   virtual void setResultLook      (unsigned int frameIdx,
                                    lookPolicy lookBinding,
-				                           std::vector<double>& lookValues, // is eaten
-				                           FFaLegendMapper const& mapping) = 0;
+                                   std::vector<double>& lookValues,
+                                   const FFaLegendMapper& mapping) = 0;
   virtual void deleteResultLook   ( int  frameIdx = -1 )   = 0;// frameIdx = -1 => all
 
 protected:
   virtual ~FdFEGroupPart() {}
 
-  FFlGroupPartData * myGroupPartData;
-  FFaLegendMapper myLegendMapper;
+  FFlGroupPartData* myGroupPartData;
 
   // Method to be called in 3D lib dep. subclass constructor
 
@@ -102,11 +100,11 @@ protected:
   //
   /////////
 
-  virtual void setShapeIndexes(bool isFaceShape, const std::vector < std::vector<int> > & idxs) = 0;
+  virtual void setShapeIndexes(bool face, const std::vector<IntVec>& idxs) = 0;
   virtual void generateShapeIndexes() = 0;
 
   virtual void toggleOn          ( bool  turnOn )     = 0;
-  virtual void setLook           ( const FFdLook & aLook )  = 0;
+  virtual void setLook           ( const FFdLook& aLook ) = 0;
   virtual void setGouradOn       ( bool  setOn )      = 0;
   virtual void set3DLLineWidth   ( int   lineWidth )  = 0;
   virtual void set3DLLinePattern ( unsigned short pattern ) = 0;
@@ -114,10 +112,6 @@ protected:
 
   virtual void setResultLookOn   ( bool  turnOn )     = 0;
   virtual void setResultsOn      ( bool  resultIsOn ) = 0;
-
-  // Control vars :
-
-  bool IAmAFaceShape;
 
 private:
   void updateOverrideLook();
@@ -133,6 +127,8 @@ private:
   int myResultsOnRefCount;
   int myResultsLookOnRefCount;
   int myResultsVertexOnRefCount;
+
+  bool IAmAFaceShape;
 };
 
 #endif
