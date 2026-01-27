@@ -51,8 +51,8 @@ which are not included in this repository:
 You need to build and install these modules separately,
 before building the FEDEM GUI application itself,
 see [here](BUILD.md#build-of-external-3rd-party-modules) for details.
-The first four of the packages above are mandatory,
-whereas the latter three are optional.
+The first three of the packages above are mandatory,
+whereas the latter four are optional.
 This means the build will work without them,
 but with some features being absent.
 
