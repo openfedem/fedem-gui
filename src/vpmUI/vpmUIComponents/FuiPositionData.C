@@ -5,6 +5,8 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
+
 #include "vpmUI/vpmUIComponents/FuiPositionData.H"
 #include "vpmUI/vpmUIComponents/FuiQueryInputField.H"
 #ifdef FT_HAS_WND
@@ -23,6 +25,7 @@
 #include "vpmDB/FmDB.H"
 #include "vpmDB/FmPart.H"
 #include "vpmDB/FmSMJointBase.H"
+#include "vpmDB/FmStraightMaster.H"
 #ifdef FT_HAS_WND
 #include "vpmDB/FmTurbine.H"
 #else
@@ -38,8 +41,8 @@
 
 FuiPositionData* FuiPositionData::ourActiveUI = NULL;
 
-typedef FFa3DLocation::PosType PosType;
-typedef FFa3DLocation::RotType RotType;
+using PosType = FFa3DLocation::PosType;
+using RotType = FFa3DLocation::RotType;
 
 
 FFaEnumMapping(PosType){
@@ -57,6 +60,27 @@ FFaEnumMapping(RotType){
   FFaEnumEntry(FFa3DLocation::DIR_EX_EXY, "X vector, and XY vector");
   FFaEnumEntryEnd;
 };
+
+
+#ifdef FUI_DEBUG
+namespace
+{
+  void printLoc(const FFa3DLocation& loc, FmModelMemberBase* obj = NULL,
+                const char* method = NULL, bool linkCG = false)
+  {
+    if (obj)
+    {
+      if (method) std::cout <<"FuiPositionData::"<< method <<": ";
+      if (linkCG) std::cout <<"CoG ";
+      std::cout <<"Location for "<< obj->getIdString();
+    }
+    else
+      std::cout <<"- updated to:";
+
+    loc.print(std::cout) << std::endl;
+  }
+}
+#endif
 
 
 FuiPositionData::FuiPositionData() : signalConnector(this)
@@ -191,9 +215,7 @@ void FuiPositionData::updateUI()
     return;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::updateUI: ";
-  if (IAmEditingLinkCG) std::cout <<"CoG ";
-  std::cout <<"Location for "<< myEditedObj->getIdString() << loc << std::endl;
+  printLoc(loc,myEditedObj,"updateUI",IAmEditingLinkCG);
 #endif
 
   PosType posType = loc.getPosType();
@@ -300,8 +322,7 @@ void FuiPositionData::updateUI()
     break;
   }
 
-  FmSMJointBase* joint = dynamic_cast<FmSMJointBase*>(myEditedObj);
-  if (joint) {
+  if (FmSMJointBase* joint = dynamic_cast<FmSMJointBase*>(myEditedObj); joint) {
     myTriadPosFollowFrame->popUp();
     myMasterFollowToggle->setValue(joint->isMasterMovedAlong());
     mySlaveFollowToggle->setValue(joint->isSlaveMovedAlong());
@@ -323,10 +344,10 @@ void FuiPositionData::setSensitivity(bool onOff)
 {
   IAmEditable = onOff;
   bool canTra = onOff;
-  bool canRot = onOff;
+  char canRot = onOff;
 
   if (myEditedObjs.empty())
-    canTra = canRot = false;
+    canRot = canTra = false;
   else if (!IAmEditingLinkCG)
   {
     FmModelMemberBase* myEditedObj = myEditedObjs.front();
@@ -336,11 +357,14 @@ void FuiPositionData::setSensitivity(bool onOff)
       canRot = static_cast<FmIsPositionedBase*>(myEditedObj)->isRotatable();
     }
     else if (myEditedObj->isOfType(FmAssemblyBase::getClassTypeID()))
-      canTra = canRot = static_cast<FmAssemblyBase*>(myEditedObj)->isMovable();
+      canRot = canTra = static_cast<FmAssemblyBase*>(myEditedObj)->isMovable();
   }
 
   for (int i = 0; i < 9; i++)
-    myFields[i]->setSensitivity(i < 3 ? canTra : canRot);
+    myFields[i]->setSensitivity(i < 3 ? canTra : canRot == 1);
+
+  if (canRot == 3) // Allow to edit the Euler-Z angle for multi-master triads
+    myFields[5]->setSensitivity(onOff);
 
   myMasterFollowToggle->setSensitivity(IAmEditable);
   mySlaveFollowToggle->setSensitivity(IAmEditable);
@@ -363,16 +387,14 @@ void FuiPositionData::onPosTypeChanged(int option)
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"FuiPositionData::onPosTypeChanged: ";
-    if (IAmEditingLinkCG) std::cout <<"CoG ";
-    std::cout <<"Location for "<< obj->getIdString() << loc << std::endl;
+    printLoc(loc,obj,"onPosTypeChanged",IAmEditingLinkCG);
 #endif
 
     if (!loc.changePosType(PosTypeMapping::map()[option].first))
       continue; // not changed
 
 #ifdef FUI_DEBUG
-    std::cout <<"- updated to"<< loc << std::endl;
+    printLoc(loc);
 #endif
 
     if (IAmEditingLinkCG)
@@ -410,16 +432,14 @@ void FuiPositionData::onRotTypeChanged(int option)
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"FuiPositionData::onRotTypeChanged: ";
-    if (IAmEditingLinkCG) std::cout <<"CoG ";
-    std::cout <<"Location for "<< obj->getIdString() << loc << std::endl;
+    printLoc(loc,obj,"onRotTypeChanged",IAmEditingLinkCG);
 #endif
 
     if (!loc.changeRotType(RotTypeMapping::map()[option].first))
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"- updated to"<< loc << std::endl;
+    printLoc(loc);
 #endif
 
     if (IAmEditingLinkCG)
@@ -459,9 +479,7 @@ void FuiPositionData::FieldChangedCB::onFieldAccepted(double value)
       continue;
 
 #ifdef FUI_DEBUG
-    std::cout <<"FuiPositionData::onFieldAccepted: ";
-    if (owner->IAmEditingLinkCG) std::cout <<"CoG ";
-    std::cout <<"Location for "<< obj->getIdString() << loc << std::endl;
+    printLoc(loc,obj,"onFieldAccepted",owner->IAmEditingLinkCG);
 #endif
 
     if (loc[i][j] == value)
@@ -472,7 +490,7 @@ void FuiPositionData::FieldChangedCB::onFieldAccepted(double value)
       continue; // ignore invalid input
 
 #ifdef FUI_DEBUG
-    std::cout <<"- updated to"<< loc << std::endl;
+    printLoc(loc);
 #endif
 
     if (owner->IAmEditingLinkCG)
@@ -493,19 +511,44 @@ void FuiPositionData::FieldChangedCB::onFieldAccepted(double value)
         Fui::getProperties()->updateSubassCoG();
     }
 
+    if (obj->isOfType(FmTriad::getClassTypeID()) && i == 1 && j == 2)
+      // Issue #110: If this triad is on a multi-master line object (there can
+      // only be one), then update the other master triads also on the same line
+      if (FmStraightMaster* line; obj->hasReferringObjs(line,"myTriads"))
+      {
+        RotType rType = loc.getRotType();
+        std::vector<FmTriad*> triads;
+        line->getTriads(triads);
+        for (FmTriad* triad : triads)
+          if (std::find(owner->myEditedObjs.begin(),owner->myEditedObjs.end(),
+                        triad) == owner->myEditedObjs.end())
+          {
+            loc = triad->getLocation();
+#ifdef FUI_DEBUG
+            printLoc(loc,triad);
+#endif
+            loc.changeRotType(rType);
+            loc[i][j] = value;
+#ifdef FUI_DEBUG
+            printLoc(loc);
+#endif
+            triad->setLocation(loc);
+            triad->draw();
+          }
+      }
+
 #ifdef FT_HAS_WND
-    FmNacelle* nac = NULL;
-    FFuTopLevelShell* cta = NULL;
+    FFuTopLevelShell* t = NULL;
     if (static_cast<FmTurbine*>(obj) == FmDB::getTurbineObject())
-      cta = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
-    else if (owner->IAmEditingLinkCG &&
-             (nac = dynamic_cast<FmNacelle*>(obj->getParentAssembly())))
-    {
-      // Update the nacelle CoG field in the wind turbine definition dialog
-      nac->CoG.setValue(nac->toLocal(nac->getGlobalCoG(false)));
-      cta = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
-    }
-    if (cta) dynamic_cast<FuiCreateTurbineAssembly*>(cta)->updateUIValues();
+      t = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
+    else if (owner->IAmEditingLinkCG)
+      if (FmNacelle* n = dynamic_cast<FmNacelle*>(obj->getParentAssembly()); n)
+      {
+        // Update the nacelle CoG field in the wind turbine definition dialog
+        n->CoG.setValue(n->toLocal(n->getGlobalCoG(false)));
+        t = FFuTopLevelShell::getInstanceByType(FuiCreateTurbineAssembly::getClassTypeID());
+      }
+    if (t) dynamic_cast<FuiCreateTurbineAssembly*>(t)->updateUIValues();
 #endif
   }
 
@@ -539,11 +582,29 @@ void FuiPositionData::onRotRefChanged(FmModelMemberBase* obj)
   FmIsPositionedBase* rotRefObj = dynamic_cast<FmIsPositionedBase*>(obj);
 
   bool changed = false;
-  for (FmModelMemberBase* eobj : myEditedObjs)
+  for (FmModelMemberBase* obj : myEditedObjs)
+  {
+    bool changedObj = false;
     if (IAmEditingLinkCG)
-      changed |= static_cast<FmPart*>(eobj)->setCGRotRef(rotRefObj);
-    else if (eobj->isOfType(FmIsPositionedBase::getClassTypeID()))
-      changed |= static_cast<FmIsPositionedBase*>(eobj)->setRotRef(rotRefObj);
+      changedObj = static_cast<FmPart*>(obj)->setCGRotRef(rotRefObj);
+    else if (obj->isOfType(FmIsPositionedBase::getClassTypeID()))
+      changedObj = static_cast<FmIsPositionedBase*>(obj)->setRotRef(rotRefObj);
+
+    if (changedObj && obj->isOfType(FmTriad::getClassTypeID()))
+      // Issue #110: If this triad is on a multi-master line object (there can
+      // only be one), then update the other master triads also on the same line
+      if (FmStraightMaster* line; obj->hasReferringObjs(line,"myTriads"))
+      {
+        std::vector<FmTriad*> triads;
+        line->getTriads(triads);
+        for (FmTriad* triad : triads)
+          if (std::find(myEditedObjs.begin(),myEditedObjs.end(),
+                        triad) == myEditedObjs.end())
+            triad->setRotRef(rotRefObj);
+      }
+
+    changed |= changedObj;
+  }
 
   if (changed)
     FpPM::touchModel();
@@ -554,10 +615,9 @@ void FuiPositionData::onRotRefChanged(FmModelMemberBase* obj)
 
 void FuiPositionData::onTriadsFollowToggled(bool)
 {
-  FmSMJointBase* joint = NULL;
   bool changed = false;
   for (FmModelMemberBase* obj : myEditedObjs)
-    if ((joint = dynamic_cast<FmSMJointBase*>(obj)))
+    if (FmSMJointBase* joint = dynamic_cast<FmSMJointBase*>(obj); joint)
       if (joint->setMasterMovedAlong(myMasterFollowToggle->getValue()) ||
           joint->setSlaveMovedAlong(mySlaveFollowToggle->getValue()))
       changed = true;
@@ -573,8 +633,8 @@ void FuiPositionData::prepareRefCSSelection(char posOrRot)
 {
   IAmDoingRefCSSelection = posOrRot;
 
-  FapUAProperties* uap = FapUAProperties::getPropertiesHandler();
-  if (uap) uap->setIgnorePickNotify(true);
+  if (FapUAProperties* uap = FapUAProperties::getPropertiesHandler(); uap)
+    uap->setIgnorePickNotify(true);
 
   FapEventManager::pushPermSelection();
   ourActiveUI = this;
@@ -589,17 +649,15 @@ void FuiPositionData::onPermSelectionChanged(const std::vector<FFaViewItem*>& to
 {
   if (!IAmDoingRefCSSelection) return;
 
-  FmIsPositionedBase* candidate = NULL;
   for (FFaViewItem* item : totalSelection)
-    if ((candidate = dynamic_cast<FmIsPositionedBase*>(item)))
-      break;
-
-  if (!candidate) return;
-
-  if (IAmDoingRefCSSelection == 'p')
-    this->onPosRefChanged(candidate);
-  else if (IAmDoingRefCSSelection == 'r')
-    this->onRotRefChanged(candidate);
+    if (FmIsPositionedBase* obj = dynamic_cast<FmIsPositionedBase*>(item); obj)
+    {
+      if (IAmDoingRefCSSelection == 'p')
+        this->onPosRefChanged(obj);
+      else if (IAmDoingRefCSSelection == 'r')
+        this->onRotRefChanged(obj);
+      return;
+    }
 }
 
 
@@ -609,8 +667,8 @@ void FuiPositionData::finishRefCSSelection()
 
   FapEventManager::popPermSelection();
 
-  FapUAProperties* uap = FapUAProperties::getPropertiesHandler();
-  if (uap) uap->setIgnorePickNotify(false);
+  if (FapUAProperties* uap = FapUAProperties::getPropertiesHandler(); uap)
+    uap->setIgnorePickNotify(false);
 }
 
 
@@ -642,9 +700,7 @@ void FuiPositionData::onPoppedUp()
     return;
 
 #ifdef FUI_DEBUG
-  std::cout <<"FuiPositionData::onPoppedUp: ";
-  if (IAmEditingLinkCG) std::cout <<"CoG ";
-  std::cout <<"Location for "<< myEditedObj->getIdString() << loc << std::endl;
+  printLoc(loc,myEditedObj,"onPoppedUp",IAmEditingLinkCG);
 #endif
   FaMat34 posCS = posRef ? posRef->getGlobalCS() : FaMat34();
   FaMat34 rotCS = rotRef ? rotRef->getGlobalCS() : FaMat34();

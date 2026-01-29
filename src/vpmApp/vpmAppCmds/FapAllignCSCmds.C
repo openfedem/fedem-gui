@@ -251,25 +251,24 @@ void FapAllignCSCmds::allignCS(const FaMat34& mx)
   FapEventManager::getSelection(selection,tmpSelection);
 
   std::string unMovables;
-  FmIsPositionedBase* posBase;
   for (FFaViewItem* item : selection)
-    if ((posBase = dynamic_cast<FmIsPositionedBase*>(item))) {
-      if (posBase->isTranslatable() && posBase->isRotatable())
+    if (FmIsPositionedBase* obj = dynamic_cast<FmIsPositionedBase*>(item); obj) {
+      if (obj->isTranslatable() && obj->isRotatable() == 1)
       {
-	posBase->setGlobalCS(mx,true);
-	posBase->updateDisplayTopology();
+        obj->setGlobalCS(mx,true);
+        obj->updateDisplayTopology();
       }
-      else if (posBase->isTranslatable())
+      else if (obj->isTranslatable())
       {
-	// Only translate (mainly slave triads in simple joints)
-	FaMat34 orgPos = posBase->getGlobalCS();
-	orgPos[3] = mx[3];
-	posBase->setGlobalCS(orgPos,true);
-	posBase->updateDisplayTopology();
-        unMovables += "\n\t" + posBase->getIdString(true) + " (Rotation locked)";
+        // Only translate (mainly slave triads in single-master joints)
+        FaMat34 orgPos = obj->getGlobalCS();
+        orgPos[3] = mx[3];
+        obj->setGlobalCS(orgPos,true);
+        obj->updateDisplayTopology();
+        unMovables += "\n\t" + obj->getIdString(true) + " (Rotation locked)";
       }
       else
-        unMovables += "\n\t" + posBase->getIdString(true);
+        unMovables += "\n\t" + obj->getIdString(true);
     }
 
   if (!unMovables.empty())
@@ -285,17 +284,16 @@ void FapAllignCSCmds::allignRotations(const FaMat34& mx)
 
   FaMat34 rotMx(mx);
   std::string unMovables;
-  FmIsPositionedBase* posBase;
   for (FFaViewItem* item : selection)
-    if ((posBase = dynamic_cast<FmIsPositionedBase*>(item))) {
-      if (posBase->isRotatable())
+    if (FmIsPositionedBase* obj = dynamic_cast<FmIsPositionedBase*>(item); obj) {
+      if (obj->isRotatable() == 1)
       {
-	rotMx[3] = posBase->getGlobalCS().translation();
-	posBase->setGlobalCS(rotMx,true);
-	posBase->updateDisplayTopology();
+        rotMx[3] = obj->getGlobalCS().translation();
+        obj->setGlobalCS(rotMx,true);
+        obj->updateDisplayTopology();
       }
       else
-        unMovables += "\n\t" + posBase->getIdString(true);
+        unMovables += "\n\t" + obj->getIdString(true);
     }
 
   if (!unMovables.empty())
