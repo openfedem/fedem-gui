@@ -41,6 +41,7 @@ SoSFTime* FdQtViewer::viewerRealTime = NULL;
 SOQT_OBJECT_SOURCE(FdQtViewer);
 
 
+#ifndef NO_FFU
 FFuComponentBase* FdViewer::create(QWidget* parent, bool noRotation)
 {
   FdQtViewer* viewer = new FdQtViewer(parent);
@@ -52,6 +53,7 @@ FFuComponentBase* FdViewer::create(QWidget* parent, bool noRotation)
   parent->setFocusProxy(viewer->getGLWidget());
   return viewer;
 }
+#endif
 
 
 // Constructor for the viewer
@@ -652,8 +654,6 @@ void FdQtViewer::processEvent(QEvent* qevent)
 	// Pass upwards
 	if ( !eventHandeled )
 		this->SoQtViewer::processEvent(qevent);
-
-	//return eventHandeled;
 }
 
 ////////////////////////
