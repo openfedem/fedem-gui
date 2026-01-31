@@ -8,8 +8,9 @@
 #include <QApplication>
 
 #include "vpmDisplay/qtViewers/FdQtViewer.H"
-#include "SoQtRenderArea.H"
-#include "SoQt.H"
+#include "vpmDisplay/FdMultiplyTransforms.H"
+
+#include <Inventor/Qt/SoQt.h>
 
 #include <Inventor/nodes/SoDirectionalLight.h>
 #include <Inventor/nodes/SoMaterial.h>
@@ -18,9 +19,8 @@
 #include <Inventor/nodes/SoText3.h>
 #include <Inventor/nodes/SoCone.h>
 #include <Inventor/nodes/SoRotationXYZ.h>
+
 #include <Inventor/sensors/SoTimerSensor.h>
-//#include <Inventor/engines/SoTimeCounter.h>
-//#include <Inventor/lock/SoLockMgr.h>
 
 
 void timerCB(void* aXf, SoSensor*)
@@ -34,7 +34,8 @@ void timerCB(void* aXf, SoSensor*)
 int main(int argc, char** argv)
 {
   QApplication* a = new QApplication(argc,argv);
-  SoQt::init();
+  SoQt::init("ViewerTest");
+  FdMultiplyTransforms::init();
 
   SoSeparator* root = new SoSeparator;
   root->ref();
@@ -43,9 +44,6 @@ int main(int argc, char** argv)
   SoPerspectiveCamera* myCamera = new SoPerspectiveCamera;
   root->addChild(myCamera);
   root->addChild(new SoDirectionalLight);
-
-  //SoTimeCounter* eng = new SoTimeCounter;
-  //xf->angle.connectFrom(&(eng->output));
 
   SoMaterial* myMaterial = new SoMaterial;
   myMaterial->diffuseColor.setValue(1.0,0.0,0.0);
@@ -63,13 +61,13 @@ int main(int argc, char** argv)
   SoTimerSensor aSensor(timerCB,(void*)xf);
   aSensor.setInterval(SbTime(2.0));
   aSensor.schedule();
-  //SoQtRenderArea* myRenderArea = new SoQtRenderArea();
+
   FdQtViewer* myRenderArea = new FdQtViewer;
-  myCamera->viewAll(root,myRenderArea->getSize());
   myRenderArea->setSceneGraph(root);
   myRenderArea->setTitle("Date & Time");
   myRenderArea->show();
 
-  a->setMainWidget(myRenderArea);
+  myCamera->viewAll(root,myRenderArea->getSize());
+
   return a->exec();
 }
