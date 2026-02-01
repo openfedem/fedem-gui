@@ -28,6 +28,8 @@
 #include <Simage/simage.h> // For mpeg (and avi on windows) export
 #include <Inventor/SoOffscreenRenderer.h>
 #include <Inventor/SbVec2s.h>
+#else
+#include <iostream>
 #endif
 
 #ifdef win32

@@ -90,7 +90,7 @@ To build and install the main component (Coin), proceed as follows:
 
 - Download the sources from [github](https://github.com/coin3d/coin).
   We have been using the release
-  [Coin 4.0.3](https://github.com/coin3d/coin/releases/tag/Coin-4.0.3).
+  [Coin 4.0.3](https://github.com/coin3d/coin/releases/tag/v4.0.3).
   Choose the file `coin-4.0.3-src.zip`.
 
 - Unzip the sources in arbitrary location,

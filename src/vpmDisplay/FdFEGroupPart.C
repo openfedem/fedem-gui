@@ -41,13 +41,12 @@ void FdFEGroupPart::removeRenderRef()
 }
 
 
-void FdFEGroupPart::setFaceIndexes(bool isFaceShape,
-                                   const std::vector< std::vector<int> >& faces)
+void FdFEGroupPart::setFaceIndexes(bool isFace, const std::vector<IntVec>& idxs)
 {
-  IAmAFaceShape = isFaceShape;
+  IAmAFaceShape = isFace;
   this->setLineOffsetOn(IAmAFaceShape);
   this->setGouradOn(IAmAFaceShape);
-  this->setShapeIndexes(isFaceShape, faces);
+  this->setShapeIndexes(IAmAFaceShape,idxs);
 }
 
 
@@ -204,13 +203,6 @@ void FdFEGroupPart::showResults(bool resultIsOn)
     if (myResultsOnRefCount > 0 && --myResultsOnRefCount == 0)
       this->setResultsOn(false);
   }
-}
-
-
-void FdFEGroupPart::remapLookResults(const FFaLegendMapper& mapping)
-{
-  myLegendMapper = mapping;
-  this->remapLookResults();
 }
 
 

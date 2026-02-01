@@ -149,7 +149,7 @@ void FdFEGroupPartKit::setSpecialGraphics(SoSeparator * scene, bool isLineShape 
   this->setLineOffsetOn(!isLineShape);
 }
 
-bool FdFEGroupPartKit::hasSpecialGraphics()
+bool FdFEGroupPartKit::hasSpecialGraphics() const
 {
   return specialGraphics.getValue() ? true : false;
 }
@@ -164,30 +164,34 @@ void FdFEGroupPartKit::setFdPointer(FdObject* backPnt)
   SO_GET_PART(this,"backPt",FdBackPointer)->setPointer(backPnt);
 }
 
-void FdFEGroupPartKit::setShapeIndexes(bool isFaceShape,
-				       const std::vector < std::vector<int> > & faces)
+SoIndexedShape* FdFEGroupPartKit::getShape(SbBool isFace)
 {
   // Make sure we have the right type of shape (faces/lines) :
-
   SoIndexedShape* aShape = (SoIndexedShape*)(this->getPart("shape",false));
-  if (!aShape || (SbBool)isFaceShape != aShape->isOfType(SoIndexedFaceSet::getClassTypeId()))
-  {
-    // We have not got right type. Make a right one
-    if (isFaceShape)
-      aShape = new SoIndexedFaceSet;
-    else
-      aShape = new SoIndexedLineSet;
+  if (aShape && isFace == aShape->isOfType(SoIndexedFaceSet::getClassTypeId()))
+    return aShape;
 
-    // Install it in the kit
-    this->setPart("shape",aShape);
-  }
+  // We have got wrong type. Make the right one.
+  if (isFace)
+    aShape = new SoIndexedFaceSet;
+  else
+    aShape = new SoIndexedLineSet;
 
+  // Install it in the kit
+  this->setPart("shape",aShape);
+  return aShape;
+}
+
+void FdFEGroupPartKit::setShapeIndexes(bool isFace,
+                                       const std::vector<IntVec>& faces)
+{
+  SoIndexedShape* aShape = this->getShape(isFace);
   if (faces.empty()) return;
 
   // Calculate needed storage from input
 
   int nIndices = 0;
-  for (const std::vector<int>& face : faces)
+  for (const IntVec& face : faces)
     nIndices += face.size() + 1;
   aShape->coordIndex.setNum(nIndices);
 
@@ -195,7 +199,7 @@ void FdFEGroupPartKit::setShapeIndexes(bool isFaceShape,
   int32_t* idx = aShape->coordIndex.startEditing();
 
   // Set the face indexes into the shape node
-  for (const std::vector<int>& face : faces)
+  for (const IntVec& face : faces)
   {
     for (int faceIndex : face)
       *(idx++) = faceIndex;
@@ -210,32 +214,18 @@ void FdFEGroupPartKit::generateShapeIndexes()
   if (!myGroupPartData)
     return;
 
-  // Make sure we have the right type of shape (faces/lines) :
-
-  bool isFaceShape = !myGroupPartData->isLineShape;
-  SoIndexedShape* aShape = (SoIndexedShape*)(this->getPart("shape",false));
-  if (!aShape || (SbBool)isFaceShape != aShape->isOfType(SoIndexedFaceSet::getClassTypeId()))
-  {
-    // We have not got right type. Make a right one
-    if (isFaceShape)
-      aShape = new SoIndexedFaceSet;
-    else
-      aShape = new SoIndexedLineSet;
-
-    // Install it in the kit
-    this->setPart("shape",aShape);
-  }
+  SoIndexedShape* aShape = this->getShape(!myGroupPartData->isLineShape);
 
   // Calculate needed storage from input
 
   int nIndexEntries = 0;
   if (myGroupPartData->isIndexShape)
-    for (const std::vector<int>& shape : myGroupPartData->shapeIndexes)
+    for (const IntVec& shape : myGroupPartData->shapeIndexes)
       nIndexEntries += shape.size() + 1;
-  else if (isFaceShape)
-    nIndexEntries = myGroupPartData->facePointers.size() + myGroupPartData->nVisiblePrimitiveVertexes;
-  else
+  else if (myGroupPartData->isLineShape)
     nIndexEntries = myGroupPartData->edgePointers.size()*3;
+  else
+    nIndexEntries = myGroupPartData->facePointers.size() + myGroupPartData->nVisiblePrimitiveVertexes;
 
   // Set the face indexes into the shape node
   aShape->coordIndex.setNum(nIndexEntries);
@@ -388,10 +378,17 @@ void FdFEGroupPartKit::setResultLookOn(bool turnOn)
 }
 
 
+void FdFEGroupPartKit::remapLookResults(const FFaLegendMapper& mapping)
+{
+  myLegendMapper = mapping;
+  this->remapLookResults();
+}
+
+
 void FdFEGroupPartKit::remapLookResults()
 {
   for (ResultsFrame* frame : myResultFrames)
-    this->remapLookResults(frame, myLegendMapper);
+    if (frame) this->remapLookResults(frame, myLegendMapper);
 }
 
 
@@ -490,7 +487,7 @@ void FdFEGroupPartKit::remapLookResults(ResultsFrame* frame, const FFaLegendMapp
 }
 
 
-float FdFEGroupPartKit::getResultFromMaterialIndex(unsigned int matIdx)
+float FdFEGroupPartKit::getResultFromMaterialIndex(unsigned int matIdx) const
 {
   if (myCurrentFrame >= myResultFrames.size() || !myResultFrames[myCurrentFrame] ||
       myResultFrames[myCurrentFrame]->resValues.empty())
@@ -540,7 +537,7 @@ float FdFEGroupPartKit::getResultFromMaterialIndex(unsigned int matIdx)
 }
 
 
-bool FdFEGroupPartKit::hasResultLook(unsigned int frameIdx)
+bool FdFEGroupPartKit::hasResultLook(unsigned int frameIdx) const
 {
   if (frameIdx < myResultFrames.size() && myResultFrames[frameIdx])
     return !myResultFrames[frameIdx]->resValues.empty();
@@ -548,22 +545,24 @@ bool FdFEGroupPartKit::hasResultLook(unsigned int frameIdx)
   return false;
 }
 
-void FdFEGroupPartKit::setResultLook(unsigned int frameIdx, lookPolicy lookBinding,
-				     std::vector<double>& lookValues,
-				     const FFaLegendMapper& mapping)
+void FdFEGroupPartKit::setResultLook(unsigned int frameIdx,
+                                     lookPolicy lookBinding,
+                                     std::vector<double>& lookValues,
+                                     const FFaLegendMapper& mapping)
 {
   this->expandFrameArrayIfNeccesary(frameIdx);
 
-  if (!myResultFrames[frameIdx])
-    myResultFrames[frameIdx] = new ResultsFrame;
+  ResultsFrame* frame = myResultFrames[frameIdx];
+  if (!frame)
+    frame = myResultFrames[frameIdx] = new ResultsFrame;
 
-  myResultFrames[frameIdx]->resValues.clear();
-  myResultFrames[frameIdx]->resValues.reserve(lookValues.size());
+  frame->resValues.clear();
+  frame->resValues.reserve(lookValues.size());
   for (double look : lookValues)
-    myResultFrames[frameIdx]->resValues.push_back((float)look);
+    frame->resValues.push_back(static_cast<float>(look));
 
-  myResultFrames[frameIdx]->resLookPolicy = lookBinding;
-  this->remapLookResults(myResultFrames[frameIdx], mapping);
+  frame->resLookPolicy = lookBinding;
+  this->remapLookResults(frame,mapping);
 }
 
 void FdFEGroupPartKit::deleteResultLook(int frameIdx) // frame = -1 => all

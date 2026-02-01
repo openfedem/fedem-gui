@@ -8,6 +8,8 @@
 #ifndef FD_GROUP_PART_KIT_H
 #define FD_GROUP_PART_KIT_H
 
+#include "vpmApp/vpmAppDisplay/FFaLegendMapper.H"
+
 #include "vpmDisplay/FdFEGroupPart.H"
 #include <Inventor/nodekits/SoBaseKit.h>
 
@@ -20,6 +22,7 @@ class SoMaterialBinding;
 class SoLightModel;
 class SoDrawStyle;
 class SoPackedColor;
+class SoIndexedShape;
 
 
 class FdFEGroupPartKit : public SoBaseKit, public FdFEGroupPart
@@ -28,9 +31,9 @@ public:
   FdFEGroupPartKit();
   static void init();
   void setSpecialGraphics(SoSeparator* scene, bool isLineShape);
-  virtual bool hasSpecialGraphics();
+  virtual bool hasSpecialGraphics() const;
   virtual void setVizMode(FdGpVizModeEnum mode);
-  float getResultFromMaterialIndex(unsigned int matIdx);
+  float getResultFromMaterialIndex(unsigned int matIdx) const;
 
 protected:
   virtual ~FdFEGroupPartKit();
@@ -44,14 +47,14 @@ private:
 
   virtual void setFdPointer(FdObject* backPt);
 
-  virtual void setShapeIndexes(bool isFaceShape, const std::vector < std::vector<int> > & idxs);
+  virtual void setShapeIndexes(bool isFace, const std::vector<IntVec>& faces);
   virtual void generateShapeIndexes();
 
   virtual void toggleOn       ( bool  turnOn );
   virtual void setLook        ( const FFdLook & aLook );
   virtual void setGouradOn    ( bool  setOn );
   virtual void set3DLLineWidth( int   lineWidth );
-  virtual void set3DLLinePattern ( unsigned short pattern );
+  virtual void set3DLLinePattern( unsigned short pattern );
   virtual void setLineOffsetOn( bool  turnOn );
 
   // Results interface :
@@ -64,8 +67,9 @@ private:
   virtual void expandFrameArrayIfNeccesary( int frameIdx );
 
   virtual void setResultLookOn( bool turnOn );
+  virtual void remapLookResults(const FFaLegendMapper& mapping);
   virtual void remapLookResults();
-  virtual bool hasResultLook( unsigned int frameIdx );
+  virtual bool hasResultLook( unsigned int frameIdx ) const;
 
   virtual void setResultLook( unsigned int frameIdx, lookPolicy lookBinding,
                               std::vector<double>& lookValues,
@@ -84,8 +88,8 @@ private:
   bool IAmShowingResultLooks;
   unsigned int    myCurrentFrame;
   FdGpVizModeEnum myVizMode;
-
-  unsigned short myLinePattern;
+  unsigned short  myLinePattern;
+  FFaLegendMapper myLegendMapper;
   int   myLineWidth;
   float myTransparency;
 
@@ -108,6 +112,8 @@ private:
   };
 
   void remapLookResults(ResultsFrame*, const FFaLegendMapper& mapping);
+
+  SoIndexedShape* getShape(SbBool isFace);
 
   std::vector<ResultsFrame*> myResultFrames;
 
