@@ -20,6 +20,7 @@ class FFrExtractor;
 class FFaResultDescription;
 class FmCurveSet;
 class FmModelMemberBase;
+class FmIsPlottedBase;
 
 
 class FapUARDBSelector : public FapUAExistenceHandler, public FapUAFinishHandler
@@ -28,7 +29,6 @@ class FapUARDBSelector : public FapUAExistenceHandler, public FapUAFinishHandler
 
 public:
   FapUARDBSelector(FuiRDBSelector* ui);
-  virtual ~FapUARDBSelector() {}
 
   void edit(FmCurveSet* curve, int axis);
   FFaResultDescription getSelectedResultDescr() const;
@@ -61,6 +61,8 @@ private:
   void updateApplyable();
   void setAxisText();
   void selectResult(const FFaResultDescription& result);
+  void getSelection(FFaResultDescription& result,
+                    std::vector<FmIsPlottedBase*>* spatialObjs) const;
 
 private:
   FuiRDBSelector* ui;
