@@ -10,6 +10,7 @@
 #include "vpmDB/FmGraph.H"
 #include "vpmDB/FmCurveSet.H"
 #include "vpmDB/FmMechanism.H"
+#include "vpmDB/FmSMJointBase.H"
 #include "vpmDB/FmBeam.H"
 #include "vpmDB/FmDB.H"
 
@@ -32,7 +33,8 @@
 bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
 				       std::string* errMsg, bool isAppending)
 {
-  if (curves.empty()) return true;
+  if (curves.empty())
+    return true;
 
   // First, resolve the combined curves (if any) such that we
   // only try to read the basic curves (RDB, external and function)
@@ -101,19 +103,25 @@ bool FapGraphDataMap::findPlottingData(const std::vector<FmCurveSet*>& curves,
 			<<" Could not detect direction of traversal."
 			<< std::endl;
 	  }
-	  xDescr.reserve(nPoints*2);
-	  FmTriad* triads[2];
-	  for (FmIsPlottedBase* obj : spatialObjs)
-	  {
-	    triads[0] = static_cast<FmBeam*>(obj)->getFirstTriad();
-	    triads[1] = static_cast<FmBeam*>(obj)->getSecondTriad();
-	    if (end1 == 1) std::swap(triads[0],triads[1]);
-	    for (int k = 0; k < 2; k++)
-              xDescr.emplace_back(triads[k]->getUITypeName(),
-                                  triads[k]->getBaseID(),triads[k]->getID());
-	  }
-	  nPoints *= 2; // two spatial result points per element
-	}
+          nPoints *= 2; // two spatial result points per element
+          xDescr.reserve(nPoints);
+          for (FmIsPlottedBase* obj : spatialObjs)
+          {
+            FmTriad* triad1 = static_cast<FmBeam*>(obj)->getFirstTriad();
+            FmTriad* triad2 = static_cast<FmBeam*>(obj)->getSecondTriad();
+            if (end1 == 1) std::swap(triad1,triad2);
+            xDescr.emplace_back("Triad",triad1->getBaseID(),triad1->getID());
+            xDescr.emplace_back("Triad",triad2->getBaseID(),triad2->getID());
+          }
+        }
+        else
+        {
+          xDescr.reserve(nPoints);
+          for (FmIsPlottedBase* obj : spatialObjs)
+            if (FmSMJointBase* joint = dynamic_cast<FmSMJointBase*>(obj); joint)
+              if (FmTriad* triad = joint->getItsMasterTriad(); triad)
+                xDescr.emplace_back("Triad",triad->getBaseID(),triad->getID());
+        }
 
 	// Initialize the axis definitions for this spatial RDB-curve.
 	// Any existing curve data is thrown away.
@@ -385,8 +393,8 @@ bool FapGraphDataMap::findDataFromFunc(const FmCurveSet* curve,
                                        FFpCurve& curveData,
                                        std::string& message)
 {
-  if (!curve) return false;
-  if (!curve->areAxesComplete()) return false;
+  if (!curve || !curve->areAxesComplete())
+    return false;
 
   FmMathFuncBase* function = curve->getFunctionRef();
   if (!function) return false;
@@ -471,7 +479,8 @@ bool FapGraphDataMap::findDataFromFile(const FmCurveSet* curve,
 bool FapGraphDataMap::findCombinedCurveData(const FmCurveSet* ccrv,
 					    std::string& message)
 {
-  if (ccrv->usingInputMode() != FmCurveSet::COMB_CURVES) return true;
+  if (ccrv->usingInputMode() != FmCurveSet::COMB_CURVES)
+    return true;
 
 #ifdef FAP_DEBUG
   std::cout <<"FapGraphDataMap: Loading curve data for expression "
@@ -583,7 +592,8 @@ bool FapGraphDataMap::hasDataChanged(const FmCurveSet* curve) const
 bool FapGraphDataMap::setDataChanged(const FmCurveSet* curve)
 {
   std::map<const FmCurveSet*,FFpCurve>::iterator c = dataMap.find(curve);
-  if (c == dataMap.end() || c->second.hasDataChanged()) return false;
+  if (c == dataMap.end() || c->second.hasDataChanged())
+    return false;
 
   c->second.setDataChanged();
   return true;
@@ -658,10 +668,12 @@ double FapGraphDataMap::getDamageFromCurve(const FmCurveSet* curve,
 					   double startT, double stopT,
 					   const FFpSNCurve& snCurve)
 {
-  if (!snCurve.isValid() || gateValue <= 0.0) return -1.0;
+  if (!snCurve.isValid() || gateValue <= 0.0)
+    return -1.0;
 
   FFpCurve* ffpCurve = this->getFFpCurve(curve,false);
-  if (!ffpCurve || ffpCurve->empty()) return -1.0;
+  if (!ffpCurve || ffpCurve->empty())
+    return -1.0;
 
   FmMechanism* mech = FmDB::getMechanismObject();
   double MPa = 1.0e-6; // Stress scaling factor to MPa
