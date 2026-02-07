@@ -80,14 +80,17 @@ void FapUARDBSelector::edit(FmCurveSet* curve, int axis)
   myAxis = axis;
   myCurve = curve;
 
-  if (myCurve) {
+  if (myCurve)
+  {
     if (!IAmEditingCurve && this->isUIPoppedUp())
       FapEventManager::pushPermSelection();
     IAmEditingCurve = true;
     this->selectResult(myCurve->getResult(myAxis));
+    this->ui->lvRes->setSglSelectionMode(curve->usingInputMode() != FmCurveSet::SPATIAL_RESULT);
     this->ui->setOkCancelDialog(true);
   }
-  else {
+  else
+  {
     this->ui->setOkCancelDialog(false);
     if (IAmEditingCurve && this->isUIPoppedUp())
       FapEventManager::popPermSelection();
@@ -100,45 +103,47 @@ void FapUARDBSelector::edit(FmCurveSet* curve, int axis)
 void FapUARDBSelector::selectResult(const FFaResultDescription& result)
 {
   // no result
-  if (result.empty()) {
+  if (result.empty())
+  {
     FapEventManager::permTotalSelect(NULL);
     posUA->permTotSelectUIItems({});
   }
 
-  FmModelMemberBase* mmb;
-  FFrEntryBase* ffrresult;
-  FFrEntryBase* ffrpos;
-
-  // Fill up frozen top-level item listviews with model member
-  if (resUA->getFreezeTopLevelItem() || posUA->getFreezeTopLevelItem())
-    if (result.baseId > 0 && (mmb = FmDB::findObject(result.baseId))) {
-      if (resUA->getFreezeTopLevelItem()) resUA->setTopLevelItem(mmb,true);
-      if (posUA->getFreezeTopLevelItem()) posUA->setTopLevelItem(mmb,true);
-    }
+  FmModelMemberBase* mmb = result.baseId > 0 ? FmDB::findObject(result.baseId) : NULL;
+  if (mmb)
+  {
+    // Fill up frozen top-level item listviews with model member
+    if (resUA->getFreezeTopLevelItem()) resUA->setTopLevelItem(mmb,true);
+    if (posUA->getFreezeTopLevelItem()) posUA->setTopLevelItem(mmb,true);
+  }
 
   //result only
-  if ((ffrresult = resUA->findItem(result))) {
-    FapEventManager::permTotalSelect(ffrresult);
-    resUA->ensureItemVisible(ffrresult);
+  if (FFrEntryBase* ffrItem = resUA->findItem(result); ffrItem)
+  {
+    FapEventManager::permTotalSelect(ffrItem);
+    resUA->ensureItemVisible(ffrItem);
   }
   //result + possibility
-  else if (result.baseId > 0 && (mmb = FmDB::findObject(result.baseId))) {
+  else if (mmb)
+  {
     //res
     FapEventManager::permTotalSelect(mmb);
     resUA->ensureItemVisible(mmb);
     //pos
     FFaResultDescription pos = result;
     pos.baseId = 0;
-    if ((ffrpos = posUA->findItem(pos))) {
-      posUA->permTotSelectUIItems({ffrpos});
-      posUA->ensureItemVisible(ffrpos);
+    if (FFrEntryBase* ffrItem = posUA->findItem(pos); ffrItem)
+    {
+      posUA->permTotSelectUIItems({ ffrItem });
+      posUA->ensureItemVisible(ffrItem);
     }
   }
   //possibility only -> ie top level var
-  else if ((ffrpos = posUA->findItem(result))) {
+  else if (FFrEntryBase* ffrItem = posUA->findItem(result); ffrItem)
+  {
     FapEventManager::permTotalSelect(NULL);
-    posUA->permTotSelectUIItems({ffrpos});
-    posUA->ensureItemVisible(ffrpos);
+    posUA->permTotSelectUIItems({ ffrItem });
+    posUA->ensureItemVisible(ffrItem);
   }
 
   this->updateApplyable();
@@ -158,18 +163,35 @@ void FapUARDBSelector::setAxisText()
 
 void FapUARDBSelector::onRDBItemSelected(FapUAItemsViewHandler* lv)
 {
-  if (!((FapUAItemsListView*)lv)->isUIPoppedUp()) return;
-
   std::vector<FFaViewItem*> totalSelection = lv->getUISelectedItems();
-  if (totalSelection.size() == 1) {
-    // single selection
-    FFaResultDescription item(totalSelection.front()->getItemName());
-    posUA->setTopLevelItem(posUA->findItem(item),false);
-  }
-  else if (totalSelection.empty())
+  if (totalSelection.empty())
     posUA->showTopLevelVarsOnly();
-  else // multi-selection (shouldn't occur)
-    posUA->clearSession();
+  else
+  {
+    // If multi-selection, check that all are of the same type
+    const char* selected = NULL;
+    for (FFaViewItem* item : totalSelection)
+      if (dynamic_cast<FmModelMemberBase*>(item))
+      {
+        if (!selected)
+          selected = item->getItemName();
+        else if (strcmp(selected,item->getItemName()))
+        {
+          selected = NULL;
+          break;
+        }
+      }
+      else
+      {
+        selected = NULL;
+        break;
+      }
+
+    if (selected)
+      posUA->setTopLevelItem(posUA->findItem(FFaResultDescription(selected)),false);
+    else
+      posUA->clearSession();
+  }
 
   this->updateApplyable();
 }
@@ -185,17 +207,29 @@ void FapUARDBSelector::onResultApplied()
 {
   if (!myCurve) return;
 
+  bool spatial = myCurve->usingInputMode() == FmCurveSet::SPATIAL_RESULT;
+
   // Setting result in curve only if this is a new result
-  FFaResultDescription result = this->getSelectedResultDescr();
+  FFaResultDescription result;
+  std::vector<FmIsPlottedBase*> spaceObjs;
+  this->getSelection(result, spatial ? &spaceObjs : NULL);
   if (result == myCurve->getResult(myAxis)) return;
 
-  std::vector<std::string> allOpers = FFaOpUtils::findOpers(result.varRefType);
-  std::vector<std::string>::iterator it = std::find(allOpers.begin(), allOpers.end(),
-						    myCurve->getResultOper(myAxis));
-
-  if (myCurve->usingInputMode() == FmCurveSet::SPATIAL_RESULT) {
-    std::vector<FmIsPlottedBase*> spaceObjs;
-    if (result.baseId > 0) {
+  if (spatial)
+  {
+    if (spaceObjs.size() > 1)
+    {
+      for (size_t i = 1; i < spaceObjs.size(); i++)
+        if (spaceObjs[i]->getTypeID() != spaceObjs.front()->getTypeID())
+        {
+          Fui::okDialog("All objects have to be of the same type.\n"
+                        "Axis definition is not updated.",FFuDialog::ERROR);
+          return;
+        }
+      result.baseId = result.userId = 0;
+    }
+    else if (result.baseId > 0)
+    {
       if (FmTriad::traverseBeam(FmDB::findObject(result.baseId),spaceObjs))
 	result.baseId = result.userId = 0;
       else if (FmBeam::traverse(FmDB::findObject(result.baseId),spaceObjs))
@@ -214,6 +248,10 @@ void FapUARDBSelector::onResultApplied()
   }
 
   myCurve->setResult(myAxis,result);
+
+  std::vector<std::string> allOpers = FFaOpUtils::findOpers(result.varRefType);
+  std::vector<std::string>::iterator it = std::find(allOpers.begin(), allOpers.end(),
+                                                    myCurve->getResultOper(myAxis));
   if (it == allOpers.end())
     myCurve->setResultOper(myAxis,FFaOpUtils::getDefaultOper(result.varRefType));
   else
@@ -226,14 +264,45 @@ void FapUARDBSelector::onResultApplied()
 FFaResultDescription FapUARDBSelector::getSelectedResultDescr() const
 {
   FFaResultDescription result;
+  this->getSelection(result,NULL);
+  return result;
+}
+//----------------------------------------------------------------------------
 
+void FapUARDBSelector::getSelection(FFaResultDescription& result,
+                                    std::vector<FmIsPlottedBase*>* spatialObjs) const
+{
   // Get selection from the list views
 
-  FFaListViewItem* resViewSel = (FFaListViewItem*)(resUA->getUISelectedItems().empty() ? NULL : resUA->getUISelectedItems().front());
-  FFaListViewItem* posViewSel = (FFaListViewItem*)(posUA->getUISelectedItems().empty() ? NULL : posUA->getUISelectedItems().front());
+  std::vector<FFaViewItem*> resSel = resUA->getUISelectedItems();
+  std::vector<FFaViewItem*> posSel = posUA->getUISelectedItems();
+
+  FFaListViewItem* resViewSel = (FFaListViewItem*)(resSel.empty() ? NULL : resSel.front());
+  FFaListViewItem* posViewSel = (FFaListViewItem*)(posSel.empty() ? NULL : posSel.front());
 
   bool isFromResView = dynamic_cast<FFrVariableReference*>(resViewSel) ? true : false;
   bool isFromPosView = dynamic_cast<FFrVariableReference*>(posViewSel) ? true : false;
+
+  // Check for multi-selection of spatial objects
+  if (spatialObjs && resSel.size() > 1)
+    for (FFaViewItem* item : resSel)
+    {
+      FFaListViewItem* vItem = static_cast<FFaListViewItem*>(item);
+      if (dynamic_cast<FFrVariableReference*>(vItem))
+      {
+        resViewSel = vItem;
+        isFromResView = true;
+        do
+          vItem = resUA->getUIParent(vItem);
+        while (dynamic_cast<FFrItemGroup*>(vItem));
+      }
+      else
+        while (dynamic_cast<FFrItemGroup*>(vItem))
+          vItem = resUA->getUIParent(vItem);
+
+      if (FmIsPlottedBase* obj = dynamic_cast<FmIsPlottedBase*>(vItem); obj)
+        spatialObjs->push_back(obj);
+    }
 
   // Build the FFaResultDescription
 
@@ -247,7 +316,8 @@ FFaResultDescription FapUARDBSelector::getSelectedResultDescr() const
     // Create varDescrPath by assembling descriptions from selection
     // and parents, up to the owner group item (model object)
     while (dynamic_cast<FFrVariableReference*>(resViewSel) ||
-	   dynamic_cast<FFrItemGroup*>(resViewSel)) {
+           dynamic_cast<FFrItemGroup*>(resViewSel))
+    {
       result.varDescrPath.insert(result.varDescrPath.begin(),
 				 ((FFrEntryBase*)resViewSel)->getDescription());
       resViewSel = resUA->getUIParent(resViewSel);
@@ -291,21 +361,21 @@ FFaResultDescription FapUARDBSelector::getSelectedResultDescr() const
       posViewSel = posUA->getUIParent(posViewSel);
     }
   }
-
-  return result;
 }
 //----------------------------------------------------------------------------
 
 void FapUARDBSelector::onAppearance(bool popup)
 {
-  if (popup) {
-    if (IAmEditingCurve)
+  if (IAmEditingCurve)
+  {
+    if (popup)
       FapEventManager::pushPermSelection();
-    this->updateApplyable();
-  }
-  else
-    if (IAmEditingCurve)
+    else
       FapEventManager::popPermSelection();
+  }
+
+  if (popup)
+    this->updateApplyable();
 }
 //----------------------------------------------------------------------------
 
@@ -342,7 +412,8 @@ void FapUARDBSelector::doNewModelExtr(FFrExtractor* extr)
 void FapUARDBSelector::doNewPosExtr(FFrExtractor* extr)
 {
   posUA->setExtractor(extr);
-  this->onRDBItemSelected(resUA);
+  if (resUA->isUIPoppedUp())
+    this->onRDBItemSelected(resUA);
 }
 //----------------------------------------------------------------------------
 
@@ -356,16 +427,23 @@ void FapUARDBSelector::onModelMemberChanged(FmModelMemberBase* item)
 
 void FapUARDBSelector::updateApplyable()
 {
-  bool applyable = false;
-  if (!resUA->getUISelectedItems().empty())
-    if (dynamic_cast<FFrVariableReference*>(resUA->getUISelectedItems().front()))
-      applyable = true;
+  std::vector<FFaViewItem*> selection = resUA->getUISelectedItems();
+  for (FFaViewItem* item : selection)
+    if (dynamic_cast<FFrVariableReference*>(item))
+    {
+      ui->setApplyable(true);
+      return;
+    }
 
-  if (!applyable && !posUA->getUISelectedItems().empty())
-    if (dynamic_cast<FFrVariableReference*>(posUA->getUISelectedItems().front()))
-      applyable = true;
+  selection = posUA->getUISelectedItems();
+  for (FFaViewItem* item : selection)
+    if (dynamic_cast<FFrVariableReference*>(item))
+    {
+      ui->setApplyable(true);
+      return;
+    }
 
-  this->ui->setApplyable(applyable);
+  ui->setApplyable(false);
 }
 //----------------------------------------------------------------------------
 

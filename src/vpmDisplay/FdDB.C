@@ -471,7 +471,6 @@ void FdDB::init()
   FdCamJointKit::init();
   FdCurveKit::init();
   FdStrainRosetteKit::init();
-  FdPipeArcKit::init();
   FdPipeSurfaceKit::init();
   FdFEModelKit::init();
   FdFEGroupPartKit::init();

@@ -6,9 +6,6 @@
 
 set ( LIB_ID vpmDisplay )
 
-# Include this to test the obj-file parser
-#add_subdirectory ( vpmDisplayTests )
-
 # Dependencies and system libraries
 
 if ( WIN )
@@ -34,6 +31,11 @@ else ( WIN )
   find_library ( SoQt_library SoQt REQUIRED )
   find_library ( Simage_library simage )
 endif ( WIN )
+
+# Include this to test the obj-file parser
+#add_subdirectory ( vpmDisplayTests )
+# Include this to build the viewer test application
+#add_subdirectory ( qtViewers/qtViewersTests )
 
 set ( EXTERNAL_LIBRARIES ${Coin_library} ${SoQt_library} Qt6::OpenGL ${DSO_LIBGL} )
 
