@@ -167,7 +167,6 @@ FapUAProperties::FapUAProperties(FuiProperties* uic)
   pv.myLoadViewAttackPointCB = FFaDynCB1M(FapUAProperties,this,loadViewAttackPointCB,bool);
   pv.myLoadViewAttackWhatCB  = FFaDynCB1M(FapUAProperties,this,loadViewAttackWhatCB,bool);
   pv.myLoadPickAttackPointCB = FFaDynCB0M(FapUAProperties,this,loadPickAttackPointCB);
-  pv.myLoadApplyCB           = FFaDynCB2M(FapUAProperties,this,applyAttackPointCB,bool,FaVec3);
 
   pv.myLoadViewFromPointCB = FFaDynCB1M(FapUAProperties,this,loadViewFromPointCB,bool);
   pv.myLoadViewFromWhatCB  = FFaDynCB1M(FapUAProperties,this,loadViewFromWhatCB,bool);
@@ -596,23 +595,21 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       else
         pv->myAttackPoint = item->getOwnerTriad()->getLocalTranslation();
 
-      pv->myAttackObjectText = item->getOwnerTriad()->getLinkIDString(true);
-
       if (pv->myFromPointIsGlobal)
         pv->myFromPoint = item->getGlobalFromPoint();
       else
         pv->myFromPoint = item->getLocalFromPoint();
 
-      if (item->getFromRef())
-        pv->myFromPointObjectText = item->getFromRef()->getLinkIDString(true);
+      if (FmIsPositionedBase* fromRef = item->getFromRef(); fromRef)
+        pv->myFromPointObjectText = fromRef->getLinkIDString(true);
 
       if (pv->myToPointIsGlobal)
         pv->myToPoint = item->getGlobalToPoint();
       else
         pv->myToPoint = item->getLocalToPoint();
 
-      if (item->getToRef())
-        pv->myToPointObjectText = item->getToRef()->getLinkIDString(true);
+      if (FmIsPositionedBase* toRef = item->getToRef(); toRef)
+        pv->myToPointObjectText = toRef->getLinkIDString(true);
 
       // Topology view:
 
@@ -3590,6 +3587,18 @@ void FapUAProperties::onModelMemberChanged(FmModelMemberBase* changedObj)
 }
 
 
+void FapUAProperties::updateState(int oldState, int newState, int mode)
+{
+  switch (mode) {
+  case FuiModes::PICKLOADATTACKPOINT_MODE:
+    if (oldState == 1 && newState == 2)
+      this->updateUI();
+  default:
+    break;
+  }
+}
+
+
 //////////////////////////
 //
 // Callbacks :
@@ -4063,20 +4072,6 @@ void FapUAProperties::loadPickAttackPointCB()
     IAmIgnoringPickNotify = true;
     FuiModes::setMode(FuiModes::PICKLOADATTACKPOINT_MODE);
   }
-}
-
-
-void FapUAProperties::applyAttackPointCB(bool isGlobal, FaVec3 point)
-{
-  FmLoad* item = dynamic_cast<FmLoad*>(mySelectedFmItem);
-  if (!item) return;
-
-  if (isGlobal)
-    item->moveAttackPointGlobal(point);
-  else
-    item->moveAttackPointLocal(point);
-
-  this->updateUI();
 }
 
 

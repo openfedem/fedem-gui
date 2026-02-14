@@ -444,11 +444,9 @@ void FuiProperties::initWidgets()
   myAttackPointEditor->setPointChangedCB(FFaDynCB2M(FuiProperties,this,onVecBoolChanged,const FaVec3&,bool));
   myAttackPointEditor->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onBoolTouched,bool));
 
-  myFromPointEditor->hideApplyButton(true);
   myFromPointEditor->setPointChangedCB(FFaDynCB2M(FuiProperties,this,onVecBoolChanged,const FaVec3&,bool));
   myFromPointEditor->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onBoolTouched,bool));
 
-  myToPointEditor->hideApplyButton(true);
   myToPointEditor->setPointChangedCB(FFaDynCB2M(FuiProperties,this,onVecBoolChanged,const FaVec3&,bool));
   myToPointEditor->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onBoolTouched,bool));
 
@@ -1427,7 +1425,13 @@ void FuiProperties::buildDynamicWidgets(const FFuaUIValues* values)
 
 FFuaUIValues* FuiProperties::createValuesObject()
 {
-  return new FuaPropertiesValues();
+  FuaPropertiesValues* vals = new FuaPropertiesValues();
+
+  // Initialize the Global/Local reference settings from the GUI widgets,
+  // since these are not stored in the model file
+  this->getLoadRefSettings(vals);
+
+  return vals;
 }
 
 
@@ -1871,7 +1875,6 @@ void FuiProperties::setUIValues(const FFuaUIValues* values)
     myLoadMagnitude->setQuery(pv->myLoadEngineQuery);
     myLoadMagnitude->setSelectedRef(pv->mySelectedLoadMagnitudeEngine);
     myAttackPointEditor->setValue(pv->myAttackPoint);
-    myAttackPointEditor->setOnWhatText(pv->myAttackObjectText);
 
     myFromPointEditor->setValue(pv->myFromPoint);
     myFromPointEditor->setOnWhatText(pv->myFromPointObjectText);
@@ -2544,7 +2547,6 @@ void FuiProperties::setCBs(const FFuaUIValues* values)
   myAttackPointEditor->setViewPointCB(pv->myLoadViewAttackPointCB);
   myAttackPointEditor->setViewWhatCB(pv->myLoadViewAttackWhatCB);
   myAttackPointEditor->setPickCB(pv->myLoadPickAttackPointCB);
-  myAttackPointEditor->setApplyCB(pv->myLoadApplyCB);
 
   myFromPointEditor->setViewPointCB(pv->myLoadViewFromPointCB);
   myFromPointEditor->setViewWhatCB(pv->myLoadViewFromWhatCB);
