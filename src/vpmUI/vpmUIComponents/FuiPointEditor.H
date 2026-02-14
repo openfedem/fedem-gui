@@ -20,14 +20,12 @@ class FaVec3;
 class FuiPointEditor : public virtual FFuComponentBase
 {
 public:
-  // Callbacks :
+  void setViewWhatCB (const FFaDynCB1<bool>& cb) { myViewWhatCB  = cb; }
+  void setViewPointCB(const FFaDynCB1<bool>& cb) { myViewPointCB = cb; }
 
-  void setViewWhatCB    (const FFaDynCB1<bool>& aDynCB);// Highlight when True
-  void setViewPointCB   (const FFaDynCB1<bool>& aDynCB);// Highlight when True
-  void setPickCB        (const FFaDynCB0&       aDynCB);
-  void setApplyCB       (const FFaDynCB2<bool,FaVec3>& aDynCB);
+  void setPickCB        (const FFaDynCB0& aDynCB);
   void setPointChangedCB(const FFaDynCB2<const FaVec3&,bool>& aDynCB);
-  void setRefChangedCB  (const FFaDynCB1<bool>& aDynCB); // Called with isGlobal();
+  void setRefChangedCB  (const FFaDynCB1<bool>& aDynCB);
 
   // Setting values:
 
@@ -43,7 +41,7 @@ public:
   // Look
 
   void hideOnWhatDisplay(bool doHide);
-  void hideApplyButton(bool hide);
+  void setReadOnly(bool readOnly) { IAmEditable = !readOnly; }
 
   virtual void setSensitivity(bool isSensitive);
 
@@ -58,20 +56,18 @@ protected:
   Fui3DPoint*    myPointUI;
   FFuPushButton* myPickButton;
   FFuPushButton* myViewPointButton;
-  FFuPushButton* myApplyButton;
 
 private:
   // Internal methods for rerouting of Callbacks
   void onMyViewWhatTouched();
   void onMyViewPointTouched();
-  void onMyApplyButtonPressed();
 
-  // Callback Objects
+  // Callback objects
 
-  FFaDynCB0 myPickCB;
-  FFaDynCB1<bool> myViewWhatCB;
-  FFaDynCB1<bool> myViewPointCB;
-  FFaDynCB2<bool,FaVec3> myApplyCB;
+  FFaDynCB1<bool> myViewWhatCB;  // Highlight when True
+  FFaDynCB1<bool> myViewPointCB; // Highlight when True
+
+  bool IAmEditable = true;
 };
 
 #endif

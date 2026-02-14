@@ -20,8 +20,6 @@ void FuiPointEditor::initWidgets()
 
   myPickButton->setPixMap(mouseMedium_xpm);
   myViewPointButton->setPixMap(look_xpm);
-  myApplyButton->setLabel("Apply");
-  myApplyButton->setActivateCB(FFaDynCB0M(FuiPointEditor,this,onMyApplyButtonPressed));
 
   myViewWhatButton->setPixMap(look_xpm);
   myIdField->setLabel("On");
@@ -39,7 +37,7 @@ void FuiPointEditor::hideOnWhatDisplay(bool doHide)
 {
   if (doHide)
   {
-    myViewWhatButton-> popDown();
+    myViewWhatButton->popDown();
     myIdField->popDown();
   }
   else
@@ -50,46 +48,18 @@ void FuiPointEditor::hideOnWhatDisplay(bool doHide)
 }
 
 
-void FuiPointEditor::hideApplyButton(bool doHide)
-{
-  if (doHide)
-    myApplyButton->popDown();
-  else
-    myApplyButton->popUp();
-}
-
-
 void FuiPointEditor::setSensitivity(bool isSensitive)
 {
-  myPointUI->setSensitivity(isSensitive);
+  myPointUI->setSensitivity(IAmEditable && isSensitive);
   myPickButton->setSensitivity(isSensitive);
-  myApplyButton->setSensitivity(isSensitive);
 }
 
 
 // Callbacks :
 
-void FuiPointEditor::setViewWhatCB(const FFaDynCB1<bool> &aDynCB)
-{
-  myViewWhatCB = aDynCB;
-}
-
-
-void FuiPointEditor::setViewPointCB(const FFaDynCB1<bool> &aDynCB)
-{
-  myViewPointCB = aDynCB;
-}
-
-
-void FuiPointEditor::setPickCB(const FFaDynCB0 &aDynCB)
+void FuiPointEditor::setPickCB(const FFaDynCB0& aDynCB)
 {
   myPickButton->setActivateCB(aDynCB);
-}
-
-
-void FuiPointEditor::setApplyCB(const FFaDynCB2<bool,FaVec3> &aDynCB)
-{
-  myApplyCB = aDynCB;
 }
 
 
@@ -99,7 +69,7 @@ void FuiPointEditor::setPointChangedCB(const FFaDynCB2<const FaVec3&,bool>& aDyn
 }
 
 
-void FuiPointEditor::setRefChangedCB(const FFaDynCB1<bool> &aDynCB)
+void FuiPointEditor::setRefChangedCB(const FFaDynCB1<bool>& aDynCB)
 {
   myPointUI->setRefChangedCB(aDynCB);
 }
@@ -151,10 +121,4 @@ void FuiPointEditor::onMyViewPointTouched()
   static bool buttonIn = false;
   buttonIn = !buttonIn;
   myViewPointCB.invoke(buttonIn);
-}
-
-
-void FuiPointEditor::onMyApplyButtonPressed()
-{
-  myApplyCB.invoke(this->myPointUI->isGlobal(), this->myPointUI->getValue());
 }

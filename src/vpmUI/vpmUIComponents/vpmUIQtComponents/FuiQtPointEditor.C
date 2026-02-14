@@ -22,8 +22,6 @@ FuiQtPointEditor::FuiQtPointEditor(QWidget* parent, const char* name)
   myPickButton = new FFuQtPushButton();
   myViewPointButton = new FFuQtPushButton();
   myViewWhatButton = new FFuQtPushButton();
-  myApplyButton = new FFuQtPushButton();
-  myApplyButton->setMaxWidth(50);
 
   this->initWidgets();
 
@@ -38,7 +36,6 @@ FuiQtPointEditor::FuiQtPointEditor(QWidget* parent, const char* name)
   layout->setContentsMargins(0,0,0,0);
   layout->addWidget(myPickButton->getQtWidget());
   layout->addWidget(myViewPointButton->getQtWidget());
-  layout->addWidget(myApplyButton->getQtWidget());
 
   QWidget* qPoint = new QWidget();
   layout = new QHBoxLayout(qPoint);

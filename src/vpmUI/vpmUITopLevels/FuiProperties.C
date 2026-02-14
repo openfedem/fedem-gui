@@ -441,6 +441,7 @@ void FuiProperties::initWidgets()
   myLoadMagnitude->setBehaviour(FuiQueryInputField::REF_NUMBER);
 
   myAttackPointEditor->hideOnWhatDisplay(true);
+  myAttackPointEditor->setReadOnly(true);
   myAttackPointEditor->setPointChangedCB(FFaDynCB2M(FuiProperties,this,onVecBoolChanged,const FaVec3&,bool));
   myAttackPointEditor->setRefChangedCB(FFaDynCB1M(FuiProperties,this,onBoolTouched,bool));
 
