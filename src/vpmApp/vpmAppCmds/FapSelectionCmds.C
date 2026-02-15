@@ -146,14 +146,14 @@ void FapSelectionCmds::help()
     Fui::showCHM("properties/spring.htm");
   else if (!strcmp(topic,"Axial damper") || !strcmp(topic,"Joint damper"))
     Fui::showCHM("properties/damper.htm");
+  else if (!strcmp(topic,"Force") || !strcmp(topic,"Torque"))
+    Fui::showCHM("properties/load.htm");
   else if (!strcmp(topic,"Structure Assembly"))
     Fui::showCHM("properties/sub-assembly.htm");
   else if (!strcmp(topic,"Function")) {
     const char* ftyp = NULL;
-    FmEngine* engine = dynamic_cast<FmEngine*>(mySelection);
-    if (engine) {
-      FmMathFuncBase* func = engine->getFunction();
-      if (func)
+    if (FmEngine* engine = dynamic_cast<FmEngine*>(mySelection); engine) {
+      if (FmMathFuncBase* func = engine->getFunction(); func)
         ftyp = func->getItemName();
       else if (engine->isFunctionLinked())
         ftyp = "refer-to-other-function";
@@ -171,10 +171,8 @@ void FapSelectionCmds::help()
 
 void FapSelectionCmds::setSelection()
 {
-  if (ourSelectionHistory.empty())
-    return;
-
-  if (ourSelectionPt != ourSelectionHistory.end()){
+  if (!ourSelectionHistory.empty() && ourSelectionPt != ourSelectionHistory.end())
+  {
     ourIAmSelecting = true;
     FapEventManager::permTotalSelect(*ourSelectionPt);
     ourIAmSelecting = false;
@@ -226,20 +224,19 @@ void FapSelectionCmds::onPermSelectionChanged(FFaViewItems selection,
   if (ourIAmSelecting)
     return;
 
-  if (!ourSelectionHistory.empty())
-    if (ourSelectionPt != ourSelectionHistory.begin()) {
-      ourSelectionHistory.erase(ourSelectionHistory.begin(), ourSelectionPt);
-      ourSelectionPt = ourSelectionHistory.begin();
-    }
+  if (!ourSelectionHistory.empty() && ourSelectionPt != ourSelectionHistory.begin())
+  {
+    ourSelectionHistory.erase(ourSelectionHistory.begin(),ourSelectionPt);
+    ourSelectionPt = ourSelectionHistory.begin();
+  }
 
-  ourSelectionIsEmpty = selection.empty();
-  if (!ourSelectionIsEmpty)
-    {
-      ourSelectionHistory.push_front(selection);
-      ourSelectionPt = ourSelectionHistory.begin(); 
-      if (ourSelectionHistory.size() > 50)
-	ourSelectionHistory.pop_back();
-    }
+  if (!(ourSelectionIsEmpty = selection.empty()))
+  {
+    ourSelectionHistory.push_front(selection);
+    ourSelectionPt = ourSelectionHistory.begin();
+    if (ourSelectionHistory.size() > 50)
+      ourSelectionHistory.pop_back();
+  }
 }
 
 
