@@ -219,6 +219,8 @@ void FapUAFunctionProperties::getDBValues(FFuaUIValues* values)
   FmParamObjectBase* pObj = e || f ? f : dynamic_cast<FmParamObjectBase*>(mySelectedFmItem);
   if (pObj && !pObj->isOfType(FmfExternalFunction::getClassTypeID())) {
     pv->showParameterView = pObj->isOfType(FmFrictionBase::getClassTypeID());
+    if (pv->showParameterView)
+      pv->mySelectedFunctionTypeIdx = 1000 + pObj->getTypeID(); // Issue #130
 #ifdef FT_HAS_PREVIEW
     pv->showCurvePreview = pObj->isOfType(FmMathFuncBase::getClassTypeID());
 #endif

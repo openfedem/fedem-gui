@@ -688,14 +688,12 @@ public:
   FFuaQueryBase*     myLoadEngineQuery = NULL;
   FmModelMemberBase* mySelectedLoadMagnitudeEngine = NULL;
 
-  FaVec3      myAttackPoint;
-  bool        myAttackPointIsGlobal = false;
-  std::string myAttackObjectText;
+  FaVec3 myAttackPoint;
+  bool   myAttackPointIsGlobal = false;
 
-  FFaDynCB1<bool>        myLoadViewAttackPointCB;
-  FFaDynCB1<bool>        myLoadViewAttackWhatCB;
-  FFaDynCB0              myLoadPickAttackPointCB;
-  FFaDynCB2<bool,FaVec3> myLoadApplyCB;
+  FFaDynCB1<bool> myLoadViewAttackPointCB;
+  FFaDynCB1<bool> myLoadViewAttackWhatCB;
+  FFaDynCB0       myLoadPickAttackPointCB;
 
   FaVec3      myFromPoint;
   bool        myFromPointIsGlobal = false;

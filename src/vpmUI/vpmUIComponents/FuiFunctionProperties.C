@@ -39,6 +39,8 @@ FuiFunctionProperties::FuiFunctionProperties()
   IAmShowingLinkToFields = false;
   IAmShowingHelpPixmap = false;
   IAmShowingJonswap = false;
+
+  myFrictionType = 0;
 }
 
 
@@ -352,7 +354,11 @@ void FuiFunctionProperties::setUIValues(const FFuaUIValues* values)
   else
     this->setParameterSensitivity(IAmSensitive);
 
-  myTypeSwitch->selectOption(fv->mySelectedFunctionTypeIdx);
+  // Issue #130: Friction objects are identified by TypeIdx > 1000
+  if (fv->mySelectedFunctionTypeIdx > 1000)
+    myFrictionType = fv->mySelectedFunctionTypeIdx;
+  else if (IAmShowingTypeSwitch)
+    myTypeSwitch->selectOption(fv->mySelectedFunctionTypeIdx);
 
   if (fv->showFileView)
   {
@@ -636,7 +642,10 @@ void FuiFunctionProperties::setCBs(const FFuaUIValues* values)
 
 void FuiFunctionProperties::getValues(FuaFunctionPropertiesValues& values)
 {
-  values.mySelectedFunctionTypeIdx = myTypeSwitch->getSelectedOption();
+  if (IAmShowingTypeSwitch)
+    values.mySelectedFunctionTypeIdx = myTypeSwitch->getSelectedOption();
+  else // Issue #130: Friction objects are identified by TypeIdx > 1000
+    values.mySelectedFunctionTypeIdx = myFrictionType;
 
   values.showParameterView = IAmShowingPrmView[VIEW] > 0;
   values.showFileView      = IAmShowingPrmView[FILE] > 0;

@@ -403,8 +403,7 @@ void FuiModes::done()
     case COMPICKPOINT_MODE:
       if (state == 1)
         FuiModes::setState(2);
-      else
-        FuiModes::cancel();
+      FuiModes::cancel();
       break;
 
     case MAKESTICKER_MODE:

@@ -51,6 +51,7 @@ private:
 protected:
   virtual void setDBValues(FFuaUIValues* values);
   virtual void getDBValues(FFuaUIValues* values);
+  virtual void updateState(int oldState, int newState, int mode);
 
 private:
   virtual FFuaUIValues* createValuesObject();
@@ -84,7 +85,6 @@ private:
   void loadViewAttackPointCB(bool);
   void loadViewAttackWhatCB(bool);
   void loadPickAttackPointCB();
-  void applyAttackPointCB(bool isGlobal, FaVec3 point);
 
   void loadViewFromPointCB(bool);
   void loadViewFromWhatCB(bool);

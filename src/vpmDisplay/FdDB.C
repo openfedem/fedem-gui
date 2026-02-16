@@ -1628,7 +1628,7 @@ void FdDB::updateState(int newState)
                                    FdPickedPoints::getFirstPickedPoint());
                 break;
               case FuiModes::PICKLOADATTACKPOINT_MODE:
-                FmLoad::changeAttackPt(dynamic_cast<FmLink*>(FapEventManager::getPermSelectedObject(0)),
+                FmLoad::changeAttackPt(dynamic_cast<FmIsPositionedBase*>(FapEventManager::getPermSelectedObject(0)),
                                        FdPickedPoints::getFirstPickedPoint());
                 break;
               case FuiModes::ADDMASTERINLINJOINT_MODE:
@@ -1715,7 +1715,7 @@ void appearanceEventCB(void*, SoEventCallback* eventCBnode)
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
-                                                              selectedObjects, // An array of FdObject*'s  that is selected
+                                                              selectedObjects, // An array of FdObject*'s that is selected
                                                               types,true, // Filter variables
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
     if (!pickedObject)
@@ -2888,18 +2888,20 @@ void pickLoadPointEventCB(void*, SoEventCallback* eventCBnode)
     std::vector<int> types;
     switch (FuiModes::getMode()) {
     case FuiModes::PICKLOADATTACKPOINT_MODE:
+      types = { FdLink::getClassTypeID(), FdTriad::getClassTypeID() };
+      break;
     case FuiModes::ADDMASTERINLINJOINT_MODE:
       types = { FdLink::getClassTypeID() };
       break;
     default:
-      types = { FdLink::getClassTypeID(), FdRefPlane::getClassTypeID() };
+      types = { FdLink::getClassTypeID(), FdTriad::getClassTypeID(), FdRefPlane::getClassTypeID() };
       break;
     }
 
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
-                                                              selectedObjects, // An array of FdObject*'s  that is selected
+                                                              selectedObjects, // An array of FdObject*'s that is selected
                                                               types,true, // Filter variables
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
 
@@ -2946,7 +2948,7 @@ void pickMeasurePointEventCB(void*, SoEventCallback* eventCBnode)
     long int  indexToInterestingPP    = -1;
     bool      wasASelectedObjInPPList = false;
     FdObject* pickedObject = FdPickFilter::getInterestingPObj(&evHaAction->getPickedPointList(),
-                                                              selectedObjects, // An array of FdObject*'s  that is selected
+                                                              selectedObjects, // An array of FdObject*'s that is selected
                                                               {},false, // No variables filtering
                                                               indexToInterestingPP,wasASelectedObjInPPList); // Variables returning values
 

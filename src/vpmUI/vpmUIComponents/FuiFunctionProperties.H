@@ -220,6 +220,8 @@ private:
   bool IAmShowingHelpPixmap;
   bool IAmShowingJonswap;
 
+  int myFrictionType;
+
   // Callbacks
 
   FFaDynCB1<int> myFuncTypeSwitchedCB;
