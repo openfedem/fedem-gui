@@ -8,6 +8,25 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.4] (2026-02-16)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/128:
+  The direction of point loads can now be defined by selecting triads
+  which are not connected to a part.
+- Issue https://github.com/openfedem/fedem-gui/issues/126:
+  A Beam diagram curve can now be defined by selecting a group of triads or joints
+  which not are connected through a beamstring.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/130:
+  The Friction property editor panel does not work properly.
+- Issue https://github.com/openfedem/fedem-gui/issues/125:
+  The GUI may crash when plotting a Beam diagram curve,
+  and changing the time field in the property editor panel.
+
 ## [fedem-8.1.3] (2026-01-20)
 
 ### :rocket: Added
@@ -368,3 +387,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.2]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.1...fedem-8.1.2
 [fedem-8.1.2.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2...fedem-8.1.2.7
 [fedem-8.1.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2.7...fedem-8.1.3
+[fedem-8.1.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.3...fedem-8.1.4
