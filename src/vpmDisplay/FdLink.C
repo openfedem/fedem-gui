@@ -244,7 +244,7 @@ FdLink::FdLink(FmLink* pt) : FdObject()
 {
   Fmd_CONSTRUCTOR_INIT(FdLink);
 
-  this->itsFmOwner = pt;
+  itsFmOwner = pt;
   FdFEModelKit* FEKit = new FdFEModelKit;
   myFEKit = FEKit;
   itsKit = FEKit;
@@ -260,7 +260,7 @@ FdLink::FdLink(FmLink* pt) : FdObject()
   IHaveLoadedVrmlViz = false;
   IHaveCreatedCadViz = false;
 
-  this->highlightBoxId = NULL;
+  highlightBoxId = NULL;
 }
 
 
@@ -275,7 +275,7 @@ FdLink::~FdLink()
 
 bool FdLink::updateFdApperance()
 {
-  FmLink* Link = (FmLink*)this->itsFmOwner;
+  FmLink* Link = static_cast<FmLink*>(itsFmOwner);
 #ifdef FD_DEBUG
   std::cout <<"FdLink::updateFdAppearance() "<< Link->getIdString(true)
             <<"\n\tColor        = "<< Link->getRGBColor()
@@ -305,7 +305,7 @@ bool FdLink::updateFdCS()
   std::cout <<"FdLink::updateFdCS() "
             << itsFmOwner->getIdString(true) << std::endl;
 #endif
-  myFEKit->setTransform(((FmLink*)this->itsFmOwner)->getGlobalCS());
+  myFEKit->setTransform(static_cast<FmLink*>(itsFmOwner)->getGlobalCS());
   this->updateSimplifiedViz();
   this->updateFdHighlight();
   return true;
@@ -330,7 +330,7 @@ bool FdLink::updateFdTopology(bool updateChildrenDisplay)
   */
 
   if (updateChildrenDisplay)
-    this->itsFmOwner->updateChildrenDisplayTopology();
+    itsFmOwner->updateChildrenDisplayTopology();
 
   return true;
 }
@@ -342,14 +342,13 @@ bool FdLink::updateFdAll(bool updateChildrenDisplay)
   std::cout <<"FdLink::updateFdAll() "
             << itsFmOwner->getIdString(true) << std::endl;
 #endif
-  FmLink* link = (FmLink*)this->itsFmOwner;
 
-  if (!this->isInserted) {
+  if (!isInserted) {
     this->getListSw()->addChild(itsKit);
-    this->isInserted = true;
+    isInserted = true;
   }
 
-  if (!link->isEarthLink()) {
+  if (FmLink* link = static_cast<FmLink*>(itsFmOwner); !link->isEarthLink()) {
 
     // Delete old visualization
 
@@ -376,20 +375,21 @@ bool FdLink::loadVrmlViz()
   if (IHaveLoadedVrmlViz)
     return true;
 
-  FmLink* link = (FmLink*)this->itsFmOwner;
+  FmLink* link = static_cast<FmLink*>(itsFmOwner);
   std::string fileName = link->visDataFile.getValue();
   if (fileName.empty())
     return false;
 
+  FFaFilePath::checkName(fileName);
   FFaFilePath::makeItAbsolute(fileName,FmDB::getMechanismObject()->getAbsModelFilePath());
   if (!FmFileSys::isFile(fileName)) {
     FFaMsg::list("  -> Error: Could not find visualization data file \"" + fileName +
-		 "\"\n             referenced by " + link->getIdString(true) + "\n");
+                 "\"\n            referenced by " + link->getIdString(true) + "\n", true);
     return false;
   }
 
   FFaMsg::list("  -> Reading visualization data for " + link->getIdString(true) +
-	       "\n     from file \"" + fileName + "\" ... ");
+               "\n     from file \"" + fileName + "\" ...");
 
   double scaleF = 1.0;
   link->visDataFileUnitConverter.getValue().convert(scaleF, "LENGTH");
@@ -423,7 +423,7 @@ bool FdLink::loadVrmlViz()
       if (std::ifstream in(fileName.c_str(),std::ios::in);
           myCadHandler->read(in) && this->createCadViz())
       {
-        FFaMsg::list("OK.\n");
+        FFaMsg::list("OK\n");
         return true;
       }
       break;
@@ -437,7 +437,7 @@ bool FdLink::loadVrmlViz()
         myFEKit->setDrawDetail(FdFEVisControl::OFF);
         myFEKit->setLineDetail(FdFEVisControl::OFF);
         myFEKit->updateVisControl();
-        FFaMsg::list("OK.\n");
+        FFaMsg::list("OK\n");
         IHaveLoadedVrmlViz = true;
         IHaveCreatedCadViz = true;
         return true;
@@ -449,7 +449,7 @@ bool FdLink::loadVrmlViz()
     }
 
   if (!vrmlSep) {
-    FFaMsg::list("Failed !\n     Visualization data could not be read.\n");
+    FFaMsg::list("Failed!\n     Visualization data could not be read.\n", true);
     return false;
   }
 
@@ -474,7 +474,7 @@ bool FdLink::loadVrmlViz()
   myFEKit->setLineDetail(FdFEVisControl::OFF);
   myFEKit->updateVisControl();
 
-  FFaMsg::list(" OK.\n");
+  FFaMsg::list("OK\n");
   IHaveLoadedVrmlViz = true;
   return true;
 }
@@ -562,7 +562,7 @@ FaVec3 FdLink::findSnapPoint(const SbVec3f& pointOnObject,
           vxProp = NULL;
       }
       else
-	return this->FdObject::findSnapPoint(pointOnObject,objToWorld);
+        return this->FdObject::findSnapPoint(pointOnObject,objToWorld);
     }
 
     if (faceDet && (vrmlCoords || coords || vxProp))
@@ -617,7 +617,7 @@ FaVec3 FdLink::findSnapPoint(const SbVec3f& pointOnObject,
       SbVec3f dist0 = sbp0 - pointOnObject;
       SbVec3f dist1 = sbp1 - pointOnObject;
       if (dist0.length() < dist1.length())
-	return this->FdObject::findSnapPoint(sbp0,objToWorld);
+        return this->FdObject::findSnapPoint(sbp0,objToWorld);
       else
         return this->FdObject::findSnapPoint(sbp1,objToWorld);
     }
@@ -629,9 +629,9 @@ FaVec3 FdLink::findSnapPoint(const SbVec3f& pointOnObject,
 
 void FdLink::showHighlight()
 {
-  if (this->highlightBoxId)
-    FdExtraGraphics::removeBBox(this->highlightBoxId);
-  this->highlightBoxId = NULL;
+  if (highlightBoxId)
+    FdExtraGraphics::removeBBox(highlightBoxId);
+  highlightBoxId = NULL;
 
   SbBox3f bbox;
   if (IAmUsingGenPartVis)
@@ -640,11 +640,11 @@ void FdLink::showHighlight()
       action->apply(n);
       SbBox3f box = action->getBoundingBox();
       if (!box.isEmpty())
-	bbox.extendBy(box);
+        bbox.extendBy(box);
     }
 
   FaVec3 max, min;
-  FmLink* link = (FmLink*)this->itsFmOwner;
+  FmLink* link = static_cast<FmLink*>(itsFmOwner);
   if (link->getBBox(max,min)) {
     bbox.extendBy(FdConverter::toSbVec3f(min));
     bbox.extendBy(FdConverter::toSbVec3f(max));
@@ -654,7 +654,7 @@ void FdLink::showHighlight()
     min = FdConverter::toFaVec3(bbox.getMin());
     max = FdConverter::toFaVec3(bbox.getMax());
   }
-  this->highlightBoxId = FdExtraGraphics::showBBox(min,max,link->getGlobalCS());
+  highlightBoxId = FdExtraGraphics::showBBox(min,max,link->getGlobalCS());
 
   // Highligth CG and CS too, if in a generic part
   if (FdDB::usesLineHighlight)
@@ -664,9 +664,9 @@ void FdLink::showHighlight()
 
 void FdLink::hideHighlight()
 {
-  if (this->highlightBoxId)
-    FdExtraGraphics::removeBBox(this->highlightBoxId);
-  this->highlightBoxId = NULL;
+  if (highlightBoxId)
+    FdExtraGraphics::removeBBox(highlightBoxId);
+  highlightBoxId = NULL;
 
   myFEKit->highlight(false);
 
@@ -675,7 +675,7 @@ void FdLink::hideHighlight()
   itsKit->setPart("symbolMaterial",NULL);
 
   SoMaterial* symbolMaterial = SO_GET_PART(itsKit, "symbolMaterial", SoMaterial);
-  FmLink* Link = (FmLink*)this->itsFmOwner;
+  FmLink* Link = static_cast<FmLink*>(itsFmOwner);
 
   symbolMaterial->diffuseColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
   symbolMaterial->ambientColor.setValue(FdConverter::toSbVec3f(Link->getRGBColor()));
