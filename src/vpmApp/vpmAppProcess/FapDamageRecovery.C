@@ -114,8 +114,7 @@ int FapDamageRecovery::createInput(std::string& rdbPath)
 #endif
 
   // Check the dependencies for this part
-  int depVal = this->checkDependencies();
-  if (depVal != FAP_READY_TO_RUN)
+  if (int depVal = this->checkDependencies(); depVal != FAP_READY_TO_RUN)
     return depVal;
 
   // If the FE data is loaded, create a strain coat on the current selection
@@ -184,23 +183,8 @@ int FapDamageRecovery::createInput(std::string& rdbPath)
   if (fpp->performRainflow.getValue())
   {
     fcoArgs.add("-PVXGate", fpp->pvxGate.getValue());
-    if (fpp->useNCode())
-    {
-      // Using nCode for rainflow analysis and fatigue
-      fcoArgs.add("-HistDataType", -fpp->histType.getValue());
-      fcoArgs.add("-HistXMin", fpp->histRange.getValue().first);
-      fcoArgs.add("-HistXMax", fpp->histRange.getValue().second);
-      fcoArgs.add("-HistYMin", fpp->histRange.getValue().first);
-      fcoArgs.add("-HistYMax", fpp->histRange.getValue().second);
-      fcoArgs.add("-HistXBins", fpp->histNBins.getValue());
-      fcoArgs.add("-HistYBins", fpp->histNBins.getValue());
-    }
-    else
-    {
-      // Using Fedem's internal fatigue solver
-      fcoArgs.add("-HistDataType", fpp->histType.getValue());
-      fcoArgs.add("-SNfile", FpPM::getFullFedemPath("sn_curves.fsn",'h'));
-    }
+    fcoArgs.add("-HistDataType", fpp->histType.getValue());
+    fcoArgs.add("-SNfile", FpPM::getFullFedemPath("sn_curves.fsn",'h'));
     double scale = 1.0e-6;
     if (myWorkMech->modelDatabaseUnits.getValue().convert(scale,"FORCE/AREA"))
       fcoArgs.add("-stressToMPaScale", scale);
@@ -224,12 +208,11 @@ int FapDamageRecovery::createInput(std::string& rdbPath)
   fopArgs.writeOptFile();
 
   // Additional options, if any
-  std::string addOptions = fpp->addOptions.getValue();
-  if (!addOptions.empty())
+  if (const std::string& addOpts = fpp->addOptions.getValue(); !addOpts.empty())
   {
     FFaOptionFileCreator faoArgs(rdbPath + mySolverName + ".fao");
     faoArgs.addComment("Additional user defined options to " + mySolverName);
-    faoArgs.add(addOptions,"",false);
+    faoArgs.add(addOpts,"",false);
     faoArgs.writeOptFile();
   }
 
