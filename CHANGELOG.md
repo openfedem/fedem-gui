@@ -8,11 +8,11 @@
 
 # Open FEDEM Changelog
 
-## [fedem-8.1.5] (2026-03-15)
+## [fedem-8.1.5] (2026-03-13)
 
 ### :rocket: Added
 
-- The Windows installation is now packed in a msi-file instead of zip.
+- The Windows installation is now available as a msi-file in addition to zip.
 - Issue https://github.com/openfedem/fedem-gui/issues/137:
   Copying Generic DB objects is now possible.
 

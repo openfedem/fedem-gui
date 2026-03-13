@@ -93,6 +93,8 @@ from the [Releases](https://github.com/openfedem/fedem-gui/releases) page.
 Unzip this file in an arbitrary location, and execute the file `INSTALL.bat`
 as administrator to install the software on your PC.
 See also [Install/README.txt](Install/README.txt).
+The later releases are also available as msi-files `Fedem-*.msi` which are
+built using the free version of the [Master Packager](https://www.masterpackager.com/) tool.
 
 The Compiled HTML Help file (Fedem.chm) embedded with the installation
 will normally be blocked by the Windows operation system,
