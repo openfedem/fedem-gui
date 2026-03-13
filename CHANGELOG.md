@@ -8,6 +8,14 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.5] (2026-03-15)
+
+### :rocket: Added
+
+- The Windows installation is now packed in a msi-file instead of zip.
+- Issue https://github.com/openfedem/fedem-gui/issues/137:
+  Copying Generic DB objects is now possible.
+
 ## [fedem-8.1.4] (2026-02-16)
 
 ### :rocket: Added
@@ -388,3 +396,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.2.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2...fedem-8.1.2.7
 [fedem-8.1.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2.7...fedem-8.1.3
 [fedem-8.1.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.3...fedem-8.1.4
+[fedem-8.1.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.4...fedem-8.1.5
