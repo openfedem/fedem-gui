@@ -68,7 +68,7 @@ int FuiMiniFileBrowser::createItem(int parent, int after, const std::string& lab
 
 /*!
   Updates an item
-  \return true if success, false if item is not present in list view.
+  \return true if success, false if item is not present
 */
 
 bool FuiMiniFileBrowser::updateItem(int id, const std::string& label, const std::string& size,
@@ -146,7 +146,7 @@ void FuiMiniFileBrowser::clearListView()
 /*!
   Will open (expand) an item, if it has children. Note that it will expand
   an item also if it doesn't have children, but it will not be visible
-  until before it gets one or more. Children. Sj�.
+  until before it gets at least one child.
 */
 
 void FuiMiniFileBrowser::openListViewItem(int id, bool open, bool notify)
@@ -240,7 +240,7 @@ void FuiMiniFileBrowser::setText(const std::string& text)
 
 
 /*!
-  Appends text to display in text view.
+  Appends text to display in text view
 */
 
 void FuiMiniFileBrowser::appendText(const char* text)
@@ -260,13 +260,14 @@ void FuiMiniFileBrowser::clearTextInfo()
 
 
 /*!
-  Customizes widgets, sets call backs etc
+  Customizes widgets, sets call backs, etc.
 */
 
 void FuiMiniFileBrowser::initWidgets()
 {
   listView->setListColumns({"File","Size","Last modified"});
-  listView->setListColumnWidth(2, 100);
+  listView->setListColumnWidth(0, 160);
+  listView->setListColumnWidth(1, 60);
   listView->setListRootIsDecorated(true);
   listView->setSglSelectionMode(false);
   listView->setHeaderClickEnabled(-1, false);
@@ -377,8 +378,8 @@ std::vector<int> FuiMiniFileBrowser::getListViewChildren(int parent)
 
 
 /*!
-  \return a std::vector with all predecessors (parent, grand-parent etc)
-  of \a descentant. Youngest first (-> vec[0] == parent, vec[1] = grand parent, etc)
+  \return vector with all predecessors (parent, grand-parent, etc.)
+  of \a descentant. Youngest first (-> vec[0] == parent, vec[1] = grand parent, etc.).
 */
 
 std::vector<int> FuiMiniFileBrowser::getListViewAncestors(int descendant)
@@ -412,7 +413,7 @@ int FuiMiniFileBrowser::getListViewParent(int child)
 
 
 /*!
-  \return references to tmp and perm selected items
+  Get references to temporarily and permanently selected items
 */
 
 void FuiMiniFileBrowser::getListViewSelection(std::vector<int>& selected)
