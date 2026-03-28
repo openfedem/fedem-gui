@@ -2992,7 +2992,12 @@ void pickMeasurePointEventCB(void*, SoEventCallback* eventCBnode)
         if (points.size() > 1)
           ListUI <<"\n   * Second picked point: "<< points[1];
         if (points.size() == 2)
-          ListUI <<"\n   * Relative distance: "<< (points[1]-points[0]).length();
+	{
+          ListUI <<"\n   * Relative distance:";
+          for (int i = 0; i < 3; i++)
+            ListUI <<" "<< points[1][i] - points[0][i];
+          ListUI <<"\n   * Total distance: "<< (points[1]-points[0]).length();
+        }
         else if (points.size() > 2)
           ListUI <<"\n   * Picked origin of rotation: "<< points[2]
                  <<"\n   * Rotation angle (rad): "<< (points[0]-points[2]).angle(points[1]-points[2]);
