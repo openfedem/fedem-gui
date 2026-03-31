@@ -8,7 +8,7 @@
 #ifndef FUI_MODES_H
 #define FUI_MODES_H
 
-#include <string>
+#include <cstddef>
 
 
 namespace FuiModes
@@ -59,7 +59,7 @@ namespace FuiModes
 		  MEASURE_DISTANCE_MODE,
 		  MEASURE_ANGLE_MODE};
 
-  void     setMode(ModeType newMode);
+  void     setMode(ModeType newMode, const char* tip = NULL);
   ModeType getMode();
 
   void setState(int newState);
@@ -70,9 +70,7 @@ namespace FuiModes
   void done();
   void cancel();
 
-  void setTip();
-
-  extern std::string tipComPicking;
+  void setTip(const char* tip = NULL);
 };
 
 #endif

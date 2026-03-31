@@ -11,7 +11,6 @@
 #include "vpmDB/FmModelMemberBase.H"
 #include "vpmApp/FapEventManager.H"
 #include "vpmDisplay/FdPickedPoints.H"
-#include "vpmDisplay/FdDB.H"
 #include "vpmUI/FuiModes.H"
 #include "FFaLib/FFaAlgebra/FFaVec3.H"
 
@@ -137,41 +136,32 @@ void CaSelectionManager::Clear()
 
 BOOL CaSelectionManager::FEGetPickedPoint(double* x, double* y, double* z, BOOL Global)
 {
-    // Get picked point list
-    std::vector<FaVec3> globalPoints;
-    FdPickedPoints::getAllPickedPointsGlobal(globalPoints);
-    if (globalPoints.size() == 0)
-        return FALSE;
+  if (!FdPickedPoints::hasPickedPoints())
+    return FALSE;
 
-    // Get picked point position
-    FaVec3 v = FdDB::getPPoint(0, (bool)Global);
-    *x = v.x();
-    *y = v.y();
-    *z = v.z();
-    return TRUE;
+  // Get the picked point position
+  FaVec3 v = FdPickedPoints::getPickedPoint(0, (bool)Global);
+  *x = v.x();
+  *y = v.y();
+  *z = v.z();
+  return TRUE;
 }
 
 void CaSelectionManager::FESetPickPointMode(BOOL On, const VARIANT FAR& Desc)
 {
-    // Set tip
-    FuiModes::tipComPicking = "";
-    if (Desc.vt == VT_BSTR) {
-        std::string strDesc(CW2A(Desc.bstrVal));
-        FuiModes::tipComPicking = strDesc;
-    }
-
-    // Set mode
-    if (On)
-        FuiModes::setMode(FuiModes::COMPICKPOINT_MODE);
-    else
-        FuiModes::cancel();
+  if (On)
+    FuiModes::setMode(FuiModes::COMPICKPOINT_MODE,
+                      Desc.vt == VT_BSTR ? CW2A(Desc.bstrVal) :
+                      "Pick or write where to set application point (Done when ready)");
+  else
+    FuiModes::cancel();
 }
 
 BOOL CaSelectionManager::FEGetPickPointMode(long* State)
 {
-    if (State != NULL)
-        *State = FuiModes::getState();
-    return FuiModes::getMode();
+  if (State != NULL)
+    *State = FuiModes::getState();
+  return FuiModes::getMode();
 }
 
 

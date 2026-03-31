@@ -32,10 +32,8 @@ namespace
   bool createPositionIsChangedByGUI = false;
 }
 
-std::string FuiModes::tipComPicking;
 
-
-void FuiModes::setMode(ModeType newMode)
+void FuiModes::setMode(ModeType newMode, const char* tip)
 {
   FuiModes::cancel();
 
@@ -63,9 +61,6 @@ void FuiModes::setMode(ModeType newMode)
     case CREATE_SENSOR_MODE:
       FapCreateSensorCmd::enterMode();
       break;
-    case SELECTREFCS_MODE:
-      Fui::tip("Select reference CS by picking in the 3D view or selecting from the Objects browser");
-      break;
     case MAKEGENERALSPIDER_MODE:
       FapGeneralSpiderCmds::enterMode();
       break;
@@ -82,7 +77,7 @@ void FuiModes::setMode(ModeType newMode)
   Fui::updateMode();
   FapUAModeller::updateMode();
 
-  FuiModes::setTip();
+  FuiModes::setTip(tip);
 
   // To make the default create position work
   // when we enter a mode for the first time
@@ -431,7 +426,7 @@ void FuiModes::done()
 }
 
 
-void FuiModes::setTip()
+void FuiModes::setTip(const char* tip)
 {
   switch (mode)
     {
@@ -943,13 +938,6 @@ void FuiModes::setTip()
 	}
       break;
 
-    case COMPICKPOINT_MODE:
-      if (tipComPicking.empty())
-        Fui::tip("Pick or write where to set application point (Done when ready)");
-      else
-        Fui::tip(tipComPicking.c_str());
-      break;
-
     case MEASURE_DISTANCE_MODE:
       switch (state)
 	{
@@ -978,6 +966,8 @@ void FuiModes::setTip()
       break;
 
     default: // All other modes handle the tip setting themselves
+      if (tip)
+        Fui::tip(tip);
       break;
     }
 }
