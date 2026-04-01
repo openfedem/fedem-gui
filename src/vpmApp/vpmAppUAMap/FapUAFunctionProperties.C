@@ -79,7 +79,7 @@ FapUAFunctionProperties::FapUAFunctionProperties(FuiFunctionProperties* uic)
 
   pv.myEditLinkFunctionCB = FFaDynCB1S(FapUAProperties::onQIFieldButtonCBS,FuiQueryInputFieldValues&);
 
-  pv.myPickSensorCB = FFaDynCB1M(FapUAFunctionProperties,this,pickSensorCB,int);
+  pv.myPickSensorCB = FFaDynCB1M(FapCreateSensorCmd,FapCreateSensorCmd::instance(),createSensor,int);
 
   pv.myAcceptExprCB = FFaDynCB0M(FapUAFunctionProperties,this,acceptExprCB);
 
@@ -156,8 +156,7 @@ void FapUAFunctionProperties::getDBValues(FFuaUIValues* values)
 	pv->myArgumentValues[j].selectedObject = sensor;
 	if (sensor) {
 
-	  std::vector<FmSensorChoice> choices;
-          size_t i;
+	  FmSensorChoices choices;
 
 	  // Dof choice :
 
@@ -165,7 +164,7 @@ void FapUAFunctionProperties::getDBValues(FFuaUIValues* values)
 	  pv->myArgumentValues[j].showDofList = !choices.empty();
 	  pv->myArgumentValues[j].selectedDofIdx = 0;
 	  pv->myArgumentValues[j].dofList.clear();
-	  for (i = 0; i < choices.size(); i++) {
+	  for (size_t i = 0; i < choices.size(); i++) {
 	    pv->myArgumentValues[j].dofList.push_back(choices[i].second);
 	    if (e->getDof(j) == choices[i].first)
 	      pv->myArgumentValues[j].selectedDofIdx = i;
@@ -177,7 +176,7 @@ void FapUAFunctionProperties::getDBValues(FFuaUIValues* values)
 	  pv->myArgumentValues[j].showVariableList = !choices.empty();
 	  pv->myArgumentValues[j].selectedVariableIdx = 0;
 	  pv->myArgumentValues[j].variableList.clear();
-	  for (i = 0; i < choices.size(); i++) {
+	  for (size_t i = 0; i < choices.size(); i++) {
 	    pv->myArgumentValues[j].variableList.push_back(choices[i].second);
 	    if (sensor->isExternalCtrlSys()) {
 	      if (e->getEntityName(j) == choices[i].second)
@@ -260,8 +259,8 @@ void FapUAFunctionProperties::getDBValues(FFuaUIValues* values)
 
     pv->mySelectedFunctionTypeIdx = -1;
     int idxSkip = 0;
-    for (size_t i = 0; i < funcTypes.size(); i++)  {
-
+    for (size_t i = 0; i < funcTypes.size(); i++)
+    {
       // Add the texts in same order as given by getCompatibleFunctionTypes.
       // Leave the reference one, if this function is used as a shape reference.
       if (isFunctionLinkedTo && funcTypes[i].funcMenuEnum == FmFuncAdmin::REFERENCE)
@@ -280,10 +279,10 @@ void FapUAFunctionProperties::getDBValues(FFuaUIValues* values)
 	  pv->mySelectedFunctionTypeIdx = i-idxSkip;
       }
       else if (funcTypes[i].getFuncType() == selectedFuncType) {
-	pv->mySelectedFunctionTypeIdx = i-idxSkip;
-	FmfUserDefined* udf = dynamic_cast<FmfUserDefined*>(f);
-	if (udf && udf->getFunctionUse() != FmMathFuncBase::WAVE_FUNCTION) // assuming there is only one user-defined wave function in each plugin
-	  pv->mySelectedFunctionTypeIdx += udf->getFuncNo()-1;
+        pv->mySelectedFunctionTypeIdx = i-idxSkip;
+        if (FmfUserDefined* udf = dynamic_cast<FmfUserDefined*>(f); udf)
+          if (udf->getFunctionUse() != FmMathFuncBase::WAVE_FUNCTION) // assuming there is only one user-defined wave function in each plugin
+            pv->mySelectedFunctionTypeIdx += udf->getFuncNo()-1;
       }
     }
 
@@ -422,12 +421,10 @@ void FapUAFunctionProperties::setDBValues(FFuaUIValues* values)
     // Function to link to
 
     if (functionLinked) {
-
-      FmEngine* linkFromEng = static_cast<FmEngine*>(pv->mySelectedLinkFunction);
-      if (linkFromEng)
-	e->setEngineToLinkFunctionFrom(linkFromEng);
+      if (FmEngine* fromEng = dynamic_cast<FmEngine*>(pv->mySelectedLinkFunction); fromEng)
+        e->setEngineToLinkFunctionFrom(fromEng);
       else
-	e->setEngineToLinkFunctionFrom(e);
+        e->setEngineToLinkFunctionFrom(e);
     }
 
     // Argument(s)
@@ -440,7 +437,7 @@ void FapUAFunctionProperties::setDBValues(FFuaUIValues* values)
 	FmSensorBase* sensor = static_cast<FmSensorBase*>(pv->myArgumentValues[j].selectedObject);
 	FmSensorBase* oldSensor = e->getSensor(j);
 	if (sensor && sensor == oldSensor) {
-	  std::vector<FmSensorChoice> choices;
+	  FmSensorChoices choices;
 	  sensor->getSensorDofs(choices);
 	  int selectionIdx = pv->myArgumentValues[j].selectedDofIdx;
 	  if (selectionIdx >= 0 && selectionIdx < (int)choices.size())
@@ -587,8 +584,7 @@ void FapUAFunctionProperties::setDBValues(FFuaUIValues* values)
   // Update the curve previewing this function, if any
 
 #ifdef FT_HAS_PREVIEW
-  FmCurveSet* curve = fn ? fn->getPreviewCurve() : NULL;
-  if (curve) {
+  if (FmCurveSet* curve = fn ? fn->getPreviewCurve() : NULL; curve) {
     curve->setFuncDomain(pv->previewDomain.X);
     curve->setIncX(pv->previewDomain.dX);
     curve->setUseSmartPoints(fn->hasSmartPoints() && pv->previewDomain.autoInc);
@@ -694,8 +690,8 @@ void FapUAFunctionProperties::getChannelListCB()
 
 void FapUAFunctionProperties::addNumberCB(double nr)
 {
-  FmfLinVelVar* f = dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
-  if (f) f->addIntervalBreak(nr);
+  if (FmfLinVelVar* f = dynamic_cast<FmfLinVelVar*>(this->getMyFunction()); f)
+    f->addIntervalBreak(nr);
 
   this->updateUIValues();
 
@@ -707,8 +703,8 @@ void FapUAFunctionProperties::addNumberCB(double nr)
 
 void FapUAFunctionProperties::addNumbersCB(double nr1, double nr2)
 {
-  FmfMultiVarBase* f = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction());
-  if (f) f->addXYset(nr1, nr2);
+  if (FmfMultiVarBase* f = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction()); f)
+    f->addXYset(nr1, nr2);
 
   this->updateUIValues();
 
@@ -754,19 +750,16 @@ void FapUAFunctionProperties::pasteCB(const std::string& data)
         word[kommaPos] = '.';
     }
 
-    float x;
-    if (sscanf(word.c_str(),"%f",&x) == 1)
+    if (float x; sscanf(word.c_str(),"%f",&x) == 1)
       numbers.push_back(x);
   }
 
-  FmfMultiVarBase* mvf;
-  FmfLinVelVar* lvf = dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
-  if (lvf)
+  if (FmfLinVelVar* lvf = dynamic_cast<FmfLinVelVar*>(this->getMyFunction()); lvf)
     for (double number : numbers)
       lvf->addIntervalBreak(number);
-  else if ((mvf = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction())))
+  else if (FmfMultiVarBase* f = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction()); f)
     for (size_t i = 0; i+1 < numbers.size(); i += 2)
-      mvf->addXYset(numbers[i],numbers[i+1]);
+      f->addXYset(numbers[i],numbers[i+1]);
 
   this->updateUIValues();
 
@@ -780,12 +773,10 @@ void FapUAFunctionProperties::deleteNumberCB(int idx)
 {
   if (idx >= 0)
   {
-    FmfMultiVarBase* mvf;
-    FmfLinVelVar* lvf = dynamic_cast<FmfLinVelVar*>(this->getMyFunction());
-    if (lvf)
+    if (FmfLinVelVar* lvf = dynamic_cast<FmfLinVelVar*>(this->getMyFunction()); lvf)
       lvf->removeIntervalBreak(idx);
-    else if ((mvf = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction())))
-      mvf->removeXYset(idx);
+    else if (FmfMultiVarBase* f = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction()); f)
+      f->removeXYset(idx);
   }
 
   this->updateUIValues();
@@ -798,8 +789,8 @@ void FapUAFunctionProperties::deleteNumberCB(int idx)
 
 void FapUAFunctionProperties::clearNumbersCB()
 {
-  FmfMultiVarBase* f = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction());
-  if (f) f->getData().clear();
+  if (FmfMultiVarBase* f = dynamic_cast<FmfMultiVarBase*>(this->getMyFunction()); f)
+    f->getData().clear();
 
   this->updateUIValues();
 
@@ -811,11 +802,11 @@ void FapUAFunctionProperties::clearNumbersCB()
 
 void FapUAFunctionProperties::acceptExprCB()
 {
-  FmfMathExpr* f = dynamic_cast<FmfMathExpr*>(this->getMyFunction());
-  if (f && !f->initGetValueNoRecursion())
-    FFaMsg::dialog("Flawed expression: '" + f->getExpressionString() +
-		   "'.\nPlease inspect, fix and re-apply.",
-		   FFaMsg::DISMISS_ERROR);
+  if (FmfMathExpr* f = dynamic_cast<FmfMathExpr*>(this->getMyFunction()); f)
+    if (!f->initGetValueNoRecursion())
+      FFaMsg::dialog("Flawed expression: '" + f->getExpressionString() +
+                     "'.\nPlease inspect, fix and re-apply.",
+                     FFaMsg::DISMISS_ERROR);
 }
 
 
@@ -841,8 +832,8 @@ FmMathFuncBase* FapUAFunctionProperties::getMyFunction()
   if (!mySelectedFmItem) return NULL;
 
   // Get actual function shown
-  FmEngine* e = this->getMyEngine();
-  if (e) return e->getFunction();
+  if (FmEngine* e = this->getMyEngine(); e)
+    return e->getFunction();
 
   return dynamic_cast<FmMathFuncBase*>(mySelectedFmItem);
 }
@@ -882,14 +873,14 @@ void FapUAFunctionProperties::funcTypeSwitchedCB(int idx)
     // Engine did not have a linked function
 
     if (f && funcTypes[idx].getFuncType() == f->getTypeID()) {
-      FmfUserDefined* udf = dynamic_cast<FmfUserDefined*>(f);
-      int newFuncNo = funcTypes[idx].funcMenuEnum - FmFuncAdmin::USER_HEADING;
-      if (udf && newFuncNo != udf->getFuncNo()) // To another user function
-      {
-	udf->setFuncNo(newFuncNo);
-        udf->onChanged();
-	this->updateUI();
-      }
+      if (FmfUserDefined* udf = dynamic_cast<FmfUserDefined*>(f); udf)
+        if (int newFuncNo = funcTypes[idx].funcMenuEnum - FmFuncAdmin::USER_HEADING;
+            newFuncNo != udf->getFuncNo()) // To another user function
+        {
+          udf->setFuncNo(newFuncNo);
+          udf->onChanged();
+          this->updateUI();
+        }
       return; // To same function type, don't do anything
     }
 
@@ -934,8 +925,7 @@ void FapUAFunctionProperties::funcTypeSwitchedCB(int idx)
 	break;
       }
 
-    FmfUserDefined* udf = dynamic_cast<FmfUserDefined*>(newF);
-    if (udf)
+    if (FmfUserDefined* udf = dynamic_cast<FmfUserDefined*>(newF); udf)
       udf->setFuncNo(funcTypes[idx].funcMenuEnum-FmFuncAdmin::USER_HEADING);
 
     if (e)
@@ -997,12 +987,6 @@ void FapUAFunctionProperties::funcTypeSwitchedCB(int idx)
   if (f) f->erase();
 
   this->updateUI();
-}
-
-
-void FapUAFunctionProperties::pickSensorCB(int iArg)
-{
-  FapCreateSensorCmd::instance()->createSensor(iArg);
 }
 
 

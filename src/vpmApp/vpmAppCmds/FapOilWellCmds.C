@@ -15,6 +15,7 @@
 #include "assemblyCreators/assemblyCreators.H"
 
 #include "vpmDB/FmDB.H"
+#include "vpmDB/FmCreate.H"
 #include "vpmDB/FmPart.H"
 #include "vpmDB/FmBeam.H"
 #include "vpmDB/FmBeamProperty.H"
@@ -479,7 +480,7 @@ void FapOilWellCmds::createPipeString(const std::string& fileName)
 	moveDownMotion->setUserDescription(FFaNumStr("MoveDown of pipe %d",currentPipeNum));
 	moveDownMotion->connect();
 	moveDownMotion->setFunction(lramp);
-	moveDownMotion->setSensor(depthEngine->getSimpleSensor(true));
+	moveDownMotion->setSensor(Fedem::createSensor(depthEngine));
 
 	double lnt = pipes[i].length;
 	double csl = currentStringLength;

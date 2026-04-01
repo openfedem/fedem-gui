@@ -33,6 +33,7 @@
 #include "vpmDB/FmAxialSpring.H"
 #include "vpmDB/FmAxialDamper.H"
 #include "vpmDB/FmStrainRosette.H"
+#include "vpmDB/FmCreate.H"
 
 #include "FFaLib/FFaDynCalls/FFaDynCB.H"
 #include "FFaLib/FFaDefinitions/FFaViewItem.H"
@@ -56,19 +57,13 @@ namespace
   {
     FFaViewItem* item = FapEventManager::getFirstPermSelectedObject();
     FmIsMeasuredBase* obj = dynamic_cast<FmIsMeasuredBase*>(item);
-    if (!obj) return;
-
-    FmSensorBase* sens = obj->getSimpleSensor(true);
 
     // If we are dealing with a control output object, we have to bypass
     // its sensor and use a sensor on the auto-created engine associated with it
-    if (obj->isOfType(FmcOutput::getClassTypeID()))
-    {
-      FmEngine* engine = static_cast<FmcOutput*>(obj)->getEngine();
-      if (engine) sens = engine->getSimpleSensor(true);
-    }
+    if (obj && obj->isOfType(FmcOutput::getClassTypeID()))
+      obj = static_cast<FmcOutput*>(obj)->getEngine();
 
-    ListUI <<"Creating "<< sens->getUserDescription() <<"\n";
+    FmSensorBase* sens = Fedem::createSensor(obj);
     FapCreateSensorCmd::instance()->setSensor(sens);
   }
 
@@ -79,14 +74,8 @@ namespace
     FapEventManager::popPermSelection();
     item = FapEventManager::getFirstPermSelectedObject();
     FmTriad* t2 = dynamic_cast<FmTriad*>(item);
-    if (!t1 || !t2 || t1 == t2)
-    {
-      ListUI <<"ERROR: Relative sensors should be used on different objects.\n";
-      return;
-    }
 
-    FmSensorBase* sens = t1->getRelativeSensor(t2,true);
-    ListUI <<"Creating "<< sens->getUserDescription() <<"\n";
+    FmSensorBase* sens = Fedem::createSensor(t1,t2);
     FapCreateSensorCmd::instance()->setSensor(sens);
   }
 
@@ -211,15 +200,13 @@ void FapCreateSensorCmd::onPermSelectionChanged(const std::vector<FFaViewItem*>&
 }
 
 
-void FapCreateSensorCmd::createSensor(unsigned int iArg)
+void FapCreateSensorCmd::createSensor(int iArg)
 {
   myArg = iArg;
   myEngine = dynamic_cast<FmEngine*>(FapEventManager::getFirstPermSelectedObject());
   if (!myEngine)
-  {
-    FmcInput* in = dynamic_cast<FmcInput*>(FapEventManager::getFirstPermSelectedObject());
-    if (in) myEngine = in->getEngine();
-  }
+    if (FmcInput* in = dynamic_cast<FmcInput*>(FapEventManager::getFirstPermSelectedObject()); in)
+      myEngine = in->getEngine();
 
   if (myEngine)
     FuiModes::setMode(FuiModes::CREATE_SENSOR_MODE);
