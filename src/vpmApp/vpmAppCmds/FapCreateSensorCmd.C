@@ -158,21 +158,20 @@ void FapCreateSensorCmd::onPermSelectionChanged(const std::vector<FFaViewItem*>&
                                                 const std::vector<FFaViewItem*>&,
                                                 const std::vector<FFaViewItem*>&)
 {
-  if (FuiModes::getMode() != FuiModes::CREATE_SENSOR_MODE)
+  if (FuiModes::getMode() != FuiModes::CREATE_SENSOR_MODE || totalSelection.empty())
     return;
 
-  FmEngine* e;
   switch (ourState)
     {
     case START:
     case ANY_SELECTED:
     case TRIAD_SELECTED:
-      if (totalSelection.empty())
-        setState(START);
+      if (FmEngine* selEngine = dynamic_cast<FmEngine*>(totalSelection.front());
+          selEngine && selEngine != myEngine)
+        setState(ANY_SELECTED);
       else if (dynamic_cast<FmTriad*>(totalSelection.front()))
         setState(TRIAD_SELECTED);
-      else if (((e = dynamic_cast<FmEngine*> (totalSelection.front())) && e != myEngine) ||
-               dynamic_cast<FmJointBase*>    (totalSelection.front()) ||
+      else if (dynamic_cast<FmJointBase*>    (totalSelection.front()) ||
                dynamic_cast<FmAxialSpring*>  (totalSelection.front()) ||
                dynamic_cast<FmAxialDamper*>  (totalSelection.front()) ||
                dynamic_cast<FmStrainRosette*>(totalSelection.front()) ||
@@ -183,15 +182,13 @@ void FapCreateSensorCmd::onPermSelectionChanged(const std::vector<FFaViewItem*>&
       break;
 
     case TRIAD1_ACCEPTED:
-      if (!totalSelection.empty() && dynamic_cast<FmTriad*>(totalSelection[0]))
+      if (totalSelection.size() > 0 && dynamic_cast<FmTriad*>(totalSelection[0]))
         setState(TRIAD2_SELECTED);
       break;
 
     case TRIAD2_SELECTED:
       if (totalSelection.size() > 1 && dynamic_cast<FmTriad*>(totalSelection[1]))
         setState(TRIAD2_SELECTED);
-      else
-        setState(TRIAD1_ACCEPTED);
       break;
 
     default:
