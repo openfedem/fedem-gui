@@ -11,7 +11,7 @@
 #include "vpmApp/FapEventManager.H"
 #include "FFaLib/FFaPatterns/FFaSingelton.H"
 
-class FmSensorBase;
+class FmIsMeasuredBase;
 class FmEngine;
 class FFaViewItem;
 
@@ -24,7 +24,7 @@ public:
   const char* getTypeIDName() const { return "FapCreateSensorCmd"; }
 
   void createSensor(int iArg);
-  void setSensor(FmSensorBase* sens);
+  void createSensor(const std::vector<FmIsMeasuredBase*>& objs);
 
   static void enterMode();
   static void cancelMode();
