@@ -1038,8 +1038,8 @@ void FapUAProperties::getDBValues(FFuaUIValues* values)
       if (measured.size() == 1)
         this->addTopologyItem(pv->myTopology,item->getMeasured(),1);
       else {
-        const char* pfx[2] = { "First", "Second" };
-        for (size_t i = 0; i < measured.size() && i < 2; i++)
+        const char* pfx[4] = { "First", "Second", "Third", "Fourth" };
+        for (size_t i = 0; i < measured.size() && i < 4; i++)
           this->addTopologyItem(pv->myTopology,measured[i],1,pfx[i]);
       }
 

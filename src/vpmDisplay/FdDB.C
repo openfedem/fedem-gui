@@ -329,6 +329,14 @@ namespace
                           dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getPermSelectedObject(1)));
       break;
 
+    case FuiModes::MAKEANGLESENSOR_MODE:
+      FpPM::vpmSetUndoPoint("Angle sensor");
+      Fedem::createSensor(dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getPermSelectedObject(0)),
+                          dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getPermSelectedObject(1)),
+                          dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getPermSelectedObject(2)),
+                          dynamic_cast<FmIsMeasuredBase*>(FapEventManager::getPermSelectedObject(3)));
+      break;
+
     case FuiModes::MAKEDAMPER_MODE:
       FpPM::vpmSetUndoPoint("Damper");
       Fedem::createAxialDamper(FdPickedPoints::getFirstPickedPoint(),
@@ -881,6 +889,7 @@ void FdDB::updateMode()
       break;
 
     case FuiModes::MAKERELATIVESENSOR_MODE:
+    case FuiModes::MAKEANGLESENSOR_MODE:
       FapEventManager::permUnselectAll();
       FdEvent::addEventCB(createRelativeSensorEventCB);
       break;
@@ -1021,6 +1030,7 @@ void FdDB::cancel()
       break;
 
     case FuiModes::MAKERELATIVESENSOR_MODE:
+    case FuiModes::MAKEANGLESENSOR_MODE:
       FapEventManager::permUnselectAll();
       FdEvent::removeEventCB(createRelativeSensorEventCB);
       break;
@@ -1569,19 +1579,8 @@ void FdDB::updateState(int newState)
         }
       break;
 
-    case FuiModes::MAKESIMPLESENSOR_MODE:
-      switch (state)
-        {
-        case 1:
-          if (newState == 0)
-            FapEventManager::permUnselectAll();
-          else if (newState == 2)
-            objectCreator(mode);
-          break;
-        }
-      break;
-
     case FuiModes::MAKETIRE_MODE:
+    case FuiModes::MAKESIMPLESENSOR_MODE:
       switch (state)
         {
         case 1:
@@ -1604,6 +1603,24 @@ void FdDB::updateState(int newState)
           if (newState == 2)
             FapEventManager::permUnselect(1);
           else if (newState == 4)
+            objectCreator(mode);
+          break;
+        }
+      break;
+
+    case FuiModes::MAKEANGLESENSOR_MODE:
+      switch (state)
+        {
+        case 1:
+        case 3:
+        case 5:
+          if (newState == 0)
+            FapEventManager::permUnselectAll();
+          break;
+        case 7:
+          if (newState == 6)
+            FapEventManager::permUnselect(3);
+          else if (newState == 8)
             objectCreator(mode);
           break;
         }
@@ -2678,25 +2695,18 @@ void createRelativeSensorEventCB(void*, SoEventCallback* eventCBnode)
     if (!pickedObject)
     {
       // The user picked nothing
-      if (state == 0 || state == 1)
-        FuiModes::setState(0);
-      else if (state == 2 || state == 3)
-        FuiModes::setState(2);
+      if (state >= 0 && state <= 7)
+        FuiModes::setState(2*(state/2));
     }
     else
     {
       if (state == 1)
         FapEventManager::permUnselectAll();
 
-      if (state == 0 || state == 1)
+      if (state >= 0 && state <= 7)
       {
-        FapEventManager::permSelect(pickedObject->getFmOwner(),0);
-        FuiModes::setState(1);
-      }
-      else if (state == 2 || state == 3)
-      {
-        FapEventManager::permSelect(pickedObject->getFmOwner(),1);
-        FuiModes::setState(3);
+        FapEventManager::permSelect(pickedObject->getFmOwner(),state/2);
+        FuiModes::setState(1+2*(state/2));
       }
     }
   }

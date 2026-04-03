@@ -15,6 +15,7 @@
 class FuiMainWindow;
 class FFuaCmdHeaderItem;
 
+
 class FapUAMainWindow : public FapUAExistenceHandler,
                         public FapUACommandHandler,
                         public FapUAFinishHandler
@@ -23,7 +24,6 @@ class FapUAMainWindow : public FapUAExistenceHandler,
 
 public:
   FapUAMainWindow(FuiMainWindow* ui);
-  virtual ~FapUAMainWindow() {}
 
 private:
   virtual FFuaUICommands* getCommands();
@@ -56,6 +56,7 @@ private:
   FFuaCmdHeaderItem createFlexibleSpiderHeader;
   FFuaCmdHeaderItem createJointHeader;
   FFuaCmdHeaderItem createFrictionHeader;
+  FFuaCmdHeaderItem createSensorHeader;
   FFuaCmdHeaderItem createSpringFunctionHeader;
   FFuaCmdHeaderItem createDamperFunctionHeader;
   FFuaCmdHeaderItem createWellHeader;

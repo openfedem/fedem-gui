@@ -392,6 +392,22 @@ void FuiModes::done()
         FuiModes::cancel();
       break;
 
+    case MAKEANGLESENSOR_MODE:
+      if (state == 1 || state == 2)
+        FuiModes::setState(2);
+      else if (state == 3 || state == 4)
+        FuiModes::setState(4);
+      else if (state == 5 || state == 6)
+        FuiModes::setState(6);
+      else if (state == 7)
+      {
+        FuiModes::setState(8);
+        FuiModes::setState(0); // For continous creating
+      }
+      else
+        FuiModes::cancel();
+      break;
+
     case PICKLOADFROMPOINT_MODE:
     case PICKLOADTOPOINT_MODE:
     case PICKLOADATTACKPOINT_MODE:
@@ -431,7 +447,7 @@ void FuiModes::setTip(const char* tip)
   switch (mode)
     {
     case EXAM_MODE:
-      Fui::tip(NULL);
+      Fui::tip(tip);
       FFaMsg::setStatus("Ready");
       break;
 
@@ -874,12 +890,10 @@ void FuiModes::setTip(const char* tip)
 	case 0:
 	  Fui::tip("Select first Triad");
 	  break;
-	case 1:
-	  Fui::tip("Select another Triad (Done when ready)");
-	  break;
 	case 2:
 	  Fui::tip("Select second Triad");
 	  break;
+	case 1:
 	case 3:
 	  Fui::tip("Select another Triad (Done when ready)");
 	  break;
@@ -887,6 +901,33 @@ void FuiModes::setTip(const char* tip)
 	  Fui::tip("Creating Sensor ...");
 	  break;
 	}
+      break;
+
+    case MAKEANGLESENSOR_MODE:
+      switch (state)
+        {
+        case 0:
+          Fui::tip("Select first Triad");
+          break;
+        case 2:
+          Fui::tip("Select second Triad");
+          break;
+        case 4:
+          Fui::tip("Select third Triad");
+          break;
+        case 6:
+          Fui::tip("Select fourth Triad");
+          break;
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+          Fui::tip("Select another Triad (Done when ready)");
+          break;
+        case 8:
+          Fui::tip("Creating Sensor ...");
+          break;
+        }
       break;
 
     case PICKLOADFROMPOINT_MODE:

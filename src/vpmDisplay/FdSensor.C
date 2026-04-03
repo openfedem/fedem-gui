@@ -30,7 +30,7 @@
 
 Fmd_SOURCE_INIT(FDSENSOR,FdSensor,FdObject);
 
-FdSensor::FdSensor(FmSensorBase* pt) : FdObject()
+FdSensor::FdSensor(FmSensorBase* pt)
 {
   Fmd_CONSTRUCTOR_INIT(FdSensor);
 
@@ -39,8 +39,7 @@ FdSensor::FdSensor(FmSensorBase* pt) : FdObject()
   itsKit = new FdSprDaTransformKit;
   itsKit->ref();
 
-  FdBackPointer* bp_pointer = SO_GET_PART(itsKit,"backPt",FdBackPointer);
-  bp_pointer->setPointer(this);
+  SO_GET_PART(itsKit,"backPt",FdBackPointer)->setPointer(this);
 }
 
 
@@ -60,7 +59,7 @@ SoNodeKitListPart* FdSensor::getListSw() const
 bool FdSensor::updateFdApperance()
 {
   if (((FmSensorBase*)itsFmOwner)->isDrawable())
-    if (this->highlightRefCount < 1) // This test makes sure we do not
+    if (highlightRefCount < 1) // This test makes sure we do not
       // un-highlight something when it is supposed to be highlighted
       itsKit->setPart("appearance.material",FdSymbolDefs::getMaterial(FdSymbolDefs::SENSOR_MAT));
 
@@ -87,49 +86,40 @@ bool FdSensor::updateFdTopology(bool)
   // Get triads to place sensor between
 
   std::vector<FmTriad*> triads;
-  triads.reserve(2);
   if (itsFmOwner->isOfType(FmSimpleSensor::getClassTypeID()))
+  {
+    if (FmIsMeasuredBase* pt = ((FmSimpleSensor*)itsFmOwner)->getMeasured(); pt)
     {
-      FmIsMeasuredBase* measured = ((FmSimpleSensor*)itsFmOwner)->getMeasured();
-      if (measured) {
-	if (measured->isOfType(FmJointBase::getClassTypeID()))
-	  {
-	    triads.push_back(((FmJointBase*)measured)->getSlaveTriad());
-	    triads.push_back(((FmJointBase*)measured)->getSlaveTriad());
-	  }
-	else if (measured->isOfType(FmAxialSpring::getClassTypeID()))
-	  {
-	    triads.push_back(((FmAxialSpring*)measured)->getFirstTriad());
-	    triads.push_back(((FmAxialSpring*)measured)->getSecondTriad());
-	  }
-	else if (measured->isOfType(FmAxialDamper::getClassTypeID()))
-	  {
-	    triads.push_back(((FmAxialDamper*)measured)->getFirstTriad());
-	    triads.push_back(((FmAxialDamper*)measured)->getSecondTriad());
-	  }
-	else if (measured->isOfType(FmTriad::getClassTypeID()))
-	  {
-	    triads.push_back((FmTriad*)measured);
-	    triads.push_back((FmTriad*)measured);
-	  }
-      }
+      if (pt->isOfType(FmJointBase::getClassTypeID()))
+        triads = { ((FmJointBase*)pt)->getSlaveTriad() };
+      else if (pt->isOfType(FmAxialSpring::getClassTypeID()))
+        ((FmAxialSpring*)pt)->getTriads(triads);
+      else if (pt->isOfType(FmAxialDamper::getClassTypeID()))
+        ((FmAxialDamper*)pt)->getTriads(triads);
+      else if (pt->isOfType(FmTriad::getClassTypeID()))
+        triads = { ((FmTriad*)pt) };
     }
+  }
   else if (itsFmOwner->isOfType(FmRelativeSensor::getClassTypeID()))
-    {
-      std::vector<FmIsMeasuredBase*> measured;
-      ((FmRelativeSensor*)itsFmOwner)->getMeasured(measured);
-      for (FmIsMeasuredBase* obj : measured)
-        triads.push_back(dynamic_cast<FmTriad*>(obj));
-    }
+  {
+    std::vector<FmIsMeasuredBase*> objs;
+    ((FmRelativeSensor*)itsFmOwner)->getMeasured(objs);
+    if (objs.size() < 2) return false;
+
+    triads = {
+      dynamic_cast<FmTriad*>(objs[0]),
+      dynamic_cast<FmTriad*>(objs[1])
+    };
+  }
 
   // Setting up connections:
 
-  if (triads.size() != 2 || !triads.front() || !triads.back())
+  if (triads.empty() || !triads.front() || !triads.back())
     return false;
 
   // First Triad:
 
-  SoBaseKit* triadKit = triads[0]->getFdPointer()->getKit();
+  SoBaseKit* triadKit = triads.front()->getFdPointer()->getKit();
   SoTransform* transLink = SO_GET_PART(triadKit,"firstTrans",SoTransform);
   SoTransform* transLocal = SO_GET_PART(triadKit,"secondTrans",SoTransform);
 
@@ -138,7 +128,7 @@ bool FdSensor::updateFdTopology(bool)
 
   // Second Triad:
 
-  triadKit = triads[1]->getFdPointer()->getKit();
+  triadKit = triads.back()->getFdPointer()->getKit();
   transLink = SO_GET_PART(triadKit,"firstTrans",SoTransform);
   transLocal = SO_GET_PART(triadKit,"secondTrans",SoTransform);
 
