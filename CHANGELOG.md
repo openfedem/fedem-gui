@@ -14,6 +14,9 @@
 
 - Issue https://github.com/openfedem/fedem-gui/issues/141:
   Relative sensors can now measure the angle between two lines defined from four triads.
+- Issue https://github.com/openfedem/fedem-gui/issues/139:
+  Also write relative distance in the three global axis directions
+  when measuring distance between two picked points.
 
 ## [fedem-8.1.5] (2026-03-13)
 
