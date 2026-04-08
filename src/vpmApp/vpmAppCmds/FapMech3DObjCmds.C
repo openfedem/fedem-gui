@@ -156,6 +156,13 @@ void FapMech3DObjCmds::init()
   cmdItem->setActivatedCB(LAMBDA_CREATE(MAKERELATIVESENSOR_MODE));
   cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
 
+  cmdItem = new FFuaCmdItem("cmdId_mech3DObj_createAngleSensor");
+  cmdItem->setSmallIcon(makeRelativeSensor_xpm);
+  cmdItem->setText("Angle Sensor");
+  cmdItem->setToolTip("Angle Sensor");
+  cmdItem->setActivatedCB(LAMBDA_CREATE(MAKEANGLESENSOR_MODE));
+  cmdItem->setGetSensitivityCB(FFaDynCB1S(FapCmdsBase::isModellerEditable,bool&));
+
   cmdItem = new FFuaCmdItem("cmdId_mech3DObj_createSticker");
   cmdItem->setSmallIcon(sticker_xpm);
   cmdItem->setText("Sticker");

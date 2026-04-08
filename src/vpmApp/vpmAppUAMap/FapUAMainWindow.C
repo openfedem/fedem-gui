@@ -306,6 +306,10 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   this->createFrictionHeader.setText("Friction");
   this->createFrictionHeader.setSmallIcon(friction_xpm);
 
+  this->createSensorHeader.clear();
+  this->createSensorHeader.setText("Sensor");
+  this->createSensorHeader.setSmallIcon(makeSimpleSensor_xpm);
+
   this->createSpringFunctionHeader.clear();
   this->createSpringFunctionHeader.setText("Spring characteristics");
   this->createSpringFunctionHeader.setSmallIcon(spring_xpm);
@@ -404,8 +408,10 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   this->mechHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createTorque"));
 
   this->mechHeader.push_back(&this->separator);
-  this->mechHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createSimpleSensor"));
-  this->mechHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createRelativeSensor"));
+  this->mechHeader.push_back(&this->createSensorHeader);
+  this->createSensorHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createSimpleSensor"));
+  this->createSensorHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createRelativeSensor"));
+  this->createSensorHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createAngleSensor"));
   this->mechHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_createStrainRosette"));
 
   this->mechHeader.push_back(&this->separator);
@@ -829,6 +835,7 @@ FFuaUICommands* FapUAMainWindow::getCommands()
   cmds->toolBars[FuiMainWindow::MECHCREATE].push_back(&this->mechCreateSensorHeader);
   this->mechCreateSensorHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createSimpleSensor"));
   this->mechCreateSensorHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createRelativeSensor"));
+  this->mechCreateSensorHeader.push_back(FFuaCmdItem::getCmdItem("cmdId_mech3DObj_createAngleSensor"));
 
   cmds->toolBars[FuiMainWindow::MECHCREATE].push_back(FFuaCmdItem::getCmdItem("cmdId_createStrainRosette"));
 

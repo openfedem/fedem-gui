@@ -639,7 +639,9 @@ void FuiPositionData::prepareRefCSSelection(char posOrRot)
   FapEventManager::pushPermSelection();
   ourActiveUI = this;
 
-  FuiModes::setMode(FuiModes::SELECTREFCS_MODE);
+  FuiModes::setMode(FuiModes::SELECTREFCS_MODE,
+                    "Select reference coordinate system by picking in the "
+                    "3D view or selecting from the Objects browser");
 }
 
 

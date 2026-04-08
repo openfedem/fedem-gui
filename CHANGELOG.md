@@ -8,6 +8,13 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.1.6] (2026-04-07)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-gui/issues/141:
+  Relative sensors can now measure the angle between two lines defined from four triads.
+
 ## [fedem-8.1.5] (2026-03-13)
 
 ### :rocket: Added
@@ -397,3 +404,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.3]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.2.7...fedem-8.1.3
 [fedem-8.1.4]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.3...fedem-8.1.4
 [fedem-8.1.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.4...fedem-8.1.5
+[fedem-8.1.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.5...fedem-8.1.6

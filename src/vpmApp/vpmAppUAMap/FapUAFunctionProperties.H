@@ -28,12 +28,11 @@ class FapUAFunctionProperties : public FapUAExistenceHandler,
 
 public:
   FapUAFunctionProperties(FuiFunctionProperties* ui);
-  virtual ~FapUAFunctionProperties() {}
 
   // Mode and state handling
   void onPermSelectionChanged(const std::vector<FFaViewItem*>& totalSelection,
-			      const std::vector<FFaViewItem*>& selectedSinceLast,
-			      const std::vector<FFaViewItem*>& unselectedSinceLast);
+                              const std::vector<FFaViewItem*>&,
+                              const std::vector<FFaViewItem*>&);
   void onFileBrowseActivated();
 
 protected:
@@ -54,7 +53,6 @@ private:
   void getChannelListCB();
   void acceptExprCB();
   void previewCB();
-  void pickSensorCB(int);
 
   // Stuff for verification
   void verifyGeneralFunctionCB(bool& isOK, FmModelMemberBase* item);

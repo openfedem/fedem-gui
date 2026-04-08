@@ -32,10 +32,8 @@ namespace
   bool createPositionIsChangedByGUI = false;
 }
 
-std::string FuiModes::tipComPicking;
 
-
-void FuiModes::setMode(ModeType newMode)
+void FuiModes::setMode(ModeType newMode, const char* tip)
 {
   FuiModes::cancel();
 
@@ -63,9 +61,6 @@ void FuiModes::setMode(ModeType newMode)
     case CREATE_SENSOR_MODE:
       FapCreateSensorCmd::enterMode();
       break;
-    case SELECTREFCS_MODE:
-      Fui::tip("Select reference CS by picking in the 3D view or selecting from the Objects browser");
-      break;
     case MAKEGENERALSPIDER_MODE:
       FapGeneralSpiderCmds::enterMode();
       break;
@@ -82,7 +77,7 @@ void FuiModes::setMode(ModeType newMode)
   Fui::updateMode();
   FapUAModeller::updateMode();
 
-  FuiModes::setTip();
+  FuiModes::setTip(tip);
 
   // To make the default create position work
   // when we enter a mode for the first time
@@ -397,6 +392,22 @@ void FuiModes::done()
         FuiModes::cancel();
       break;
 
+    case MAKEANGLESENSOR_MODE:
+      if (state == 1 || state == 2)
+        FuiModes::setState(2);
+      else if (state == 3 || state == 4)
+        FuiModes::setState(4);
+      else if (state == 5 || state == 6)
+        FuiModes::setState(6);
+      else if (state == 7)
+      {
+        FuiModes::setState(8);
+        FuiModes::setState(0); // For continous creating
+      }
+      else
+        FuiModes::cancel();
+      break;
+
     case PICKLOADFROMPOINT_MODE:
     case PICKLOADTOPOINT_MODE:
     case PICKLOADATTACKPOINT_MODE:
@@ -431,12 +442,12 @@ void FuiModes::done()
 }
 
 
-void FuiModes::setTip()
+void FuiModes::setTip(const char* tip)
 {
   switch (mode)
     {
     case EXAM_MODE:
-      Fui::tip(NULL);
+      Fui::tip(tip);
       FFaMsg::setStatus("Ready");
       break;
 
@@ -879,12 +890,10 @@ void FuiModes::setTip()
 	case 0:
 	  Fui::tip("Select first Triad");
 	  break;
-	case 1:
-	  Fui::tip("Select another Triad (Done when ready)");
-	  break;
 	case 2:
 	  Fui::tip("Select second Triad");
 	  break;
+	case 1:
 	case 3:
 	  Fui::tip("Select another Triad (Done when ready)");
 	  break;
@@ -892,6 +901,33 @@ void FuiModes::setTip()
 	  Fui::tip("Creating Sensor ...");
 	  break;
 	}
+      break;
+
+    case MAKEANGLESENSOR_MODE:
+      switch (state)
+        {
+        case 0:
+          Fui::tip("Select first Triad");
+          break;
+        case 2:
+          Fui::tip("Select second Triad");
+          break;
+        case 4:
+          Fui::tip("Select third Triad");
+          break;
+        case 6:
+          Fui::tip("Select fourth Triad");
+          break;
+        case 1:
+        case 3:
+        case 5:
+        case 7:
+          Fui::tip("Select another Triad (Done when ready)");
+          break;
+        case 8:
+          Fui::tip("Creating Sensor ...");
+          break;
+        }
       break;
 
     case PICKLOADFROMPOINT_MODE:
@@ -943,13 +979,6 @@ void FuiModes::setTip()
 	}
       break;
 
-    case COMPICKPOINT_MODE:
-      if (tipComPicking.empty())
-        Fui::tip("Pick or write where to set application point (Done when ready)");
-      else
-        Fui::tip(tipComPicking.c_str());
-      break;
-
     case MEASURE_DISTANCE_MODE:
       switch (state)
 	{
@@ -978,6 +1007,8 @@ void FuiModes::setTip()
       break;
 
     default: // All other modes handle the tip setting themselves
+      if (tip)
+        Fui::tip(tip);
       break;
     }
 }
