@@ -8,7 +8,7 @@
 
 # Open FEDEM Changelog
 
-## [fedem-8.1.6] (2026-04-07)
+## [fedem-8.1.6] (2026-04-23)
 
 ### :rocket: Added
 
@@ -17,6 +17,11 @@
 - Issue https://github.com/openfedem/fedem-gui/issues/139:
   Also write relative distance in the three global axis directions
   when measuring distance between two picked points.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/143:
+  The reduced surface and mesh lines visualization does not work (bug in R8.1.5 only).
 
 ## [fedem-8.1.5] (2026-03-13)
 

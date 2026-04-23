@@ -216,19 +216,8 @@ void FdFEGroupPartKit::generateShapeIndexes()
 
   SoIndexedShape* aShape = this->getShape(!myGroupPartData->isLineShape);
 
-  // Calculate needed storage from input
-
-  int nIndexEntries = 0;
-  if (myGroupPartData->isIndexShape)
-    for (const IntVec& shape : myGroupPartData->shapeIndexes)
-      nIndexEntries += shape.size() + 1;
-  else if (myGroupPartData->isLineShape)
-    nIndexEntries = myGroupPartData->edgePointers.size()*3;
-  else
-    nIndexEntries = myGroupPartData->facePointers.size() + myGroupPartData->nVisiblePrimitiveVertexes;
-
   // Set the face indexes into the shape node
-  aShape->coordIndex.setNum(nIndexEntries);
+  aShape->coordIndex.setNum(myGroupPartData->getNoVisibleVertices(true));
   myGroupPartData->getShapeIndexes(aShape->coordIndex.startEditing());
   aShape->coordIndex.finishEditing();
 }
@@ -419,10 +408,7 @@ void FdFEGroupPartKit::remapLookResults(ResultsFrame* frame, const FFaLegendMapp
           nColors = myGroupPartData->facePointers.size();
         break;
       case PR_FACE_VERTEX:
-        if (myGroupPartData->isLineShape)
-          nColors = myGroupPartData->edgePointers.size()*2;
-        else
-          nColors = myGroupPartData->nVisiblePrimitiveVertexes;
+        nColors = myGroupPartData->getNoVisibleVertices();
         break;
       default:
         break;
@@ -514,16 +500,8 @@ float FdFEGroupPartKit::getResultFromMaterialIndex(unsigned int matIdx) const
         break;
 
       case PR_FACE_VERTEX:
-        if (myGroupPartData->isLineShape)
-        {
-          if (matIdx < myGroupPartData->edgePointers.size()*2)
-            resIdx = matIdx;
-        }
-        else
-        {
-          if ((int)matIdx < myGroupPartData->nVisiblePrimitiveVertexes)
-            resIdx = matIdx;
-        }
+        if (matIdx < myGroupPartData->getNoVisibleVertices())
+          resIdx = matIdx;
         break;
 
       default:

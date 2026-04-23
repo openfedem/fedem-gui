@@ -35,11 +35,11 @@ private:
                               const std::vector<FFaViewItem*>&,
                               const std::vector<FFaViewItem*>&);
 
-  FmEngine* myEngine;
-  int       myArg;
-
   FapPermSelChangedReceiver<FapCreateSensorCmd> permSignalConnector;
   friend class FapPermSelChangedReceiver<FapCreateSensorCmd>;
+
+  FmEngine* myEngine;
+  int       myArg;
 };
 
 #endif
