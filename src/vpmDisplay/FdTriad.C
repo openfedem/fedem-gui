@@ -89,11 +89,14 @@ SoNodeKitListPart* FdTriad::getListSw() const
 }
 
 
-static FmJointBase* getFirstJoint(FdTriad* triad)
+namespace
 {
-  std::vector<FmJointBase*> joints;
-  static_cast<FmTriad*>(triad->getFmOwner())->getJointBinding(joints);
-  return joints.empty() ? NULL : joints.front();
+  FmJointBase* getFirstJoint(FdTriad* triad)
+  {
+    std::vector<FmJointBase*> joints;
+    static_cast<FmTriad*>(triad->getFmOwner())->getJointBinding(joints);
+    return joints.empty() ? NULL : joints.front();
+  }
 }
 
 
@@ -103,15 +106,20 @@ bool FdTriad::updateFdTopology(bool updateChildrenDisplay)
   std::cout <<"\nFdTriad::updateFdTopology() "
             << itsFmOwner->getIdString(true) << std::endl;
 #endif
+  return this->updateTriadTopology(updateChildrenDisplay);
+}
 
+
+bool FdTriad::updateTriadTopology(bool updateChildrenDisplay, FaMat34* xfmx)
+{
   SoTransform* transLink;
 
   FmTriad* triad = static_cast<FmTriad*>(itsFmOwner);
-  FmLink* ownerLink = triad->getOwnerLink(0);
 
-  if (ownerLink) // Triad is attached
+  if (FmLink* ownerLink = triad->getOwnerLink(0); ownerLink)
   {
-    if (ownerLink->getFdPointer())
+    // The triad is attached
+    if (!xfmx && ownerLink->getFdPointer())
       transLink = SO_GET_PART(ownerLink->getFdPointer()->getKit(),"transform",SoTransform);
     else
     {
@@ -122,100 +130,115 @@ bool FdTriad::updateFdTopology(bool updateChildrenDisplay)
 
     // Set transform from DB
 
-#ifdef FD_DEBUG
-    std::cout <<"\tAttached to "<< ownerLink->getIdString() <<": 2nd transform"
-              << ownerLink->getGlobalCS().inverse()*triad->getGlobalCS()
-              << std::endl;
-#endif
-    SoTransform* transLocal = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
-    transLocal->setMatrix(FdConverter::toSbMatrix(ownerLink->getGlobalCS().inverse()*triad->getGlobalCS()));
-    itsTrKit->setPart("secondTrans",transLocal);
-  }
-  else // Triad is not attached to a part
-  {
-    // Joints have to update topology after the triad
-    // to connect to the triad and not to the link.
-    FmJointBase* joint = getFirstJoint(this);
-    if (joint)
+    transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
+    if (xfmx)
+      transLink->setMatrix(FdConverter::toSbMatrix(*xfmx));
+    else
     {
+      FaMat34 newTr;
+      if (ownerLink->getFdPointer())
+        newTr = ownerLink->getGlobalCS().inverse()*triad->getGlobalCS();
+      else // Issue #154 fix: This triad is attached to the Earth part.
+        // Use the global CS of the triad since the Earth have no visualization.
+        newTr = triad->getGlobalCS();
 #ifdef FD_DEBUG
-      std::cout <<"\tNot attached, but in Joint "<< joint->getIdString();
+      std::cout <<"\tAttached to "<< ownerLink->getIdString()
+                <<": 2nd transform"<< newTr << std::endl;
+#endif
+      transLink->setMatrix(FdConverter::toSbMatrix(newTr));
+      itsTrKit->setPart("secondTrans",transLink);
+    }
+  }
+  else if (FmJointBase* joint = getFirstJoint(this); joint)
+  {
+    // Triad is not attached, but it is in joint
+#ifdef FD_DEBUG
+    if (!xfmx)
+      std::cout <<"\tNot attached, but in "<< joint->getIdString();
 #endif
 
-      // Triad is in joint
-      FmLink* otherLink = NULL;
-      if (joint->isAttachedToLink())
-	if (!joint->isOfType(FmFreeJoint::getClassTypeID()) && !joint->isOfType(FmCamJoint::getClassTypeID()))
-	  otherLink = joint->getOtherLink(triad);
+    // Joints have to update topology after the triad
+    // to connect to the triad and not to the link
+    FmLink* otherLink = NULL;
+    if (joint->isAttachedToLink())
+      if (!joint->isOfType(FmFreeJoint::getClassTypeID()) && !joint->isOfType(FmCamJoint::getClassTypeID()))
+        otherLink = joint->getOtherLink(triad);
 
-      if (otherLink)
+    if (otherLink)
+    {
+      // The other part of the joint is attached to a link.
+      // This part of the joint must also follow the link:
+      // Get the link transform and install it:
+
+      if (otherLink->getFdPointer())
+        transLink = SO_GET_PART(otherLink->getFdPointer()->getKit(),"transform",SoTransform);
+      else
       {
-	// The other part of the joint is attached to a link.
-	// This part of the joint must also follow the link:
-	// Get the link transform and install it:
-
-	if (otherLink->getFdPointer())
-	  transLink = SO_GET_PART(otherLink->getFdPointer()->getKit(),"transform",SoTransform);
-	else
-	{
-	  transLink = new SoTransform;
-	  transLink->setMatrix(SbMatrix::identity());
-	}
-	itsTrKit->setPart("firstTrans", transLink);
-
-#ifdef FD_DEBUG
-        std::cout <<"\n\tMoving with "<< otherLink->getIdString() <<" to "
-                  << otherLink->getGlobalCS().inverse()*triad->getGlobalCS()
-                  << std::endl;
-#endif
-
-	// We have to adjust the transform of the triad that is not
-	// attached so that it is transformed right
-
-	transLink = new SoTransform;
-	transLink->setMatrix(FdConverter::toSbMatrix(otherLink->getGlobalCS().inverse()*triad->getGlobalCS()));
-	itsTrKit->setPart("secondTrans",transLink);
+        transLink = new SoTransform;
+        transLink->setMatrix(SbMatrix::identity());
       }
-      else // Joint is free in space
+      itsTrKit->setPart("firstTrans", transLink);
+
+      // We have to adjust the transform of the triad that is not
+      // attached so that it is transformed right
+
+      transLink = new SoTransform;
+      if (xfmx)
+        transLink->setMatrix(FdConverter::toSbMatrix(*xfmx));
+      else
       {
-	// Remove the possible transformconnection
-	// to a link, and put an identity instead.
-
-	transLink = new SoTransform;
-	transLink->setMatrix(SbMatrix::identity());
-	itsTrKit->setPart("firstTrans", transLink);
-
+        FaMat34 newTr = otherLink->getGlobalCS().inverse()*triad->getGlobalCS();
 #ifdef FD_DEBUG
-        std::cout <<"\n\tFree in space, moving Triad to "
-                  << triad->getGlobalCS() << std::endl;
+        std::cout <<"\n\tMoving with "<< otherLink->getIdString()
+                  <<" at "<< otherLink->getGlobalCS()
+                  <<" to "<< newTr << std::endl;
 #endif
-
-        // Set transform from DB
-
-        transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
-        transLink->setMatrix(FdConverter::toSbMatrix(triad->getGlobalCS()));
+        transLink->setMatrix(FdConverter::toSbMatrix(newTr));
       }
+      itsTrKit->setPart("secondTrans",transLink);
     }
     else
     {
-      // Triad is not on a part and not in a joint
+      // Joint is free in space.
       // Remove the possible transform connection
-      // to a link, and put a identity instead.
+      // to a link, and put an identity instead.
 
       transLink = new SoTransform;
       transLink->setMatrix(SbMatrix::identity());
       itsTrKit->setPart("firstTrans", transLink);
 
 #ifdef FD_DEBUG
-      std::cout <<"\n\tFree in space, moving Triad to "
-                << triad->getGlobalCS() << std::endl;
+      if (!xfmx)
+        std::cout <<"\n\tFree in space, moving Triad to "
+                  << triad->getGlobalCS() << std::endl;
 #endif
 
       // Set transform from DB
 
       transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
-      transLink->setMatrix(FdConverter::toSbMatrix(triad->getGlobalCS()));
+      transLink->setMatrix(FdConverter::toSbMatrix(xfmx ? *xfmx :
+                                                   triad->getGlobalCS()));
     }
+  }
+  else
+  {
+    // Triad is neither on a part nor in a joint.
+    // Remove possible link transform connection, and put a identity instead.
+
+    transLink = new SoTransform;
+    transLink->setMatrix(SbMatrix::identity());
+    itsTrKit->setPart("firstTrans", transLink);
+
+#ifdef FD_DEBUG
+    std::cout <<"\n\tFree in space, moving Triad to "<< triad->getGlobalCS()
+              << std::endl;
+#endif
+
+    // Set transform from DB
+
+    transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
+    transLink->setMatrix(FdConverter::toSbMatrix(xfmx ? *xfmx :
+                                                 triad->getGlobalCS()));
   }
 
   // Set transform from DB
@@ -363,19 +386,13 @@ bool FdTriad::hasResultTransform(size_t frameIdx)
 
 void FdTriad::setResultTransform(size_t frameIdx, const FaMat34& pos)
 {
-  this->findOrCreateXfMx(frameIdx) = pos;
-}
-
-
-FaMat34& FdTriad::findOrCreateXfMx(size_t frameIdx)
-{
   if (frameIdx >= myResultsFrames.size())
     myResultsFrames.resize(frameIdx+1,NULL);
 
-  if (!myResultsFrames[frameIdx])
-    myResultsFrames[frameIdx] = new FaMat34();
-
-  return *myResultsFrames[frameIdx];
+  if (myResultsFrames[frameIdx])
+    *myResultsFrames[frameIdx] = pos;
+  else
+    myResultsFrames[frameIdx] = new FaMat34(pos);
 }
 
 
@@ -383,101 +400,10 @@ void FdTriad::selectAnimationFrame(size_t frameNr)
 {
   myCurrentResultsFrame = frameNr;
 
-  SoTransform* transLink;
-
-  FmTriad* triad = static_cast<FmTriad*>(itsFmOwner);
-  FmLink* ownerLink = triad->getOwnerLink(0);
-
-  if (ownerLink) // Triad is attached
-  {
-    transLink = new SoTransform;
-    transLink->setMatrix(SbMatrix::identity());
-    itsTrKit->setPart("firstTrans", transLink);
-
-    // Set transform from DB
-
-    transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
-    transLink->setMatrix(FdConverter::toSbMatrix(this->findOrCreateXfMx(myCurrentResultsFrame)));
-
-  }
-  else // Triad is not attached to a part
-  {
-    // Joints have to update topology after the triad
-    // to connect to the triad and not to the link.
-    FmJointBase* joint = getFirstJoint(this);
-    if (joint)
-    {
-      // Triad is in joint
-      FmLink* otherLink = NULL;
-      if (joint->isAttachedToLink())
-	if (!joint->isOfType(FmFreeJoint::getClassTypeID()) && !joint->isOfType(FmCamJoint::getClassTypeID()))
-	  otherLink = joint->getOtherLink(triad);
-
-      if (otherLink)
-      {
-	// The other part of the joint is attached to a link.
-	// This part of the joint must also follow the link:
-	// Get the link transform and install it:
-
-	if (otherLink->getFdPointer())
-	  transLink = SO_GET_PART(otherLink->getFdPointer()->getKit(),"transform",SoTransform);
-	else
-	{
-	  transLink = new SoTransform;
-	  transLink->setMatrix(SbMatrix::identity());
-	}
-	itsTrKit->setPart("firstTrans", transLink);
-
-	// We have to adjust the transform of the triad that is not
-	// attached so that it is transformed right
-
-	transLink = new SoTransform;
-	transLink->setMatrix(FdConverter::toSbMatrix(otherLink->getGlobalCS().inverse()*this->findOrCreateXfMx(myCurrentResultsFrame)));
-	itsTrKit->setPart("secondTrans", transLink);
-      }
-      else {
-	// Joint is free in space
-	// Remove the possible transformconnection
-	// to a link, and put an identity instead.
-
-	transLink = new SoTransform;
-	transLink->setMatrix(SbMatrix::identity());
-	itsTrKit->setPart("firstTrans", transLink);
-
-	// Set transform from DB
-
-	transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
-	transLink->setMatrix(FdConverter::toSbMatrix(this->findOrCreateXfMx(myCurrentResultsFrame)));
-      }
-    }
-    else {
-      // Triad is not on a part and not in a joint
-      // Remove the possible transformconnection
-      // to a link, and put a identity instead.
-
-      transLink = new SoTransform;
-      transLink->setMatrix(SbMatrix::identity());
-      itsTrKit->setPart("firstTrans", transLink);
-
-      // Set transform from DB
-
-      transLink = SO_GET_PART(itsTrKit,"secondTrans",SoTransform);
-      transLink->setMatrix(FdConverter::toSbMatrix(this->findOrCreateXfMx(myCurrentResultsFrame)));
-    }
-  }
-
-  // Set transform from DB
-
-  /* Recursive update of the display topology of the
-  // enteties affected by this entety:
-  //              Axial Spring/Damper
-  //            /
-  // Link->Triad->Joint->HP
-  //            \
-  //              Load
-  */
-
-  itsFmOwner->updateChildrenDisplayTopology();
+  if (frameNr < myResultsFrames.size())
+    this->updateTriadTopology(true,myResultsFrames[frameNr]);
+  else
+    this->updateTriadTopology(true);
 }
 
 
@@ -580,7 +506,7 @@ int FdTriad::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
       break;
 
     case BALL:
-      triadCS = (joint->getSlaveTriad())->getGlobalCS();
+      triadCS = joint->getSlaveTriad()->getGlobalCS();
 
       if (joint->isOfType(FmRigidJoint::getClassTypeID()))
 	currentDOFs = RIGID;
@@ -633,7 +559,7 @@ int FdTriad::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
       break;
 
     case REV:
-      triadCS = (joint->getSlaveTriad())->getGlobalCS();
+      triadCS = joint->getSlaveTriad()->getGlobalCS();
 
       if (joint->isOfType(FmRigidJoint::getClassTypeID()))
 	currentDOFs = RIGID;
@@ -731,8 +657,8 @@ void FdTriad::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
 {
   // First check if the triad is attached to a (single) link.
   // If it is, move the link (with the triad on it) instead of the triad itself.
-  FmLink* ownerLink = ((FmTriad*)itsFmOwner)->getOwnerLink();
-  if (ownerLink && ownerLink->getFdPointer())
+  if (FmLink* ownerLink = ((FmTriad*)itsFmOwner)->getOwnerLink();
+      ownerLink && ownerLink->getFdPointer())
   {
     ownerLink->getFdPointer()->smartMove(p1,p2,dof);
     return;
@@ -746,13 +672,14 @@ void FdTriad::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
   SoTransform* otherTransform2 = NULL;
   SoTransform* otherLinkTransform = NULL;
 
-  // Check if the triad is member of a joint.
   bool isInLinJoint = false;
-  FmJointBase* joint = getFirstJoint(this);
-  if (joint)
+
+  // Check if the triad is member of a joint.
+  if (FmJointBase* joint = getFirstJoint(this); joint)
   {
     // Check if triad is member of a simple joint (Revolute,Ball,Rigid).
-    if (joint->isOfType(FmSMJointBase::getClassTypeID()) && !joint->isOfType(FmFreeJoint::getClassTypeID()))
+    if (joint->isOfType(FmSMJointBase::getClassTypeID()) &&
+        !joint->isOfType(FmFreeJoint::getClassTypeID()))
     {
       // It is, so move joint instead.
       joint->getFdPointer()->smartMove(p1,p2,dof);
@@ -761,9 +688,10 @@ void FdTriad::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
 
     // If triad is member of a linear joint we have to move the other
     // triads in the joint together with this triad.
-    isInLinJoint = joint->isOfType(FmMMJointBase::getClassTypeID()) && !joint->isOfType(FmCamJoint::getClassTypeID());
-    if (isInLinJoint)
+    if (joint->isOfType(FmSMJointBase::getClassTypeID()) &&
+        !joint->isOfType(FmCamJoint::getClassTypeID()))
     {
+      isInLinJoint = true;
       if (joint->isAttachedToLink())
       {
 	// We know that this triad is not attached to a link,
@@ -776,16 +704,16 @@ void FdTriad::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
 
       // Get the other FdTriads and their transforms.
 
-      otherTriad1 = (FdTriad*)(((FmMMJointBase*)joint)->getFirstMaster())->getFdPointer();
-      otherTriad2 = (FdTriad*)(((FmMMJointBase*)joint)->getLastMaster())->getFdPointer();
+      otherTriad1 = (FdTriad*)((FmMMJointBase*)joint)->getFirstMaster()->getFdPointer();
+      otherTriad2 = (FdTriad*)((FmMMJointBase*)joint)->getLastMaster()->getFdPointer();
 
       if (this == otherTriad1) // This triad is the first master in the linear joint
       {
 	otherTriad1 = otherTriad2;
-	otherTriad2 = (FdTriad*)(((FmMMJointBase*)joint)->getSlaveTriad())->getFdPointer();
+	otherTriad2 = (FdTriad*)joint->getSlaveTriad()->getFdPointer();
       }
       else if (this == otherTriad2) // This triad is the last master in the linear joint
-	otherTriad2 = (FdTriad*)(((FmMMJointBase*)joint)->getSlaveTriad())->getFdPointer();
+	otherTriad2 = (FdTriad*)joint->getSlaveTriad()->getFdPointer();
 
       otherTransform1 = SO_GET_PART(otherTriad1->getKit(),"secondTrans",SoTransform);
       otherTransform2 = SO_GET_PART(otherTriad2->getKit(),"secondTrans",SoTransform);
