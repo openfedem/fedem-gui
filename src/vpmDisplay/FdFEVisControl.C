@@ -11,6 +11,9 @@
 
 #include <algorithm>
 #include <iterator>
+#ifdef FD_DEBUG
+#include <iostream>
+#endif
 
 
 FdColor FdFEVisControl::ourBackgroundColor = { 0.0f, 0.0f, 0.0f };
@@ -457,12 +460,22 @@ void FdFEVisControl::updateGroupPartsShown()
 
 #ifdef FD_DEBUG
   static int nWrites = 0;
-  std::cout <<"\n#"<< ++nWrites <<"\tShould be ON:";
-  for (GroupPartType gpt : shouldBeOn) std::cout <<" "<< gpt;
-  std::cout <<"\n\t\tTurned ON  :";
-  for (GroupPartType gpt : toTurnOn) std::cout <<" "<< gpt;
-  std::cout <<"\n\t\tTurned OFF :";
-  for (GroupPartType gpt : toTurnOff) std::cout <<" "<< gpt;
+  std::cout <<"FdFEVisControl::updateGroupPartsShown(): #"<< ++nWrites;
+  if (!shouldBeOn.empty()) {
+    std::cout <<"\n\tShould be ON :";
+    for (GroupPartType gpt : shouldBeOn)
+      std::cout <<" "<< gpt;
+  }
+  if (!toTurnOn.empty()) {
+    std::cout <<"\n\tTurned ON    :";
+    for (GroupPartType gpt : toTurnOn)
+      std::cout <<" "<< gpt;
+  }
+  if (!toTurnOff.empty()) {
+    std::cout <<"\n\tTurned OFF   :";
+    for (GroupPartType gpt : toTurnOff)
+      std::cout <<" "<< gpt;
+  }
   std::cout << std::endl;
 #endif
 }

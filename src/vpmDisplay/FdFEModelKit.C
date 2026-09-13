@@ -119,16 +119,10 @@ FdFEModelKit::~FdFEModelKit()
 }
 
 
-FdFEGroupPart* FdFEModelKit::createGroupPart(SoSeparator* specialGraphics,
-                                             bool isLineShape)
+FdFEGroupPart* FdFEModelKit::createGroupPart()
 {
   FdFEGroupPartKit* newOne = new FdFEGroupPartKit;
-  SoGroup* group = (SoGroup*)this->getPart("groupParts", TRUE);
-
-  group->addChild(newOne);
-
-  if (specialGraphics)
-    newOne->setSpecialGraphics(specialGraphics, isLineShape);
+  ((SoGroup*)this->getPart("groupParts",TRUE))->addChild(newOne);
 
   return newOne;
 }
@@ -156,7 +150,10 @@ void FdFEModelKit::addGroupPart(FdFEGroupPartSet::GroupPartType type,
     break;
   }
 
-  myGroupParts[type].push_back(this->createGroupPart(specialGraphics,isLineShape));
+  FdFEGroupPartKit* newOne = new FdFEGroupPartKit;
+  ((SoGroup*)this->getPart("groupParts",TRUE))->addChild(newOne);
+  newOne->setSpecialGraphics(specialGraphics,isLineShape);
+  myGroupParts[type].push_back(newOne);
 }
 
 void FdFEModelKit::deleteGroupParts(FdFEGroupPartSet::GroupPartType type)
@@ -186,7 +183,7 @@ void FdFEModelKit::show(bool doShow)
 
 void FdFEModelKit::deleteVisualization(bool keepSpecialGraphics)
 {
-  SoGroup* group = (SoGroup*)this->getPart("groupParts", TRUE);
+  SoGroup* group = (SoGroup*)this->getPart("groupParts",TRUE);
   if (!keepSpecialGraphics)
   {
     group->removeAllChildren();
@@ -215,14 +212,14 @@ void FdFEModelKit::deleteVisualization(bool keepSpecialGraphics)
       }
   }
 
-  this->deletePrVertexResults(-1);
+  for (ResultsFrame& frame : myResultsFrames)
+    frame.eraseVxRes();
 }
 
 
-void FdFEModelKit::setFdPointer(FdObject* backPnt)
+void FdFEModelKit::setFdPointer(FdObject* backPt)
 {
-  FdBackPointer *bp_pointer = SO_GET_PART(this, "backPt", FdBackPointer);
-  bp_pointer->setPointer(backPnt);
+  SO_GET_PART(this,"backPt",FdBackPointer)->setPointer(backPt);
 }
 
 
@@ -295,37 +292,19 @@ void FdFEModelKit::showVertexResults(bool doShow)
 }
 
 
-void FdFEModelKit::freezeResultFrame(int)
+void* FdFEModelKit::addLabel(const std::string& text, const FaVec3& position)
 {
-}
-
-void FdFEModelKit::unFreezeResultFrame(int)
-{
-}
-
-
-void * FdFEModelKit::addLabel(const std::string & text, const FaVec3 & position)
-{
-  FdLabelKit * label = new FdLabelKit(text,position);
-  SoSeparator * sep = (SoSeparator *)(this->getPart("labels",TRUE));
-  sep->addChild(label);
+  FdLabelKit* label = new FdLabelKit(text,position);
+  ((SoSeparator*)this->getPart("labels",TRUE))->addChild(label);
   return (void*)label;
 }
 
-void FdFEModelKit::removeLabels(void * id)
+void FdFEModelKit::removeLabels(void* id)
 {
-  if (!id)
+  if (id)
+    ((SoSeparator*)this->getPart("labels",TRUE))->removeChild((SoNode*)id);
+  else
     this->setPart("labels", NULL);
-  else {
-    SoSeparator * sep = (SoSeparator *)(this->getPart("labels",TRUE));
-    sep->removeChild((SoNode*)id);
-  }
-}
-
-void FdFEModelKit::setLabelColor(const FdColor& rgbColor)
-{
-  SoMaterial* mat = (SoMaterial*)this->getPart("labelMaterial",true);
-  mat->diffuseColor.setValue(rgbColor.data());
 }
 
 FaMat34 FdFEModelKit::getActiveTransform()
@@ -336,26 +315,17 @@ FaMat34 FdFEModelKit::getActiveTransform()
   return FdConverter::toFaMat34(mx);
 }
 
-void FdFEModelKit::setTransform    ( const FaMat34 & pos  )
+void FdFEModelKit::setTransform(const FaMat34& pos)
 {
   myTransformMx = pos;
   if (IAmUsingMyTransform)
     this->setTempTransform(pos);
 }
 
-void FdFEModelKit::setTempTransform( const FaMat34 & pos  )
+void FdFEModelKit::setTempTransform(const FaMat34& pos)
 {
   SoTransform* xf = (SoTransform*)transform.getValue();
   if (xf) xf->setMatrix(FdConverter::toSbMatrix(pos));
-}
-
-void FdFEModelKit::setTempTransform( float trans[3], float rot[4])
-{
-  SoTransform* xf = (SoTransform*)transform.getValue();
-  if (xf) {
-    if (trans) xf->translation.setValue(trans);
-    if (rot)   xf->rotation.setValue(rot);
-  }
 }
 
 void FdFEModelKit::resetTempTransform()
@@ -366,7 +336,7 @@ void FdFEModelKit::resetTempTransform()
   IAmUsingMyTransform = true;
 }
 
-void FdFEModelKit::setTempVxes(SoVertexProperty * vxes)
+void FdFEModelKit::setTempVxes(SoVertexProperty* vxes)
 {
   this->setPart("coords", vxes);
 }
@@ -416,10 +386,10 @@ void FdFEModelKit::setCoGCSToggle(bool doShow)
     symbolSw->whichChild.setValue( doShow ? SO_SWITCH_ALL : SO_SWITCH_NONE);
 }
 
-void FdFEModelKit::addInternalCS(const FaMat34 & localMx)
+void FdFEModelKit::addInternalCS(const FaMat34& localMx)
 {
   SoSwitch* symbolSw = (SoSwitch*) this->internalCSSwitch.getValue();
-  FdTransformKit * xfKit = new FdTransformKit;
+  FdTransformKit* xfKit = new FdTransformKit;
   xfKit->ref();
   SoTransform* xf = SO_GET_PART(xfKit, "firstTrans", SoTransform);
   xf->setMatrix(FdConverter::toSbMatrix(localMx));
@@ -431,7 +401,7 @@ void FdFEModelKit::addInternalCS(const FaMat34 & localMx)
   xfKit->unref();
 }
 
-void FdFEModelKit::setCorotCS(const FaMat34 & localMx)
+void FdFEModelKit::setCorotCS(const FaMat34& localMx)
 {
   FdTransformKit* xfKit = SO_GET_PART(this, "corotCSSymbol", FdTransformKit);
   SoTransform* xf = SO_GET_PART(xfKit, "firstTrans", SoTransform);
@@ -440,14 +410,9 @@ void FdFEModelKit::setCorotCS(const FaMat34 & localMx)
   xfKit->setPart("symbol", symb);
 }
 
-FaMat34 FdFEModelKit::getTransform()
+FaVec3 FdFEModelKit::getVertex(int idx) const
 {
-  return myTransformMx;
-}
-
-FaVec3 FdFEModelKit::getVertex(int idx)
-{
-  if (myVertexes && idx < myVertexes->vertex.getNum())
+  if (idx >= 0 && idx < myVertexes->vertex.getNum())
     return FdConverter::toFaVec3(myVertexes->vertex[idx]);
   else
     return FaVec3();
@@ -507,20 +472,17 @@ void FdFEModelKit::setVertexes(const VertexVec& vertexes)
 
 void FdFEModelKit::addResultFrame(int beforeFrame)
 {
-  if (beforeFrame < 0)
-    {
-      // Adding one to the end :
-      myResultsFrames.push_back(ResultsFrame());
-    }
+  if (beforeFrame < 0) // Adding to the end
+    myResultsFrames.emplace_back();
   else
-    {
-      // Inserting in the middle :
-      if (beforeFrame > 0)
-        this->expandFrameArrayIfNeccesary(beforeFrame-1);
-      std::vector<ResultsFrame>::iterator beforeFrameIt = myResultsFrames.begin();
-      beforeFrameIt += beforeFrame;
-      myResultsFrames.insert(beforeFrameIt, ResultsFrame());
-    }
+  {
+    // Inserting in the middle :
+    if (beforeFrame > 0)
+      this->expandFrameArrayIfNeccesary(beforeFrame-1);
+    std::vector<ResultsFrame>::iterator beforeFrameIt = myResultsFrames.begin();
+    beforeFrameIt += beforeFrame;
+    myResultsFrames.emplace(beforeFrameIt);
+  }
 
   this->FdFEModel::addResultFrame(beforeFrame);
 }
@@ -528,28 +490,22 @@ void FdFEModelKit::addResultFrame(int beforeFrame)
 
 void FdFEModelKit::deleteResultFrame(int frameIdx)
 {
-   if (frameIdx < 0)
-    {
-      // Delete all frames :
-      for (ResultsFrame& frame : myResultsFrames) frame.eraseAll();
-      std::vector<ResultsFrame> dummy;
-      myResultsFrames.swap(dummy);
-    }
-   else if ((size_t)frameIdx < myResultsFrames.size())
-     {
-       // Delete a single frame
-       std::vector<ResultsFrame>::iterator frameIdxIt = myResultsFrames.begin();
-       frameIdxIt += frameIdx;
-       myResultsFrames.erase(frameIdxIt);
-     }
+  if (frameIdx < 0)
+  {
+    // Delete all frames :
+    for (ResultsFrame& frame : myResultsFrames) frame.eraseAll();
+    std::vector<ResultsFrame> dummy;
+    myResultsFrames.swap(dummy);
+  }
+  else if ((size_t)frameIdx < myResultsFrames.size())
+  {
+    // Delete a single frame
+    std::vector<ResultsFrame>::iterator frameIdxIt = myResultsFrames.begin();
+    frameIdxIt += frameIdx;
+    myResultsFrames.erase(frameIdxIt);
+  }
 
-   this->FdFEModel::deleteResultFrame(frameIdx);
-}
-
-
-int FdFEModelKit::getResultFrameCount()
-{
-  return myResultsFrames.size();
+  this->FdFEModel::deleteResultFrame(frameIdx);
 }
 
 
@@ -564,61 +520,13 @@ bool FdFEModelKit::hasResultTransform(unsigned int frameIdx)
 
 void FdFEModelKit::setResultTransform(unsigned int frameIdx, const FaMat34& pos)
 {
-  *FdFEModelKit::findOrCreateXfMx(frameIdx) = pos;
-}
+  if (frameIdx >= myResultsFrames.size())
+    myResultsFrames.resize(frameIdx+1);
 
-
-void FdFEModelKit::setResultTransforms(const std::vector<FaMat34>& posFrames)
-{
-  size_t i;
-  for (i = 0; i < posFrames.size(); i++)
-    this->setResultTransform(i,posFrames[i]);
-
-  for (i = posFrames.size(); i < myResultsFrames.size(); i++)
-    myResultsFrames[i].eraseMx();
-}
-
-
-void FdFEModelKit::deleteResultTransforms(int frameIdx)
-{
-  if (frameIdx < 0)
-    for (ResultsFrame& frame : myResultsFrames) frame.eraseMx();
-  else if ((size_t)frameIdx < myResultsFrames.size())
-    myResultsFrames[frameIdx].eraseMx();
-}
-
-
-void FdFEModelKit::setPrVertexResultLook(unsigned int frameIdx, const IndexVec& packedLooks)
-{
-  SoVertexProperty* vxProperty = FdFEModelKit::findOrCreateVxProp(frameIdx);
-
-  vxProperty->orderedRGBA.setNum(packedLooks.size());
-
-  uint32_t* packedColors = vxProperty->orderedRGBA.startEditing();
-
-  for (size_t i = 0; i < packedLooks.size(); i++)
-    packedColors[i] = packedLooks[i];
-
-  vxProperty->orderedRGBA.finishEditing();
-
-  vxProperty->materialBinding.setValue(SoVertexProperty::PER_VERTEX_INDEXED);
-}
-
-
-void FdFEModelKit::setPrVertexResultLooks(const std::vector<IndexVec>& packedLookFrames)
-
-{
-  for (size_t i = 0; i < packedLookFrames.size(); i++)
-    this->setPrVertexResultLook(i,packedLookFrames[i]);
-}
-
-
-void FdFEModelKit::deleteResultLook(int frameIdx)
-{
-  if (frameIdx < 0)
-    for (ResultsFrame& frame : myResultsFrames) frame.eraseColor();
-  else if ((size_t)frameIdx < myResultsFrames.size())
-    myResultsFrames[frameIdx].eraseColor();
+  if (myResultsFrames[frameIdx].mx)
+    *myResultsFrames[frameIdx].mx = pos;
+  else
+    myResultsFrames[frameIdx].mx = new FaMat34(pos);
 }
 
 
@@ -639,8 +547,8 @@ bool FdFEModelKit::hasResultDeformation(unsigned int frameIdx)
 void FdFEModelKit::setResultDeformation(unsigned int frameIdx, const VertexVec& defs)
 {
   this->expandFrameArrayIfNeccesary(frameIdx);
-  myResultsFrames[frameIdx].deformation.resize(defs.size());
 
+  myResultsFrames[frameIdx].deformation.resize(defs.size());
   for (size_t vxIdx = 0; vxIdx < defs.size(); vxIdx++) {
     Vec3f& vPt = myResultsFrames[frameIdx].deformation[vxIdx];
     vPt[0] = (float)defs[vxIdx][0];
@@ -648,10 +556,12 @@ void FdFEModelKit::setResultDeformation(unsigned int frameIdx, const VertexVec& 
     vPt[2] = (float)defs[vxIdx][2];
   }
 
-  FdFEModelKit::findOrCreateVxProp(frameIdx);
+  if (!myResultsFrames[frameIdx].vxProp) {
+    myResultsFrames[frameIdx].vxProp = new SoVertexProperty;
+    myResultsFrames[frameIdx].vxProp->ref();
+  }
 
-  if (myVertexes)
-    this->updateResultVertexes(myResultsFrames[frameIdx]);
+  this->updateResultVertexes(myResultsFrames[frameIdx]);
 }
 
 
@@ -683,87 +593,8 @@ void FdFEModelKit::setDeformationScale(float scale)
 {
   myDeformationScale = scale;
 
-  if (myVertexes)
-    for (const ResultsFrame& frame : myResultsFrames)
-      this->updateResultVertexes(frame);
-}
-
-
-void FdFEModelKit::setResultVertexes(unsigned int frameIdx, const VertexVec& vertexes)
-{
-  SoVertexProperty* vxProperty = FdFEModelKit::findOrCreateVxProp(frameIdx);
-
-  vxProperty->vertex.setNum(vertexes.size());
-
-  SbVec3f* sbVectors = vxProperty->vertex.startEditing();
-
-  for (const FaVec3& pos : vertexes)
-  {
-    sbVectors->setValue((float)pos.x(),(float)pos.y(),(float)pos.z());
-    sbVectors++;
-  }
-
-  vxProperty->vertex.finishEditing();
-}
-
-
-void FdFEModelKit::setResultVertexes(const std::vector<VertexVec>& vertexFrames)
-{
-  size_t i;
-  for (i = 0; i < vertexFrames.size(); i++)
-    this->setResultVertexes(i,vertexFrames[i]);
-
-  for (i = vertexFrames.size(); i < myResultsFrames.size(); i++)
-    myResultsFrames[i].eraseVx();
-}
-
-
-void FdFEModelKit::deleteResultVertexes(int frameIdx)
-{
-  if (frameIdx < 0)
-    for (ResultsFrame& frame : myResultsFrames) frame.eraseVx();
-  else if ((size_t)frameIdx < myResultsFrames.size())
-    myResultsFrames[frameIdx].eraseVx();
-}
-
-
-void FdFEModelKit::deletePrVertexResults(int frameIdx)
-{
-  if (frameIdx < 0)
-    for (ResultsFrame& frame : myResultsFrames) frame.eraseVxRes();
-  else if ((size_t)frameIdx < myResultsFrames.size())
-    myResultsFrames[frameIdx].eraseVxRes();
-}
-
-
-///////////////////////////////////////////
-//
-// Convenience methods :
-//
-
-FaMat34* FdFEModelKit::findOrCreateXfMx(unsigned int frameIdx)
-{
-  if (frameIdx >= myResultsFrames.size())
-    myResultsFrames.resize(frameIdx+1);
-
-  if (!myResultsFrames[frameIdx].mx)
-    myResultsFrames[frameIdx].mx = new FaMat34;
-
-  return myResultsFrames[frameIdx].mx;
-}
-
-
-SoVertexProperty* FdFEModelKit::findOrCreateVxProp(unsigned int frameIdx)
-{
-  if (frameIdx >= myResultsFrames.size())
-    myResultsFrames.resize(frameIdx+1);
-
-  if (!myResultsFrames[frameIdx].vxProp) {
-    myResultsFrames[frameIdx].vxProp = new SoVertexProperty;
-    myResultsFrames[frameIdx].vxProp->ref();
-  }
-
-  return myResultsFrames[frameIdx].vxProp;
+  for (const ResultsFrame& frame : myResultsFrames)
+    this->updateResultVertexes(frame);
 }
 
 
@@ -773,4 +604,22 @@ void FdFEModelKit::expandFrameArrayIfNeccesary(int frameIdx)
     myResultsFrames.resize(frameIdx+1);
 
   this->FdFEModel::expandFrameArrayIfNeccesary(frameIdx);
+}
+
+
+void FdFEModelKit::ResultsFrame::eraseVxProp()
+{
+  if (!vxProp)
+    return;
+
+  vxProp->vertex.deleteValues(0,-1);
+  vxProp->orderedRGBA.deleteValues(0,-1);
+  vxProp->unref();
+  vxProp = NULL;
+}
+
+void FdFEModelKit::ResultsFrame::eraseDef()
+{
+  std::vector<Vec3f> empty;
+  deformation.swap(empty);
 }

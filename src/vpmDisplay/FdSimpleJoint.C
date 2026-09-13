@@ -97,8 +97,7 @@ bool FdSimpleJoint::updateFdTopology(bool updateChildrenDisplay)
 
   // Set Slave transform and backPt connection
 
-  FmTriad* slave = ((FmJointBase*)itsFmOwner)->getSlaveTriad();
-  if (slave)
+  if (FmTriad* slave = ((FmJointBase*)itsFmOwner)->getSlaveTriad(); slave)
   {
     transLink = SO_GET_PART(slave->getFdPointer()->getKit(),"firstTrans",SoTransform);
     transLocal = SO_GET_PART(slave->getFdPointer()->getKit(),"secondTrans",SoTransform);
@@ -111,7 +110,7 @@ bool FdSimpleJoint::updateFdTopology(bool updateChildrenDisplay)
     std::cerr <<"FdSimpleJoint::updateFdTopology: No slave triad in "
               << itsFmOwner->getIdString(true) << std::endl;
     transLink = new SoTransform;
-    transLocal= new SoTransform;
+    transLocal = new SoTransform;
   }
 
   itsKit->setPart("slave.firstTrans",transLink);
@@ -121,8 +120,7 @@ bool FdSimpleJoint::updateFdTopology(bool updateChildrenDisplay)
 
   // Set Master transform and backPt connection
 
-  FmTriad* master = ((FmSMJointBase*)itsFmOwner)->getItsMasterTriad();
-  if (master)
+  if (FmTriad* master = ((FmSMJointBase*)itsFmOwner)->getItsMasterTriad(); master)
   {
     transLink = SO_GET_PART(master->getFdPointer()->getKit(),"firstTrans",SoTransform);
     transLocal = SO_GET_PART(master->getFdPointer()->getKit(),"secondTrans",SoTransform);
@@ -135,7 +133,8 @@ bool FdSimpleJoint::updateFdTopology(bool updateChildrenDisplay)
     std::cout <<"FdSimpleJoint::updateFdTopology: No master triad in "
               << itsFmOwner->getIdString(true) << std::endl;
     // Transformation is set equal to slave transformation
-    backPt = new FdBackPointer;
+    appearanceKit = NULL;
+    backPt = NULL;
   }
 
   itsKit->setPart("master.firstTrans",transLink);
@@ -147,21 +146,22 @@ bool FdSimpleJoint::updateFdTopology(bool updateChildrenDisplay)
 
   itsKit->setPart("joint.firstTrans",transLink);
   SoTransform* jointTransLocal = SO_GET_PART(itsKit,"joint.secondTrans",SoTransform);
-  jointTransLocal->setMatrix(SbMatrix::identity());
   FaMat34 jcs = ((FmJointBase*)itsFmOwner)->getLocalCS();
-  if (master)
-  {
-    // Needs to handle that the slavelink xf is actually used for the master as well,
-    // to make it follow during the animation (smart move)
-    SbMatrix masterMx;
-    masterMx.setTransform(transLocal->translation.getValue(),
-		          transLocal->rotation.getValue(),
-			  transLocal->scaleFactor.getValue());
-    jcs = FdConverter::toFaMat34(masterMx) * jcs;
 #ifdef FD_DEBUG
-    std::cout <<" Joint location from master:"<< jcs << std::endl;
+  std::cout <<"\tLocal joint location:"<< jcs;
 #endif
-  }
+
+  // Needs to handle that the slavelink xf is actually used for the master as well,
+  // to make it follow during the animation (smart move)
+  SbMatrix masterMx;
+  masterMx.setTransform(transLocal->translation.getValue(),
+                        transLocal->rotation.getValue(),
+                        transLocal->scaleFactor.getValue());
+  jcs = FdConverter::toFaMat34(masterMx) * jcs;
+#ifdef FD_DEBUG
+  std::cout <<"\n\tMaster location:"<< FdConverter::toFaMat34(masterMx)
+            <<"\n\tJoint location from master:"<< jcs << std::endl;
+#endif
   jointTransLocal->setMatrix(FdConverter::toSbMatrix(jcs));
 
   FdSprDaTransformKit* lineSymbol = SO_GET_PART(itsKit,"lineS",FdSprDaTransformKit);
@@ -290,7 +290,7 @@ bool FdSimpleJoint::updateFmOwner()
 {
 #ifdef FD_DEBUG
   std::cout <<"FdSimpleJoint::updateFmOwner() "
-	    << itsFmOwner->getIdString(true) << std::endl;
+            << itsFmOwner->getIdString(true) << std::endl;
 #endif
   SoTransform* firstTrans  = SO_GET_PART(itsKit,"joint.firstTrans", SoTransform);
   SoTransform* secondTrans = SO_GET_PART(itsKit,"joint.secondTrans", SoTransform);
@@ -306,7 +306,7 @@ bool FdSimpleJoint::updateFmOwner()
                      SbVec3f(1,1,1));
 
 #ifdef FD_DEBUG
-  std::cout <<" Joint location:" << FdConverter::toFaMat34(trans) << std::endl;
+  std::cout <<"\nJoint location:"<< FdConverter::toFaMat34(trans) << std::endl;
 #endif
 
   ((FmIsPositionedBase*)itsFmOwner)->setGlobalCS(FdConverter::toFaMat34(trans));
@@ -339,10 +339,8 @@ void FdSimpleJoint::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& d
     }
   }
 
-  FaVec3 tempVec1, tempVec2;
   SbVec3f translation(0,0,0);
   SbRotation tempRotation;
-  double angle = 0.0;
 
   switch (dof.getType())
     {
@@ -352,22 +350,23 @@ void FdSimpleJoint::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& d
       break;
 
     case BALL:
-      tempVec1 = p1 - dof.getCenter();
-      if (tempVec1.isZero()) return;
-
-      tempVec2 = p2 - dof.getCenter();
-      if (tempVec2.isZero()) return;
-
-      // We will compute sensible rotation
-      tempRotation.setValue(FdConverter::toSbVec3f(tempVec1),
-                            FdConverter::toSbVec3f(tempVec2));
+      if (FaVec3 tmp1 = p1 - dof.getCenter(); !tmp1.isZero())
+      {
+	if (FaVec3 tmp2 = p2 - dof.getCenter(); !tmp2.isZero())
+	  tempRotation.setValue(FdConverter::toSbVec3f(tmp1),
+				FdConverter::toSbVec3f(tmp2));
+	else
+	  return;
+      }
+      else
+	return;
       break;
 
     case REV:
-      // We will compute sensible rotation
-      angle = dof.rotationAngle(p1,p2);
-      if (fabs(angle) <= 1.0e-6) return;
-      tempRotation.setValue(FdConverter::toSbVec3f(dof.getDirection()),(float)angle);
+      if (double angle = dof.rotationAngle(p1,p2); fabs(angle) > 1.0e-6)
+        tempRotation.setValue(FdConverter::toSbVec3f(dof.getDirection()),(float)angle);
+      else
+	return;
       break;
     }
 
@@ -414,8 +413,6 @@ int FdSimpleJoint::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
 
   int currentDOFs = FREE;
 
-  SbVec3f tempVec1, tempVec2;
-
   std::vector<FmSticker*> stickers;
   ((FmSMJointBase*)itsFmOwner)->getItsMasterTriad()->getStickers(stickers);
   ((FmSMJointBase*)itsFmOwner)->getSlaveTriad()->getStickers(stickers);
@@ -429,27 +426,27 @@ int FdSimpleJoint::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
 	break;
 
       case BALL:
-	tempVec1 = FdConverter::toSbVec3f(sticker->getPoint());
-	if (centerPoint != tempVec1)
-	  {
-	    direction = centerPoint - tempVec1;
-	    currentDOFs = REV;
-	  }
+	if (SbVec3f tmp = FdConverter::toSbVec3f(sticker->getPoint());
+	    centerPoint != tmp)
+	{
+	  direction = centerPoint - tmp;
+	  currentDOFs = REV;
+	}
 	break;
 
       case REV:
 	// Test if sticker is on revolute axis.
 	// Get vector between sticker and RevJoint
-	tempVec2 = centerPoint - FdConverter::toSbVec3f(sticker->getPoint());
-	if (tempVec2.length())
-	  {
-	    // Get RevJoint axis direction
-	    tempVec1 = direction;
-	    tempVec1.normalize();
-	    tempVec2.normalize();
-	    if (fabsf(tempVec1.dot(tempVec2)) != 1.0f)
-	      currentDOFs = RIGID;
-	  }
+	if (SbVec3f tmp2 = centerPoint - FdConverter::toSbVec3f(sticker->getPoint());
+	    tmp2.length() > 0.0f)
+	{
+	  // Get RevJoint axis direction
+	  SbVec3f tmp1 = direction;
+	  tmp1.normalize();
+	  tmp2.normalize();
+	  if (fabsf(tmp1.dot(tmp2)) != 1.0f)
+	    currentDOFs = RIGID;
+	}
 	break;
 
       case RIGID:

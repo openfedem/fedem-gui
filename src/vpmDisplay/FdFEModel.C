@@ -86,9 +86,11 @@ void FdFEModel::addGroupPart(FdFEGroupPartSet::GroupPartType type,
   if (!groupPartData)
     return;
 
-  if (!groupPartData->shapeIndexes.empty())
+  FdFEGroupPart* newFdGP = this->createGroupPart();
+  if (groupPartData->shapeIndexes.empty())
+    newFdGP->setGroupPartData(groupPartData);
+  else
   {
-    FdFEGroupPart* newFdGP = this->createGroupPart();
     newFdGP->setFaceIndexes(!groupPartData->isLineShape,
                             groupPartData->shapeIndexes);
 
@@ -96,27 +98,22 @@ void FdFEModel::addGroupPart(FdFEGroupPartSet::GroupPartType type,
       newFdGP->setLinePattern(0xffff);
 
     groupPartData->visualModel = newFdGP;
-    myGroupParts.addGroupPart(type,newFdGP);
   }
-  else
-  {
-    FdFEGroupPart* newFdGP = this->createGroupPart();
-    newFdGP->setGroupPartData(groupPartData);
-    myGroupParts.addGroupPart(type,newFdGP);
-  }
+
+  myGroupParts.addGroupPart(type,newFdGP);
 }
 
 
-void FdFEModel::addLineShape(const std::vector< std::vector<int> >& indices,
+void FdFEModel::addLineShape(const std::vector<IntVec>& indices,
                              unsigned short int pattern)
 {
-  if (!indices.empty())
-  {
-    FdFEGroupPart* newFdGP = this->createGroupPart();
-    newFdGP->setFaceIndexes(false,indices);
-    newFdGP->setLinePattern(pattern);
-    myGroupParts.addGroupPart(FdFEGroupPartSet::RED_OUTLINE_LINES,newFdGP);
-  }
+  if (indices.empty())
+    return;
+
+  FdFEGroupPart* newFdGP = this->createGroupPart();
+  newFdGP->setFaceIndexes(false,indices);
+  newFdGP->setLinePattern(pattern);
+  myGroupParts.addGroupPart(FdFEGroupPartSet::RED_OUTLINE_LINES,newFdGP);
 }
 
 
@@ -161,7 +158,7 @@ void FdFEModel::show(bool doShow)
 }
 
 
-void FdFEModel::setDrawDetail(DetailType detailLevel)
+void FdFEModel::setDrawDetail(FdFEVisControl::DetailType detailLevel)
 {
   this->setVisParam(myVisParams.detailLevel,
                     &FdFEVisControl::setDrawDetail,
@@ -169,7 +166,7 @@ void FdFEModel::setDrawDetail(DetailType detailLevel)
 }
 
 
-void FdFEModel::setLineDetail(DetailType detailLevel)
+void FdFEModel::setLineDetail(FdFEVisControl::DetailType detailLevel)
 {
   this->setVisParam(myVisParams.lineDetailLevel,
                     &FdFEVisControl::setLineDetail,
@@ -177,7 +174,7 @@ void FdFEModel::setLineDetail(DetailType detailLevel)
 }
 
 
-void FdFEModel::setDrawStyle(DrawStyleType drawStyle)
+void FdFEModel::setDrawStyle(FdFEVisControl::DrawStyleType drawStyle)
 {
   this->setVisParam(myVisParams.drawStyle,
                     &FdFEVisControl::setDrawStyle,
@@ -200,7 +197,8 @@ void FdFEModel::setLook(const FFdLook& aLook)
 
 
 void FdFEModel::highlight(bool isToHighlight,
-                          DetailType type, const FdColor& color)
+                          FdFEVisControl::DetailType type,
+                          const FdColor& color)
 {
   if (IAmHighlighted == isToHighlight) return;
 

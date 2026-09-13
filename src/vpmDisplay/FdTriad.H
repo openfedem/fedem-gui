@@ -58,6 +58,8 @@ protected:
   virtual void showHighlight();
   virtual void hideHighlight();
 
+  bool updateTriadTopology(bool updateChildrenDisplay, FaMat34* xfmx = NULL);
+
 private:
   SoBaseKit* itsTrKit;
 
@@ -65,8 +67,6 @@ private:
 
   FFaOperation<FaMat34>* myPosMxReadOp;
   std::vector<FaMat34*>  myResultsFrames;
-
-  FaMat34& findOrCreateXfMx(size_t frameIdx);
 };
 
 #endif
