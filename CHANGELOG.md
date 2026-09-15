@@ -8,6 +8,21 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.2.0] (2026-09-15)
+
+### :rocket: Initial release of FEDEM R8.2
+
+The dynamics solver in this release can perform eigenvalue analysis
+while accounting for the control system. This feature is currently
+activated by specifying the command-line options `-2nStSp -ctrlSysEigFlag=1`
+in the Dynamics Solver field in the Additional Solver Options dialog box.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-gui/issues/154:
+  Invalid triad and joint visualization if attached to ground
+  and the Earth link position is changed.
+
 ## [fedem-8.1.7] (2026-08-15)
 
 ### :rocket: Added
@@ -141,9 +156,9 @@ the various GUI components is now complete, also for all the property views.
 ### :bug: Fixed
 
 - The `Qt6OpenGLWidgets.dll` file is missing in the Windows installation.
-- The GUI freezes when the Airfoil Browser dialog is launched on Windows.
-- Some GUI components appear and disappear instantly when the Dynamics Solver dialog is launched the first time.
-- The "File of type:" menu in the file selection dialog contains "All files (*)" only.
+- The GUI freezes when the Airfoil Browser dialog box is opened on Windows.
+- Some GUI components appear and disappear instantly when the Solver dialog box is opened the first time in a session.
+- The "File of type:" menu in the file selection dialogs contains "All files (*)" only.
 - When creating a sea wave function, the default function type is wrong (should be Sine).
 - Issue https://github.com/openfedem/fedem-gui/issues/83:
   Deleting and pasting does not work for Linear derivative functions.
@@ -260,7 +275,7 @@ before doing this, as they are not included in the FEDEM distribution:
   Auto-detection of triads along a prismatic/cylindric joints have tolerance issues.
 - Issue https://github.com/openfedem/fedem-gui/issues/45 :
   Copy curves by dragging into a new Graph group does not work.
-- Minor adjustments of GUI fields in the Solver setup dialog box
+- Minor adjustments of GUI fields in the Solver dialog box
   and in the Scale and Shift tab of the Curve property editor panel.
 
 ## [fedem-8.0.7] (2024-11-17)
@@ -430,3 +445,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.5]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.4...fedem-8.1.5
 [fedem-8.1.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.5...fedem-8.1.6
 [fedem-8.1.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.6...fedem-8.1.7
+[fedem-8.2.0]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.7...fedem-8.2.0

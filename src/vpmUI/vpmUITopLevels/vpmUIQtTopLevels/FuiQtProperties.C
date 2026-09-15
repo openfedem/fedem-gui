@@ -923,7 +923,7 @@ bool FuiQtStartGuide::initWidgets()
   if (!fileOk)
   {
     std::cerr <<" *** Can't open file "<< htmFile.toStdString() << std::endl;
-    strData = "Welcome to <i>FEDEM 8.1</i>";
+    strData = "Welcome to <i>FEDEM 8.2</i>";
   }
   else while (!file.atEnd())
     strData.append(file.readLine().data());
@@ -933,7 +933,7 @@ bool FuiQtStartGuide::initWidgets()
   strData.replace(" src='", " src='" + appPath);
   // Set fields
   myLogoImage->setPixMap(startGuideLogo_xpm,true);
-  myHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.1</b></i></font>");
+  myHeading->setLabel("<font color='#008cff' size='5'><i><b>Welcome to FEDEM 8.2</b></i></font>");
   myContentLabel->setLabel(strData.toStdString());
   myContentLabel->setLinkActivatedCB(FFaDynCB1S(onURLActivated,const std::string&));
   myLogoBorderRight->setPixMap(startGuideBorderRight_xpm,true);
