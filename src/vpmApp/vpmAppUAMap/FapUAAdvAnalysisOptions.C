@@ -93,10 +93,9 @@ void FapUAAdvAnalysisOptions::setDBValues(FFuaUIValues* values)
   else
     analysis->newmarkDamping.setValue(FmAnalysis::NONE);
   analysis->ignoreTolerance.setValue(intOpToggles[FuiAdvAnalysisOptions::RADIO_IGNORE_TOL]);
+  analysis->defaultShadowPosAlg.setValue(intOptValues[FuiAdvAnalysisOptions::SHADOW_POS_ALG]);
   analysis->useDynStressStiffening.setValue(intOpToggles[FuiAdvAnalysisOptions::DYN_STRESS_STIFF]);
   analysis->useMassCorrection.setValue(intOpToggles[FuiAdvAnalysisOptions::MOMENT_CORRECTION]);
-
-  analysis->defaultShadowPosAlg.setValue(advValues->optionMenuValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::SHADOW_POS_ALG]);
 
   intOptStatus[FuiAdvAnalysisOptions::NUM_ITERS] = analysis->setForceNumIt(intOptValues[FuiAdvAnalysisOptions::NUM_ITERS]);
   intOptStatus[FuiAdvAnalysisOptions::MAX_NUM_ITERS] = analysis->setMaxNumIt(intOptValues[FuiAdvAnalysisOptions::MAX_NUM_ITERS]);
@@ -241,19 +240,22 @@ void FapUAAdvAnalysisOptions::getDBValues(FFuaUIValues* values)
   };
 
   // Time options
+  BoolMap&    timeOpToggles = advValues->toggleValues[FuiAdvAnalysisOptions::TIMEOPTIONS];
+  IntegerMap& timeIntValues = advValues->integerValues[FuiAdvAnalysisOptions::TIMEOPTIONS];
+  DoubleMap&  timeOptValues = advValues->doubleValues[FuiAdvAnalysisOptions::TIMEOPTIONS];
 
-  advValues->doubleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::START] = analysis->startTime.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::STOP] = analysis->stopTime.getValue();
+  timeOptValues[FuiAdvAnalysisOptions::START] = analysis->startTime.getValue();
+  timeOptValues[FuiAdvAnalysisOptions::STOP]  = analysis->stopTime.getValue();
   advValues->myTimeIncValue = analysis->timeIncr.getValue();
   advValues->myEditTimeIncEngineCB = FFaDynCB1S(FapUAQuery::onQIFieldButtonCB,FuiQueryInputFieldValues&);
-  advValues->doubleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::MIN_TIME_INCR] = analysis->minTimeIncr.getValue();
+  timeOptValues[FuiAdvAnalysisOptions::MIN_TIME_INCR] = analysis->minTimeIncr.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::CUTBACK] = analysis->doCutback.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::CUTBACK_FACTOR] = analysis->cutbackFactor.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::CUTBACK_STEPS] = analysis->cutbackSteps.getValue();
+  timeOpToggles[FuiAdvAnalysisOptions::CUTBACK]        = analysis->doCutback.getValue();
+  timeOptValues[FuiAdvAnalysisOptions::CUTBACK_FACTOR] = analysis->cutbackFactor.getValue();
+  timeIntValues[FuiAdvAnalysisOptions::CUTBACK_STEPS]  = analysis->cutbackSteps.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::RESTART] = analysis->doRestart.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::TIMEOPTIONS][FuiAdvAnalysisOptions::RESTART_TIME] = analysis->restartTime.getValue();
+  timeOpToggles[FuiAdvAnalysisOptions::RESTART]      = analysis->doRestart.getValue();
+  timeOptValues[FuiAdvAnalysisOptions::RESTART_TIME] = analysis->restartTime.getValue();
 
   advValues->myTimeIncQuery = FapUAEngineQuery::instance();
   advValues->mySelectedTimeEngine = analysis->getEngine();
@@ -262,29 +264,38 @@ void FapUAAdvAnalysisOptions::getDBValues(FFuaUIValues* values)
 #endif
 
   // Integration options
+  BoolMap&    intOpToggles = advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS];
+  IntegerMap& intOptValues = advValues->integerValues[FuiAdvAnalysisOptions::INTOPTIONS];
+  DoubleMap&  intOptReals  = advValues->doubleValues[FuiAdvAnalysisOptions::INTOPTIONS];
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::NEWMARK] = analysis->newmarkDamping.getValue() == FmAnalysis::NONE;
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::HHT_ALPHA] = analysis->newmarkDamping.getValue() == FmAnalysis::HHT_ALPHA;
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::GENERALIZED_ALPHA] = analysis->newmarkDamping.getValue() == FmAnalysis::GENERALIZED_ALPHA;
-  advValues->doubleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::HHT_ALPHA] = analysis->newmarkFactors.getValue().first;
-  advValues->doubleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::GENERALIZED_ALPHA] = analysis->newmarkFactors.getValue().second;
+  switch (analysis->newmarkDamping.getValue()) {
+  case FmAnalysis::NONE:
+    intOpToggles[FuiAdvAnalysisOptions::NEWMARK] = true;
+    break;
+  case FmAnalysis::HHT_ALPHA:
+    intOpToggles[FuiAdvAnalysisOptions::HHT_ALPHA] = true;
+    break;
+  case FmAnalysis::GENERALIZED_ALPHA:
+    intOpToggles[FuiAdvAnalysisOptions::GENERALIZED_ALPHA] = true;
+    break;
+  }
+  intOptReals[FuiAdvAnalysisOptions::HHT_ALPHA]         = analysis->newmarkFactors.getValue().first;
+  intOptReals[FuiAdvAnalysisOptions::GENERALIZED_ALPHA] = analysis->newmarkFactors.getValue().second;
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::RADIO_USE_TOL] = !analysis->ignoreTolerance.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::RADIO_IGNORE_TOL] = analysis->ignoreTolerance.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::DYN_STRESS_STIFF] = analysis->useDynStressStiffening.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::MOMENT_CORRECTION] = analysis->useMassCorrection.getValue();
+  intOpToggles[FuiAdvAnalysisOptions::RADIO_IGNORE_TOL] = analysis->ignoreTolerance.getValue();
 
-  advValues->integerValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::NUM_ITERS] = analysis->fixedNumIt.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::MAX_NUM_ITERS] = analysis->maxNumIt.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::MIN_NUM_ITERS] = analysis->minNumIt.getValue();
+  intOptValues[FuiAdvAnalysisOptions::NUM_ITERS]     = analysis->fixedNumIt.getValue();
+  intOptValues[FuiAdvAnalysisOptions::MAX_NUM_ITERS] = analysis->maxNumIt.getValue();
+  intOptValues[FuiAdvAnalysisOptions::MIN_NUM_ITERS] = analysis->minNumIt.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::RADIO_FIXED_MATRIX_UPDATE] = analysis->useFixedMatrixUpdates.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::RADIO_VAR_MATRIX_UPDATE] = !analysis->useFixedMatrixUpdates.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::MIN_MATRIX_UPDATE] = analysis->minMatrixUpdates.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::MAX_NO_MATRIX_UPDATE] = analysis->maxSequentialNoMatrixUpdates.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::TOL_MATRIX_UPDATE] = analysis->tolMatrixUpdateFactor.getValue();
+  intOpToggles[FuiAdvAnalysisOptions::RADIO_FIXED_MATRIX_UPDATE] = analysis->useFixedMatrixUpdates.getValue();
+  intOptValues[FuiAdvAnalysisOptions::MIN_MATRIX_UPDATE]         = analysis->minMatrixUpdates.getValue();
+  intOptValues[FuiAdvAnalysisOptions::MAX_NO_MATRIX_UPDATE]      = analysis->maxSequentialNoMatrixUpdates.getValue();
+  intOptReals[FuiAdvAnalysisOptions::TOL_MATRIX_UPDATE]          = analysis->tolMatrixUpdateFactor.getValue();
 
-  advValues->optionMenuValues[FuiAdvAnalysisOptions::INTOPTIONS][FuiAdvAnalysisOptions::SHADOW_POS_ALG] = analysis->defaultShadowPosAlg.getValue();
+  intOptValues[FuiAdvAnalysisOptions::SHADOW_POS_ALG]    = analysis->defaultShadowPosAlg.getValue();
+  intOpToggles[FuiAdvAnalysisOptions::DYN_STRESS_STIFF]  = analysis->useDynStressStiffening.getValue();
+  intOpToggles[FuiAdvAnalysisOptions::MOMENT_CORRECTION] = analysis->useMassCorrection.getValue();
 
   // Convergence options
 
@@ -299,60 +310,70 @@ void FapUAAdvAnalysisOptions::getDBValues(FFuaUIValues* values)
   getConvOption(FuiAdvAnalysisOptions::MAX_EN, analysis->tolEnergyMax.getValue());
 
   // Eigen options
+  BoolMap&    eigOpToggles = advValues->toggleValues[FuiAdvAnalysisOptions::EIGENOPTIONS];
+  IntegerMap& eigIntValues = advValues->integerValues[FuiAdvAnalysisOptions::EIGENOPTIONS];
+  DoubleMap&  eigOptValues = advValues->doubleValues[FuiAdvAnalysisOptions::EIGENOPTIONS];
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::EMODE_SOL] = analysis->solveEigenvalues.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::EMODE_DAMPED] = analysis->dampedEigenvalues.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::EMODE_BC] = analysis->useBCsOnEigenvalues.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::EMODE_STRESS_STIFF] = analysis->useEigStressStiffening.getValue();
+  eigOpToggles[FuiAdvAnalysisOptions::EMODE_SOL]          = analysis->solveEigenvalues.getValue();
+  eigOpToggles[FuiAdvAnalysisOptions::EMODE_DAMPED]       = analysis->dampedEigenvalues.getValue();
+  eigOpToggles[FuiAdvAnalysisOptions::EMODE_BC]           = analysis->useBCsOnEigenvalues.getValue();
+  eigOpToggles[FuiAdvAnalysisOptions::EMODE_STRESS_STIFF] = analysis->useEigStressStiffening.getValue();
 
-  advValues->doubleValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::EMODE_INTV] = analysis->eigenSolveTimeInterval.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::EMODE_SHIFT_FACT] = analysis->eigenvalueShiftFactor.getValue()/(pi+pi);
+  eigOptValues[FuiAdvAnalysisOptions::EMODE_INTV]       = analysis->eigenSolveTimeInterval.getValue();
+  eigOptValues[FuiAdvAnalysisOptions::EMODE_SHIFT_FACT] = analysis->eigenvalueShiftFactor.getValue()/(pi+pi);
 
-  advValues->integerValues[FuiAdvAnalysisOptions::EIGENOPTIONS][FuiAdvAnalysisOptions::NUM_EMODES] = analysis->numEigenmodes.getValue();
+  eigIntValues[FuiAdvAnalysisOptions::NUM_EMODES] = analysis->numEigenmodes.getValue();
 
   // Equilibrium options
+  BoolMap&    eqOpToggles = advValues->toggleValues[FuiAdvAnalysisOptions::EQOPTIONS];
+  IntegerMap& eqIntValues = advValues->integerValues[FuiAdvAnalysisOptions::EQOPTIONS];
+  DoubleMap&  eqOptValues = advValues->doubleValues[FuiAdvAnalysisOptions::EQOPTIONS];
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::EQL_ITER] = analysis->solveInitEquil.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::EQL_STRESS_STIFF] = analysis->useEquStressStiffening.getValue();
+  eqOpToggles[FuiAdvAnalysisOptions::EQL_ITER]         = analysis->solveInitEquil.getValue();
+  eqOpToggles[FuiAdvAnalysisOptions::EQL_STRESS_STIFF] = analysis->useEquStressStiffening.getValue();
 
-  advValues->doubleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::EQL_ITER_TOL] = analysis->staticEqlTol.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::ITER_STEP_SIZE] = analysis->iterStepLimit.getValue();
+  eqOptValues[FuiAdvAnalysisOptions::EQL_ITER_TOL]   = analysis->staticEqlTol.getValue();
+  eqOptValues[FuiAdvAnalysisOptions::ITER_STEP_SIZE] = analysis->iterStepLimit.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::RAMP_UP] = analysis->smoothRamp.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::RAMP_GRAV] = analysis->rampGrav.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::RAMP_STEPS] = analysis->rampSteps.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::RAMP_VMAX] = analysis->rampVmax.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::RAMP_LENGTH] = analysis->rampLength.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::EQOPTIONS][FuiAdvAnalysisOptions::RAMP_DELAY] = analysis->rampPause.getValue();
+  eqOpToggles[FuiAdvAnalysisOptions::RAMP_UP]     = analysis->smoothRamp.getValue();
+  eqOpToggles[FuiAdvAnalysisOptions::RAMP_GRAV]   = analysis->rampGrav.getValue();
+  eqIntValues[FuiAdvAnalysisOptions::RAMP_STEPS]  = analysis->rampSteps.getValue();
+  eqOptValues[FuiAdvAnalysisOptions::RAMP_VMAX]   = analysis->rampVmax.getValue();
+  eqOptValues[FuiAdvAnalysisOptions::RAMP_LENGTH] = analysis->rampLength.getValue();
+  eqOptValues[FuiAdvAnalysisOptions::RAMP_DELAY]  = analysis->rampPause.getValue();
 
   // Output options
+  BoolMap& outputToggles = advValues->toggleValues[FuiAdvAnalysisOptions::OUTPUTOPTIONS];
 
   advValues->modelFilePath  = FmDB::getMechanismObject()->getAbsModelFilePath() + FFaFilePath::getPathSeparator();
   advValues->autoCurveExportFileName = analysis->autoCurveExportFileName.getValue();
   advValues->curveFileFormat = analysis->autoCurveExportFileFormat.getValue();
   advValues->autoVTFFileName = analysis->solverVTFname.getValue();
   advValues->autoVTFFileType = FapLicenseManager::checkVTFExportLicense(false) ? (int)analysis->solverVTFtype.getValue() : -1;
-  advValues->toggleValues[FuiAdvAnalysisOptions::OUTPUTOPTIONS][FuiAdvAnalysisOptions::AUTO_CURVE_EXPORT] = analysis->autoCurveExportSwitch.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::OUTPUTOPTIONS][FuiAdvAnalysisOptions::AUTO_VTF_EXPORT] = analysis->autoSolverVTFExport.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::OUTPUTOPTIONS][FuiAdvAnalysisOptions::AUTO_ANIM] = analysis->autoAnimateSwitch.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::OUTPUTOPTIONS][FuiAdvAnalysisOptions::OVERWRITE] = analysis->overwriteResults.getValue();
+  outputToggles[FuiAdvAnalysisOptions::AUTO_CURVE_EXPORT] = analysis->autoCurveExportSwitch.getValue();
+  outputToggles[FuiAdvAnalysisOptions::AUTO_VTF_EXPORT]   = analysis->autoSolverVTFExport.getValue();
+  outputToggles[FuiAdvAnalysisOptions::AUTO_ANIM] = analysis->autoAnimateSwitch.getValue();
+  outputToggles[FuiAdvAnalysisOptions::OVERWRITE] = analysis->overwriteResults.getValue();
 
   // Basic options
+  BoolMap&    basOpToggles = advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS];
+  IntegerMap& basIntValues = advValues->integerValues[FuiAdvAnalysisOptions::BASICOPTIONS];
+  DoubleMap&  basOptValues = advValues->doubleValues[FuiAdvAnalysisOptions::BASICOPTIONS];
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::IEQ_TOGGLE] = analysis->solveInitEquil.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::IEQ_TOGGLE] = analysis->solveInitEquil.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::TIME_TOGGLE] = analysis->dynamicsEnable.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::START] = analysis->startTime.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::STOP] = analysis->stopTime.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::STOP] = analysis->stopTimeEnable.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::TIME_TOGGLE] = analysis->dynamicsEnable.getValue();
+  basOptValues[FuiAdvAnalysisOptions::START] = analysis->startTime.getValue();
+  basOptValues[FuiAdvAnalysisOptions::STOP]  = analysis->stopTime.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::STOP]  = analysis->stopTimeEnable.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::QS_TOGGLE] = analysis->quasistaticEnable.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::QS_COMPLETE] = !analysis->quasistaticMode.getValue();
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::QS_UPTOTIME] = analysis->quasistaticMode.getValue();
-  advValues->doubleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::QS_UPTOTIME] = analysis->quasistaticUpToTime.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::QS_TOGGLE]   = analysis->quasistaticEnable.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::QS_COMPLETE] = !analysis->quasistaticMode.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::QS_UPTOTIME] = analysis->quasistaticMode.getValue();
+  basOptValues[FuiAdvAnalysisOptions::QS_UPTOTIME] = analysis->quasistaticUpToTime.getValue();
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::MODES_TOGGLE] = analysis->solveEigenvalues.getValue();
-  advValues->integerValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::MODES_COUNT] = analysis->numEigenmodes.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::MODES_TOGGLE] = analysis->solveEigenvalues.getValue();
+  basIntValues[FuiAdvAnalysisOptions::MODES_COUNT]  = analysis->numEigenmodes.getValue();
 
   std::vector<FmModelMemberBase*> objs;
   FmDB::getAllOfType(objs,FmDofLoad::getClassTypeID());
@@ -374,5 +395,5 @@ void FapUAAdvAnalysisOptions::getDBValues(FFuaUIValues* values)
       }
   }
 
-  advValues->toggleValues[FuiAdvAnalysisOptions::BASICOPTIONS][FuiAdvAnalysisOptions::FRA_TOGGLE] = advValues->haveFreqDomainLoads && analysis->solveFrequencyDomain.getValue();
+  basOpToggles[FuiAdvAnalysisOptions::FRA_TOGGLE] = advValues->haveFreqDomainLoads && analysis->solveFrequencyDomain.getValue();
 }

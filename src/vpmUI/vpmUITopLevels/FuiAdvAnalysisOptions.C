@@ -963,8 +963,8 @@ void FuiAdvAnalysisOptions::setMyUIValues(FuaAdvAnalysisOptionsValues* advValues
     }
   }
 
-  IntegerIter vi = advValues->optionMenuValues[INTOPTIONS].find(SHADOW_POS_ALG);
-  if (vi != advValues->optionMenuValues[INTOPTIONS].end())
+  IntegerIter vi = advValues->integerValues[INTOPTIONS].find(SHADOW_POS_ALG);
+  if (vi != advValues->integerValues[INTOPTIONS].end())
     shadowPosAlgMenu->selectOption(vi->second);
 
   this->myAdvTimeIncQueryField->setValue(advValues->myTimeIncValue);
@@ -1088,7 +1088,7 @@ bool FuiAdvAnalysisOptions::getMyUIValues(FuaAdvAnalysisOptionsValues* values)
       values->toggleValues[iOpt][t.first] = t.second->getValue();
   }
 
-  values->optionMenuValues[INTOPTIONS][SHADOW_POS_ALG] = shadowPosAlgMenu->getSelectedOption();
+  values->integerValues[INTOPTIONS][SHADOW_POS_ALG] = shadowPosAlgMenu->getSelectedOption();
 
   if (addOptions)
     values->addOptions = addOptions->getValue();
