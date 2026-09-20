@@ -13,6 +13,7 @@
 #include "vpmDB/FmPart.H"
 #ifdef USE_INVENTOR
 #include "vpmDisplay/FdPart.H"
+#include "vpmDisplay/FdTriad.H"
 #include "vpmDisplay/FdAnimateModel.H"
 #include "vpmDisplay/FdFEModel.H"
 #endif
@@ -582,7 +583,7 @@ bool Fap::modesAnimation (FmAnimation* animation,
   int n, baseId, vtxId;
   double R, c, s, t;
   FaMat33 linkCS, rotMat;
-  FaMat34 linkPos, triRelPos, triPos, curPos;
+  FaMat34 linkPos, triRelPos, triPos, curPos, tmpPos;
   std::array<FmTriad*,3>  refTriad;
   std::array<FaMat34,3>   triadPos;
   std::array<FaVec3,3>    offset, point, tra, rot;
@@ -695,6 +696,9 @@ bool Fap::modesAnimation (FmAnimation* animation,
       std::vector<FaVec3Vec> eigVec(1+nComp);
       if (getEigenVector(rdb,part,modeNr,modeType,eigVec))
       {
+        std::vector<FmTriad*> triads;
+        part->getTriads(triads);
+
         // Expanded mode shape was found
         const VertexVec& vertices = part->getLinkHandler()->getVertexes();
         FaVec3Vec vtxFrame(vertices.size());
@@ -780,17 +784,30 @@ bool Fap::modesAnimation (FmAnimation* animation,
 	  if (modeType == FmAnimation::SYSTEM_MODES)
 	  {
 	    vtxId = 0;
-	    curPos = curPos.inverse()*linkPos;
+	    tmpPos = curPos.inverse()*linkPos;
 	    for (FaVec3& dis : vtxFrame)
 	    {
 	      const FaVec3& x = *vertices[vtxId++];
-	      dis = curPos * (x + dis) - x;
+	      dis = tmpPos * (x + dis) - x;
 	    }
 	  }
 
 #ifdef USE_INVENTOR
           // Set frame deformations for this part
           visMod->setResultDeformation(frameId,vtxFrame);
+
+          // Issue #157: Set frame deformation for triads attached to this part.
+          // The translation is taken from the vertex displacement associated
+          // with the FE node the triad is defined on. The orientation will be
+          // equal to that of the part the triad sits on (simplification).
+          for (FmTriad* triad : triads)
+            if (FFlNode* node = triad->getFENode(); node)
+              if ((vtxId = node->getVertexID()) >= 0)
+              {
+                FdTriad* visMod = static_cast<FdTriad*>(triad->getFdPointer());
+                tmpPos = triad->getLocalCS() + vtxFrame[vtxId];
+                visMod->setResultTransform(frameId,curPos*tmpPos);
+              }
 #endif
         }
         continue; // go on with the next part
