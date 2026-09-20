@@ -290,8 +290,7 @@ void FapAnimationCmds::show(FmAnimation* anim, bool showUI)
   std::vector<FmLink*> links;
   FmDB::getAllLinks(links);
   for (FmLink* link : links)
-    if (link->getFdPointer())
-      objs.push_back(dynamic_cast<FdAnimatedBase*>(link->getFdPointer()));
+    objs.push_back(dynamic_cast<FdAnimatedBase*>(link->getFdPointer()));
 
   if (FmDB::getActiveViewSettings()->visibleTriads())
   {
@@ -300,13 +299,12 @@ void FapAnimationCmds::show(FmAnimation* anim, bool showUI)
     // Only add triads that are not attached.
     // Triads attached to links are animated indirectly via the link
     for (FmTriad* triad : triads)
-      if (triad->getFdPointer() && !triad->getOwnerLink(0))
+      if (!triad->getOwnerLink(0) || anim->isModesAnimation.getValue())
         objs.push_back(dynamic_cast<FdAnimatedBase*>(triad->getFdPointer()));
   }
 
   // Sea wave visualization
-  FmSeaState* seaState = FmDB::getSeaStateObject(false);
-  if (seaState && seaState->getFdPointer())
+  if (FmSeaState* seaState = FmDB::getSeaStateObject(false); seaState)
     objs.push_back(dynamic_cast<FdAnimatedBase*>(seaState->getFdPointer()));
 
   ourAnimator->setAnimationObjects(objs);
