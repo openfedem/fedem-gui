@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "vpmApp/vpmAppDisplay/FapAnimationCreator.H"
+#include "vpmApp/vpmAppDisplay/FapModesAnimation.H"
 #include "vpmApp/vpmAppDisplay/FFaLegendMapper.H"
 #include "vpmApp/vpmAppDisplay/FapVTFFile.H"
 #include "vpmApp/vpmAppProcess/FapSimEventHandler.H"
@@ -572,7 +573,7 @@ bool FapAnimationCreator::loadAnimation(FmAnimation* animation,
   // Modes animation is handled by a separate function
 
   if (animation && animation->isModesAnimation.getValue())
-    return FapAnimationCreator::modesAnimation(animation,animator,userCancelled);
+    return Fap::modesAnimation(animation,animator,userCancelled);
 
 #ifdef FAP_DEBUG
   std::cout <<"\n"<< std::string(80,'=')
@@ -1666,9 +1667,9 @@ bool FapAnimationCreator::exportToVTF(FmAnimation* animation,
 
     // Read and write link transformations
     std::map<int,FaMat34> mxLink;
-    for (i = 0; i < nLinks; i++)
-      FapAnimationCreator::readMatrix(mxVarRef[i],mxLink[myLinks[i]->getBaseID()]);
-    status = vtf.writeTransformations(mxLink);
+    for (i = 0; i < nLinks && status; i++)
+      status = mxVarRef[i]->readVar(mxLink[myLinks[i]->getBaseID()]);
+    status &= vtf.writeTransformations(mxLink);
     if (!status) break;
 
     // Read and write FE part deformations
