@@ -347,7 +347,6 @@ public:
   std::array<IntegerMap,FuiAdvAnalysisOptions::NOPTIONS> integerValues;
   std::array<BoolMap   ,FuiAdvAnalysisOptions::NOPTIONS> valueStatus;
   std::array<BoolMap   ,FuiAdvAnalysisOptions::NOPTIONS> toggleValues;
-  std::array<IntegerMap,FuiAdvAnalysisOptions::NOPTIONS> optionMenuValues;
 
   double myTimeIncValue = 0.0;
   FFuaQueryBase* myTimeIncQuery = NULL;

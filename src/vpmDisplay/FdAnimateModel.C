@@ -96,15 +96,19 @@ FdAnimateModel::~FdAnimateModel(void)
 
 void FdAnimateModel::setAnimationObjects(const std::vector<FdAnimatedBase*>& objs)
 {
-  myObjsToAnimate = objs;
+  myObjsToAnimate.clear();
+  myObjsToAnimate.reserve(objs.size());
   for (FdAnimatedBase* obj : objs)
-  {
-    obj->showFringes(IAmShowingFringes);
-    obj->showDeformations(IAmShowingDeformations);
-    obj->showLinkMotion(IAmShowingLinkMotion);
-    obj->showTriadMotion(IAmShowingTriadMotion);
-  }
+    if (obj)
+    {
+      obj->showFringes(IAmShowingFringes);
+      obj->showDeformations(IAmShowingDeformations);
+      obj->showLinkMotion(IAmShowingLinkMotion);
+      obj->showTriadMotion(IAmShowingTriadMotion);
+      myObjsToAnimate.push_back(obj);
+    }
 }
+
 
 unsigned long FdAnimateModel::addFrame(float time,  bool doShowIt)
 {

@@ -17,12 +17,9 @@ class FmModelMemberBase;
 class FmLink;
 class FmPart;
 class FmTriad;
-class FdTriad;
 class FmAnimation;
 class FdAnimateModel;
-class FFlLinkHandler;
 class FFrExtractor;
-class FFrEntryBase;
 class FFaLegendMapper;
 class FFaProfiler;
 class FaMat34;
@@ -31,9 +28,9 @@ class FaVec3;
 
 class FapAnimationCreator
 {
-  typedef std::vector<FaVec3> FaVec3Vec;
-  typedef std::vector<double> DoubleVec;
-  typedef std::set<double>    DoubleSet;
+  using FaVec3Vec = std::vector<FaVec3>;
+  using DoubleVec = std::vector<double>;
+  using DoubleSet = std::set<double>;
 
 public:
   FapAnimationCreator();
@@ -96,43 +93,6 @@ private:
   bool readFringeData(DoubleVec& values, FmPart* part);
   bool readFringeData(std::vector<DoubleVec>& values, FmPart* part);
   void finishFringeReading(FmPart* part);
-
-
-  // Modes animation methods (implemented in FapModesAnimation.C) :
-
-  static bool modesAnimation(FmAnimation* animation, FdAnimateModel* animator,
-                             bool& userCancelled);
-
-  static int modesInitAnim(FmAnimation* animation, FdAnimateModel* animator,
-                           FFrExtractor* rdb,
-                           const std::vector<FmModelMemberBase*>& objs,
-                           double& ksi, double& omega,
-                           double& Tmax, double& Tinc);
-
-  static int getEigenValue(FFrExtractor* rdb, FmLink*& foundLink,
-                           const std::vector<FmModelMemberBase*>& objs,
-                           int modeNr, int modeType,
-                           double& Re, double& Im);
-
-  static bool getPosition(FFrExtractor* rdb,
-                          const char* objType, int baseId,
-                          FaMat34& posMat);
-
-  static bool getEigenVector(FFrExtractor* rdb,
-                             const char* objType, int baseId, int modeNr,
-                             FaVec3Vec& translation, FaVec3Vec& rotation);
-
-  static bool getEigenVector(FFrExtractor* rdb, FmPart* part,
-                             int modeNr, int modeType,
-                             std::vector<FaVec3Vec>& eigenVector);
-
-  static bool getDeformation(const FFrEntryBase* itemGroup,
-                             FaVec3& translation, FaVec3& rotation);
-
-  static bool getDeformation(const FFrEntryBase* itemGroup,
-                             FaVec3& deformation, bool rotation = false);
-
-  static bool readMatrix(FFrEntryBase* entry, FaMat34& mat);
 
 
   // Attributes used by time history and time summary animations

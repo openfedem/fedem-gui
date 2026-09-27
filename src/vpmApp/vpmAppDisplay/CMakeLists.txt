@@ -10,7 +10,7 @@ set ( LIB_ID vpmAppDisplay )
 
 ## Files with header and source with same name
 set ( COMPONENT_FILE_LIST FapAnimationCreator FFaLegendMapper
-                          FapVTFFile FapCGeoFile )
+                          FapModesAnimation FapVTFFile FapCGeoFile )
 if ( Qwt_LIBRARY )
   list ( APPEND COMPONENT_FILE_LIST FapGraphDataMap )
 endif ( Qwt_LIBRARY )
@@ -18,7 +18,7 @@ endif ( Qwt_LIBRARY )
 ## Pure header files, i.e., header files without a corresponding source file
 set ( HEADER_FILE_LIST FapReadCurveData )
 ## Pure implementation files, i.e., source files without corresponding header
-set ( SOURCE_FILE_LIST FapModesAnimation )
+set ( SOURCE_FILE_LIST )
 
 
 find_path ( STB_IMAGE_PATH stb_image.h PATHS "$ENV{STB_ROOT}" )
