@@ -10,12 +10,12 @@
  * AUTHOR: Jens LIEN
  * LAST MODIFIED: 16 nov 1995
  *
- * DESCRIPTION: Open Inventor node with pointer to an instance of 
+ * DESCRIPTION: Open Inventor node with pointer to an instance of
  * FdObject or inherited classes.
  *****************************************************************/
 
-#ifndef FDBACKPOINTER_H
-#define FDBACKPOINTER_H
+#ifndef FD_BACK_POINTER_H
+#define FD_BACK_POINTER_H
 
 #include <Inventor/nodes/SoSubNode.h>
 
@@ -32,18 +32,15 @@ class FdBackPointer : public SoNode
 public:
   static void init();
 
-  FdBackPointer();
-  FdBackPointer(FdObject*);
+  FdBackPointer(FdObject* pt = NULL);
 
-  FdObject* getPointer();
-  void setPointer(FdObject*);
+  FdObject* getPointer() { return structPt; }
+  void setPointer(FdObject* pt) { structPt = pt; }
 
-  // Dummy overloading of write() to avoid any output to file
-  virtual void write(SoWriteAction* writeAction);
+  // Dummy override to avoid any output to file
+  void write(SoWriteAction*) override {}
 
 private:
-  virtual ~FdBackPointer();
-
   FdObject* structPt;
 };
 
