@@ -57,7 +57,6 @@
 #include "vpmDisplay/FdAxialSprDa.H"
 #include "vpmDisplay/FdSimpleJoint.H"
 #include "vpmDisplay/FdRevJoint.H"
-#include "vpmDisplay/FdPrismJoint.H"
 #include "vpmDisplay/FdLinJoint.H"
 #include "vpmDisplay/FdTriad.H"
 #include "vpmDisplay/FdLoad.H"

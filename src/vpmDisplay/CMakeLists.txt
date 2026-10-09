@@ -93,7 +93,7 @@ set ( COMPONENT_FILE_LIST  FaDOF Fd2dPictureNode Fd2DPoints
                            FdLink FdLoad FdLoadDirEngine FdLoadTransformKit
                            FdMechanismKit FdMultiplyTransforms FdObjParser FdPart
                            FdPickedPoints FdPickFilter FdPipeSurface FdPipeSurfaceKit
-                           FdPrismJoint FdPtPMoveAnimator FdRefPlane FdRefPlaneKit
+                           FdPtPMoveAnimator FdRefPlane FdRefPlaneKit
                            FdRevJoint FdSeaState FdSeaStateKit
                            FdSelector FdSensor FdSimpleJoint FdSimpleJointKit
                            FdSprDaPlacer FdSprDaTransformKit FdSticker FdStrainRosette

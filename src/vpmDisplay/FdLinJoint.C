@@ -38,9 +38,10 @@
 
 
 Fmd_SOURCE_INIT(FDLINJOINT,FdLinJoint,FdObject);
+Fmd_SOURCE_INIT(FDPRISMJOINT,FdPrismJoint,FdLinJoint);
 
 
-FdLinJoint::FdLinJoint(FmMMJointBase* pt) : FdObject()
+FdLinJoint::FdLinJoint(FmMMJointBase* pt)
 {
   Fmd_CONSTRUCTOR_INIT(FdLinJoint);
 
@@ -58,6 +59,12 @@ FdLinJoint::FdLinJoint(FmMMJointBase* pt) : FdObject()
   // This is done in FdLinJoint::updateFdTopology()
   itsKit->setPart("slave.backPt",bp_pointer);
   itsKit->setPart("lineSymbol.backPt",bp_pointer);
+}
+
+
+FdPrismJoint::FdPrismJoint(FmMMJointBase* pt) : FdLinJoint(pt)
+{
+  Fmd_CONSTRUCTOR_INIT(FdPrismJoint);
 }
 
 
