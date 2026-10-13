@@ -93,8 +93,7 @@ bool FdLinJoint::updateFdTopology(bool updateChildrenDisplay)
 
   // Set up slave part of the joint:
 
-  FmTriad* triad = ((FmJointBase*)itsFmOwner)->getSlaveTriad();
-  if (triad)
+  if (FmTriad* triad = ((FmJointBase*)itsFmOwner)->getSlaveTriad(); triad)
   {
     transLink  = SO_GET_PART(triad->getFdPointer()->getKit(),
                              "firstTrans", SoTransform);
@@ -122,7 +121,7 @@ bool FdLinJoint::updateFdTopology(bool updateChildrenDisplay)
   // Set up master part of the joint:
 
   std::vector<FmTriad*> masters;
-  ((FmMMJointBase*)itsFmOwner)->getMasterTriads(masters);
+  ((FmJointBase*)itsFmOwner)->getMasterTriads(masters);
 
   SoNodeKitListPart* masterList = SO_GET_PART(itsKit,
                                               "masterList", SoNodeKitListPart);
@@ -279,7 +278,7 @@ void FdLinJoint::hideHighlight()
 #endif
 
   std::vector<FmTriad*> triads;
-  ((FmMMJointBase*)itsFmOwner)->getMasterTriads(triads);
+  ((FmJointBase*)itsFmOwner)->getMasterTriads(triads);
   triads.push_back(((FmJointBase*)itsFmOwner)->getSlaveTriad());
   for (FmTriad* triad : triads)
     triad->getFdPointer()->updateFdApperance();
@@ -289,7 +288,7 @@ void FdLinJoint::hideHighlight()
 void FdLinJoint::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
 {
   std::vector<FmTriad*> jointTriads;
-  ((FmMMJointBase*)itsFmOwner)->getMasterTriads(jointTriads);
+  ((FmJointBase*)itsFmOwner)->getMasterTriads(jointTriads);
   size_t nMasters = jointTriads.size();
   if (nMasters < 2) return;
 
@@ -312,7 +311,7 @@ void FdLinJoint::smartMove(const FaVec3& p1, const FaVec3& p2, const FaDOF& dof)
   };
 
   // Insert the slave triad into the array of master triads based on its position
-  FmTriad* slaveTriad = ((FmMMJointBase*)itsFmOwner)->getSlaveTriad();
+  FmTriad* slaveTriad = ((FmJointBase*)itsFmOwner)->getSlaveTriad();
   size_t i = 0;
   for (i = 0; i < nMasters; i++)
     if (i+1 == nMasters)
@@ -548,7 +547,7 @@ FaVec3 FdLinJoint::findSnapPoint(const SbVec3f& pointOnObject,
 {
   FaVec3 firstTrans = (((FmMMJointBase*)itsFmOwner)->getFirstMaster())->getGlobalTranslation();
   FaVec3 lastTrans  = (((FmMMJointBase*)itsFmOwner)->getLastMaster())->getGlobalTranslation();
-  FaVec3 slaveTrans = (((FmMMJointBase*)itsFmOwner)->getSlaveTriad())->getGlobalTranslation();
+  FaVec3 slaveTrans = (((FmJointBase*)itsFmOwner)->getSlaveTriad())->getGlobalTranslation();
 
   SbVec3f worldPoint;
   objToWorld.multVecMatrix(pointOnObject,worldPoint);
@@ -567,13 +566,14 @@ FaVec3 FdLinJoint::findSnapPoint(const SbVec3f& pointOnObject,
 
 int FdLinJoint::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
 {
-  bool mastersIsAttached = ((FmMMJointBase*)itsFmOwner)->isMasterAttachedToLink(true);
-  bool slaveIsAttached   = ((FmMMJointBase*)itsFmOwner)->isSlaveAttachedToLink(true);
+  bool mastersIsAttached = ((FmJointBase*)itsFmOwner)->isMasterAttachedToLink(true);
+  bool slaveIsAttached   = ((FmJointBase*)itsFmOwner)->isSlaveAttachedToLink(true);
   if (mastersIsAttached && slaveIsAttached)
     return RIGID;
 
-  int hasStickers = (((FmMMJointBase*)itsFmOwner)->getSlaveTriad())->hasStickers();
-  FaMat34 triadCS = (((FmMMJointBase*)itsFmOwner)->getSlaveTriad())->getGlobalCS();
+  FmTriad* slaveT = ((FmJointBase*)itsFmOwner)->getSlaveTriad();
+  int hasStickers = slaveT->hasStickers();
+  FaMat34 triadCS = slaveT->getGlobalCS();
   if (mastersIsAttached)
   {
     direction = FdConverter::toSbVec3f(triadCS[2]);
@@ -588,8 +588,10 @@ int FdLinJoint::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
       return hasStickers ? RIGID : PRISM;
   }
 
-  if ((((FmMMJointBase*)itsFmOwner)->getFirstMaster())->hasStickers()) hasStickers += 2;
-  if ((((FmMMJointBase*)itsFmOwner)->getLastMaster())->hasStickers())  hasStickers += 4;
+  FmTriad* master1 = ((FmMMJointBase*)itsFmOwner)->getFirstMaster();
+  FmTriad* master2 = ((FmMMJointBase*)itsFmOwner)->getLastMaster();
+  if (master1->hasStickers()) hasStickers += 2;
+  if (master2->hasStickers()) hasStickers += 4;
   if (slaveIsAttached)
   {
     direction = FdConverter::toSbVec3f(triadCS[2]);
@@ -608,9 +610,9 @@ int FdLinJoint::getDegOfFreedom(SbVec3f& centerPoint, SbVec3f& direction)
   if (hasStickers%2 == 0) // no sticker on slave Triad
   {
     if (hasStickers == 4) // sticker on last master Triad only
-      triadCS = (((FmMMJointBase*)itsFmOwner)->getLastMaster())->getGlobalCS();
+      triadCS = master2->getGlobalCS();
     else if (hasStickers == 2) // sticker on first master Triad only
-      triadCS = (((FmMMJointBase*)itsFmOwner)->getFirstMaster())->getGlobalCS();
+      triadCS = master1->getGlobalCS();
   }
   direction = FdConverter::toSbVec3f(triadCS[2]);
   centerPoint = FdConverter::toSbVec3f(triadCS.translation());
