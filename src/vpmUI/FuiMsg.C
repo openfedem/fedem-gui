@@ -5,6 +5,9 @@
 // This file is part of FEDEM - https://openfedem.org
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <iostream>
+#include <stack>
+
 #include "vpmUI/vpmUITopLevels/FuiMainWindow.H"
 #include "vpmUI/FuiMsg.H"
 #include "vpmUI/Fui.H"
@@ -15,6 +18,34 @@
 #else
 #include <unistd.h>
 #endif
+
+
+namespace
+{
+  std::stack<std::string> ourStatuses; //! Status message stack
+
+  //! \brief Prints the content of \ref ourStatuses.
+  void showStatuses(bool newline = false)
+  {
+    std::cout <<"Status: ";
+    if (ourStatuses.empty())
+      std::cout <<"EMPTY";
+    else if (ourStatuses.size() == 1)
+      std::cout << ourStatuses.top();
+    else
+    {
+      std::stack<std::string> myCopy(ourStatuses);
+      std::vector<std::string> tmp;
+      for (tmp.reserve(myCopy.size()); !myCopy.empty(); myCopy.pop())
+        tmp.push_back(myCopy.top());
+      // Print in reverse order to get the top at the end
+      std::cout <<" "<< tmp.back();
+      for (int i = tmp.size()-2; i >= 0; i--)
+        std::cout <<", "<< tmp[i];
+    }
+    if (newline) std::cout << std::endl;
+  }
+}
 
 
 void FuiMsg::printCurrentTime(FILE* fd, const char* action)
@@ -197,8 +228,8 @@ void FuiMsg::tipVt(const std::string& str)
 void FuiMsg::setStatusVt(const std::string& statusText)
 {
 #ifdef FUIMSG_DEBUG
-  for (size_t i = 0; i < ourStatuses.size(); i++) std::cout <<" ";
-  std::cout << statusText <<" [set]\n";
+  showStatuses(false);
+  std::cout <<", "<< statusText <<" [set]"<< std::endl;
 #endif
 
   // Only set if no stack is active to avoid disturbance.
@@ -208,15 +239,16 @@ void FuiMsg::setStatusVt(const std::string& statusText)
   ourStatuses.push(statusText);
   if (Fui::getMainWindow())
     Fui::getMainWindow()->setStatus(statusText.c_str());
-  else
-    FFaMsg::showStatus();
+#ifndef FUIMSG_DEBUG
+  else showStatuses();
+#endif
 }
 
 void FuiMsg::changeStatusVt(const std::string& statusText)
 {
 #ifdef FUIMSG_DEBUG
-  for (size_t i = 0; i < ourStatuses.size(); i++) std::cout <<" ";
-  std::cout << statusText <<" [change]\n";
+  showStatuses(false);
+  std::cout <<", "<< statusText <<" [change]"<< std::endl;
 #endif
 
   ourStatuses.pop();
@@ -224,38 +256,44 @@ void FuiMsg::changeStatusVt(const std::string& statusText)
 
   if (Fui::getMainWindow())
     Fui::getMainWindow()->setStatus(ourStatuses.top().c_str());
-  else
-    FFaMsg::showStatus();
+#ifndef FUIMSG_DEBUG
+  else showStatuses();
+#endif
 }
 
 void FuiMsg::pushStatusVt(const std::string& statusText)
 {
 #ifdef FUIMSG_DEBUG
-  for (size_t i = 0; i < ourStatuses.size(); i++) std::cout <<" ";
-  std::cout << statusText <<" [push]\n";
+  showStatuses(false);
+  std::cout <<", "<< statusText <<" [push]"<< std::endl;
 #endif
 
   ourStatuses.push(statusText);
 
   if (Fui::getMainWindow())
     Fui::getMainWindow()->setStatus(ourStatuses.top().c_str());
-  else
-    FFaMsg::showStatus();
+#ifndef FUIMSG_DEBUG
+  else showStatuses();
+#endif
 }
 
 void FuiMsg::popStatusVt()
 {
-  ourStatuses.pop();
-
 #ifdef FUIMSG_DEBUG
-  for (size_t i = 0; i < ourStatuses.size(); i++) std::cout <<" ";
-  std::cout << (ourStatuses.empty() ? "EMPTY" : ourStatuses.top()) <<" [pop]\n";
+  showStatuses(false);
+  std::cout <<" [pop]"<< std::endl;
 #endif
 
-  if (!ourStatuses.empty() && Fui::getMainWindow())
-    Fui::getMainWindow()->setStatus(ourStatuses.top().c_str());
-  else
-    FFaMsg::showStatus();
+  ourStatuses.pop();
+
+  if (Fui::getMainWindow())
+  {
+    if (!ourStatuses.empty())
+      Fui::getMainWindow()->setStatus(ourStatuses.top().c_str());
+  }
+#ifndef FUIMSG_DEBUG
+  else showStatuses();
+#endif
 }
 
 

@@ -41,4 +41,13 @@ protected:
   virtual void hideHighlight();
 };
 
+
+class FdPrismJoint : public FdLinJoint
+{
+  Fmd_HEADER_INIT();
+
+public:
+  FdPrismJoint(FmMMJointBase* pt);
+};
+
 #endif
