@@ -15,15 +15,18 @@
 class FuiMsg : public FFaMsg
 {
 public:
+  //! \brief Default constructor initializing the members.
   FuiMsg() { listFile = NULL; tmpName = NULL; }
+  //! \brief The destructor closes the list file, if opened.
   virtual ~FuiMsg() { this->closeListFile(); }
 
-  // Open a list file containing a copy of the output list window
+  //! \brief Opens a list file containing a copy of the output list window.
   virtual bool openListFile(const char* = NULL, bool = false);
+  //! \brief Closes the list file.
   virtual void closeListFile();
 
 private:
-  // Print time stamp to the given file
+  //! \brief Prints time stamp to the given file.
   static void printCurrentTime(FILE* fd, const char* action);
 
 protected:
@@ -61,8 +64,8 @@ protected:
   virtual void disableProgressVt();
 
 private:
-  FILE* listFile; // Copy all Output List contents to this file
-  char* tmpName;  // Name of temporary list file to be deleted when closed
+  FILE* listFile; //!< Copy all Output List contents to this file
+  char* tmpName;  //!< Name of temporary list file to be deleted when closed
 };
 
 #endif
