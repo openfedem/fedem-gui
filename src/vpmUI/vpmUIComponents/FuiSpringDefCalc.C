@@ -53,17 +53,6 @@ void FuiSpringDefCalc::initWidgets()
 }
 
 
-void FuiSpringDefCalc::setChangedCB(const FFaDynCB0& aDynCB)
-{
-  myChangedCB = aDynCB;
-}
-
-void FuiSpringDefCalc::setValuesChangedCB(const FFaDynCB1<FuiSpringDefCalcValues&>& aDynCB)
-{
-  myValuesChangedCB = aDynCB;
-}
-
-
 void FuiSpringDefCalc::setCBs(const FuiSpringDefCalcValues& values)
 {
   myLengthEngineField->setButtonCB(values.myQIFieldButtonCB);
@@ -76,7 +65,8 @@ void FuiSpringDefCalc::buildDynamicWidgets(const FuiSpringDefCalcValues& values)
   if (IAmSensitive)
     myVariableField->setSensitivity(values.variableIsEditable);
 
-  this->setLabels(values.useAngularLabels,values.useSpringLabels);
+  this->setLabels(values.useAngularLabels,values.useSpringLabels,
+                  values.selectedLengthEngine);
 
   if (values.fixedOrFree) {
     myILengthField->popDown();
@@ -100,7 +90,8 @@ void FuiSpringDefCalc::buildDynamicWidgets(const FuiSpringDefCalcValues& values)
 
 void FuiSpringDefCalc::setValues(const FuiSpringDefCalcValues& values)
 {
-  this->setLabels(values.useAngularLabels,values.useSpringLabels);
+  this->setLabels(values.useAngularLabels,values.useSpringLabels,
+                  values.selectedLengthEngine);
 
   myVariableField->setValue(values.variable);
 
@@ -145,31 +136,6 @@ void FuiSpringDefCalc::getValues(FuiSpringDefCalcValues& values)
 }
 
 
-void FuiSpringDefCalc::onDoubleChanged(double)
-{
-  this->onValuesChanged();
-}
-
-void FuiSpringDefCalc::onIntBoolChanged(int, bool)
-{
-  this->onValuesChanged();
-}
-
-void FuiSpringDefCalc::onEngineChanged(int)
-{
-  this->onValuesChanged();
-}
-
-
-void FuiSpringDefCalc::onValuesChanged()
-{
-  FuiSpringDefCalcValues values;
-  this->getValues(values);
-  myValuesChangedCB.invoke(values);
-  myChangedCB.invoke();
-}
-
-
 void FuiSpringDefCalc::setSensitivity(bool isSensitive)
 {
   IAmSensitive = isSensitive;
@@ -186,28 +152,37 @@ void FuiSpringDefCalc::setSensitivity(bool isSensitive)
 }
 
 
-void FuiSpringDefCalc::setLabels(char isAngle, bool isSpring)
+void FuiSpringDefCalc::setLabels(char isAngle, bool isSpring, bool isVarying)
 {
-  if (isAngle == IAmAngular && isSpring == IAmSpring) return;
+  if (isAngle == IAmAngular && isSpring == IAmSpring && isVarying == IAmVarying)
+    return;
 
   IAmDeflection = isAngle == 0 || isAngle == 1;
   IAmAngular = isAngle;
   IAmSpring = isSpring;
+  IAmVarying = isVarying;
+
+  auto&& makeLabel = [isVarying](const char* text)
+  {
+    static std::string label;
+    label = std::string(isVarying ? "Initial " : "Constant ") + text;
+    return label.c_str();
+  };
 
   if (IAmSpring) // Spring controlled motion
   {
     if (IAmAngular > 0) {
       this->setLabel("Stress free angle control");
       myVariableLabel->setLabel("Angle in model");
-      myILToggle->setLabel("Constant stress free angle");
-      myIDToggle->setLabel("Constant deflection");
+      myILToggle->setLabel(makeLabel("stress free angle"));
+      myIDToggle->setLabel(makeLabel("deflection"));
       myLengthChangeLabel->setLabel("Stress free angle change");
     }
     else {
       this->setLabel("Stress free length control");
       myVariableLabel->setLabel("Length in model");
-      myILToggle->setLabel("Constant stress free length");
-      myIDToggle->setLabel("Constant deflection");
+      myILToggle->setLabel(makeLabel("stress free length"));
+      myIDToggle->setLabel(makeLabel("deflection"));
       myLengthChangeLabel->setLabel("Stress free length change");
     }
   }
@@ -216,31 +191,31 @@ void FuiSpringDefCalc::setLabels(char isAngle, bool isSpring)
     if (IAmAngular > 0) {
       this->setLabel("Rotation control");
       myVariableLabel->setLabel("Angle in model");
-      myIDToggle->setLabel("Constant rotation");
+      myIDToggle->setLabel(makeLabel("rotation"));
     }
     else {
       this->setLabel("Translation control");
       myVariableLabel->setLabel("Length in model");
-      myIDToggle->setLabel("Constant displacement");
+      myIDToggle->setLabel(makeLabel("displacement"));
     }
 
     switch (IAmAngular) {
     case 0:
-      myILToggle->setLabel("Constant length");
+      myILToggle->setLabel(makeLabel("length"));
       myLengthChangeLabel->setLabel("Length change");
       break;
     case 1:
-      myILToggle->setLabel("Constant angle");
+      myILToggle->setLabel(makeLabel("angle"));
       myLengthChangeLabel->setLabel("Angle change");
       break;
     case  2:
     case -1:
-      myILToggle->setLabel("Constant velocity");
+      myILToggle->setLabel(makeLabel("velocity"));
       myLengthChangeLabel->setLabel("Velocity change");
       break;
     case  3:
     case -2:
-      myILToggle->setLabel("Constant acceleration");
+      myILToggle->setLabel(makeLabel("acceleration"));
       myLengthChangeLabel->setLabel("Acceleration change");
       break;
     }
