@@ -239,6 +239,7 @@ int main (int argc, char** argv)
 #endif
 
   FpPM::loadUnitConvertionFile();
+  FpPM::loadLinkDefaultColors();
   FpPM::loadResultPosFiles();
   FpPM::loadSNCurveFile();
   FpPM::loadAllPlugins();

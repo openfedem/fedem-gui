@@ -23,6 +23,7 @@ namespace FpPM
 
   void CopyrightNotice();
   void loadUnitConvertionFile();
+  void loadLinkDefaultColors();
   void loadResultPosFiles();
   void loadSNCurveFile();
   void loadPropertyLibraries();

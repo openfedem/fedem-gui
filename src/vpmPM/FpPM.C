@@ -34,6 +34,7 @@
 #include "vpmDB/FmModelLoader.H"
 #include "vpmDB/FmSolverInput.H"
 #include "vpmDB/FmModesOptions.H"
+#include "vpmDB/FmGlobalViewSettings.H"
 
 #include "vpmUI/Fui.H"
 #include "vpmUI/FuiModes.H"
@@ -793,6 +794,45 @@ void FpPM::loadUnitConvertionFile()
               <<" ]\n"<< std::endl;
 
   FFaUnitCalculatorProvider::instance()->readCalculatorDefs(unitFile);
+}
+
+
+void FpPM::loadLinkDefaultColors()
+{
+  std::string colorFile = FpPM::getFullFedemPath("linkcolors.flc",'h');
+  if (!FpFileSys::isFile(colorFile))
+    return;
+
+  if (!FFaAppInfo::isConsole())
+    std::cout <<"Loading default link color file:\n[ "<< colorFile <<" ] ";
+
+  if (std::ifstream s(colorFile,std::ios::out); s)
+  {
+    char c;
+    std::array<int,3> rgb;
+    std::vector<FmColor> defaultColors;
+    while (s.get(c))
+    {
+      if (c != '#')
+      {
+        s.putback(c);
+        s >> rgb[0] >> rgb[1] >> rgb[2];
+      }
+      if (s.ignore(256,'\n') && c != '#')
+      {
+        for (int& c : rgb)
+          if (c < 0)
+            c = 0;
+          else if (c > 255)
+            c = 255;
+        defaultColors.emplace_back(rgb);
+      }
+    }
+    std::cout << defaultColors.size() <<"\n"<< std::endl;
+    FmGlobalViewSettings::setLinkDefaultColors(defaultColors);
+  }
+  else
+    std::cout <<"failed!\n"<< std::endl;
 }
 
 
@@ -1611,8 +1651,7 @@ bool FpPM::vpmModelSave(bool pruneEmptyDirs)
   // Save the model in <modelFile>.tmp so we don't loose the old file
   // in case of write failure due to disk full, etc.
   std::string tempFile = modelFile + ".tmp";
-  std::ofstream s(tempFile,std::ios::out);
-  if (s)
+  if (std::ofstream s(tempFile,std::ios::out); s)
   {
     Fui::noUserInputPlease();
     FpFileSys::verifyDirectory(mech->getAbsModelRDBPath());
@@ -1625,7 +1664,6 @@ bool FpPM::vpmModelSave(bool pruneEmptyDirs)
     FapSimEventHandler::RDBSave(pruneEmptyDirs);
     FmSubAssembly::mainFilePath = mech->getAbsModelFilePath();
     isModelSaved = FmDB::reportAll(s);
-    s.close();
 
     Fui::okToGetUserInput();
   }
@@ -1945,13 +1983,11 @@ bool FpPM::vpmModelSaveAs(const std::string& name, bool saveReducedParts,
   // Finally save the model file
   FFaMsg::list("  -> Saving Model File ");
   bool isModelSaved = false;
-  std::ofstream s(fmmName,std::ios::out);
-  if (s)
+  if (std::ofstream s(fmmName,std::ios::out); s)
   {
     FmDB::updateModelVersionOnSave(false);
     FmSubAssembly::mainFilePath = newModelP;
     isModelSaved = FmDB::reportAll(s);
-    s.close();
   }
   if (isModelSaved)
     FFaMsg::list(" ... Done.\n");
@@ -2149,13 +2185,11 @@ bool FpPM::vpmModelExport(const std::string& newPath, bool solverInput)
   {
     // Finally, save the model file
     FFaMsg::list("  -> Writing Model File ");
-    std::ofstream s(fName,std::ios::out);
-    if (s)
+    if (std::ofstream s(fName,std::ios::out); s)
     {
       FmDB::updateModelVersionOnSave(false);
       FmSubAssembly::mainFilePath = newModelP;
       isModelSaved = FmDB::reportAll(s);
-      s.close();
     }
     if (isModelSaved)
       FFaMsg::list(" ... Done.\n");
