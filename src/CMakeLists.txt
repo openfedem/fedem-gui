@@ -128,6 +128,7 @@ if ( USE_FORTRAN AND USE_CHSHAPE )
   add_subdirectory ( ${MDB_DIR}/chainShape "${CMAKE_CURRENT_BINARY_DIR}/chainShape" )
 endif ( USE_FORTRAN AND USE_CHSHAPE )
 
+string ( APPEND CMAKE_CXX_FLAGS_DEBUG " -DFM_DEBUG=${FT_DEBUG}" )
 add_subdirectory ( ${MDB_DIR}/vpmDB "${CMAKE_CURRENT_BINARY_DIR}/vpmDB" )
 
 #
