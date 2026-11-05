@@ -53,17 +53,12 @@ class FuiSpringDefCalc : public virtual FFuComponentBase
 public:
   FuiSpringDefCalc();
 
-  // Setting Up :
-
-  void setLabels(char isAngle, bool isSpring);
-
   virtual void setLabel(const char* text) = 0;
   virtual void setSensitivity(bool isSensitive);
 
   // Callbacks :
 
-  void setChangedCB(const FFaDynCB0& aDynCB);
-  void setValuesChangedCB(const FFaDynCB1<FuiSpringDefCalcValues&>& aDynCB);
+  void setChangedCB(const FFaDynCB0& aDynCB) { myChangedCB = aDynCB; }
 
   // Setting values:
 
@@ -96,23 +91,24 @@ protected:
 
 private:
 
+  void setLabels(char isAngle, bool isSpring, bool isVarying = false);
+
   // Internal methods for rerouting of Callbacks
 
-  void onDoubleChanged(double value);
-  void onIntBoolChanged(int button, bool value);
-  void onEngineChanged(int idx);
-  void onValuesChanged();
+  void onDoubleChanged(double)    { myChangedCB.invoke(); }
+  void onIntBoolChanged(int,bool) { myChangedCB.invoke(); }
+  void onEngineChanged(int)       { myChangedCB.invoke(); }
 
-  // Callback Objects
+  // Callback object
 
-  FFaDynCB1<FuiSpringDefCalcValues&> myValuesChangedCB;
-  FFaDynCB0                          myChangedCB;
+  FFaDynCB0 myChangedCB;
 
   // Internal Vars
 
   bool IAmSpring;
   char IAmAngular;
   bool IAmDeflection;
+  bool IAmVarying;
   bool IAmSensitive;
   bool IAmBlockingVariable;
 };
