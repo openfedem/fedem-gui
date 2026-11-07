@@ -8,6 +8,30 @@
 
 # Open FEDEM Changelog
 
+## [fedem-8.2.1] (2026-11-06)
+
+### :rocket: Added
+
+- Issue https://github.com/openfedem/fedem-mdb/issues/56:
+  The default number of component modes in a FE part is now 0 (changed from 12).
+- Issue https://github.com/openfedem/fedem-gui/issues/167:
+  The `-allSecondaryVars` option is now activated by default in the template model files.
+- Issue https://github.com/openfedem/fedem-gui/issues/165:
+  The default colors on parts can now be read from a configurable resource file.
+- Issue https://github.com/openfedem/fedem-gui/issues/159:
+  Allow prismatic and cylindric joints spanning several parts.
+
+### :bug: Fixed
+
+- Issue https://github.com/openfedem/fedem-mdb/issues/59:
+  Importing an existing model as sub-assembly does not work when the imported model uses a model link repository.
+- Issue https://github.com/openfedem/fedem-gui/issues/168:
+  Import of an FE model with co-located spider reference nodes does not work.
+- Issue https://github.com/openfedem/fedem-gui/issues/161:
+  Misleading "Constant" label when prescribed motion or stress-free length is defined by a function.
+- Issue https://github.com/openfedem/fedem-gui/issues/157:
+  Incorrect animation of triads in expanded mode shape animation.
+
 ## [fedem-8.2.0] (2026-09-15)
 
 ### :rocket: Initial release of FEDEM R8.2
@@ -446,3 +470,4 @@ before doing this, as they are not included in the FEDEM distribution:
 [fedem-8.1.6]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.5...fedem-8.1.6
 [fedem-8.1.7]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.6...fedem-8.1.7
 [fedem-8.2.0]: https://github.com/openfedem/fedem-gui/compare/fedem-8.1.7...fedem-8.2.0
+[fedem-8.2.1]: https://github.com/openfedem/fedem-gui/compare/fedem-8.2.0...fedem-8.2.1
